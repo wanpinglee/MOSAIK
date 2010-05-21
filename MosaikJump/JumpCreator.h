@@ -106,4 +106,6 @@ private:
 	uint64_t* mKeyBuffer;
 	// the key buffer size
 	uint64_t mKeyBufferLen;
+	// chromosome information, e.g. begins and ends
+	vector<ReferenceSequence> referenceSequences;
 };

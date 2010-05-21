@@ -332,6 +332,10 @@ void CJumpCreator::HashReference(const string& referenceFilename) {
 	refseq.Open(referenceFilename);
 	unsigned int referenceLength = refseq.GetReferenceSequenceLength();
 
+	// get begins and ends of chromosomes
+	refseq.GetReferenceSequences(referenceSequences);
+
+
 	char* pReference = NULL;
 	refseq.LoadConcatenatedSequence(pReference);
 
@@ -454,7 +458,7 @@ void CJumpCreator::StoreHash(vector<HashPosition>& hashPositions) {
 	if(mLimitPositions && (numHashes > mMaxHashPositions)) numHashes = mMaxHashPositions;
 
 	// shuffle the vector
-	random_shuffle(hashPositions.begin(), hashPositions.end());
+	// random_shuffle(hashPositions.begin(), hashPositions.end());
 
 	// localize the hash
 	uint64_t hash = hashPositions[0].Hash;
@@ -487,7 +491,22 @@ void CJumpCreator::StoreHash(vector<HashPosition>& hashPositions) {
 	memcpy(mBuffer + bufferOffset, (char*)&numHashes, SIZEOF_INT);
 	bufferOffset += SIZEOF_INT;
 
+	//unsigned int curChromosomeNo = 0;
+	//unsigned int preChromosomeNo = 0;
+	//unsigned int diffChromosomeNo;
+	//const int dummy = 0xff;
 	for(unsigned int i = 0; i < numHashes; i++) {
+		//while ( hashPositions[i].Position > referenceSequences[curChromosomeNo].End )
+		//	curChromosomeNo++;
+
+		//diffChromosomeNo = curChromosomeNo - preChromosomeNo;
+		//if ( diffChromosomeNo > 0 ) {
+		//	memcpy(mBuffer + bufferOffset, (char*)&dummy, SIZEOF_INT);
+		//	bufferOffset += SIZEOF_INT;
+		//	memcpy(mBuffer + bufferOffset, (char*)&diffChromosomeNo, SIZEOF_INT);
+		//	bufferOffset += SIZEOF_INT;
+		//}
+		//preChromosomeNo = curChromosomeNo;
 		memcpy(mBuffer + bufferOffset, (char*)&hashPositions[i].Position, SIZEOF_INT);
 		bufferOffset += SIZEOF_INT;
 	}
