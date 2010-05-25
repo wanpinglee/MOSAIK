@@ -331,6 +331,8 @@ void CJumpDnaHash::LoadKeys(void) {
 
 	fread(pKeys, (size_t)bytesLeft, 1, mKeys);
 	cout << "finished." << endl;
+
+	fclose(mKeys);
 }
 
 inline void CJumpDnaHash::LoadBlockPositions( char* blockPosition, uint64_t& bytesLeft, const unsigned int& fillBufferSize ) {
@@ -375,8 +377,9 @@ void CJumpDnaHash::LoadPositions(void) {
 
 
 	// initialize positions memory
-	size_t mPositionBufferLen = (_begin - _end + 1);
-	mPositionBuffer = new char[(size_t)mPositionBufferLen];
+	size_t mPositionBufferLen1 = SIZEOF_INT*(2*(_end - _begin + 1));
+	cout << endl << mPositionBufferLen1 << endl;
+	mPositionBuffer = new char[(size_t)mPositionBufferLen1];
 	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
 
 	if ( !mPositionBuffer ) {
@@ -396,11 +399,11 @@ void CJumpDnaHash::LoadPositions(void) {
 	//char*    pMPositionBuffer    = mPositionBuffer;
 	//uint64_t leftMPositionBuffer = fillBufferSize;
 
-	mPositionBufferPtr = NULL;
+	//mPositionBufferPtr = NULL;
 	off_type offset   = 0;
 	off_type filePosition = 0;
 	off_type curFilePosition = 0;
-	off_type left = 0;
+	off_type left = mPositionBufferLen1;
 
 	cout << "- loading jump positions database into memory... ";
 	cout.flush();
@@ -472,6 +475,8 @@ void CJumpDnaHash::LoadPositions(void) {
 	delete [] blockPosition;
 
 	cout << "finished." << endl;
+
+	fclose(mPositions);
 
 
 	// load full positions
@@ -562,7 +567,7 @@ inline void CJumpDnaHash::StorePositions ( const unsigned int fillBufferSize, of
 
 	// mPositionBuffer is full
 	// reallocate new space
-	if ( left == 0 ) {
+	if ( left < SIZEOF_INT ) {
 		//char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
 		//memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
 		//delete [] mPositionBuffer;
@@ -582,7 +587,7 @@ inline void CJumpDnaHash::StorePositions ( const unsigned int fillBufferSize, of
 	for ( vector<unsigned int>::iterator ptr = positions.begin(); ptr != positions.end(); ptr++ ) {
 		// mPositionBuffer is full
 		// reallocate new space
-		if ( left == 0 ) {
+		if ( left < SIZEOF_INT ) {
 			//char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
 			//memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
 			//delete [] mPositionBuffer;

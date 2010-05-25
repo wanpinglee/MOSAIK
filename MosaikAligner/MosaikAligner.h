@@ -27,6 +27,7 @@
 #include "ProgressBar.h"
 #include "ReferenceSequenceReader.h"
 #include "UbiqDnaHash.h"
+#include "FileUtilities.h"
 
 using namespace std;
 
@@ -86,4 +87,6 @@ private:
 	unsigned int mReferenceLength;
 	// the hash-table associated with the specified alignment algortihm
 	CAbstractDnaHash* mpDNAHash;
+	// temporary output files for chromosome-bychromosome alignment
+	vector< string > outputFilenames;
 };

@@ -92,8 +92,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
 
+	for ( unsigned int i = 0; i < referenceSequences.size(); i++) {
+
 	// initialize our hash tables
-	InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[0]);
+	InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[i], pRefEnd[i]);
 
 	// set the hash positions threshold
 	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
@@ -101,7 +103,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	// localize the read archive filenames
 	string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
-	string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
+	//string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
+	// get a temporary file name
+	string tempFilename;
+	CFileUtilities::GetTempFilename(tempFilename);
+	outputFilenames.push_back(tempFilename);
 
 	// define our read format reader and writer
 	MosaikReadFormat::CReadReader in;
@@ -122,10 +128,21 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	else alignmentStatus |= AS_UNIQUE_MODE;
 
 	MosaikReadFormat::CAlignmentWriter out;
-	out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus);
+	out.Open(tempFilename.c_str(), referenceSequences, readGroups, alignmentStatus);
 
 
 	AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
+
+	// close open file streams
+	in.Close();
+
+	// solid references should be one-base longer after converting back to basespace
+	if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+	out.Close();
+
+	if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+
+	}
 
 
 	// free up some memory
@@ -140,14 +157,14 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
 	// close open file streams
-	in.Close();
+	//in.Close();
 	
 	// solid references should be one-base longer after converting back to basespace
-	if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
-	out.Close();
+	//if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+	//out.Close();
 
 	//if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
-	if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+	//if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
 }
 
 // aligns the read archive
