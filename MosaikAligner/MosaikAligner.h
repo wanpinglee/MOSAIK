@@ -38,7 +38,9 @@ public:
 	// destructor
 	~CMosaikAligner(void);
 	// aligns the read archive
-	void AlignReadArchive(void);
+	void AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs);
+	// aligns the read archive chromosome by chromosome
+	void AlignReadArchiveLowMemory(void);
 	// enables the alignment candidate threshold
 	void EnableAlignmentCandidateThreshold(const unsigned short alignmentCandidateThreshold);
 	// enables the banded Smith-Waterman algorithm
@@ -77,7 +79,7 @@ private:
 	// hashes the reference sequence
 	void HashReferenceSequence(MosaikReadFormat::CReferenceSequenceReader& refseq);
 	// initializes the hash tables
-	void InitializeHashTables(const unsigned char bitSize);
+	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end);
 	// the reference sequence
 	char* mReference;
 	// the length of the reference sequence

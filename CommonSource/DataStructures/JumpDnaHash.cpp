@@ -13,7 +13,7 @@
 #include "JumpDnaHash.h"
 
 // constructor
-CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements)
+CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end)
 : mNumPositions(numPositions)
 , mLimitPositions(false)
 , mKeepKeysInMemory(keepKeysInMemory)
@@ -30,6 +30,8 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameS
 , mPositionBufferLen(0)
 , mPositionBufferPtr(0)
 , mMruCache(numCachedElements)
+, _begin(begin)
+, _end(end)
 {
 	mHashSize = hashSize;
 
@@ -367,6 +369,17 @@ void CJumpDnaHash::LoadPositions(void) {
 	blockPosition = new char[(size_t)fillBufferSize];
 
 	if( !blockPosition ) {
+		cout << "ERROR: Memory allocation for the temporary jump positions failed." << endl;
+		exit(1);
+	}
+
+
+	// initialize positions memory
+	size_t mPositionBufferLen = (_begin - _end + 1);
+	mPositionBuffer = new char[(size_t)mPositionBufferLen];
+	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
+
+	if ( !mPositionBuffer ) {
 		cout << "ERROR: Memory allocation for the jump positions failed." << endl;
 		exit(1);
 	}
@@ -391,37 +404,6 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	cout << "- loading jump positions database into memory... ";
 	cout.flush();
-
-	// load full positions
-	//mPositionBuffer = new char[(size_t)mPositionBufferLen];
-	//mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
-
-	//if(!mPositionBuffer) {
-	//	cout << "ERROR: Memory allocation for the jump positions database failed." << endl;
-	//	exit(1);
-	//}
-
-	//uint64_t bytesLeft = mPositionBufferLen;
-	//const unsigned int fillBufferSize = 2147483648ULL; // 2 GB
-
-	//cout << "- loading jump positions database into memory... ";
-	//cout.flush();
-
-	//char* pPositions = mPositionBuffer;
-	//while(bytesLeft > fillBufferSize) {
-	//	fread(pPositions, fillBufferSize, 1, mPositions);
-	//	pPositions += fillBufferSize;
-	//	bytesLeft  -= fillBufferSize;
-	//}
-
-	//fread(pPositions, (size_t)bytesLeft, 1, mPositions);
-	//cout << "finished." << endl;
-
-	//rewind(mPositions);
-
-	//bytesLeft = mPositionBufferLen;
-	//LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
-	// end of loading full positions
 
 	while ( (uint64_t)offset < mKeyBufferLen ) {
 		memcpy((char*)&filePosition, (char*)(mKeyBufferPtr + offset), KEY_LENGTH);
@@ -448,16 +430,8 @@ void CJumpDnaHash::LoadPositions(void) {
 		memcpy((char*)&numPositions, (char*)(blockPositionPtr + p), SIZEOF_INT);
 		
 
-		//memcpy((char*)&numPositions1, (char*)(mPositionBufferPtr + filePosition), SIZEOF_INT);
-
-		//if ( numPositions != numPositions1 ) {
-		//	cout << "numPositions\t" << numPositions << "\t" << numPositions1 << endl;
-		//	exit(1);
-		//}
-
-
 		vector <unsigned int> positions;
-		positions.resize(numPositions);
+		positions.reserve(numPositions);
 		// load all positions of hash hits
 		for ( unsigned int i = 0; i < numPositions; i++ ) {
 			
@@ -471,24 +445,26 @@ void CJumpDnaHash::LoadPositions(void) {
 			//unsigned int hashPosition1;
 			off_type p = filePosition - (off_type)nBlock*fillBufferSize;
 			memcpy((char*)&hashPosition, (char*)(blockPositionPtr + p), SIZEOF_INT);
-			positions[i] = hashPosition;
-			//memcpy((char*)&hashPosition1, (char*)(mPositionBufferPtr + filePosition), SIZEOF_INT);
-
 			
-			//if ( hashPosition != hashPosition1 ) {
-			//	cout << "hashPosition\t" << hashPosition << "\t" << hashPosition1 << "\t" << p << endl;
-			//	exit(1);
-			//}
-
+			// the hash position is not within the current chromosome
+			if ( hashPosition > _end )
+				break;
+			if ( hashPosition < _begin )
+				continue;
+			
+			positions.push_back(hashPosition);
 		}
 
-		random_shuffle( positions.begin(), positions.end() );
-
-		StorePositions(fillBufferSize, curFilePosition, left, positions, offset);
+		
+		if ( positions.size() == 0 ) {
+			memset((char*)(mKeyBufferPtr + offset), 0xff, KEY_LENGTH);
+		}
+		else {
+			random_shuffle( positions.begin(), positions.end() );
+			StorePositions(fillBufferSize, curFilePosition, left, positions, offset);
+		}
 
 		positions.clear();
-		//if(mLimitPositions && (numPositions > mMaxHashPositions))
-		//	positions.erase( positions.begin()+mMaxHashPositions, positions.end() );
 
 		offset += KEY_LENGTH;
 	}
@@ -570,31 +546,6 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	// end of loading full positions
 
-/*	
-	mPositionBuffer = new char[(size_t)mPositionBufferLen];
-	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
-
-	if(!mPositionBuffer) {
-		cout << "ERROR: Memory allocation for the jump positions database failed." << endl;
-		exit(1);
-	}
-
-	uint64_t bytesLeft = mPositionBufferLen;
-	const unsigned int fillBufferSize = 2147483648ULL; // 2 GB
-
-	cout << "- loading jump positions database into memory... ";
-	cout.flush();
-
-	char* pPositions = mPositionBuffer;
-	while(bytesLeft > fillBufferSize) {
-		fread(pPositions, fillBufferSize, 1, mPositions);
-		pPositions += fillBufferSize;
-		bytesLeft  -= fillBufferSize;
-	}
-
-	fread(pPositions, (size_t)bytesLeft, 1, mPositions);
-	cout << "finished." << endl;
-*/
 }
 
 inline void CJumpDnaHash::StorePositions ( const unsigned int fillBufferSize, off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffset) {
@@ -602,21 +553,24 @@ inline void CJumpDnaHash::StorePositions ( const unsigned int fillBufferSize, of
 	// revise the key pointer
 	memcpy((char*)(mKeyBufferPtr + keyOffset), (char*)&curFilePosition, KEY_LENGTH);
 	
-	if ( !mPositionBuffer ) {
-		mPositionBuffer = new char[(size_t)fillBufferSize];
-		mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
-		left = fillBufferSize;
-	}
+	// initialize memory
+	//if ( !mPositionBuffer ) {
+	//	mPositionBuffer = new char[(size_t)fillBufferSize];
+	//	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
+	//	left = fillBufferSize;
+	//}
 
 	// mPositionBuffer is full
 	// reallocate new space
 	if ( left == 0 ) {
-		char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
-		memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
-		delete [] mPositionBuffer;
-		mPositionBuffer = tempBuffer;
-		mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
-		left = fillBufferSize;
+		//char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
+		//memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
+		//delete [] mPositionBuffer;
+		//mPositionBuffer = tempBuffer;
+		//mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
+		//left = fillBufferSize;
+		cout << "ERROR: Out of the allocated position memory." << endl;
+		exit(1);
 	}
 
 	// store number of hash hits
@@ -629,12 +583,14 @@ inline void CJumpDnaHash::StorePositions ( const unsigned int fillBufferSize, of
 		// mPositionBuffer is full
 		// reallocate new space
 		if ( left == 0 ) {
-			char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
-			memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
-			delete [] mPositionBuffer;
-			mPositionBuffer = tempBuffer;
-			mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
-			left = fillBufferSize;
+			//char* tempBuffer = new char[(size_t)curFilePosition + (size_t)fillBufferSize];
+			//memcpy(tempBuffer, mPositionBuffer, (size_t)curFilePosition);
+			//delete [] mPositionBuffer;
+			//mPositionBuffer = tempBuffer;
+			//mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
+			//left = fillBufferSize;
+			cout << "ERROR: Out of the allocated position memory." << endl;
+			exit(1);
 		}
 
 		po = *ptr;

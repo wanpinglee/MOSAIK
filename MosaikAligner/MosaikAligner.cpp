@@ -33,14 +33,132 @@ CMosaikAligner::~CMosaikAligner(void) {
 	//delete mpDNAHash;
 }
 
-// aligns the read archive
-void CMosaikAligner::AlignReadArchive(void) {
+void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	// ==============
 	// initialization
 	// ==============
 
 	// retrieve the concatenated reference sequence length
+	vector<ReferenceSequence> referenceSequences;
+
+	MosaikReadFormat::CReferenceSequenceReader refseq;
+	refseq.Open(mSettings.ReferenceFilename);
+	refseq.GetReferenceSequences(referenceSequences);
+	mReferenceLength = refseq.GetReferenceSequenceLength();
+	const unsigned int numRefSeqs = refseq.GetNumReferenceSequences();
+
+	// retrieve the basespace reference filenames
+	char** pBsRefSeqs = NULL;
+	if(mFlags.EnableColorspace) {
+
+		cout << "- loading basespace reference sequences... ";
+		cout.flush();
+
+		MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
+		bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
+
+		if(!bsRefSeq.HasSameReferenceSequences(referenceSequences)) {
+			printf("ERROR: The basespace and colorspace reference sequence archives do not seem to represent the same FASTA file.\n"); 
+			exit(1);
+		}
+
+		bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
+		bsRefSeq.Close();
+
+		cout << "finished." << endl;
+	}
+
+	// initialize our hash tables
+	//InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize));
+
+	// hash the concatenated reference sequence
+	if(!mFlags.IsUsingJumpDB) HashReferenceSequence(refseq);
+
+	cout << "- loading reference sequence... ";
+	cout.flush();
+	refseq.LoadConcatenatedSequence(mReference);
+	cout << "finished." << endl;
+
+	refseq.Close();
+
+	// create our reference sequence LUTs
+	unsigned int* pRefBegin = new unsigned int[numRefSeqs];
+	unsigned int* pRefEnd   = new unsigned int[numRefSeqs];
+	
+	for(unsigned int j = 0; j < numRefSeqs; j++) {
+		pRefBegin[j] = referenceSequences[j].Begin;
+		pRefEnd[j]   = referenceSequences[j].End;
+	}
+
+
+	// initialize our hash tables
+	InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[0]);
+
+	// set the hash positions threshold
+	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
+		mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+
+	// localize the read archive filenames
+	string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
+	string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
+
+	// define our read format reader and writer
+	MosaikReadFormat::CReadReader in;
+	in.Open(inputReadArchiveFilename);
+	MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+	ReadStatus readStatus          = in.GetStatus();
+	mSettings.SequencingTechnology = readGroup.SequencingTechnology;
+	mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
+
+	//const bool isPairedEnd = (readStatus == RS_PAIRED_END_READ ? true : false);
+
+	vector<MosaikReadFormat::ReadGroup> readGroups;
+	readGroups.push_back(readGroup);
+
+	// set the alignment status flags
+	AlignmentStatus alignmentStatus = AS_UNSORTED_READ | readStatus;
+	if(mMode == CAlignmentThread::AlignerMode_ALL) alignmentStatus |= AS_ALL_MODE;
+	else alignmentStatus |= AS_UNIQUE_MODE;
+
+	MosaikReadFormat::CAlignmentWriter out;
+	out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus);
+
+
+	AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
+
+
+	// free up some memory
+	delete [] mReference;
+	//delete [] activeThreads;
+	if(pRefBegin) delete [] pRefBegin;
+	if(pRefEnd)   delete [] pRefEnd;
+
+	if(pBsRefSeqs) {
+		for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
+		delete [] pBsRefSeqs;
+	}
+
+	// close open file streams
+	in.Close();
+	
+	// solid references should be one-base longer after converting back to basespace
+	if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+	out.Close();
+
+	//if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
+	if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+}
+
+// aligns the read archive
+void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs) {
+
+	// ==============
+	// initialization
+	// ==============
+
+	// retrieve the concatenated reference sequence length
+	/*
 	vector<ReferenceSequence> referenceSequences;
 
 	MosaikReadFormat::CReferenceSequenceReader refseq;
@@ -92,6 +210,7 @@ void CMosaikAligner::AlignReadArchive(void) {
 		pRefEnd[j]   = referenceSequences[j].End;
 	}
 
+
 	// set the hash positions threshold
 	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
 		mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
@@ -104,12 +223,19 @@ void CMosaikAligner::AlignReadArchive(void) {
 	MosaikReadFormat::CReadReader in;
 	in.Open(inputReadArchiveFilename);
 	MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+	*/
+
 	ReadStatus readStatus          = in.GetStatus();
+	
+	/*
 	mSettings.SequencingTechnology = readGroup.SequencingTechnology;
 	mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
+	*/
 
+	
 	const bool isPairedEnd = (readStatus == RS_PAIRED_END_READ ? true : false);
 
+	/*
 	vector<MosaikReadFormat::ReadGroup> readGroups;
 	readGroups.push_back(readGroup);
 
@@ -120,6 +246,7 @@ void CMosaikAligner::AlignReadArchive(void) {
 
 	MosaikReadFormat::CAlignmentWriter out;
 	out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus);
+	*/
 
 	// open the unaligned read report file
 	FILE* unalignedStream = NULL;
@@ -129,6 +256,8 @@ void CMosaikAligner::AlignReadArchive(void) {
 			exit(1);
 		}
 	}
+	
+
 
 	// localize our read and reference counts. Initialize our statistical counters
 	uint64_t numReadArchiveReads = in.GetNumReads();
@@ -200,25 +329,25 @@ void CMosaikAligner::AlignReadArchive(void) {
 	alignmentBench.Stop();
 
 	// free up some memory
-	delete [] mReference;
+	//delete [] mReference;
 	delete [] activeThreads;
-	if(pRefBegin) delete [] pRefBegin;
-	if(pRefEnd)   delete [] pRefEnd;
+	//if(pRefBegin) delete [] pRefBegin;
+	//if(pRefEnd)   delete [] pRefEnd;
 
-	if(pBsRefSeqs) {
-		for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
-		delete [] pBsRefSeqs;
-	}
+	//if(pBsRefSeqs) {
+	//	for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
+	//	delete [] pBsRefSeqs;
+	//}
 
 	// close open file streams
-	in.Close();
+	//in.Close();
 	
 	// solid references should be one-base longer after converting back to basespace
-	if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
-	out.Close();
+	//if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+	//out.Close();
 
 	if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
-	if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+	//if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
 
 	// ====================
 	// print our statistics
@@ -553,24 +682,24 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 }
 
 // initializes the hash tables
-void CMosaikAligner::InitializeHashTables(const unsigned char bitSize) {
+void CMosaikAligner::InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end) {
 
 	// decide which DNA hash table to use
 	switch(mAlgorithm) {
 	case CAlignmentThread::AlignerAlgorithm_FAST:
 	case CAlignmentThread::AlignerAlgorithm_SINGLE:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 1, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes);
+			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 1, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end);
 		} else mpDNAHash = new CDnaHash(bitSize, mSettings.HashSize);
 		break;
 	case CAlignmentThread::AlignerAlgorithm_MULTI:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 9, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes);
+			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 9, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end);
 		} else mpDNAHash = new CMultiDnaHash(bitSize, mSettings.HashSize);
 		break;
 	case CAlignmentThread::AlignerAlgorithm_ALL:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 0, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes);
+			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 0, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end);
 		} else mpDNAHash = new CUbiqDnaHash(bitSize, mSettings.HashSize);
 		break;
 	default:
