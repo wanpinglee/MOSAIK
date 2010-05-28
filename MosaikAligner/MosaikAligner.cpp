@@ -11,6 +11,7 @@
 
 #include "MosaikAligner.h"
 
+
 // constructor
 CMosaikAligner::CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads)
 	: mAlgorithm(algorithmType)
@@ -91,56 +92,73 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		pRefEnd[j]   = referenceSequences[j].End;
 	}
 
+	//string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
+	
+	//MosaikReadFormat::CReadReader in;
+	//in.Open(inputReadArchiveFilename);
+	//MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+	//ReadStatus readStatus          = in.GetStatus();
+	//mSettings.SequencingTechnology = readGroup.SequencingTechnology;
+	//mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
+	//in.Close();
+
+	//vector<MosaikReadFormat::ReadGroup> readGroups;
+	//readGroups.push_back(readGroup);
+
 
 	for ( unsigned int i = 0; i < referenceSequences.size(); i++) {
 
-	// initialize our hash tables
-	InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[i], pRefEnd[i]);
+		cout << "- aligning chromosome " << i << endl;
+		
+		// initialize our hash tables
+		InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[i], pRefEnd[i]);
 
-	// set the hash positions threshold
-	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
-		mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+		// set the hash positions threshold
+		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
+			mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
-	// localize the read archive filenames
-	string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
-	//string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
-	// get a temporary file name
-	string tempFilename;
-	CFileUtilities::GetTempFilename(tempFilename);
-	outputFilenames.push_back(tempFilename);
+		// localize the read archive filenames
+		string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
+		//string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
+		// get a temporary file name
+		string tempFilename;
+		CFileUtilities::GetTempFilename(tempFilename);
+		outputFilenames.push_back(tempFilename);
 
-	// define our read format reader and writer
-	MosaikReadFormat::CReadReader in;
-	in.Open(inputReadArchiveFilename);
-	MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
-	ReadStatus readStatus          = in.GetStatus();
-	mSettings.SequencingTechnology = readGroup.SequencingTechnology;
-	mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
+		// define our read format reader and writer
+		MosaikReadFormat::CReadReader in;
+		in.Open(inputReadArchiveFilename);
+		MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+		ReadStatus readStatus          = in.GetStatus();
+		mSettings.SequencingTechnology = readGroup.SequencingTechnology;
+		mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
 
-	//const bool isPairedEnd = (readStatus == RS_PAIRED_END_READ ? true : false);
+		vector<MosaikReadFormat::ReadGroup> readGroups;
+		readGroups.push_back(readGroup);
 
-	vector<MosaikReadFormat::ReadGroup> readGroups;
-	readGroups.push_back(readGroup);
+		// set the alignment status flags
+		AlignmentStatus alignmentStatus = AS_UNSORTED_READ | readStatus;
+		if(mMode == CAlignmentThread::AlignerMode_ALL) alignmentStatus |= AS_ALL_MODE;
+		else alignmentStatus |= AS_UNIQUE_MODE;
 
-	// set the alignment status flags
-	AlignmentStatus alignmentStatus = AS_UNSORTED_READ | readStatus;
-	if(mMode == CAlignmentThread::AlignerMode_ALL) alignmentStatus |= AS_ALL_MODE;
-	else alignmentStatus |= AS_UNIQUE_MODE;
+		// prepare a new vector for the current chromosome for opening out archive
+		vector<ReferenceSequence> smallReferenceSequences;
+		smallReferenceSequences.push_back(referenceSequences[i]);
 
-	MosaikReadFormat::CAlignmentWriter out;
-	out.Open(tempFilename.c_str(), referenceSequences, readGroups, alignmentStatus);
+		MosaikReadFormat::CAlignmentWriter out;
+		out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus);
 
 
-	AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
+		AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
 
-	// close open file streams
-	in.Close();
+		// close open file streams
+		in.Close();
 
-	// solid references should be one-base longer after converting back to basespace
-	if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
-	out.Close();
+		// solid references should be one-base longer after converting back to basespace
+		if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+		out.Close();
 
-	if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+		if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
 
 	}
 
@@ -165,6 +183,55 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	//if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
 	//if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+	
+	MergeArchives();
+}
+
+void CMosaikAligner::MergeArchives(void) {
+	
+	// set active threads
+	unsigned int nThread = ( mSettings.NumThreads < outputFilenames.size() ) ? mSettings.NumThreads : outputFilenames.size();
+	
+	vector< string > temporaryFiles;
+	temporaryFiles.resize( outputFilenames.size() );
+	for ( unsigned int i = 0; i < outputFilenames.size(); i++ ) {
+		string tempFilename;
+		CFileUtilities::GetTempFilename(tempFilename);
+		temporaryFiles[i] = tempFilename;
+	}
+
+        // calculate total # of reads
+        unsigned int nReads = 0;
+        for ( unsigned int i = 0 ; i < outputFilenames.size(); i++ ) {
+	        MosaikReadFormat::CAlignmentReader reader;
+                reader.Open( outputFilenames[i] );
+                nReads += reader.GetNumReads();
+                reader.Close();
+        }
+
+
+	// TODO: remove later
+	nThread = 3;
+	unsigned int nMaxAlignment = 1000;
+
+	CConsole::Heading();
+	cout << "Sorting alignment archive:" << endl;
+	CConsole::Reset();
+	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads );
+	sThread.Start();
+
+	CConsole::Heading();
+	cout << "Merging alignment archive:" << endl;
+	CConsole::Reset();
+
+        unsigned int readNo = 0;
+        CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
+        CArchiveMerge merger( temporaryFiles, mSettings.OutputReadArchiveFilename, nMaxAlignment, &readNo );
+        merger.Merge();
+        CProgressBar<unsigned int>::WaitThread();
+
+	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
+		rm(temporaryFiles[i].c_str());
 }
 
 // aligns the read archive
@@ -380,6 +447,7 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	const uint64_t totalAlignedReads = mStatisticsCounters.AlignedReads;
 
 	// print our alignment statistics (mates)
+	/*
 	printf("\n");
 	CConsole::Heading(); printf("Alignment statistics (mates):\n"); CConsole::Reset();
 	printf("===================================\n");
@@ -460,6 +528,7 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	printf("==================================\n");
 	printf("aligned mate bp:        %10llu\n", (unsigned long long)mStatisticsCounters.MateBasesAligned);
 	printf("alignment candidates/s: %10.1f\n", mStatisticsCounters.AlignmentCandidates / alignmentBench.GetElapsedWallTime());
+	*/
 }
 
 // estimates the appropriate hash table size
@@ -506,6 +575,11 @@ void CMosaikAligner::EnableAlignmentCandidateThreshold(const unsigned short alig
 void CMosaikAligner::EnableBandedSmithWaterman(const unsigned int bandwidth) {
 	mFlags.UseBandedSmithWaterman = true;
 	mSettings.Bandwidth           = bandwidth;
+}
+
+// enable the low-memory algorithm
+void CMosaikAligner::EnableLowMemory(void) {
+	mFlags.UseLowMemory  = true;
 }
 
 // Enables SOLiD colorspace translation

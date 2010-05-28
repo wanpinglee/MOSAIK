@@ -87,7 +87,7 @@ private:
 	// load a block of hash positions
 	inline void LoadBlockPositions( char* blockPosition, uint64_t& bytesLeft, const unsigned int& fillBufferSize );
 	// Store hash positions
-	inline void StorePositions ( const unsigned int fillBufferSize, off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffest);
+	inline void StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffest);
 	// the begining of current chromosome
 	unsigned int _begin;
 	// the end of current chromosome

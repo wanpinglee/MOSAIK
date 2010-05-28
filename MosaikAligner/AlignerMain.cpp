@@ -69,6 +69,7 @@ struct ConfigurationSettings {
 	bool RecordUnalignedReads;
 	bool UseAlignedLengthForMismatches;
 	bool UseJumpDB;
+	bool UseLowMemory;
 
 	// filenames
 	string AlignmentsFilename;
@@ -131,6 +132,7 @@ struct ConfigurationSettings {
 		, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
+		, UseLowMemory(false)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
@@ -189,8 +191,9 @@ int main(int argc, char* argv[]) {
 
 	// add the performance options
 	OptionGroup* pPerformanceOpts = COptions::CreateOptionGroup("Performance");
-	COptions::AddValueOption("-p",  "processors", "use the specified number of processors", "", settings.HasNumThreads, settings.NumThreads, pPerformanceOpts);
-	COptions::AddValueOption("-bw", "bandwidth",  "specifies the Smith-Waterman bandwidth", "", settings.HasBandwidth,  settings.Bandwidth,  pPerformanceOpts, DEFAULT_BANDWIDTH);
+	COptions::AddValueOption("-p",  "processors", "uses the specified number of processors", "", settings.HasNumThreads, settings.NumThreads, pPerformanceOpts);
+	COptions::AddValueOption("-bw", "bandwidth",  "specifies the Smith-Waterman bandwidth", "",  settings.HasBandwidth,  settings.Bandwidth,  pPerformanceOpts, DEFAULT_BANDWIDTH);
+	COptions::AddOption("-lm",                    "keeps the keys file on disk",              settings.UseLowMemory,                                 pPerformanceOpts);
 
 	// add the jump database options
 	OptionGroup* pJumpOpts = COptions::CreateOptionGroup("Jump database");
@@ -510,6 +513,9 @@ int main(int argc, char* argv[]) {
 
 	// set the Smith-Waterman bandwidth
 	if(settings.HasBandwidth) ma.EnableBandedSmithWaterman(settings.Bandwidth);
+
+	// enable low-memory algorithm
+	if(settings.UseLowMemory) ma.EnableLowMemory();
 
 	// =============
 	// set filenames
