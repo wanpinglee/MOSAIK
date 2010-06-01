@@ -379,8 +379,13 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	// initialize positions memory
 	// TODO: we may ask too large memory space
-	size_t mPositionBufferLen1 = SIZEOF_INT*(2*(_end - _begin + 1));
-	mPositionBuffer    = new char[(size_t)mPositionBufferLen1];
+	uint64_t mPositionBufferLen1 = _end - _begin + 1;
+	if ( ( mPositionBufferLen / ( 2 * SIZEOF_INT) ) < mPositionBufferLen1 )
+		mPositionBufferLen1 = mPositionBufferLen;
+	else
+		mPositionBufferLen1 = mPositionBufferLen1 * 2 * SIZEOF_INT;
+
+	mPositionBuffer    = new char[mPositionBufferLen1];
 	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];
 
 	if ( !mPositionBuffer ) {
