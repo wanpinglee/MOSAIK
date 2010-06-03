@@ -85,6 +85,8 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 	// prepare writer
 	MosaikReadFormat::CAlignmentWriter writer;
 	writer.Open(_outputFilename, *_referenceSequences, _readGroups, _alignmentStatus);
+	// TODO: Consider what is the perfect number.
+	writer.AdjustPartitionSize(2000);
 
 	// pick the min one
 	vector< SortNMergeUtilities::AlignedReadPair >::iterator ite;
