@@ -258,7 +258,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 
 	// free up some memory
-	delete [] mReference;
+	//delete [] mReference;
 	//delete [] activeThreads;
 	//if(pRefBegin) delete [] pRefBegin;
 	//if(pRefEnd)   delete [] pRefEnd;
@@ -307,8 +307,8 @@ void CMosaikAligner::MergeArchives(void) {
         }
 
 
-	// TODO: remove later
-	//nThread = 3;
+	// if nThread is too large, it'll open too many files at the same time.
+	// Then, we'll get an error since system doesn't allow us to open any file.
 	if ( nThread > 10 )
 		nThread = 10;
 
@@ -707,7 +707,8 @@ void CMosaikAligner::PrintStatistics () {
 	printf(")\n");
 
 	// print our local alignment search statistics
-	if(mFlags.UseLocalAlignmentSearch) {
+	// we don't print out local alignment information when the low-memory approach is enabled.
+	if( !mFlags.UseLowMemory && mFlags.UseLocalAlignmentSearch ) {
 		printf("\n");
 		CConsole::Heading(); printf("Local alignment search statistics:\n"); CConsole::Reset();
 		printf("===================================\n");
