@@ -29,7 +29,7 @@ using namespace std;
 class CJumpDnaHash : public CAbstractDnaHash {
 public:
 	// constructor
-	CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end);
+	CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset);
 	// destructor
 	~CJumpDnaHash(void);
 	// dummy function
@@ -92,4 +92,5 @@ private:
 	unsigned int _begin;
 	// the end of current chromosome
 	unsigned int _end;
+	unsigned int _offset;
 };

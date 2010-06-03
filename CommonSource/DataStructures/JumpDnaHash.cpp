@@ -13,7 +13,7 @@
 #include "JumpDnaHash.h"
 
 // constructor
-CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end)
+CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset)
 : mNumPositions(numPositions)
 , mLimitPositions(false)
 , mKeepKeysInMemory(keepKeysInMemory)
@@ -32,6 +32,7 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameS
 , mMruCache(numCachedElements)
 , _begin(begin)
 , _end(end)
+, _offset(offset)
 {
 	mHashSize = hashSize;
 
@@ -88,13 +89,6 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameS
 	if(keepKeysInMemory)      LoadKeys();
 	if(keepPositionsInMemory) LoadPositions();
 
-	// ================================
-	// wait for exit
-	//char a;
-	//cout << "Type a letter" << endl;
-	//cin >> a;
-	//exit(1);
-	// ===============================
 
 	// activate the MRU cache
 	if(numCachedElements > 0) mUseCache = true;
@@ -365,7 +359,8 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	// prepare the buffer for loading positions from the file
 	// for low-memory usage, each tile we load fillBufferSize positions
-	const unsigned int fillBufferSize  = 1073741824ULL; // 1 GB
+	//const unsigned int fillBufferSize  = 1073741824ULL; // 1 GB
+	const unsigned int fillBufferSize  = 536870912; // 500 MB
 	char*        blockPosition;
 	uintptr_t    blockPositionPtr;
 	unsigned int nBlock = 0; // indicates how many blocks have been handled
@@ -456,6 +451,14 @@ void CJumpDnaHash::LoadPositions(void) {
 				continue;
 			
 			// the hash position is within the current chromosome, and keep it in the vector
+			
+			if ( hashPosition < _offset ) {
+				cout << "ERROR: The hash position is smaller than offset." << endl;
+				exit(1);
+			}
+			
+			hashPosition -= _offset;
+			
 			positions.push_back(hashPosition);
 		}
 

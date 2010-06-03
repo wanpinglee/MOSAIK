@@ -88,7 +88,7 @@ private:
 	// hashes the reference sequence
 	void HashReferenceSequence(MosaikReadFormat::CReferenceSequenceReader& refseq);
 	// initializes the hash tables
-	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end);
+	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end, const unsigned int offset);
 	// the reference sequence
 	char* mReference;
 	// the length of the reference sequence
