@@ -50,7 +50,7 @@ void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::Alig
 
 	MosaikReadFormat::CAlignmentWriter writer;
 	writer.Open(tempFilename, *_referenceSequences, _readGroups, _alignmentStatus);
-	writer.AdjustPartitionSize(2000);
+	writer.AdjustPartitionSize(1000);
 
 	for ( list<Mosaik::AlignedRead>::iterator ite = _alignedReadCache.begin(); ite != _alignedReadCache.end(); ite++ ) 
 		writer.SaveAlignedRead( *ite );

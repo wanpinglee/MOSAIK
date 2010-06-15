@@ -643,6 +643,10 @@ namespace MosaikReadFormat {
 		mBufferPosition += SIZEOF_INT;
 
 		// store the reference sequence index
+		if ( pAl->ReferenceIndex > mNumRefSeqs ) {
+			cout << "ERROR: The reference index is out the range when saving alignments." << endl;
+			exit(1);
+		}
 		mLastReferenceIndex = pAl->ReferenceIndex;
 		mReferenceSequences[pAl->ReferenceIndex].NumAligned++;
 		memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceIndex, SIZEOF_INT);
@@ -825,6 +829,7 @@ namespace MosaikReadFormat {
 
 		mPartitionMembers = 0;
 		mBufferPosition   = 0;
+		memset(mBuffer, 0, mBufferLen);
 	}
 
 	// writes the tag to disk

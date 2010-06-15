@@ -20,6 +20,13 @@ namespace Mosaik {
 		CMosaikString Bases;
 		CMosaikString Qualities;
 		char SolidPrefixTransition[SOLID_PREFIX_LENGTH];
+
+		bool clear(void) {
+			Bases.clear();
+			Qualities.clear();
+
+			return true;
+		}
 	};
 
 	struct Read {
@@ -27,5 +34,14 @@ namespace Mosaik {
 		CMosaikString Name;
 		Mate Mate1;
 		Mate Mate2;
+		
+		bool clear(void) {
+			ReadGroupCode = 0;
+			Name.clear();
+			Mate1.clear();
+			Mate2.clear();
+
+			return true;
+		}
 	};
 }

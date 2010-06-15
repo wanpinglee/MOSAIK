@@ -252,7 +252,7 @@ void CArchiveMerge::Merge() {
 	// prepare MOSAIK writer
 	MosaikReadFormat::CAlignmentWriter writer;
 	writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus);
-	writer.AdjustPartitionSize(2000);
+	writer.AdjustPartitionSize(1000);
 
 	
 	// pick the min one
@@ -294,20 +294,34 @@ void CArchiveMerge::Merge() {
 			bool isFull = ( ite->read.Mate1Alignments.size() + minRead.Mate1Alignments.size() > minRead.Mate1Alignments.max_size() )
 			            ||( ite->read.Mate2Alignments.size() + minRead.Mate2Alignments.size() > minRead.Mate2Alignments.max_size() );
 			if ( isFull ) {
-				cout << "ERROR: Too many alignments." << endl;
+				cout << "ERROR: Too many alignments waiting for writing." << endl;
 				exit(1);
 			}
 
 			if ( ite->read.Mate1Alignments.size() > 0 )
-				minRead.Mate1Alignments.insert( minRead.Mate1Alignments.end(), ite->read.Mate1Alignments.begin(), ite->read.Mate1Alignments.end() );
+				minRead.Mate1Alignments.insert( minRead.Mate1Alignments.begin(), ite->read.Mate1Alignments.begin(), ite->read.Mate1Alignments.end() );
 			if ( ite->read.Mate2Alignments.size() > 0 )
-				minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), ite->read.Mate2Alignments.begin(), ite->read.Mate2Alignments.end() );
+				minRead.Mate2Alignments.insert( minRead.Mate2Alignments.begin(), ite->read.Mate2Alignments.begin(), ite->read.Mate2Alignments.end() );
+
+			// accordant flag
+			minRead.IsLongRead |= ite->read.IsLongRead;
+
+			// TODO: think this more
+			if ( minRead.Mate1Alignments.size() > _nMaxAlignment ) {
+				random_shuffle(minRead.Mate1Alignments.begin(), minRead.Mate1Alignments.end());
+				minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
+			}
+			if ( minRead.Mate2Alignments.size() > _nMaxAlignment ) {
+				random_shuffle(minRead.Mate2Alignments.begin(), minRead.Mate2Alignments.end());
+				minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
+			}
+
 		}
 		
 		tempNo = ite->owner;
 		
 		if ( tempNo >= nTemp ) {
-			cout << "ERROR: Read temporary wrongly." << endl;
+			cout << "ERROR: Read ID is wrong." << endl;
 			exit(1);
 		}
 		
@@ -341,6 +355,9 @@ void CArchiveMerge::Merge() {
 					minRead.Mate1Alignments.insert( minRead.Mate1Alignments.end(), reads[i].read.Mate1Alignments.begin(), reads[i].read.Mate1Alignments.end() );
 				if ( reads[i].read.Mate2Alignments.size() > 0 )
 					minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), reads[i].read.Mate2Alignments.begin(), reads[i].read.Mate2Alignments.end() );
+				
+				// accordant flag
+				minRead.IsLongRead |= ite->read.IsLongRead;
 			}
 
 			while ( true ) {
@@ -368,6 +385,9 @@ void CArchiveMerge::Merge() {
 						minRead.Mate1Alignments.insert( minRead.Mate1Alignments.end(), mr.Mate1Alignments.begin(), mr.Mate1Alignments.end() );
 					if( mr.Mate2Alignments.size() > 0 )
 						minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), mr.Mate2Alignments.begin(), mr.Mate2Alignments.end() );
+					
+					// accordant flag
+					minRead.IsLongRead |= ite->read.IsLongRead;
 				}
 
 			}

@@ -120,6 +120,7 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 	while(true) {
 
+		mr.clear();
 		pthread_mutex_lock(&mGetReadMutex);
 		bool hasMoreReads = pIn->LoadNextRead(mr);
 		if(hasMoreReads) *pReadCounter = *pReadCounter + 1;
@@ -673,10 +674,10 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	}
 
 	// adjust the reference start positions
-	if ( !mFlags.UseLowMemory )
+	//if ( !mFlags.UseLowMemory )
 		alignment.ReferenceIndex = referenceIndex;
-	else
-		alignment.ReferenceIndex = 0;
+	//else
+	//	alignment.ReferenceIndex = 0;
 	alignment.ReferenceBegin += begin - refBegin;
 	alignment.ReferenceEnd   += begin - refBegin;
 }

@@ -74,7 +74,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize));
 
 	// hash the concatenated reference sequence
-	if(!mFlags.IsUsingJumpDB) HashReferenceSequence(refseq);
+	//if(!mFlags.IsUsingJumpDB) {
+	//	InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), 0, 0, 0);
+	//	HashReferenceSequence(refseq);
+	//}
 
 	//cout << "- loading reference sequence... ";
 	//cout.flush();
@@ -112,7 +115,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 		
 		// initialize our hash tables
-		InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0);
+		if(!mFlags.IsUsingJumpDB) {
+			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), 0, 0, 0);
+			HashReferenceSequence(refseq);
+		}
+		else
+			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0);
 
 		// set the hash positions threshold
 		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
@@ -158,102 +166,97 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-	/*
-		unsigned int* pRefAccBases = new unsigned int[numRefSeqs];
-		pRefAccBases[0] = 0;
-		for(unsigned int i = 1; i < numRefSeqs; i++) {
-			pRefAccBases[i] = referenceSequences[i].Begin + pRefAccBases[i - 1];
-		}
-	*/
+		// grouping reference
+		//GroupReferences();
+		
+		for ( unsigned int i = 0; i < numRefSeqs; i++) {
 
-	for ( unsigned int i = 0; i < numRefSeqs; i++) {
+	        	CConsole::Heading();
+		        cout << endl << "Aligning chromosome " << i+1 << ":" << endl;
+		        CConsole::Reset();
 
-	        CConsole::Heading();
-	        cout << endl << "Aligning chromosome " << i+1 << ":" << endl;
-	        CConsole::Reset();
+			refseq.Open(mSettings.ReferenceFilename);
+			cout << "- loading reference sequence... ";
+			cout.flush();
+			refseq.LoadConcatenatedSequence(mReference);
+			refseq.Close();
 
-		refseq.Open(mSettings.ReferenceFilename);
-		cout << "- loading reference sequence... ";
-		cout.flush();
-		refseq.LoadConcatenatedSequence(mReference);
-		refseq.Close();
-
-		// trim reference sequence
-		unsigned int chrLength = referenceSequences[i].End - referenceSequences[i].Begin + 1;
-		char* chrReference  = new char[ chrLength + 1 ];
-		char* mReferencePtr = mReference + referenceSequences[i].Begin;
-		memcpy( chrReference, mReferencePtr, chrLength);
-		chrReference[chrLength] = 0;
-		delete [] mReference;
-		mReference = chrReference;
-		cout << "finished." << endl;
+			// trim reference sequence
+			unsigned int chrLength = referenceSequences[i].End - referenceSequences[i].Begin + 1;
+			char* chrReference  = new char[ chrLength + 1 ];
+			char* mReferencePtr = mReference + referenceSequences[i].Begin;
+			memcpy( chrReference, mReferencePtr, chrLength);
+			chrReference[chrLength] = 0;
+			delete [] mReference;
+			mReference = chrReference;
+			cout << "finished." << endl;
 
 		
-		// initialize our hash tables
-		mReferenceLength = chrLength;
-		InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[i].Begin, referenceSequences[i].End, referenceSequences[i].Begin);
+			// initialize our hash tables
+			mReferenceLength = chrLength;
+			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[i].Begin, referenceSequences[i].End, referenceSequences[i].Begin);
 
-		// set the hash positions threshold
-		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
-			mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+			// set the hash positions threshold
+			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
+				mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
-		// set reference information
-		unsigned int* pRefBegin = new unsigned int[1];
-		unsigned int* pRefEnd   = new unsigned int[1];
-		pRefBegin[0] = 0;
-		pRefEnd[0]   = referenceSequences[i].End - referenceSequences[i].Begin;
+			// set reference information
+			unsigned int* pRefBegin = new unsigned int[1];
+			unsigned int* pRefEnd   = new unsigned int[1];
+			pRefBegin[0] = 0;
+			pRefEnd[0]   = referenceSequences[i].End - referenceSequences[i].Begin;
 
-		// localize the read archive filenames
-		//string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
-		//string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
-		// get a temporary file name
-		string tempFilename;
-		CFileUtilities::GetTempFilename(tempFilename);
-		outputFilenames.push_back(tempFilename);
+			// localize the read archive filenames
+			//string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
+			//string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
+			// get a temporary file name
+			string tempFilename;
+			CFileUtilities::GetTempFilename(tempFilename);
+			outputFilenames.push_back(tempFilename);
 
-		// define our read format reader and writer
-		MosaikReadFormat::CReadReader in;
-		in.Open(inputReadArchiveFilename);
-		MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
-		ReadStatus readStatus          = in.GetStatus();
-		mSettings.SequencingTechnology = readGroup.SequencingTechnology;
-		mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
+			// define our read format reader and writer
+			MosaikReadFormat::CReadReader in;
+			in.Open(inputReadArchiveFilename);
+			MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+			ReadStatus readStatus          = in.GetStatus();
+			mSettings.SequencingTechnology = readGroup.SequencingTechnology;
+			mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
 
-		vector<MosaikReadFormat::ReadGroup> readGroups;
-		readGroups.push_back(readGroup);
+			vector<MosaikReadFormat::ReadGroup> readGroups;
+			readGroups.push_back(readGroup);
 
-		// set the alignment status flags
-		AlignmentStatus alignmentStatus = AS_UNSORTED_READ | readStatus;
-		if(mMode == CAlignmentThread::AlignerMode_ALL) alignmentStatus |= AS_ALL_MODE;
-		else alignmentStatus |= AS_UNIQUE_MODE;
+			// set the alignment status flags
+			AlignmentStatus alignmentStatus = AS_UNSORTED_READ | readStatus;
+			if(mMode == CAlignmentThread::AlignerMode_ALL) alignmentStatus |= AS_ALL_MODE;
+			else alignmentStatus |= AS_UNIQUE_MODE;
 
-		// prepare a new vector for the current chromosome for opening out archive
-		vector<ReferenceSequence> smallReferenceSequences;
-		smallReferenceSequences.push_back(referenceSequences[i]);
+			// prepare a new vector for the current chromosome for opening out archive
+			vector<ReferenceSequence> smallReferenceSequences;
+			smallReferenceSequences.push_back(referenceSequences[i]);
 
-		MosaikReadFormat::CAlignmentWriter out;
-		out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus);
-		out.AdjustPartitionSize(20000/referenceSequences.size());
-
-
-		AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
-
-		// close open file streams
-		in.Close();
-
-		// solid references should be one-base longer after converting back to basespace
-		if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
-		out.Close();
-
-		// free memory
-		if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
-		if(pRefBegin) delete [] pRefBegin;
-		if(pRefEnd)   delete [] pRefEnd;
-		delete [] mReference;
-		mReference = NULL;
+			MosaikReadFormat::CAlignmentWriter out;
+			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus);
+			out.AdjustPartitionSize(20000/referenceSequences.size());
 
 
-	}
+			AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
+
+			// close open file streams
+			in.Close();
+
+			// solid references should be one-base longer after converting back to basespace
+			if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+			out.Close();
+
+			// free memory
+			if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
+			if(pRefBegin) delete [] pRefBegin;
+			if(pRefEnd)   delete [] pRefEnd;
+			delete [] mReference;
+			mReference = NULL;
+
+
+		}
 	}
 
 
@@ -283,6 +286,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	PrintStatistics();
 }
+
+/*
+void CMosaikAligner::GroupReferences(void) {
+	// find the largest reference
+	for ( unsigned int i = 0; i < referenceSequences.size(); i++ ) {
+		
+	}
+}
+*/
 
 void CMosaikAligner::MergeArchives(void) {
 	
@@ -330,8 +342,8 @@ void CMosaikAligner::MergeArchives(void) {
         merger.Merge();
         CProgressBar<unsigned int>::WaitThread();
 
-	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		rm(outputFilenames[i].c_str());
+	//for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
+	//	rm(outputFilenames[i].c_str());
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
 		rm(temporaryFiles[i].c_str());

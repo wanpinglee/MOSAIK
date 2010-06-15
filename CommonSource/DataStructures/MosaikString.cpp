@@ -26,6 +26,7 @@ CMosaikString::CMosaikString(void)
 // destructor
 CMosaikString::~CMosaikString(void) {
 	if(mData) delete [] mData;
+	mData = NULL;
 }
 
 // copy constructor
@@ -157,11 +158,11 @@ bool CMosaikString::empty(void) {
 }
 
 bool CMosaikString::clear(void) {
-	//if ( mData ) {
-	//	delete [] mData;
-	//}
-
+	//if ( mData ) delete [] mData;
+	//mData = NULL;
+	memset(mData, 0, mAllocatedLength);
 	mLength = 0;
+	//mAllocatedLength = 0;
 
 	return true;
 }
@@ -396,7 +397,8 @@ void CMosaikString::Reserve(const unsigned int numBytes) {
 
 	// reset the data
 	mLength = 0;
-	mData[0] = 0;
+	//mData[0] = 0;
+	memset(mData, 0, mAllocatedLength);
 }
 
 // reverses the contents of the string

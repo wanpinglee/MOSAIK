@@ -41,6 +41,16 @@ namespace Mosaik {
                         IsLongRead = false;
                         IsPairedEnd= false;
 
+			if ( !Mate1Alignments.empty() ) {
+				cout << "ERROR: Clearing AlignedRead is failed." << endl;
+				exit(1);
+			}
+
+			if ( !Mate2Alignments.empty() ) {
+				cout << "ERROR: Clearing AlignedRead is failed." << endl;
+				exit(1);
+			}
+
                         return true;
 		}
 
