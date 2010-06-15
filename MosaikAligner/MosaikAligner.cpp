@@ -167,12 +167,18 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	else {
 		// grouping reference
-		//GroupReferences();
+		vector< pair <unsigned int, unsigned int> > referenceGroups;
+		GroupReferences(referenceSequences, referenceGroups);
 		
-		for ( unsigned int i = 0; i < numRefSeqs; i++) {
+		for ( unsigned int i = 0; i < referenceGroups.size(); i++) {
 
-	        	CConsole::Heading();
-		        cout << endl << "Aligning chromosome " << i+1 << ":" << endl;
+	        	unsigned int startRef = referenceGroups[i].first;
+			unsigned int endRef   = referenceGroups[i].first + referenceGroups[i].second - 1;
+			CConsole::Heading();
+		        if ( referenceGroups[i].second > 1 )
+				cout << endl << "Aligning chromosome " << startRef + 1 << "-" << endRef + 1 << " (of " << numRefSeqs << "):" << endl;
+			else
+				cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
 		        CConsole::Reset();
 
 			refseq.Open(mSettings.ReferenceFilename);
@@ -182,9 +188,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			refseq.Close();
 
 			// trim reference sequence
-			unsigned int chrLength = referenceSequences[i].End - referenceSequences[i].Begin + 1;
+			unsigned int chrLength = referenceSequences[startRef].End - referenceSequences[endRef].Begin + 1;
 			char* chrReference  = new char[ chrLength + 1 ];
-			char* mReferencePtr = mReference + referenceSequences[i].Begin;
+			char* mReferencePtr = mReference + referenceSequences[startRef].Begin;
 			memcpy( chrReference, mReferencePtr, chrLength);
 			chrReference[chrLength] = 0;
 			delete [] mReference;
@@ -194,17 +200,19 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		
 			// initialize our hash tables
 			mReferenceLength = chrLength;
-			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[i].Begin, referenceSequences[i].End, referenceSequences[i].Begin);
+			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[startRef].Begin, referenceSequences[endRef].End, referenceSequences[startRef].Begin);
 
 			// set the hash positions threshold
 			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
 				mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
 			// set reference information
-			unsigned int* pRefBegin = new unsigned int[1];
-			unsigned int* pRefEnd   = new unsigned int[1];
-			pRefBegin[0] = 0;
-			pRefEnd[0]   = referenceSequences[i].End - referenceSequences[i].Begin;
+			unsigned int* pRefBegin = new unsigned int[referenceGroups[i].second];
+			unsigned int* pRefEnd   = new unsigned int[referenceGroups[i].second];
+			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
+				pRefBegin[j] = referenceSequences[startRef+j].Begin - referenceSequences[startRef].Begin;
+				pRefEnd[j]   = referenceSequences[startRef+j].End   - referenceSequences[startRef].Begin;
+			}
 
 			// localize the read archive filenames
 			//string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
@@ -232,7 +240,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 			// prepare a new vector for the current chromosome for opening out archive
 			vector<ReferenceSequence> smallReferenceSequences;
-			smallReferenceSequences.push_back(referenceSequences[i]);
+			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
+				smallReferenceSequences.push_back(referenceSequences[startRef+j]);
+			}
 
 			MosaikReadFormat::CAlignmentWriter out;
 			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus);
@@ -287,14 +297,43 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	PrintStatistics();
 }
 
-/*
-void CMosaikAligner::GroupReferences(void) {
+
+void CMosaikAligner::GroupReferences(const vector<ReferenceSequence> referenceSequences, vector<pair<unsigned int, unsigned int> >& referenceGroups) {
 	// find the largest reference
+	unsigned int max = 0;
+	unsigned int length = 0;
 	for ( unsigned int i = 0; i < referenceSequences.size(); i++ ) {
-		
+		length = referenceSequences[i].End - referenceSequences[i].Begin + 1;
+		max = ( length > max ) ? length : max;
 	}
+
+	unsigned int start = 0;
+	unsigned int accLength = referenceSequences[0].End - referenceSequences[0].Begin + 1;
+	for ( unsigned int i = 1; i < referenceSequences.size(); i++ ) {
+		length = referenceSequences[i].End - referenceSequences[i].Begin + 1;
+		if ( ( accLength + length ) > max ) {
+			pair<unsigned int, unsigned int> tmp (start, i - start);
+			referenceGroups.push_back(tmp);
+			start = i;
+			accLength = length;
+		}
+		else
+			accLength += length;
+
+	}
+
+	if ( accLength != 0 ) {
+		pair<unsigned int, unsigned int> tmp (start, referenceSequences.size()-start);
+		referenceGroups.push_back(tmp);
+	}
+
+	//for ( unsigned int i = 0; i < referenceGroups.size(); i++) {
+	//	cout << referenceGroups[i].first << "\t" << referenceGroups[i].second << endl;
+	//}
+	
+
 }
-*/
+
 
 void CMosaikAligner::MergeArchives(void) {
 	
@@ -342,8 +381,8 @@ void CMosaikAligner::MergeArchives(void) {
         merger.Merge();
         CProgressBar<unsigned int>::WaitThread();
 
-	//for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-	//	rm(outputFilenames[i].c_str());
+	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
+		rm(outputFilenames[i].c_str());
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
 		rm(temporaryFiles[i].c_str());
