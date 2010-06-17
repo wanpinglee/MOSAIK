@@ -188,7 +188,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			refseq.Close();
 
 			// trim reference sequence
-			unsigned int chrLength = referenceSequences[startRef].End - referenceSequences[endRef].Begin + 1;
+			unsigned int chrLength = referenceSequences[endRef].End - referenceSequences[startRef].Begin + 1;
 			char* chrReference  = new char[ chrLength + 1 ];
 			char* mReferencePtr = mReference + referenceSequences[startRef].Begin;
 			memcpy( chrReference, mReferencePtr, chrLength);

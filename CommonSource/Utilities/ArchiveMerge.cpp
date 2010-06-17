@@ -307,14 +307,14 @@ void CArchiveMerge::Merge() {
 			minRead.IsLongRead |= ite->read.IsLongRead;
 
 			// TODO: think this more
-			if ( minRead.Mate1Alignments.size() > _nMaxAlignment ) {
-				random_shuffle(minRead.Mate1Alignments.begin(), minRead.Mate1Alignments.end());
-				minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
-			}
-			if ( minRead.Mate2Alignments.size() > _nMaxAlignment ) {
-				random_shuffle(minRead.Mate2Alignments.begin(), minRead.Mate2Alignments.end());
-				minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
-			}
+			//if ( minRead.Mate1Alignments.size() > _nMaxAlignment ) {
+			//	random_shuffle(minRead.Mate1Alignments.begin(), minRead.Mate1Alignments.end());
+			//	minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
+			//}
+			//if ( minRead.Mate2Alignments.size() > _nMaxAlignment ) {
+			//	random_shuffle(minRead.Mate2Alignments.begin(), minRead.Mate2Alignments.end());
+			//	minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
+			//}
 
 		}
 		

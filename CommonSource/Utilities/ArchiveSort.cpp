@@ -25,7 +25,7 @@ CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsign
 	,_readCounter(readCounter)
 	,_readCounterMutex(readCounterMutex)
 {
-	_alignedReadCacheSize = 100000;
+	_alignedReadCacheSize = 50000;
 }
 
 CArchiveSort::~CArchiveSort (){
