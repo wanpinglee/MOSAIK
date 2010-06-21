@@ -343,3 +343,6 @@ void CUbiqDnaHash::RandomizeAndTrimHashPositions(unsigned short numHashPositions
 		}
 	}
 }
+
+
+void CUbiqDnaHash::LoadKeysNPositions(void){}

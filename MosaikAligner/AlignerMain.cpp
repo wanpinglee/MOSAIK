@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
 	// add the jump database options
 	OptionGroup* pJumpOpts = COptions::CreateOptionGroup("Jump database");
 	COptions::AddValueOption("-j",  "filename stub", "uses the specified jump database",     "", settings.UseJumpDB,                 settings.JumpFilenameStub, pJumpOpts);
-	COptions::AddValueOption("-jc", "# of hashes",   "caches the most recently used hashes", "", settings.HasJumpCacheMemory,        settings.JumpCacheMemory,  pJumpOpts);
+	//COptions::AddValueOption("-jc", "# of hashes",   "caches the most recently used hashes", "", settings.HasJumpCacheMemory,        settings.JumpCacheMemory,  pJumpOpts);
 	COptions::AddOption("-kd",                       "keeps the keys file on disk",              settings.KeepJumpKeysOnDisk,                                 pJumpOpts);
 	COptions::AddOption("-pd",                       "keeps the positions file on disk",         settings.KeepJumpPositionsOnDisk,                            pJumpOpts);
 

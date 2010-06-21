@@ -86,8 +86,9 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameS
 	fclose(mMeta);
 
 	// place the keys and positions in memory
-	if(keepKeysInMemory)      LoadKeys();
-	if(keepPositionsInMemory) LoadPositions();
+	//if(keepKeysInMemory)      LoadKeys();
+	//if(keepPositionsInMemory) LoadPositions();
+	hasKeysNPositions = false;
 
 
 	// activate the MRU cache
@@ -126,11 +127,26 @@ void CJumpDnaHash::FreeMemory(void) {
 	if(mBuffer)         delete [] mBuffer;
 	if(mKeyBuffer)      delete [] mKeyBuffer;
 	if(mPositionBuffer) delete [] mPositionBuffer;
+
+	hasKeysNPositions = false;
+}
+
+// load hash keys and positions form file to memory
+void CJumpDnaHash::LoadKeysNPositions() {
+	if(mKeepKeysInMemory)      LoadKeys();
+	if(mKeepPositionsInMemory) LoadPositions();
+
+	hasKeysNPositions = true;
 }
 
 // retrieves the genome location of the fragment
 void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, CHashRegionTree& hrt, double& mhpOccupancy) {
 
+	if ( !hasKeysNPositions ) {
+		cout << "Have not loaded hash keys and positions before using them" << endl;
+		exit(1);
+	}
+	
 	// find the correct position in the keys database
 	const off_type offset = key * KEY_LENGTH;
 	off_type position = 0;
@@ -289,6 +305,127 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 void CJumpDnaHash::GetCacheStatistics(uint64_t& cacheHits, uint64_t& cacheMisses) {
 	mMruCache.GetStatistics(cacheHits, cacheMisses);
 }
+
+// get the distribution of # hashs aginst the chromosomes
+void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs) {
+	
+	LoadKeys();
+
+	const unsigned int fillBufferSize  = 536870912; // 500 MB
+	char*        blockPosition;
+	uintptr_t    blockPositionPtr;
+	unsigned int nBlock = 0; // indicates how many blocks have been handled
+	blockPosition = new char[(size_t)fillBufferSize];
+
+	if( !blockPosition ) {
+		cout << "ERROR: Memory allocation for the temporary jump positions failed." << endl;
+		exit(1);
+	}
+
+	uint64_t bytesLeft           = mPositionBufferLen;
+	//uint64_t mPositionBufferLen1 = _end - _begin + 1;
+	LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
+
+	off_type offset          = 0;                   // for mKeyBufferPtr
+	//off_type curFilePosition = 0;                   // for mPositionBufferPtr
+	//off_type left            = mPositionBufferLen1; // for mPositionBuffer full detection
+
+	cout << "- loading jump positions database into memory... ";
+	cout.flush();
+
+	while ( (uint64_t)offset < mKeyBufferLen ) {
+
+		// get the position of the position file for the current key
+		// pointer of key
+		off_type filePosition = 0;
+		memcpy((char*)&filePosition, (char*)(mKeyBufferPtr + offset), KEY_LENGTH);
+
+		// no hash hits
+		if ( filePosition ==  0xffffffffffULL ) {
+			offset += KEY_LENGTH;
+			continue;
+		}
+
+		
+		// if the required filePosition isn't within the current block,
+		// then load the next block of positions
+		if ( filePosition >= (off_type)(nBlock+1)*fillBufferSize ) {
+			LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
+			nBlock++;
+		}
+
+		// load number of hash hits
+		blockPositionPtr   = (uintptr_t)&blockPosition[0];
+		off_type posOffset = filePosition - (off_type)nBlock*fillBufferSize;
+		unsigned int numPositions;
+		memcpy((char*)&numPositions, (char*)(blockPositionPtr + posOffset), SIZEOF_INT);
+		
+
+		vector <unsigned int> positions;
+		positions.reserve(numPositions);
+		// load all positions of hash hits
+		for ( unsigned int i = 0; i < numPositions; i++ ) {
+			
+			filePosition += SIZEOF_INT;
+			if ( filePosition >= (off_type)(nBlock+1)*fillBufferSize ) {
+				LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
+				nBlock++;
+			}
+
+			posOffset = filePosition - (off_type)nBlock*fillBufferSize;
+			unsigned int hashPosition;
+			memcpy((char*)&hashPosition, (char*)(blockPositionPtr + posOffset), SIZEOF_INT);
+			
+			// the hash position is not within the current chromosome
+			if ( hashPosition > _end )
+				break;
+			if ( hashPosition < _begin )
+				continue;
+			
+			// the hash position is within the current chromosome, and keep it in the vector
+			
+			if ( hashPosition < _offset ) {
+				cout << "ERROR: The hash position is smaller than offset." << endl;
+				exit(1);
+			}
+			
+			hashPosition -= _offset;
+			
+			positions.push_back(hashPosition);
+		}
+
+		
+		// no hash hit
+		if ( positions.size() != 0 ) {
+			random_shuffle( positions.begin(), positions.end() );
+			//StorePositions(curFilePosition, left, positions, offset);
+			SetPositionDistribution(referenceSequences, nHashs, positions);
+		}
+
+		positions.clear();
+
+		offset += KEY_LENGTH;
+	}
+
+	delete [] blockPosition;
+
+	cout << "finished." << endl;
+
+	fclose(mPositions);
+
+
+}
+
+// determine the chromosome which positions locating in
+void CJumpDnaHash::SetPositionDistribution(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, const vector<unsigned int> positions) {
+
+	for ( unsigned int i = 0; i < positions.size(); i++ ) {
+		unsigned int refNo = 0;
+		while( positions[i] > referenceSequences[refNo].second ) refNo++;
+		nHashs[refNo]++;
+	}
+}
+
 
 // loads the keys database into memory
 void CJumpDnaHash::LoadKeys(void) {

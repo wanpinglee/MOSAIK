@@ -46,6 +46,9 @@ public:
 	void FreeMemory(void);
 	// dummy function
 	void RandomizeAndTrimHashPositions(unsigned short numHashPositions);
+	// load hash keys and positions from the file to memory
+	void LoadKeysNPositions(void);
+	void GetHashStatistics(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs);
 
 private:
 	// loads the keys database into memory
@@ -88,9 +91,12 @@ private:
 	inline void LoadBlockPositions( char* blockPosition, uint64_t& bytesLeft, const unsigned int& fillBufferSize );
 	// Store hash positions
 	inline void StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffest);
+	// determine the chromosome which positions locating in
+	void SetPositionDistribution(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, const vector<unsigned int> positions);
 	// the begining of current chromosome
 	unsigned int _begin;
 	// the end of current chromosome
 	unsigned int _end;
 	unsigned int _offset;
+	bool hasKeysNPositions;
 };

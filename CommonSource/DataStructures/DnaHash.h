@@ -32,6 +32,8 @@ public:
 	void Clear(void);
 	// retrieves the genome location of the fragment
 	void Get(const uint64_t& key, const unsigned int& queryPosition, CHashRegionTree& hrt, double& mhpOccupancy);
+	// load hash keys and positions from the file to memory
+	void LoadKeysNPositions(void);
 	// returns statistics about the hash table
 	void GetStatistics(unsigned int& numUsedHashes, unsigned int& numUniqueHashes, unsigned int& numNonUniqueHashes, unsigned int& numUsedHashesCount, unsigned int& numUniqueHashesCount, unsigned int& numNonUniqueHashesCount, double& mean, double& stddev);
 	// dumps the contents of the hash table to standard output

@@ -363,3 +363,4 @@ void CDnaHash::GetStatistics(unsigned int& numUsedHashes, unsigned int& numUniqu
 
 // dummy function
 void CDnaHash::RandomizeAndTrimHashPositions(unsigned short numHashPositions) {}
+void CDnaHash::LoadKeysNPositions(void){}

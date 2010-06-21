@@ -119,8 +119,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), 0, 0, 0);
 			HashReferenceSequence(refseq);
 		}
-		else
+		else {
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0);
+			mpDNAHash->LoadKeysNPositions();
+		}
 
 		// set the hash positions threshold
 		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
@@ -166,6 +168,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
+		// get hash statistics
+		vector< unsigned int > nHashs;
+		uint64_t nTotalHash;
+		GetHashStatistics(referenceSequences, nHashs, nTotalHash);
 		// grouping reference
 		vector< pair <unsigned int, unsigned int> > referenceGroups;
 		GroupReferences(referenceSequences, referenceGroups);
@@ -201,10 +207,21 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			// initialize our hash tables
 			mReferenceLength = chrLength;
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[startRef].Begin, referenceSequences[endRef].End, referenceSequences[startRef].Begin);
+			mpDNAHash->LoadKeysNPositions();
 
 			// set the hash positions threshold
-			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) 
-				mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) { 
+				uint64_t nHash = 0;
+				for ( unsigned int j = 0; j < referenceGroups[i].second; j++ )
+					nHash += nHashs[ startRef + j ];
+
+				double ratio = nHash / (double)nTotalHash;
+				unsigned int positionThreshold = ceil(ratio * (double)mSettings.HashPositionThreshold);
+				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
+				//exit(1);
+				
+				//mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+			}
 
 			// set reference information
 			unsigned int* pRefBegin = new unsigned int[referenceGroups[i].second];
@@ -295,6 +312,37 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		MergeArchives();
 
 	PrintStatistics();
+}
+
+
+void CMosaikAligner::GetHashStatistics(const vector<ReferenceSequence> referenceSequences, vector<unsigned int>& nHashs, uint64_t& nTotalHash) {
+
+	unsigned int length = referenceSequences.size();
+	unsigned int begin  = referenceSequences[0].Begin;
+	unsigned int end    = referenceSequences[length - 1].End;
+	unsigned int offset = 0;
+	CJumpDnaHash hash(mSettings.HashSize, mSettings.JumpFilenameStub, 1, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end, offset);
+
+	vector< pair<unsigned int, unsigned int> > references;
+	for ( unsigned int i = 0; i < length; i++ ) {
+		pair<unsigned int, unsigned int> temp(referenceSequences[i].Begin, referenceSequences[i].End);
+		references.push_back(temp);
+	}
+
+	nHashs.resize(length, 0);
+	hash.GetHashStatistics(references, nHashs);
+
+	nTotalHash = 0;
+	for ( unsigned int i = 0; i < nHashs.size(); i++ ) {
+		nTotalHash += nHashs[i];
+	}
+
+	//for ( unsigned int i = 0; i < nHashs.size(); i++ ) {
+	//	double ratio = nHashs[i] / (double)nTotalHash;
+	//	cout << (double)mSettings.HashPositionThreshold * ratio << endl;
+	//}
+	
+	//exit(1);
 }
 
 

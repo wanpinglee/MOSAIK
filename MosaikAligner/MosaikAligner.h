@@ -102,5 +102,6 @@ private:
 	void MergeArchives(void);
 	void PrintStatistics(void);
 	void GroupReferences(const vector<ReferenceSequence> referenceSequences, vector< pair<unsigned int, unsigned int> >& referenceGroups);
+	void GetHashStatistics(const vector<ReferenceSequence> referenceSequences, vector<unsigned int>& nHashs, uint64_t& nTotalHash);
 };
 
