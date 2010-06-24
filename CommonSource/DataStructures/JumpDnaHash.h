@@ -29,7 +29,7 @@ using namespace std;
 class CJumpDnaHash : public CAbstractDnaHash {
 public:
 	// constructor
-	CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset);
+	CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset, const unsigned int expectedMemory, const bool useLowMemory);
 	// destructor
 	~CJumpDnaHash(void);
 	// dummy function
@@ -48,7 +48,7 @@ public:
 	void RandomizeAndTrimHashPositions(unsigned short numHashPositions);
 	// load hash keys and positions from the file to memory
 	void LoadKeysNPositions(void);
-	void GetHashStatistics(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs);
+	void GetHashStatistics(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories);
 
 private:
 	// loads the keys database into memory
@@ -92,11 +92,13 @@ private:
 	// Store hash positions
 	inline void StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffest);
 	// determine the chromosome which positions locating in
-	void SetPositionDistribution(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, const vector<unsigned int> positions);
+	void SetPositionDistribution(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, const vector<unsigned int> positions);
 	// the begining of current chromosome
 	unsigned int _begin;
 	// the end of current chromosome
 	unsigned int _end;
 	unsigned int _offset;
+	unsigned int _expectedMemory;
 	bool hasKeysNPositions;
+	bool _useLowMemory;
 };

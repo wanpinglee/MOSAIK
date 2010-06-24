@@ -89,7 +89,7 @@ private:
 	// hashes the reference sequence
 	void HashReferenceSequence(MosaikReadFormat::CReferenceSequenceReader& refseq);
 	// initializes the hash tables
-	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end, const unsigned int offset);
+	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end, const unsigned int offset, const bool useLowMemory, const unsigned int expectedMemory);
 	// the reference sequence
 	char* mReference;
 	// the length of the reference sequence
@@ -102,6 +102,6 @@ private:
 	void MergeArchives(void);
 	void PrintStatistics(void);
 	void GroupReferences(const vector<ReferenceSequence> referenceSequences, vector< pair<unsigned int, unsigned int> >& referenceGroups);
-	void GetHashStatistics(const vector<ReferenceSequence> referenceSequences, vector<unsigned int>& nHashs, uint64_t& nTotalHash);
+	void GetHashStatistics(const vector< pair <unsigned int, unsigned int> > referenceGroups, const vector<ReferenceSequence> referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, uint64_t& nTotalHash);
 };
 

@@ -393,6 +393,11 @@ int main(int argc, char* argv[]) {
 			errorBuilder << ERROR_SPACER << "When aligning SOLiD read archives, both a colorspace reference archive AND a basespace reference archive are required. Use the -ibs parameter to supply the basespace reference archive filename." << endl;
 			foundError = true;
 		}
+
+		if( settings.UseLowMemory ) {
+			errorBuilder << ERROR_SPACER << "The low-memory algorithm does not support for SOLiD reads yet." << endl;
+			foundError = true;
+		}
 	}
 
 	// print the errors if any were found

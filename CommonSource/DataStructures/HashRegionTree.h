@@ -55,7 +55,7 @@ namespace AVLTree {
 		// moves on to the previous element in the tree
 		bool GetPreviousEntry(HashRegion& key);
 		// insert into the tree; duplicates are ignored
-		void Insert(HashRegion& key);
+		bool Insert(HashRegion& key);
 		// returns the current size of the tree
 		unsigned int GetCount();
 		// gets the current hash region at the traversal pointer

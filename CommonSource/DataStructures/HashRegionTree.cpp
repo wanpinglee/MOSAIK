@@ -284,7 +284,7 @@ namespace AVLTree {
 	}
 
 	// update the tree
-	void CHashRegionTree::Insert(HashRegion& key) {
+	bool CHashRegionTree::Insert(HashRegion& key) {
 
 		// A1. Initialization
 		HashRegionAvlNode* n = mRoot;
@@ -406,6 +406,8 @@ namespace AVLTree {
 				// decrement the count
 				mCount--;
 
+				return true;
+
 			} else {
 
 				// A4. Adjust balance factors
@@ -442,9 +444,14 @@ namespace AVLTree {
 						}
 					}
 				}
+
+				return false;
 			}
 
 		} else mRoot = n;
+
+		return false;
+
 	}
 
 	// rotates a given node left

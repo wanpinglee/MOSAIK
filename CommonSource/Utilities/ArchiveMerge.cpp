@@ -276,8 +276,6 @@ void CArchiveMerge::Merge() {
 		//ite = min_element( reads.begin(), reads.end(), CmpAlignedReadPair );
 		
 		if ( ite->read.Name > minRead.Name ) {
-			//if ( ++nRead % 100000 == 0 )
-			//	cout << "\t" << nRead << " have been merged." << endl;
 
 			//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 			if ( minRead.Mate1Alignments.size() > _nMaxAlignment )

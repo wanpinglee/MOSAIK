@@ -59,7 +59,7 @@ namespace AVLTree {
 		// moves on to the previous element in the tree
 		bool GetPreviousEntry(K& key);
 		// insert into the tree; duplicates are ignored
-		void Insert(K& key);
+		bool Insert(K& key);
 	private:
 		// our tree root
 		AvlNode<K>* mRoot;
