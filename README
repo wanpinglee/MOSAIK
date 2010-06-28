@@ -1,0 +1,35 @@
+================================================================================
+Mosaik 1.0.1370 Release Distribution Documentation
+Michael Stromberg, Marth Lab                                          2010-01-13
+================================================================================
+
+To compile MOSAIK, simply type "make" and "make utils". When the compilation is 
+complete, you will find the MOSAIK binaries in the ../bin directory.
+
+By default, Makefile behavior is tuned to Linux distributions. If you want to
+compile MOSAIK in Mac OS X, simply set the BLD_PLATFORM environment variable
+to macosx. e.g.
+
+export BLD_PLATFORM=macosx
+
+In addition to 'linux' and 'macosx', we have included another build platform:
+
+'macosx64' - fyzkem was kind enough to enable 64-bit support for the Mac OS X
+             version of MOSAIK.
+
+If you want to add another set of settings to configure the Makefile, simply
+add a new .inc file in the includes directory and set the BLD_PLATFORM variable
+accordingly (without the .inc suffix).
+
+All of the source code within is dual licensed under the GPL 2.0+ and via
+a commerical license available from the Marth Lab. 
+
+The exception to this is public domain code used within MOSAIK:
+
+1. SQLite - http://www.sqlite.org
+2. fastlz by Ariya Hidayat - http://www.fastlz.org/
+3. MD5 implementation - RSA Data Security, RFC 1321
+
+All of the common routines shared between the various MOSAIK tools can be found
+in the CommonSource subdirectory. All of the MOSAIK tools have subdirectories
+in the src directory. All compiled object code is stored in the ../obj directory.

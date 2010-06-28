@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/53/trunk/src/MosaikSort
+END
+SingleEndSort.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/47/trunk/src/MosaikSort/SingleEndSort.cpp
+END
+PairedEndSort.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/53/trunk/src/MosaikSort/PairedEndSort.cpp
+END
+SingleEndSort.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2/trunk/src/MosaikSort/SingleEndSort.h
+END
+PairedEndSort.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/53/trunk/src/MosaikSort/PairedEndSort.h
+END
+SortMain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/50/trunk/src/MosaikSort/SortMain.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/2/trunk/src/MosaikSort/Makefile
+END

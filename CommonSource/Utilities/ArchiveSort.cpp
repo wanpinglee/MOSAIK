@@ -19,13 +19,15 @@
 #include "ArchiveSort.h"
 
 
-CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex )
+CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength )
 	:_inputFilename(inputFilename)
 	,_outputFilename(outputFilename)
 	,_readCounter(readCounter)
 	,_readCounterMutex(readCounterMutex)
+	,_medianFragmentLength(medianFragmentLength)
 {
 	_alignedReadCacheSize = 100000;
+	_extendedFragmentLength = 3;
 }
 
 CArchiveSort::~CArchiveSort (){
@@ -266,7 +268,7 @@ void CArchiveSort::Sort(){
 		//if ( isMm || isUm ) 
 		// TODO: should calculate the fragment length before sorting
 		if ( isMm )
-			SortNMergeUtilities::KeepProperPair(mr, 750);
+			SortNMergeUtilities::KeepProperPair(mr, _medianFragmentLength * _extendedFragmentLength );
 
 		if ( count == _alignedReadCacheSize ) {
 			// sort and store alignment

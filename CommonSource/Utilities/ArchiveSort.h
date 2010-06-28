@@ -52,7 +52,7 @@ class CArchiveSort {
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
 		/*  constructor */ 
-		CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex );
+		CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength );
 		~CArchiveSort ();
 		void Sort();
 
@@ -70,10 +70,12 @@ class CArchiveSort {
 		string _inputFilename;
 		string _outputFilename;
 		vector< string >          _tempSortedFiles;
+		
 		unsigned int _alignedReadCacheSize;
 		unsigned int *_readCounter;
 		pthread_mutex_t *_readCounterMutex;
-
+		unsigned int _medianFragmentLength;
+		unsigned int _extendedFragmentLength;
 
 		vector<ReferenceSequence>*          _referenceSequences;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;

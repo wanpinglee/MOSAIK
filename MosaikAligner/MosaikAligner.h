@@ -20,6 +20,7 @@
 #include "AlignmentThread.h"
 #include "AlignmentWriter.h"
 #include "AlignmentReader.h"
+#include "ArchiveMerge.h"
 #include "ReferenceSequence.h"
 #include "Benchmark.h"
 #include "ConsoleUtilities.h"
@@ -32,8 +33,8 @@
 #include "ReferenceSequenceReader.h"
 #include "UbiqDnaHash.h"
 #include "FileUtilities.h"
-#include "ArchiveMerge.h"
 #include "SortThread.h"
+#include "SortNMergeUtilities.h"
 
 using namespace std;
 

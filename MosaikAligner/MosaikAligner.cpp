@@ -408,7 +408,7 @@ void CMosaikAligner::MergeArchives(void) {
 	CConsole::Heading();
 	cout << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
-	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads );
+	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength );
 	sThread.Start();
 
 	CConsole::Heading();

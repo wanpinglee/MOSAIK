@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/49/trunk/src/CommonSource/ExternalReadFormats
+END
+Fasta.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/Fasta.cpp
+END
+Fastq.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/Fastq.cpp
+END
+SRF.h
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/SRF.h
+END
+BamWriter.h
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/33/trunk/src/CommonSource/ExternalReadFormats/BamWriter.h
+END
+Fasta.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/Fasta.h
+END
+Fastq.h
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/Fastq.h
+END
+SRF.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/SRF.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/2/trunk/src/CommonSource/ExternalReadFormats/Makefile
+END
+BamWriter.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/!svn/ver/49/trunk/src/CommonSource/ExternalReadFormats/BamWriter.cpp
+END

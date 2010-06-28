@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use strict;
+
+print "Updating config.h... ";
+
+# get the current SVN revision
+my $svnOutput = `svn info . | grep ^Revision`;
+my($version) = $svnOutput =~ m/^Revision:\s+(\S+)/;
+
+# get the current date
+my $date = `date +%Y-%m-%d`;
+chomp $date;
+
+# update the config.h file
+# #define MOSAIK_VERSION_DATE "2008-02-01"
+# sed "s/\(^#define MOSAIK_VERSION_DATE \"\)\(..*$\)/\1bob\"/" CommonSource/Config/Mosaik/Config.h
+# | sed "s/\(const unsigned char MOSAIK_BUILD_VERSION = \)\(..*$\)/\1bob;/"
+
+my $dateSedCommand = "sed \"s/\\(^#define MOSAIK_VERSION_DATE \\\"\\)\\(..*\$\\)/\\1$date\\\"/\" CommonSource/Config/Mosaik.h | sed \"s/\\(^const unsigned short MOSAIK_BUILD_VERSION = \\)\\(..*\$\\)/\\1$version;/\"";
+
+system("$dateSedCommand > CommonSource/Config/Mosaik.h.new");
+rename("CommonSource/Config/Mosaik.h.new", "CommonSource/Config/Mosaik.h");
+
+print "finished.\n";

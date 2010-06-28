@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/45/trunk/src/MosaikDupSnoop
+END
+MosaikDupSnoop.h
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/2/trunk/src/MosaikDupSnoop/MosaikDupSnoop.h
+END
+MosaikDupSnoop.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/2/trunk/src/MosaikDupSnoop/MosaikDupSnoop.cpp
+END
+DupSnoopMain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/2/trunk/src/MosaikDupSnoop/DupSnoopMain.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/45/trunk/src/MosaikDupSnoop/Makefile
+END
