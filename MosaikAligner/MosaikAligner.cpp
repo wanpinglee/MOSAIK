@@ -48,14 +48,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	refseq.GetReferenceSequences(referenceSequences);
 	mReferenceLength = refseq.GetReferenceSequenceLength();
 	const unsigned int numRefSeqs = refseq.GetNumReferenceSequences();
+	refseq.Close();
 
 	// retrieve the basespace reference filenames
-	char** pBsRefSeqs = NULL;
+	//char** pBsRefSeqs = NULL;
 	if(mFlags.EnableColorspace) {
-
-		cout << "- loading basespace reference sequences... ";
-		cout.flush();
-
+		
 		MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
 		bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
 
@@ -64,10 +62,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			exit(1);
 		}
 
-		bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
 		bsRefSeq.Close();
-
-		cout << "finished." << endl;
 	}
 
 	// initialize our hash tables
@@ -84,8 +79,6 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//refseq.LoadConcatenatedSequence(mReference);
 	//cout << "finished." << endl;
 
-	refseq.Close();
-
 	// create our reference sequence LUTs
 	//unsigned int* pRefBegin = new unsigned int[numRefSeqs];
 	//unsigned int* pRefEnd   = new unsigned int[numRefSeqs];
@@ -100,6 +93,24 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	if ( !mFlags.UseLowMemory ) {
 		
+		// prepare BS reference sequence for SOLiD data
+		char** pBsRefSeqs = NULL;
+		if(mFlags.EnableColorspace) {
+
+			cout << "- loading basespace reference sequences... ";
+			cout.flush();
+
+			MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
+			bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
+
+
+			bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
+			bsRefSeq.Close();
+
+			cout << "finished." << endl;
+		}
+
+		// prepare reference sequence
 		refseq.Open(mSettings.ReferenceFilename);
 		cout << "- loading reference sequence... ";
 		cout.flush();
@@ -161,11 +172,17 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 		// free memory
 		if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
-		if(pRefBegin) delete [] pRefBegin;
-		if(pRefEnd)   delete [] pRefEnd;
-		delete [] mReference;
+		if(pRefBegin)  delete [] pRefBegin;
+		if(pRefEnd)    delete [] pRefEnd;
+		if(mReference) delete [] mReference;
+		if(pBsRefSeqs) {
+			for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
+			delete [] pBsRefSeqs;
+		}
+		pRefBegin  = NULL;
+		pRefEnd    = NULL;
 		mReference = NULL;
-	
+		pBsRefSeqs = NULL;
 	}
 	else {
 		// grouping reference
@@ -178,6 +195,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		uint64_t nTotalHash;
 		GetHashStatistics(referenceGroups, referenceSequences, nHashs, expectedMemories, nTotalHash);
 		
+		// align reads again per chromosome group
 		for ( unsigned int i = 0; i < referenceGroups.size(); i++) {
 
 	        	unsigned int startRef = referenceGroups[i].first;
@@ -189,6 +207,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
 		        CConsole::Reset();
 
+			// prepare reference sequence
 			refseq.Open(mSettings.ReferenceFilename);
 			cout << "- loading reference sequence... ";
 			cout.flush();
@@ -210,8 +229,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			
 			// calculate expected memories for jump data
 			unsigned int expectedMemory = nHashs[i] + expectedMemories[i];
-			// reserve 10% more memory for unexpected usage
-			expectedMemory =  expectedMemory * 1.1;
+			// reserve 3% more memory for unexpected usage
+			expectedMemory =  expectedMemory * 1.03;
 
 			mReferenceLength = chrLength;
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[startRef].Begin, referenceSequences[endRef].End, referenceSequences[startRef].Begin, mFlags.UseLowMemory, expectedMemory);
@@ -268,6 +287,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 
+			char** pBsRefSeqs = NULL;
 			AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
 
 			// close open file streams
@@ -279,18 +299,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 			// free memory
 			if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
-			if(pRefBegin) delete [] pRefBegin;
-			if(pRefEnd)   delete [] pRefEnd;
-			delete [] mReference;
+			if(pRefBegin)  delete [] pRefBegin;
+			if(pRefEnd)    delete [] pRefEnd;
+			if(mReference) delete [] mReference;
+			pRefBegin  = NULL;
+			pRefEnd    = NULL;
 			mReference = NULL;
 
 
 		}
-	}
-
-	if(pBsRefSeqs) {
-		for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
-		delete [] pBsRefSeqs;
 	}
 
 	if ( mFlags.UseLowMemory )
@@ -403,19 +420,33 @@ void CMosaikAligner::MergeArchives(void) {
 	if ( nThread > 7 )
 		nThread = 7;
 
-	unsigned int nMaxAlignment = 1000;
+	// prepare BS reference sequence for SOLiD data when sorting archives
+	char** pBsRefSeqs = NULL;
+	if(mFlags.EnableColorspace) {
+		cout << "- loading basespace reference sequences... ";
+		cout.flush();
+
+		MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
+		bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
+
+		bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
+		bsRefSeq.Close();
+
+		cout << "finished." << endl;
+	}
 
 	CConsole::Heading();
 	cout << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
-	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength );
+	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength, mFlags.EnableColorspace, pBsRefSeqs );
 	sThread.Start();
 
 	CConsole::Heading();
 	cout << "Merging alignment archive:" << endl;
 	CConsole::Reset();
 
-        unsigned int readNo = 0;
+        unsigned int readNo        = 0;
+	unsigned int nMaxAlignment = 1000;
         CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
         CArchiveMerge merger( temporaryFiles, mSettings.OutputReadArchiveFilename, nMaxAlignment, &readNo );
         merger.Merge();

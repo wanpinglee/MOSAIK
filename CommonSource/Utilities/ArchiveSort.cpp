@@ -19,15 +19,19 @@
 #include "ArchiveSort.h"
 
 
-CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength )
+CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength, bool enableColorspace, char** pBsRefSeqs )
 	:_inputFilename(inputFilename)
 	,_outputFilename(outputFilename)
 	,_readCounter(readCounter)
 	,_readCounterMutex(readCounterMutex)
 	,_medianFragmentLength(medianFragmentLength)
+	,_enableColorspace(enableColorspace)
 {
 	_alignedReadCacheSize = 100000;
 	_extendedFragmentLength = 3;
+
+	if ( enableColorspace )
+		_solidConverter.SetReferenceSequences(pBsRefSeqs);
 }
 
 CArchiveSort::~CArchiveSort (){
@@ -54,8 +58,17 @@ void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::Alig
 	writer.Open(tempFilename, *_referenceSequences, _readGroups, _alignmentStatus);
 	writer.AdjustPartitionSize(1000);
 
-	for ( list<Mosaik::AlignedRead>::iterator ite = _alignedReadCache.begin(); ite != _alignedReadCache.end(); ite++ ) 
+	for ( list<Mosaik::AlignedRead>::iterator ite = _alignedReadCache.begin(); ite != _alignedReadCache.end(); ite++ ) {
+		
+		if ( _enableColorspace ) {
+			for ( vector<Alignment>::iterator aIte = ite->Mate1Alignments.begin(); aIte != ite->Mate1Alignments.end(); aIte++ )
+				_solidConverter.ConvertAlignmentToBasespace(*aIte);
+			for ( vector<Alignment>::iterator aIte = ite->Mate2Alignments.begin(); aIte != ite->Mate2Alignments.end(); aIte++ )
+				_solidConverter.ConvertAlignmentToBasespace(*aIte);
+		}
+
 		writer.SaveAlignedRead( *ite );
+	}
 	
 	
 	writer.Close();

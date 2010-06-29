@@ -5,8 +5,11 @@ use strict;
 print "Updating config.h... ";
 
 # get the current SVN revision
-my $svnOutput = `svn info . | grep ^Revision`;
-my($version) = $svnOutput =~ m/^Revision:\s+(\S+)/;
+#my $svnOutput = `svn info . | grep ^Revision`;
+#my($version) = $svnOutput =~ m/^Revision:\s+(\S+)/;
+my $svnOutput = `git describe --tags HEAD`;
+my($annotatedTag,$NonAnnotatedTag) = $svnOutput =~ m/\S+.\d+.(\d+)-(\d+)-g\S+/;
+my($version) = $annotatedTag + $NonAnnotatedTag;
 
 # get the current date
 my $date = `date +%Y-%m-%d`;

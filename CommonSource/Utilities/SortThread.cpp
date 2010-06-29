@@ -19,7 +19,7 @@
 
 			pthread_mutex_unlock(&td->_mutex);
 
-			CArchiveSort sorter( input, output, &td->_readNo, &td->_readCounterMutex, td->_medianFragmentLength );
+			CArchiveSort sorter( input, output, &td->_readNo, &td->_readCounterMutex, td->_medianFragmentLength, td->_enableColorspace, td->_pBsRefSeqs );
 			sorter.Sort();
 		}
 

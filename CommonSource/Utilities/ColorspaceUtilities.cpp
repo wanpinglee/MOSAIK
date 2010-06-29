@@ -755,6 +755,10 @@ void CColorspaceUtilities::PatchColorspaceGaps(char* pReference, char* pQuery, c
 
 // sets the reference sequences
 void CColorspaceUtilities::SetReferenceSequences(char** pBsRefSeqs) {
+	if ( !pBsRefSeqs ) {
+		cout << "ERROR: The BS reference is an empty string." << endl;
+		exit(1);
+	}
 	mpBsRefSeqs = pBsRefSeqs;
 }
 
