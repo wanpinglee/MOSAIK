@@ -697,7 +697,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* qualities, co
 
 	// convert from colorspace to basespace
 	// unenable EnableColorspace flag for low-memory algorithm, deal with the SOLiD convertion when sorting the aligned archives
-	if( mFlags.EnableColorspace && !mFlags.UseLowMemory ) {
+	if( mFlags.EnableColorspace ) {
 		mCS.ConvertAlignmentToBasespace(al);		
 		numNonAlignedBases = (queryLength + 1) - al.QueryLength;
 	}

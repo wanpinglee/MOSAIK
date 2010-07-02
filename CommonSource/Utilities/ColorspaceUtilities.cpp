@@ -110,7 +110,13 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	
 
 	// convert cs to bs
+	// initial the first BS base
 	char bsBase = mpBsRefSeqs[al.ReferenceIndex][al.ReferenceBegin];
+	if ( bsBase == 'N' || bsBase == 'X' ) {
+		cout << "ERROR: The first base of the colorspace-basespace converter is N or X." << endl;
+		exit(1);
+	}
+	// copy CS alignments
 	memcpy ( mCsAl.csReference, al.Reference.Data(), pairwiseLen );
 	memcpy ( mCsAl.csQuery,     al.Query.Data(),     pairwiseLen );
 
@@ -755,10 +761,6 @@ void CColorspaceUtilities::PatchColorspaceGaps(char* pReference, char* pQuery, c
 
 // sets the reference sequences
 void CColorspaceUtilities::SetReferenceSequences(char** pBsRefSeqs) {
-	if ( !pBsRefSeqs ) {
-		cout << "ERROR: The BS reference is an empty string." << endl;
-		exit(1);
-	}
 	mpBsRefSeqs = pBsRefSeqs;
 }
 

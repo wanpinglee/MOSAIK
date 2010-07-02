@@ -132,6 +132,32 @@ namespace MosaikReadFormat {
 		}
 	}
 
+	// copies the reference sequences from this archive into the supplied character array
+	// Given the start chromosome and # of chromosomes are going to be copied
+	// NOTE: caller frees the memory
+	void CReferenceSequenceReader::CopyReferenceSequences(char** &pSeqs, unsigned int startRef, unsigned int length) {
+
+		// get a sorted vector of the reference sequences
+		vector<ReferenceSequence> refSeqs;
+		GetReferenceSequences(refSeqs);
+		//pSeqs = new char*[mNumReferenceSequences];
+		pSeqs = new char*[length];
+
+		// grab the appropriate sequences
+		string bases;
+		for( unsigned int i = 0; i < length; i++ ) {
+
+			// retrieve the bases for the current sequence
+			GetReferenceSequence(refSeqs[ startRef + i ].Name, bases);
+			const unsigned int numBases = (unsigned int)bases.size();
+
+			// copy the bases to our character array
+			pSeqs[i] = new char[numBases + 1];
+			memcpy(pSeqs[i], bases.data(), numBases);
+			pSeqs[i][numBases] = 0;
+		}
+	}
+
 	// returns the number of reference sequences in this archive
 	unsigned int CReferenceSequenceReader::GetNumReferenceSequences(void) const {
 		return mNumReferenceSequences;

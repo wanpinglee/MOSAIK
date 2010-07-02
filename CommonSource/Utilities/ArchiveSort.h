@@ -33,7 +33,6 @@
 #include "AlignmentWriter.h"
 #include "AlignmentReader.h"
 #include "MosaikString.h"
-#include "ColorspaceUtilities.h"
 
 using namespace std;
 
@@ -53,7 +52,7 @@ class CArchiveSort {
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
 		/*  constructor */ 
-		CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength, bool enableColorspace, char** pBsRefSeqs );
+		CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength );
 		~CArchiveSort ();
 		void Sort();
 
@@ -77,8 +76,6 @@ class CArchiveSort {
 		pthread_mutex_t *_readCounterMutex;
 		unsigned int _medianFragmentLength;
 		unsigned int _extendedFragmentLength;
-		
-		bool _enableColorspace;
 
 		vector<ReferenceSequence>*          _referenceSequences;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;
@@ -87,7 +84,6 @@ class CArchiveSort {
 		void SortNStoreCache( vector< string >& tempFiles, list<Mosaik::AlignedRead>& _alignedReadCache );
 		void SortNStoreTemp ( vector< string >& tempFiles );
 
-		CColorspaceUtilities _solidConverter;
 
 
 }; /* -----  end of class AlignedArchiveMerge  ----- */

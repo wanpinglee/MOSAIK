@@ -394,10 +394,10 @@ int main(int argc, char* argv[]) {
 			foundError = true;
 		}
 
-		if( settings.UseLowMemory ) {
-			errorBuilder << ERROR_SPACER << "The low-memory algorithm does not support for SOLiD reads yet." << endl;
-			foundError = true;
-		}
+		//if( settings.UseLowMemory ) {
+		//	errorBuilder << ERROR_SPACER << "The low-memory algorithm does not support for SOLiD reads yet." << endl;
+		//	foundError = true;
+		//}
 	}
 
 	// print the errors if any were found

@@ -41,7 +41,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	// ==============
 
 	// retrieve the concatenated reference sequence length
-	vector<ReferenceSequence> referenceSequences;
+	// vector<ReferenceSequence> referenceSequences;
 
 	MosaikReadFormat::CReferenceSequenceReader refseq;
 	refseq.Open(mSettings.ReferenceFilename);
@@ -185,15 +185,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		pBsRefSeqs = NULL;
 	}
 	else {
-		// grouping reference
-		vector< pair <unsigned int, unsigned int> > referenceGroups;
-		GroupReferences(referenceSequences, referenceGroups);
+		// grouping reference and store information in referenceGroups vector
+		// vector< pair <unsigned int, unsigned int> > referenceGroups;
+		GroupReferences();
 		
 		// get hash statistics for adjusting mhp for each reference group and reserve memory
 		vector< unsigned int > nHashs;             // the numbers of hash positions in each reference group
 		vector< unsigned int > expectedMemories;   // the numbers of hashs in each reference group
 		uint64_t nTotalHash;
-		GetHashStatistics(referenceGroups, referenceSequences, nHashs, expectedMemories, nTotalHash);
+		GetHashStatistics( nHashs, expectedMemories, nTotalHash );
 		
 		// align reads again per chromosome group
 		for ( unsigned int i = 0; i < referenceGroups.size(); i++) {
@@ -206,6 +206,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			else
 				cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
 		        CConsole::Reset();
+
+			// prepare BS reference sequence for SOLiD data
+			char** pBsRefSeqs = NULL;
+			if(mFlags.EnableColorspace) {
+	
+				cout << "- loading basespace reference sequences... ";
+				cout.flush();
+
+				MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
+				bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
+
+
+				bsRefSeq.CopyReferenceSequences(pBsRefSeqs, startRef, referenceGroups[i].second);
+				bsRefSeq.Close();
+
+				cout << "finished." << endl;
+			}
 
 			// prepare reference sequence
 			refseq.Open(mSettings.ReferenceFilename);
@@ -287,7 +304,6 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 
-			char** pBsRefSeqs = NULL;
 			AlignReadArchive(in, out, pRefBegin, pRefEnd, pBsRefSeqs);
 
 			// close open file streams
@@ -302,11 +318,14 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			if(pRefBegin)  delete [] pRefBegin;
 			if(pRefEnd)    delete [] pRefEnd;
 			if(mReference) delete [] mReference;
+			if(pBsRefSeqs) {
+				for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
+				delete [] pBsRefSeqs;
+			}
 			pRefBegin  = NULL;
 			pRefEnd    = NULL;
 			mReference = NULL;
-
-
+			pBsRefSeqs = NULL;
 		}
 	}
 
@@ -317,14 +336,17 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 }
 
 
-void CMosaikAligner::GetHashStatistics(const vector< pair <unsigned int, unsigned int> > referenceGroups, const vector<ReferenceSequence> referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, uint64_t& nTotalHash) {
+void CMosaikAligner::GetHashStatistics( vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, uint64_t& nTotalHash ) {
 
 	//unsigned int length = referenceSequences.size();
 	unsigned int length = referenceGroups.size();
 	unsigned int begin  = referenceSequences[0].Begin;
 	unsigned int end    = referenceSequences[ referenceSequences.size() - 1].End;
 	unsigned int offset = 0;
+
+	// initial JumpDnaHash
 	CJumpDnaHash hash(mSettings.HashSize, mSettings.JumpFilenameStub, 0, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end, offset, false, 0);
+	// set mhp number to JumpDnaHash
 	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
 		hash.RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
@@ -355,7 +377,7 @@ void CMosaikAligner::GetHashStatistics(const vector< pair <unsigned int, unsigne
 }
 
 
-void CMosaikAligner::GroupReferences(const vector<ReferenceSequence> referenceSequences, vector<pair<unsigned int, unsigned int> >& referenceGroups) {
+void CMosaikAligner::GroupReferences(void) {
 	// find the largest reference
 	unsigned int max = 0;
 	unsigned int length = 0;
@@ -420,25 +442,18 @@ void CMosaikAligner::MergeArchives(void) {
 	if ( nThread > 7 )
 		nThread = 7;
 
-	// prepare BS reference sequence for SOLiD data when sorting archives
-	char** pBsRefSeqs = NULL;
-	if(mFlags.EnableColorspace) {
-		cout << "- loading basespace reference sequences... ";
-		cout.flush();
-
-		MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
-		bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
-
-		bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
-		bsRefSeq.Close();
-
-		cout << "finished." << endl;
-	}
+	// prepare reference offset vector for SOLiD
+	//vector<unsigned int> refOffsets;
+	//refOffsets.resize(referenceGroups.size());
+	//for ( unsigned int i = 0; i < referenceGroups.size(); i++ ) {
+	//	unsigned int startRef = referenceGroups[i].first;
+	//	refOffsets[i] = referenceSequences[startRef].Begin;
+	//}
 
 	CConsole::Heading();
-	cout << "Sorting alignment archive:" << endl;
+	cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
-	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength, mFlags.EnableColorspace, pBsRefSeqs );
+	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength );
 	sThread.Start();
 
 	CConsole::Heading();
@@ -607,6 +622,10 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	td.pReadCounter        = &readCounter;
 	td.IsPairedEnd         = isPairedEnd;
 	td.pBsRefSeqs          = pBsRefSeqs;
+
+	// unenable EnableColorspace flag for low-memory algorithm, deal with the SOLiD convertion when sorting the aligned archives
+	//if ( mFlags.UseLowMemory )
+	//	td.Flags.EnableColorspace = false;
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);

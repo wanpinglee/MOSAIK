@@ -39,6 +39,7 @@ namespace MosaikReadFormat {
 		// copies the reference sequences from this archive into the supplied character array
 		// NOTE: caller frees the memory
 		void CopyReferenceSequences(char** &pSeqs);
+		void CopyReferenceSequences(char** &pSeqs, unsigned int startRef, unsigned int length);
 		// returns the number of reference sequences in this archive
 		unsigned int GetNumReferenceSequences(void) const;
 		// returns the reference sequence length

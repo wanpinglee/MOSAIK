@@ -9,17 +9,16 @@
 		string input;
 		string output;
 
-
 			pthread_mutex_lock(&td->_mutex);
 		
 		while( td->_archiveNo < td->_nArchive ) {
-			input  = td->_input [td->_archiveNo];
-			output = td->_output[td->_archiveNo];
+			input          = td->_input [td->_archiveNo];
+			output         = td->_output[td->_archiveNo];
 			td->_archiveNo++;
 
 			pthread_mutex_unlock(&td->_mutex);
 
-			CArchiveSort sorter( input, output, &td->_readNo, &td->_readCounterMutex, td->_medianFragmentLength, td->_enableColorspace, td->_pBsRefSeqs );
+			CArchiveSort sorter( input, output, &td->_readNo, &td->_readCounterMutex, td->_medianFragmentLength );
 			sorter.Sort();
 		}
 
