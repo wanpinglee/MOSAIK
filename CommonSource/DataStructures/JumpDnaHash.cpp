@@ -519,6 +519,7 @@ void CJumpDnaHash::LoadKeys(void) {
 	fclose(mKeys);
 }
 
+// load partial positions into memory for low-memory algorithm
 inline void CJumpDnaHash::LoadBlockPositions( char* blockPosition, uint64_t& bytesLeft, const unsigned int& fillBufferSize ) {
 	
 	// clear the buffer
@@ -533,6 +534,7 @@ inline void CJumpDnaHash::LoadBlockPositions( char* blockPosition, uint64_t& byt
 		bytesLeft -= fillBufferSize;
 	}
 }
+
 
 // loads the positions database into memory
 void CJumpDnaHash::LoadPositions(void) {
@@ -564,10 +566,6 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	// initialize positions memory
 	uint64_t mPositionBufferLen1 = _useLowMemory ? (_expectedMemory * SIZEOF_INT) : mPositionBufferLen;
-	//if ( ( mPositionBufferLen / ( 2 * SIZEOF_INT) ) < mPositionBufferLen1 )
-	//	mPositionBufferLen1 = mPositionBufferLen;
-	//else
-	//	mPositionBufferLen1 = (double)mPositionBufferLen1 * 1.8 * (double)SIZEOF_INT;
 
 	mPositionBuffer    = new char[mPositionBufferLen1];
 	mPositionBufferPtr = (uintptr_t)&mPositionBuffer[0];

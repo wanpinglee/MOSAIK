@@ -249,7 +249,46 @@ namespace MosaikReadFormat {
 		}
 	}
 
-	//initializes the supplied pointer with the 2-bit concatenated reference sequence
+	// initializes the supplied pointer with the concatenated reference sequence
+	void CReferenceSequenceReader::LoadConcatenatedSequence( char* &referenceSequence, unsigned int start, unsigned int refLength ) {
+        	// initialize a reference spacer sequence (used between sequences in the concatenated sequence)
+	        char referenceDivider[NUM_REFERENCE_DIVIDER_BASES];
+	        uninitialized_fill(referenceDivider, referenceDivider + NUM_REFERENCE_DIVIDER_BASES, 'J');
+
+		// grab information of references
+		vector<ReferenceSequence> refSeqs;
+		GetReferenceSequences(refSeqs);
+		
+		unsigned int baseLength = 0;
+		for ( unsigned int i = 0; i < refLength; i++ ) 
+			baseLength += refSeqs[ start + i ].NumBases;
+		baseLength += NUM_REFERENCE_DIVIDER_BASES * (refLength - 1);
+		
+		// allocate memory space
+		referenceSequence = new char [ baseLength + 1 ];
+		char* referenceSequencePtr = &referenceSequence[0];
+
+		// grab the appropriate sequences
+		string bases;
+		for( unsigned int i = 0; i < refLength; i++ ) {
+
+			// retrieve the bases for the current sequence
+			GetReferenceSequence(refSeqs[ start + i ].Name, bases);
+			const unsigned int numBases = (unsigned int)bases.size();
+
+			// copy the bases to our character array
+			memcpy(referenceSequencePtr, bases.data(), numBases);
+			referenceSequencePtr += refSeqs[ start + i ].NumBases;
+			
+			if ( i != ( refLength - 1 ) ) {
+				memcpy(referenceSequencePtr, referenceDivider, NUM_REFERENCE_DIVIDER_BASES);
+				referenceSequencePtr += NUM_REFERENCE_DIVIDER_BASES;
+			}
+		}
+
+		referenceSequencePtr = 0;
+	}
+
 	void CReferenceSequenceReader::Load2BitConcatenatedSequence(char* &referenceSequence, char* &maskSequence, unsigned int& numMaskedPositions) {
 
 		// jump to the reference sequence

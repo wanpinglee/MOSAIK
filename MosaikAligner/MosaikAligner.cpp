@@ -207,6 +207,33 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
 		        CConsole::Reset();
 
+			// initialize our hash tables
+			// calculate expected memories for jump data
+			unsigned int expectedMemory = nHashs[i] + expectedMemories[i];
+			// reserve 3% more memory for unexpected usage
+			expectedMemory =  expectedMemory * 1.03;
+
+			InitializeHashTables(0, referenceSequences[startRef].Begin, referenceSequences[endRef].End, referenceSequences[startRef].Begin, mFlags.UseLowMemory, expectedMemory);
+
+			// set the hash positions threshold
+			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) { 
+				double ratio = nHashs[i] / (double)nTotalHash;
+				unsigned int positionThreshold = ceil(ratio * (double)mSettings.HashPositionThreshold);
+				//cout << positionThreshold << endl;
+				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
+			}
+
+			// load jump data
+			mpDNAHash->LoadKeysNPositions();
+
+			// set reference information
+			unsigned int* pRefBegin = new unsigned int[referenceGroups[i].second];
+			unsigned int* pRefEnd   = new unsigned int[referenceGroups[i].second];
+			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
+				pRefBegin[j] = referenceSequences[startRef+j].Begin - referenceSequences[startRef].Begin;
+				pRefEnd[j]   = referenceSequences[startRef+j].End   - referenceSequences[startRef].Begin;
+			}
+
 			// prepare BS reference sequence for SOLiD data
 			char** pBsRefSeqs = NULL;
 			if(mFlags.EnableColorspace) {
@@ -228,49 +255,21 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			refseq.Open(mSettings.ReferenceFilename);
 			cout << "- loading reference sequence... ";
 			cout.flush();
-			refseq.LoadConcatenatedSequence(mReference);
+			//refseq.LoadConcatenatedSequence(mReference);
+			refseq.LoadConcatenatedSequence(mReference, startRef, referenceGroups[i].second);
 			refseq.Close();
 
 			// trim reference sequence
-			unsigned int chrLength = referenceSequences[endRef].End - referenceSequences[startRef].Begin + 1;
-			char* chrReference  = new char[ chrLength + 1 ];
-			char* mReferencePtr = mReference + referenceSequences[startRef].Begin;
-			memcpy( chrReference, mReferencePtr, chrLength);
-			chrReference[chrLength] = 0;
-			delete [] mReference;
-			mReference = chrReference;
+			//unsigned int chrLength = referenceSequences[endRef].End - referenceSequences[startRef].Begin + 1;
+			//char* chrReference  = new char[ chrLength + 1 ];
+			//char* mReferencePtr = mReference + referenceSequences[startRef].Begin;
+			//memcpy( chrReference, mReferencePtr, chrLength);
+			//chrReference[chrLength] = 0;
+			//delete [] mReference;
+			//mReference = chrReference;
 			cout << "finished." << endl;
-
-		
-			// initialize our hash tables
 			
-			// calculate expected memories for jump data
-			unsigned int expectedMemory = nHashs[i] + expectedMemories[i];
-			// reserve 3% more memory for unexpected usage
-			expectedMemory =  expectedMemory * 1.03;
-
-			mReferenceLength = chrLength;
-			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), referenceSequences[startRef].Begin, referenceSequences[endRef].End, referenceSequences[startRef].Begin, mFlags.UseLowMemory, expectedMemory);
-
-			// set the hash positions threshold
-			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) { 
-				double ratio = nHashs[i] / (double)nTotalHash;
-				unsigned int positionThreshold = ceil(ratio * (double)mSettings.HashPositionThreshold);
-				//cout << positionThreshold << endl;
-				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
-			}
-
-			// load jump data
-			mpDNAHash->LoadKeysNPositions();
-
-			// set reference information
-			unsigned int* pRefBegin = new unsigned int[referenceGroups[i].second];
-			unsigned int* pRefEnd   = new unsigned int[referenceGroups[i].second];
-			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
-				pRefBegin[j] = referenceSequences[startRef+j].Begin - referenceSequences[startRef].Begin;
-				pRefEnd[j]   = referenceSequences[startRef+j].End   - referenceSequences[startRef].Begin;
-			}
-
+			
 			// localize the read archive filenames
 			// get a temporary file name
 			string tempFilename;
@@ -319,7 +318,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			if(pRefEnd)    delete [] pRefEnd;
 			if(mReference) delete [] mReference;
 			if(pBsRefSeqs) {
-				for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
+				for(unsigned int j = 0; j < referenceGroups[i].second; j++)
+					delete [] pBsRefSeqs[j];
+				
 				delete [] pBsRefSeqs;
 			}
 			pRefBegin  = NULL;

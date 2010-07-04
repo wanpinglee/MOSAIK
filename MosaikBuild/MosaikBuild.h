@@ -49,7 +49,7 @@ using namespace std;
 #define NORMAL_FASTQ_OFFSET 33
 #define SOLEXA_FASTQ_OFFSET 64
 
-#define NUM_REFERENCE_DIVIDER_BASES 500
+//#define NUM_REFERENCE_DIVIDER_BASES 500
 
 class CMosaikBuild {
 	friend class CMosaikBuildTests;

@@ -19,12 +19,12 @@
 // MOSAIK version
 // ==============
 
-#define MOSAIK_VERSION_DATE "2010-07-01"
+#define MOSAIK_VERSION_DATE "2010-07-04"
 
 // adopt a major.minor.build version number [1].[1].[3]
 const unsigned char  MOSAIK_MAJOR_VERSION = 1;
 const unsigned char  MOSAIK_MINOR_VERSION = 1;
-const unsigned short MOSAIK_BUILD_VERSION = 3;
+const unsigned short MOSAIK_BUILD_VERSION = 4;
 
 // ================================
 // Platform specific variable sizes
@@ -80,5 +80,6 @@ const char OS_DIRECTORY_SEPARATOR = '/';
 // Aligner constants
 // =================
 
+#define NUM_REFERENCE_DIVIDER_BASES 500
 const double HASH_REGION_EXTENSION_PERCENT     = 0.025;
 const unsigned char REFERENCE_SEQUENCE_QUALITY = 40;

@@ -54,6 +54,7 @@ namespace MosaikReadFormat {
 		bool HasSameReferenceSequences(vector<ReferenceSequence>& otherSeqs);
 		// initializes the supplied pointer with the concatenated reference sequence
 		void LoadConcatenatedSequence(char* &referenceSequence);
+		void LoadConcatenatedSequence( char* &referenceSequence, unsigned int start, unsigned int refLength );
 		//initializes the supplied pointer with the 2-bit concatenated reference sequence
 		void Load2BitConcatenatedSequence(char* &referenceSequence, char* &maskSequence, unsigned int& numMaskedPositions);
 		// opens the reference sequence archive
