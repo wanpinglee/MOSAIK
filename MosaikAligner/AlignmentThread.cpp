@@ -52,8 +52,8 @@ CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSe
 
 // destructor
 CAlignmentThread::~CAlignmentThread(void) {
-	if(mForwardRead) delete [] mForwardRead;
-	if(mReverseRead) delete [] mReverseRead;
+	delete [] mForwardRead; mForwardRead = NULL;
+	delete [] mReverseRead; mReverseRead = NULL;
 }
 
 // activates the current alignment thread

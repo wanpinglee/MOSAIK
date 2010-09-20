@@ -36,22 +36,32 @@ CColorspaceUtilities::~CColorspaceUtilities(void) {
 	//delete [] mNumGapsObserved;
 
 	mCsAl.csAlignmentLength = 0;
-	if (mCsAl.csReference) delete [] mCsAl.csReference;
-	if (mCsAl.csQuery)     delete [] mCsAl.csQuery;
-	if (mCsAl.bsReference) delete [] mCsAl.bsReference;
-	if (mCsAl.bsQuery)     delete [] mCsAl.bsQuery;
-	if (mCsAl.type)        delete [] mCsAl.type;
+	//if (mCsAl.csReference) delete [] mCsAl.csReference;
+	//if (mCsAl.csQuery)     delete [] mCsAl.csQuery;
+	//if (mCsAl.bsReference) delete [] mCsAl.bsReference;
+	//if (mCsAl.bsQuery)     delete [] mCsAl.bsQuery;
+	//if (mCsAl.type)        delete [] mCsAl.type;
+	
+	delete [] mCsAl.csReference; mCsAl.csReference = NULL;
+	delete [] mCsAl.csQuery; mCsAl.csQuery = NULL;
+	delete [] mCsAl.bsReference; mCsAl.bsReference = NULL;
+	delete [] mCsAl.bsQuery; mCsAl.bsQuery = NULL;
+	delete [] mCsAl.type; mCsAl.type = NULL;
 	
 	mCsAl.nDashReference = 0;
 	mCsAl.nDashQuery     = 0;
-	if (mCsAl.dashReference) delete [] mCsAl.dashReference;
-	if (mCsAl.dashQuery)     delete [] mCsAl.dashQuery;
+	//if (mCsAl.dashReference) delete [] mCsAl.dashReference;
+	//if (mCsAl.dashQuery)     delete [] mCsAl.dashQuery;
+	delete [] mCsAl.dashReference; mCsAl.dashReference = NULL;
+	delete [] mCsAl.dashQuery; mCsAl.dashQuery = NULL;
 
 	mCsAl.nMismatch = 0;
-	if (mCsAl.mismatch)    delete [] mCsAl.mismatch;
+	//if (mCsAl.mismatch)    delete [] mCsAl.mismatch;
+	delete [] mCsAl.mismatch; mCsAl.mismatch = NULL;
 
 	mCsAl.nIdentical = 0;
-	if (mCsAl.identical)   delete [] mCsAl.identical;
+	//if (mCsAl.identical)   delete [] mCsAl.identical;
+	delete [] mCsAl.identical; mCsAl.identical = NULL;
 }
 
 // converts the supplied alignment from colorspace to basespace
@@ -66,18 +76,31 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	// re-allocate mBsRef & mBsQuery if the reversed space is insufficient
 	if(  pairwiseLen > mCsAl.csAlignmentLength ) {
 		
-		if ( mCsAl.csReference ) delete [] mCsAl.csReference;
-		if ( mCsAl.csQuery )     delete [] mCsAl.csQuery;
-		if ( mCsAl.bsReference ) delete [] mCsAl.bsReference;
-		if ( mCsAl.bsQuery )     delete [] mCsAl.bsQuery;
-		if ( mCsAl.type )        delete [] mCsAl.type;
+		//if ( mCsAl.csReference ) delete [] mCsAl.csReference;
+		//if ( mCsAl.csQuery )     delete [] mCsAl.csQuery;
+		//if ( mCsAl.bsReference ) delete [] mCsAl.bsReference;
+		//if ( mCsAl.bsQuery )     delete [] mCsAl.bsQuery;
+		//if ( mCsAl.type )        delete [] mCsAl.type;
 	
-		if ( mCsAl.dashReference ) delete [] mCsAl.dashReference;
-		if ( mCsAl.dashQuery )     delete [] mCsAl.dashQuery;
+		//if ( mCsAl.dashReference ) delete [] mCsAl.dashReference;
+		//if ( mCsAl.dashQuery )     delete [] mCsAl.dashQuery;
 
-		if ( mCsAl.mismatch )      delete [] mCsAl.mismatch;
+		//if ( mCsAl.mismatch )      delete [] mCsAl.mismatch;
 
-		if ( mCsAl.identical )     delete [] mCsAl.identical;
+		//if ( mCsAl.identical )     delete [] mCsAl.identical;
+		
+		delete [] mCsAl.csReference;
+		delete [] mCsAl.csQuery;
+		delete [] mCsAl.bsReference;
+		delete [] mCsAl.bsQuery;
+		delete [] mCsAl.type;
+	
+		delete [] mCsAl.dashReference;
+		delete [] mCsAl.dashQuery;
+
+		delete [] mCsAl.mismatch;
+
+		delete [] mCsAl.identical;
 		
 		try {
 			mCsAl.csAlignmentLength = pairwiseLen;

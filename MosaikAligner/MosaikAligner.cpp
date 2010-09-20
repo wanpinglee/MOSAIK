@@ -679,6 +679,7 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	// free up some memory
 	//delete [] mReference;
 	delete [] activeThreads;
+	activeThreads = NULL;
 	//if(pRefBegin) delete [] pRefBegin;
 	//if(pRefEnd)   delete [] pRefEnd;
 
@@ -1016,6 +1017,33 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 
 	char* pAnchor = twoBitConcatenatedSequence;
 
+	// DEBUG by WAN-Ping on 20100920
+	//unsigned int counter = 1;
+	//for ( unsigned int i = 0; i < numBases / 4; i++ ) {
+	//	char temp = *pAnchor;
+	//	for ( unsigned int j = 0; j < 4; j++ ) {
+	//		char temp1 = temp;
+	//		unsigned short shiftBit = 6 - (j * 2);
+	//		temp1 = temp1 >> shiftBit;
+	//		temp1 &= 0x03;
+	//		switch(temp1) {
+	//			case 0: cout << 'A'; break;
+	//			case 1: cout << 'C'; break;
+	//			case 2: cout << 'G'; break;
+	//			case 3: cout << 'T'; break;
+	//			default: cout << 'N'; break;
+	//		}
+	//		if ( (counter % 70) == 0 )
+	//			cout << endl;
+	//		counter++;
+	//
+	//	}
+	//	pAnchor++;
+	//}
+
+	//exit(1);
+	// END od DEBUG
+
 	uint64_t key, tKey;
 	unsigned char hashSize = mSettings.HashSize;
 	unsigned char hashBits = hashSize * 2;
@@ -1030,28 +1058,28 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 
 	switch(unusedRightBits) {
 	case 0:
-		rightMasks[0]  = 0xff;
-		rightMasks[1]  = 0xc0;
-		rightMasks[2]  = 0xf0;
-		rightMasks[3]  = 0xfc;
+		rightMasks[0]  = 0xff; // 1111 1111
+		rightMasks[1]  = 0xc0; // 1100 0000
+		rightMasks[2]  = 0xf0; // 1111 0000
+		rightMasks[3]  = 0xfc; // 1111 1100
 		break;
 	case 2:
-		rightMasks[0]  = 0xfc;
-		rightMasks[1]  = 0xff;
-		rightMasks[2]  = 0xc0;
-		rightMasks[3]  = 0xf0;
+		rightMasks[0]  = 0xfc; // 1111 1100
+		rightMasks[1]  = 0xff; // 1111 1111
+		rightMasks[2]  = 0xc0; // 1100 0000
+		rightMasks[3]  = 0xf0; // 1111 0000
 		break;
 	case 4:
-		rightMasks[0]  = 0xf0;
-		rightMasks[1]  = 0xfc;
-		rightMasks[2]  = 0xff;
-		rightMasks[3]  = 0xc0;
+		rightMasks[0]  = 0xf0; // 1111 0000
+		rightMasks[1]  = 0xfc; // 1111 1100
+		rightMasks[2]  = 0xff; // 1111 1111
+		rightMasks[3]  = 0xc0; // 1100 0000
 		break;
 	case 6:
-		rightMasks[0]  = 0xc0;
-		rightMasks[1]  = 0xf0;
-		rightMasks[2]  = 0xfc;
-		rightMasks[3]  = 0xff;
+		rightMasks[0]  = 0xc0; // 1100 0000
+		rightMasks[1]  = 0xf0; // 1111 0000
+		rightMasks[2]  = 0xfc; // 1111 1100
+		rightMasks[3]  = 0xff; // 1111 1111
 		break;
 	default:
 		cout << "ERROR: Unknown unused right bit combination." << endl;
@@ -1091,6 +1119,7 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 	CConsole::Reset();
 	CProgressBar<unsigned int>::StartThread(&j, 0, maxPositions, "ref bases");
 
+	//unsigned int counter = 1;
 	for(; j < maxPositions; j++) {
 
 		// update mask
@@ -1123,6 +1152,28 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 		// add the leftmost byte
 		tKey = pAnchor[currentByte] & leftMasks[cycle++];
 		key |= tKey << shift;
+
+		// DEBUG
+		// show the current hash
+		//for ( unsigned int k = 0; k < hashSize; k++ ) {
+		//	uint64_t tempKey = key;
+		//	//unsigned short shiftBit = hashSize * 2 - ( k + 1 ) * 2;
+		//	//char currentBase = tempKey >> shiftBit;
+		//	char currentBase = tempKey >> (hashSize * 2 - 2);
+		//	currentBase &= 0x03;
+		//	switch(currentBase) {
+		//		case 0: cout << 'A'; break;
+		//		case 1: cout << 'C'; break;
+		//		case 2: cout << 'G'; break;
+		//		case 3: cout << 'T'; break;
+		//		default: cout << 'N'; break;
+		//	}
+		//}
+		//if ( ( counter % 70) == 0 )
+		//	cout << endl;
+		//counter++;
+		//cout << endl;
+		//END of DEBUG
 
 		// increment our offset cycle and 2-bit position
 		if(cycle > 3) {

@@ -512,6 +512,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		exit(1);
 	}
 
+	memset(concatenated2bReference, 0, concatenated2bLength + 1);
+
 	// human genome 36.2
 	//
 	// A: 843953565
@@ -547,8 +549,10 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 		} else {
 
+			// if the previuos base is masked, we extend the current maskRegion.
 			if(currentBase == (lastMaskedBase + 1)) {
 				maskedPositions[maskIndex].End++;
+			// if the previous base is NOT masked, we create a new maskRegion.
 			} else {
 				MaskedPosition mp(currentBase);
 				maskedPositions.push_back(mp);
@@ -559,7 +563,7 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		}
 
 		// store the packed data
-		concatenated2bReference[offset] |= twoBit  << shift;
+		concatenated2bReference[offset] |= twoBit << shift;
 
 		// update the bit shifts
 		shift -= 2;
@@ -572,6 +576,36 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	}
 
 	printf("finished.\n");
+
+	// DEBUG by Wan-Ping on 20100920
+        //unsigned int counter = 1;
+	//unsigned int numBases = currentBase;
+        //char* pAnchor = concatenated2bReference;
+	//for ( unsigned int i = 0; i < numBases / 4; i++ ) {
+        //      unsigned char temp = 0;
+	//	temp = *pAnchor;
+        //        for ( unsigned int j = 0; j < 4; j++ ) {
+        //                char temp1 = temp;
+        //                unsigned short shiftBit = 6 - (j * 2);
+        //                temp1 = temp1 >> shiftBit;
+        //                temp1 &= 0x03;
+        //                switch(temp1) {
+        //                        case 0: cout << 'A'; break;
+        //                        case 1: cout << 'C'; break;
+        //                        case 2: cout << 'G'; break;
+        //                        case 3: cout << 'T'; break;
+        //                        default: cout << 'N'; break;
+        //                }
+        //                if ( (counter % 70) == 0 )
+        //                        cout << endl;
+	//		counter++;
+	//
+        //        }
+        //        pAnchor++;
+        //}
+	// END of DEBUG
+
+
 
 	// =============================================
 	// writing concatenated 2-bit reference sequence
@@ -587,6 +621,7 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	fio.Write(concatenated2bReference, concatenated2bLength, refStream);
 
 	printf("finished.\n");
+
 
 	// ======================
 	// writing masking vector
@@ -629,6 +664,7 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		// clean up
 		delete [] maskedBuffer;
 	}
+
 
 	// clean up
 	fio.Clear();
