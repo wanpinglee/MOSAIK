@@ -179,9 +179,9 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-act",  "threshold",      "the alignment candidate threshold (length)", "", settings.EnableAlignmentCandidateThreshold, settings.AlignmentCandidateThreshold, pFilterOpts);
 	COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
 	COptions::AddValueOption("-ls",   "radius",         "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
-	COptions::AddValueOption("-mhp",  "hash positions", "enable an alignment quality threshold",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
-	COptions::AddValueOption("-min",  "# nucleotides",  "enable an alignment quality threshold",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
-	COptions::AddValueOption("-minp", "percent",        "the # of mismatches allowed",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
+	COptions::AddValueOption("-mhp",  "hash positions", "the max # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
+	COptions::AddValueOption("-min",  "# nucleotides",  "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
+	COptions::AddValueOption("-minp", "percent",        "the min alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
 	COptions::AddValueOption("-mm",   "mismatches",     "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
 	COptions::AddValueOption("-mmp",  "threshold",      "enable an alignment quality threshold",      "", settings.CheckMismatchPercent,              settings.MismatchPercent,             pFilterOpts);
 	COptions::AddOption("-mmal", "when enabled, unaligned portions of the read will not count as a mismatch", settings.UseAlignedLengthForMismatches,                                       pFilterOpts);
@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
 	OptionGroup* pPerformanceOpts = COptions::CreateOptionGroup("Performance");
 	COptions::AddValueOption("-p",  "processors", "uses the specified number of processors", "", settings.HasNumThreads, settings.NumThreads, pPerformanceOpts);
 	COptions::AddValueOption("-bw", "bandwidth",  "specifies the Smith-Waterman bandwidth", "",  settings.HasBandwidth,  settings.Bandwidth,  pPerformanceOpts, DEFAULT_BANDWIDTH);
-	COptions::AddOption("-lm",                    "keeps the keys file on disk",              settings.UseLowMemory,                                 pPerformanceOpts);
+	COptions::AddOption("-lm",                    "enable low-memory functions",              settings.UseLowMemory,                                 pPerformanceOpts);
 
 	// add the jump database options
 	OptionGroup* pJumpOpts = COptions::CreateOptionGroup("Jump database");
