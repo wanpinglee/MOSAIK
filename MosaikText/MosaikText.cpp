@@ -607,7 +607,7 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	if(alIter->IsResolvedAsPair) {
 		// N.B. we already checked that the reference indexes were identical
 		gzprintf(mStreams.sam, "=\t%u\t%u\t", alIter->MateReferenceBegin + 1, insertSize);
-	} else gzprintf(mStreams.sam, "*\t*\t*\t");
+	} else gzprintf(mStreams.sam, "*\t0\t0\t");
 
 	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches);	
 }
