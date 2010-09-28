@@ -174,6 +174,11 @@ bool CFasta::LoadNextMate(FastaTags& ft, Mosaik::Mate& m) {
 		sb << mBaseBuffer;
 	}
 
+	//if ( ft.Name == "F6AN14005FWVK2" ) {
+	//	cout << sb.str() << endl;
+	//	cout << sb.str().size() << endl;
+	//}
+
 	m.Bases = sb.str().c_str();
 	sb.str("");
 
@@ -187,9 +192,16 @@ bool CFasta::LoadNextMate(FastaTags& ft, Mosaik::Mate& m) {
 			QUALITY_FILE_UNGETC(ch);
 			if((ch == '>') || QUALITY_FILE_EOF) break;
 			QUALITY_FILE_GETS;
-			CSequenceUtilities::Chomp(mQualityBuffer);
+			CSequenceUtilities::ChompQuality(mQualityBuffer);
 			sb << mQualityBuffer;
 		}
+
+		//if ( ft.Name == "F6AN14005FWVK2" ) {
+		//	cout << sb.str() << endl;
+		//	cout << sb.str().size() << endl;
+		//	char a;
+		//	cin >> a;
+		//}
 
 		string qualities = sb.str();
 		CRegexUtilities::ConvertQualities(qualities, m.Qualities);

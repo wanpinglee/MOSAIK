@@ -29,6 +29,7 @@ public:
 	static inline void LowercaseSequence(string& s);
 	// Trims the carriage return at the end of a string
 	static inline void Chomp(char* s);
+	static inline void ChompQuality(char* s);
 };
 
 // Trims the carriage return at the end of a string
@@ -39,6 +40,19 @@ inline void CSequenceUtilities::Chomp(char* s) {
 
 	while((s[sLen] == 10) || (s[sLen] == 13)) {
 		s[sLen] = 0;
+		sLen--;
+		if(sLen < 0) break;
+	}
+}
+
+// Trims the carriage return at the end of a string
+inline void CSequenceUtilities::ChompQuality(char* s) {
+	size_t sLen = strlen(s);
+	if(sLen == 0) return;
+	sLen--;
+
+	while((s[sLen] == 10) || (s[sLen] == 13)) {
+		s[sLen] = ' ';
 		sLen--;
 		if(sLen < 0) break;
 	}
