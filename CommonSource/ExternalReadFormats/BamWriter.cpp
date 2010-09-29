@@ -501,6 +501,13 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	const unsigned int nameLen  = readName.Length() + 1;
 	const unsigned int queryLen = query.Length();
 
+	// sanity check
+	alIter->BaseQualities.CheckQuality();
+	//if ( queryLen != alIter->BaseQualities.Length() ) {
+	//        printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", queryLen, alIter->BaseQualities.Length(), readName.CData());
+        //        exit(1);
+        //}
+	
 	// encode the query
 	string encodedQuery;
 	EncodeQuerySequence(query, encodedQuery);

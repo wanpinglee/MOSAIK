@@ -601,6 +601,14 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	CMosaikString bq(alIter->BaseQualities);
 	bq.Increment(33);
 
+	// sanity check
+	alIter->BaseQualities.CheckQuality();
+	//if ( alIter->Query.Length() != alIter->BaseQualities.Length() ) {
+	//	printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", alIter->Query.Length(), alIter->BaseQualities.Length(), readName.CData());
+	//	exit(1);
+	//}
+	
+
 	gzprintf(mStreams.sam, "%s\t%u\t%s\t%u\t%u\t%s\t", readName.CData(), flag, alIter->ReferenceName, 
 		alIter->ReferenceBegin + 1, alIter->Quality, mCigarBuffer);
 
