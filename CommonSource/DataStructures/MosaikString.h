@@ -103,7 +103,7 @@ public:
 	bool empty(void);
 	// clear the string
 	bool clear(void);
-	// checks values of qualities which shouldn't be larger than 61
+	// checks values of qualities which shouldn't be larger than 60
 	void CheckQuality();
 
 private:

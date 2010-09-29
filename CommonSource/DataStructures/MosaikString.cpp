@@ -280,7 +280,7 @@ size_t CMosaikString::GetHash(void) const {
 	return (size_t)hash;
 }
 
-// checks values of qualities which shouldn't be larger than 61
+// checks values of qualities which shouldn't be larger than 60
 void CMosaikString::CheckQuality() {
 	for(unsigned int i = 0; i < mLength; i++)
 		if ( mData[i] > 60 ) {
