@@ -254,6 +254,14 @@ namespace MosaikReadFormat {
 		// ============
 		// store mate 1
 		// ============
+		
+
+		// sanity check
+		if ( mr.Mate1.Bases.Length() != mr.Mate1.Qualities.Length() ) {
+			printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", mr.Mate1.Bases.Length(), mr.Mate1.Qualities.Length(), mr.Name.CData());
+			exit(1);
+		}
+		
 
 		// store the read length
 		memcpy(mBuffer + bufferOffset, (char*)&numMate1Bases, SIZEOF_SHORT);
@@ -278,6 +286,12 @@ namespace MosaikReadFormat {
 
 		if(isPairedEnd) {
 
+			// sanity check
+			if ( mr.Mate2.Bases.Length() != mr.Mate2.Qualities.Length() ) {
+				printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", mr.Mate2.Bases.Length(), mr.Mate2.Qualities.Length(), mr.Name.CData());
+				exit(1);
+			}
+			
 			// store the read length
 			memcpy(mBuffer + bufferOffset, (char*)&numMate2Bases, SIZEOF_SHORT);
 			bufferOffset += SIZEOF_SHORT;

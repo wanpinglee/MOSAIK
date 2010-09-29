@@ -174,11 +174,6 @@ bool CFasta::LoadNextMate(FastaTags& ft, Mosaik::Mate& m) {
 		sb << mBaseBuffer;
 	}
 
-	//if ( ft.Name == "F6AN14005FWVK2" ) {
-	//	cout << sb.str() << endl;
-	//	cout << sb.str().size() << endl;
-	//}
-
 	m.Bases = sb.str().c_str();
 	sb.str("");
 
@@ -196,18 +191,22 @@ bool CFasta::LoadNextMate(FastaTags& ft, Mosaik::Mate& m) {
 			sb << mQualityBuffer;
 		}
 
-		//if ( ft.Name == "F6AN14005FWVK2" ) {
-		//	cout << sb.str() << endl;
-		//	cout << sb.str().size() << endl;
-		//	char a;
-		//	cin >> a;
-		//}
-
 		string qualities = sb.str();
 		CRegexUtilities::ConvertQualities(qualities, m.Qualities);
 
 	} else m.Qualities.Fill(mAssignedBaseQuality, m.Bases.Length());
 
+	
+	// This sanity check is moved to ReadWriter
+	// sanity check
+	//if ( m.Bases.Length() != m.Qualities.Length() ) {
+	//	printf("ERROR: The lengths of bases(%u) and qualities(%u) didn't match.\n", m.Bases.Length(), m.Qualities.Length());
+	//	printf("%s\n", m.Bases.CData());
+	//	m.Qualities.Increment(33);
+	//	printf("%s\n", m.Qualities.CData());
+	//	exit(1);
+	//}
+	
 	m.Bases.Uppercase();
 
 	return true;
