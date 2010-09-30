@@ -104,7 +104,7 @@ public:
 	// clear the string
 	bool clear(void);
 	// checks values of qualities which shouldn't be larger than 60
-	void CheckQuality();
+	void CheckQuality( void );
 
 private:
 	// our underlying data
