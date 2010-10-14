@@ -814,6 +814,7 @@ void CMosaikAligner::PrintStatistics () {
 	if ( mFlags.UseLowMemory ) {
 		mStatisticsCounters.ShortMates      = 0;
 		mStatisticsCounters.FailedHashMates = 0;
+		mStatisticsCounters.FilteredOutMates= 0;
 		mStatisticsCounters.UnalignedReads  = numReadArchiveReads - mStatisticsCounters.AlignedReads;
 	}
 
