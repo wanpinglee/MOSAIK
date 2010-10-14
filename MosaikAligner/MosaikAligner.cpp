@@ -812,10 +812,10 @@ void CMosaikAligner::PrintStatistics () {
 	const uint64_t totalMates = isPairedEnd ? numReadArchiveReads * 2 : numReadArchiveReads;
 	
 	if ( mFlags.UseLowMemory ) {
-		mStatisticsCounters.ShortMates      = 0;
-		mStatisticsCounters.FailedHashMates = 0;
-		mStatisticsCounters.FilteredOutMates= 0;
-		mStatisticsCounters.UnalignedReads  = numReadArchiveReads - mStatisticsCounters.AlignedReads;
+		mStatisticsCounters.ShortMates       = 0;
+		mStatisticsCounters.FailedHashMates  = 0;
+		mStatisticsCounters.UnalignedReads   = numReadArchiveReads - mStatisticsCounters.AlignedReads;
+		mStatisticsCounters.FilteredOutMates = mStatisticsCounters.UnalignedReads;
 	}
 
 	const uint64_t totalAlignedMates = mStatisticsCounters.UniqueMates + mStatisticsCounters.NonUniqueMates;
