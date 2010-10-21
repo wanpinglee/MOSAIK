@@ -42,12 +42,16 @@ struct ConfigurationSettings {
 	bool SampleAllFragmentLengths;
 	bool UseConsedRenaming;
 	bool UseNonUniqueReads;
+	bool HasInputFastqFilename;
+	bool HasInputFastq2Filename;
 
 	// filenames
 	string DuplicateDirectory;
 	string InputMosaikAlignmentFilename;
 	string OutputMosaikAlignmentFilename;
 	string UnresolvedMosaikAlignmentFilename;
+	string InputFastqFilename;
+	string InputFastq2Filename;
 
 	// parameters
 	double ConfidenceInterval;
@@ -69,6 +73,8 @@ struct ConfigurationSettings {
 		, SampleAllFragmentLengths(false)
 		, UseConsedRenaming(false)
 		, UseNonUniqueReads(false)
+		, HasInputFastqFilename(false)
+		, HasInputFastq2Filename(false)
 		, ConfidenceInterval(DEFAULT_CONFIDENCE_INTERVAL)
 		, CacheSize(DEFAULT_CACHE_SIZE)
 	{}
@@ -95,11 +101,13 @@ int main(int argc, char* argv[]) {
 
 	// add the input/output options
 	OptionGroup* pIOOpts = COptions::CreateOptionGroup("Input & Output");
-	COptions::AddOption("-consed",                                "appends a number to read names for consed compatibility",                   settings.UseConsedRenaming,                                                        pIOOpts);
-	COptions::AddValueOption("-dup", "directory",                 "enables duplicate filtering with databases in the specified directory", "", settings.HasDuplicateDirectory,            settings.DuplicateDirectory,            pIOOpts);
-	COptions::AddValueOption("-in",  "MOSAIK alignment filename", "the input MOSAIK alignment file",  "An input MOSAIK alignment filename",    settings.HasInputMosaikAlignmentFilename,  settings.InputMosaikAlignmentFilename,  pIOOpts);
-	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output MOSAIK alignment file", "An output MOSAIK alignment filename",   settings.HasOutputMosaikAlignmentFilename, settings.OutputMosaikAlignmentFilename, pIOOpts);
-	COptions::AddValueOption("-mem", "# of alignments in memory", "sets the sorting cache size",                                           "", settings.HasCacheSize,                     settings.CacheSize,                     pIOOpts, DEFAULT_CACHE_SIZE);
+	COptions::AddOption("-consed",                                "appends a number to read names for consed compatibility",                     settings.UseConsedRenaming,                                                        pIOOpts);
+	COptions::AddValueOption("-dup", "directory",                 "enables duplicate filtering with databases in the specified directory", "",   settings.HasDuplicateDirectory,            settings.DuplicateDirectory,            pIOOpts);
+	COptions::AddValueOption("-in",  "MOSAIK alignment filename", "the input MOSAIK alignment file",      "An input MOSAIK alignment filename",  settings.HasInputMosaikAlignmentFilename,  settings.InputMosaikAlignmentFilename,  pIOOpts);
+	//COptions::AddValueOption("-q",   "FASTQ filename",            "the original FASTQ filename",          "An input FASTQ filename",             settings.HasInputFastqFilename,  settings.InputFastqFilename,  pIOOpts);
+	//COptions::AddValueOption("-q2",  "FASTQ filename",            "the original 2nd mate FASTQ filename", "An input FASTQ filename",             settings.HasInputFastq2Filename,  settings.InputFastq2Filename,  pIOOpts);
+	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output MOSAIK alignment file",     "An output MOSAIK alignment filename", settings.HasOutputMosaikAlignmentFilename, settings.OutputMosaikAlignmentFilename, pIOOpts);
+	COptions::AddValueOption("-mem", "# of alignments in memory", "sets the sorting cache size",                                           "",   settings.HasCacheSize,                     settings.CacheSize,                     pIOOpts, DEFAULT_CACHE_SIZE);
 
 	// add the single-end options
 	OptionGroup* pSingleOpts = COptions::CreateOptionGroup("Single-end Options");
@@ -122,10 +130,19 @@ int main(int argc, char* argv[]) {
 	// parse the current command line
 	COptions::Parse(argc, argv);
 
+	// test to see if the specified input files exist
+	SequencingTechnologies seqTech;
+	AlignmentStatus alignmentStatus;
+	MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputMosaikAlignmentFilename, seqTech, alignmentStatus, true);
+
+	// activate paired-end sorting mode
+	bool isAlignmentArchivePairedEnd = false;
+	if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
+
 	// =============================
 	// check for missing information
 	// =============================
-
+	
 	bool foundError = false;
 	ostringstream errorBuilder;
 	const string ERROR_SPACER(7, ' ');
@@ -135,6 +152,24 @@ int main(int argc, char* argv[]) {
 		errorBuilder << ERROR_SPACER << "The confidence interval should be between 0.0 and 1.0." << endl;
 		foundError = true;
 	}
+
+	// October 19th, 2010
+	// patching paired-end archives needs two the original FASTQ files
+	/*
+	if ( isAlignmentArchivePairedEnd ) {
+		bool noneFastqFiles = !settings.HasInputFastqFilename && !settings.HasInputFastq2Filename;
+		bool bothFastqFiles = settings.HasInputFastqFilename && settings.HasInputFastq2Filename;
+		if ( !noneFastqFiles && !bothFastqFiles ) {
+			errorBuilder << ERROR_SPACER << "For paired-end data, both two original FASTQ files are needed, -q and -q2." << endl;
+			foundError = true;
+		}
+	} else {
+		if ( settings.HasInputFastq2Filename ) {
+			errorBuilder << ERROR_SPACER << " For single-end data, please use -q." << endl;
+			foundError = true;
+		}
+	}
+	*/
 
 	// print the errors if any were found
 	if(foundError) {
@@ -161,13 +196,13 @@ int main(int argc, char* argv[]) {
 	}
 
 	// test to see if the specified input files exist
-	SequencingTechnologies seqTech;
-	AlignmentStatus alignmentStatus;
-	MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputMosaikAlignmentFilename, seqTech, alignmentStatus, true);
+	//SequencingTechnologies seqTech;
+	//AlignmentStatus alignmentStatus;
+	//MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputMosaikAlignmentFilename, seqTech, alignmentStatus, true);
 
 	// activate paired-end sorting mode
-	bool isAlignmentArchivePairedEnd = false;
-	if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
+	//bool isAlignmentArchivePairedEnd = false;
+	//if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
 
 	// start benchmarking
 	CBenchmark bench;
@@ -223,6 +258,12 @@ int main(int argc, char* argv[]) {
 			printf("- disabling fragment alignment quality calculation.\n");
 			pes.DisableFragmentAlignmentQuality();
 		}
+
+		// patch the original fastq information
+		//if(settings.HasInputFastqFilename) {
+		//	printf("- patching the original FASTQ information.\n");
+		//	pes.PatchFastq();
+		//}
 
 		// resolve the paired-end reads
 		pes.ResolvePairedEndReads(settings.InputMosaikAlignmentFilename, settings.OutputMosaikAlignmentFilename);

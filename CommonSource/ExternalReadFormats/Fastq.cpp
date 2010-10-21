@@ -97,6 +97,191 @@ void CFastq::Close(void) {
 	READ_FILE_CLOSE;
 }
 
+// create a temporary FASTQ which is sorted by read names
+void CFastq::SortByName(const string filename) {
+
+	if(!mIsOpen) {
+		printf("ERROR: SortByName was called before the FASTQ file was opened.\n");
+		exit(1);
+	}
+
+	this->Rewind();
+
+	CMosaikString readName;
+	Mosaik::Mate m;
+
+	unsigned int cacheSize = 10000000;
+
+	vector<string> tempFastqs;
+	unsigned int readCount = 0;
+	list<Mosaik::Read> cache;
+	
+	// partially sort the file and store them in several temp files
+	while ( this->LoadNextMate(readName, m) ) {
+		
+		readCount++;
+
+		Mosaik::Read r;
+		r.Name  = readName;
+		r.Mate1 = m;
+
+		cache.push_back(r);
+		
+		// full
+		if ( readCount == cacheSize ) {
+			// sort by read names
+			cache.sort();
+			
+			// retrieve a temporary filename
+			string tempFilename;
+			CFileUtilities::GetTempFilename(tempFilename);
+			tempFastqs.push_back(tempFilename);
+
+			ofstream cacheFile;
+			cacheFile.open(tempFilename.c_str(), ios::out);
+			for ( list<Mosaik::Read>::iterator ite = cache.begin(); ite != cache.end(); ite++ ) {
+				cacheFile << '@' << ite->Name << endl;
+				cacheFile << ite->Mate1.Bases << endl;
+				ite->Mate1.Qualities.Increment(mFastqOffset);
+				cacheFile << '+' << ite->Name << endl;
+				cacheFile << ite->Mate1.Qualities << endl;
+			}
+			cacheFile.close();
+
+			readCount = 0;
+		}
+
+	}
+	// sort the last list
+	if ( readCount > 0 ) {
+		// sort by read names
+		cache.sort();
+
+		// retrieve a temporary filename
+		string tempFilename;
+		CFileUtilities::GetTempFilename(tempFilename);
+		tempFastqs.push_back(tempFilename);
+
+		ofstream cacheFile;
+		cacheFile.open(tempFilename.c_str(), ios::out);
+		for ( list<Mosaik::Read>::iterator ite = cache.begin(); ite != cache.end(); ite++ ) {
+			cacheFile << '@' << ite->Name << endl;
+			cacheFile << ite->Mate1.Bases << endl;
+			ite->Mate1.Qualities.Increment(mFastqOffset);
+			cacheFile << '+' << ite->Name << endl;
+			cacheFile << ite->Mate1.Qualities << endl;
+		}
+		cacheFile.close();
+	}
+
+
+	// globally sort the file
+	unsigned int nTemp = tempFastqs.size();
+	vector<CFastq> tempReaders;
+	tempReaders.resize( nTemp );
+	for ( unsigned int i = 0; i < nTemp; i++ )
+		tempReaders[i].Open(tempFastqs[i].c_str());
+
+	// load the top element in each temp
+	vector<Mosaik::Read> tops;
+	vector<bool> dones;
+	unsigned int nDone = 0;
+	for ( vector<CFastq>::iterator ite = tempReaders.begin(); ite != tempReaders.end(); ite++ ) {
+		Mosaik::Read r;
+		if ( ite->LoadNextMate( readName, m ) ) {
+			r.Name = readName;
+			r.Mate1 = m;
+			tops.push_back(r);
+			dones.push_back(false);
+		}
+		else {
+			r.clear();
+			tops.push_back(r);
+			dones.push_back(true);
+		}
+	}
+
+	ofstream file;
+	file.open(filename.c_str(), ios::out);
+
+	// pick the min one
+	while ( nDone != ( nTemp - 1 ) ) {
+		unsigned int minId;
+		minId = FindMinRead(tops);
+
+		if ( dones[minId] ) {
+			cout << "ERROR: The targeted temporary has been empty." << endl;
+			exit(1);
+		}
+
+		file << '@' << tops[minId].Name << endl;
+		file << tops[minId].Mate1.Bases << endl;
+		tops[minId].Mate1.Qualities.Increment(mFastqOffset);
+		file << '+' << tops[minId].Name << endl;
+		file << tops[minId].Mate1.Qualities << endl;
+
+
+		if ( tempReaders[minId].LoadNextMate( readName, m ) ) {
+			tops[minId].clear();
+			tops[minId].Name = readName;
+			tops[minId].Mate1 = m;
+		}
+		else {
+			tops[minId].clear();
+			dones[minId] = true;
+			nDone++;
+			//delete temp file
+			rm( tempFastqs[minId].c_str() );
+		}
+	}
+
+	for ( unsigned int i = 0; i < dones.size(); i++ ) {
+		if ( !dones[i] ) {
+			// dump the last one on tops
+			file << '@' << tops[i].Name << endl;
+			file << tops[i].Mate1.Bases << endl;
+			tops[i].Mate1.Qualities.Increment(mFastqOffset);
+			file << '+' << tops[i].Name << endl;
+			file << tops[i].Mate1.Qualities << endl;
+
+			// dump the remaining reads in temp file
+			while( tempReaders[i].LoadNextMate( readName, m ) ) {
+				file << '@' << readName.CData() << endl;
+				file << m.Bases << endl;
+				m.Qualities.Increment(mFastqOffset);
+				file << '+' << readName.CData() << endl;
+				file << m.Qualities << endl;
+			}
+			// delete temp file
+			rm( tempFastqs[i].c_str() );
+		}
+	}
+
+	file.close();
+
+}
+
+
+// given a vector containing reads, find the min read and return the vector id
+inline unsigned int CFastq::FindMinRead ( vector<Mosaik::Read>& tops ) {
+	unsigned int minId = 0;
+	for ( unsigned int i = 1; i < tops.size(); i++ ) {
+		if ( tops[i].Name.empty() )
+			continue;
+		else {
+			if ( tops[minId].Name.empty() )
+				minId = i;
+			else {
+				if ( tops[i] < tops[minId] )
+					minId = i;
+			}
+		}
+	}
+
+	return minId;
+
+}
+
 // loads the next read from the FASTQ file
 bool CFastq::LoadNextMate(CMosaikString& readName, Mosaik::Mate& m) {
 
@@ -169,20 +354,23 @@ bool CFastq::LoadNextMate(CMosaikString& readName, Mosaik::Mate& m) {
 	}
 
 	// determine the FASTQ style
-	if(!mIsFastqStyleKnown) {
-		char firstBase = m.Qualities[0];
-
-		if(firstBase <= 72) {
-			mFastqOffset = NORMAL_FASTQ_OFFSET;
-			mUsingIlluminaStyle = false;
-		} else { 
-			mFastqOffset = ILLUMINA_FASTQ_OFFSET;
-			mUsingIlluminaStyle = true;
-		}
-
-		mIsFastqStyleKnown = true;
-	}
-
+	// what does this mean? October 19th, 2010
+	//if(!mIsFastqStyleKnown) {
+	//	char firstBase = m.Qualities[0];
+	//
+	//	if(firstBase <= 72) {
+	//		mFastqOffset = NORMAL_FASTQ_OFFSET;
+	//		mUsingIlluminaStyle = false;
+	//	} else { 
+	//		mFastqOffset = ILLUMINA_FASTQ_OFFSET;
+	//		mUsingIlluminaStyle = true;
+	//	}
+	//
+	//	mIsFastqStyleKnown = true;
+	//}
+	mFastqOffset = NORMAL_FASTQ_OFFSET;
+	
+	
 	m.Bases.Uppercase();
 	m.Qualities.Decrement(mFastqOffset);
 
@@ -206,7 +394,7 @@ void CFastq::Open(const string& filename) {
 
 	FILE* checkStream = NULL;
 	if(fopen_s(&checkStream, filename.c_str(), "rb") != 0) {
-		printf("ERROR: Unable to open the read FASTQ file.\n");
+		printf("ERROR: Unable to open the read FASTQ file, filename:%s.\n", filename.c_str());
 		exit(1);
 	}
 

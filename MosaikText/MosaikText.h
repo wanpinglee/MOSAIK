@@ -23,6 +23,8 @@
 #include "AlignmentReader.h"
 #include "ColorspaceUtilities.h"
 #include "BamWriter.h"
+#include "Fastq.h"
+#include "FileUtilities.h"
 #include "Mosaik.h"
 #include "MosaikString.h"
 #include "ProgressBar.h"
@@ -77,6 +79,10 @@ public:
 	void ParseMosaikAlignmentFile(const string& alignmentFilename);
 	// parses the specified MOSAIK read file
 	void ParseMosaikReadFile(const string& readFilename);
+	// parse the fastq file
+	void ParseFastqFile(const string& readFilename);
+	// parse the 2nd mate fastq file
+	void ParseFastq2File(const string& readFilename);
 
 private:
 	struct PslBlock {
@@ -106,6 +112,7 @@ private:
 		bool IsSamEnabled;
 		bool IsScreenEnabled;
 		bool UseReferenceFilter;
+		bool EnableFastqPatching;
 
 		Flags(void)
 			: EvaluateUniqueReadsOnly(false)
@@ -118,6 +125,7 @@ private:
 			, IsSamEnabled(false)
 			, IsScreenEnabled(false)
 			, UseReferenceFilter(false)
+			, EnableFastqPatching(false)
 		{}
 	} mFlags;
 	// our settings data structure
@@ -129,6 +137,8 @@ private:
 		string FastqFilename;
 		string PslFilename;
 		string SamFilename;
+		string inputFastqFilename;
+		string inputFastq2Filename;
 		unsigned int FilteredReferenceIndex;
 		uint64_t NumFilteredReferenceReads;
 	} mSettings;

@@ -53,6 +53,8 @@ public:
 	char& operator[](const int index);
 	// appends the specified string to the current string
 	void Append(const char* s);
+	// appends the specified string to the current string
+	void Append(const char* s, const unsigned int sLen);
 	// returns a const pointer to the data
 	const char* CData(void) const;
 	// copies the specified c-style string

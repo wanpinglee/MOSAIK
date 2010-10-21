@@ -94,6 +94,8 @@ public:
 	void ResolvePairedEndReads(const string& inputFilename, const string& outputFilename);
 	// sets the desired confidence interval
 	void SetConfidenceInterval(const double& percent);
+	// patch the original fastq information
+	void PatchFastq(void);
 
 private:
 	// define our sort configuration structure
@@ -121,6 +123,8 @@ private:
 		bool ResolveUU;
 		bool SampleAllFragmentLengths;
 		bool UseFragmentAlignmentQuality;
+		bool PatchFastq;
+		bool SortByName;
 
 		FlagData()
 			: AllowAllUniqueFragmentLengths(false)
@@ -132,6 +136,8 @@ private:
 			, ResolveUU(false)
 			, SampleAllFragmentLengths(false)
 			, UseFragmentAlignmentQuality(true)
+			, PatchFastq(false)
+			, SortByName(false)
 		{}
 	} mFlags;
 	// retrieves an alignment from the specified temporary file and adds it to the specified list
@@ -155,6 +161,7 @@ private:
 	// our reference gap hash map vector and associated iterator
 	vector<unordered_map<unsigned int, unsigned short> > mRefGapVector;
 	unordered_map<unsigned int, unsigned short>::iterator mRefGapIter;
+	inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
 };
 
 // returns the current alignment model based on the order and orientation of the mates
@@ -192,3 +199,8 @@ inline unsigned char CPairedEndSort::GetFragmentAlignmentQuality(int aq, const b
 	return (unsigned char)aq;
 }
 
+// sort alignments by their names
+inline bool CPairedEndSort::NameLessThan (const Alignment& al1, const Alignment& al2){
+	if ( al1.Name < al2.Name ) return true;
+	return false;
+}

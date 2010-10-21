@@ -43,5 +43,9 @@ namespace Mosaik {
 
 			return true;
 		}
+
+		bool operator<(const Read& i) const{
+			return Name < i.Name;
+		}
 	};
 }

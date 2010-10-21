@@ -42,6 +42,11 @@ void CPairedEndSort::ConfigureResolution(const bool uo, const bool uu, const boo
 	mFlags.ResolveMM = mm;
 }
 
+// patch the original fastq information
+void CPairedEndSort::PatchFastq(void) {
+	mFlags.PatchFastq = true;
+}
+
 // disables fragment alignment quality calculation
 void CPairedEndSort::DisableFragmentAlignmentQuality(void) {
 	mFlags.UseFragmentAlignmentQuality = false;
@@ -626,6 +631,11 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	// rewind the alignment reader
 	reader.Rewind();
 
+	// make alignments sorted by names
+	//if ( mFlags.PatchFastq ) {
+		mFlags.SortByName = true;
+	//}
+
 	while(reader.LoadNextRead(ar)) {
 
 		// localize the read name
@@ -639,7 +649,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		const bool isUO = ar.Mate1Alignments.empty() || ar.Mate2Alignments.empty();
 		const bool isUU =  isMate1Unique &&  isMate2Unique;
 		const bool isMM = !isMate1Unique && !isMate2Unique;
-		const bool isUM = !isUO && !isUU && !isMM;
+		//const bool isUM = !isUO && !isUU && !isMM;
 
 		// handle orphans
 		if(isUO) {
@@ -837,6 +847,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	if(acIter != alignmentCache.begin()) numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
 
+	
+	
 	// =======================
 	// sort the resolved reads
 	// =======================
@@ -885,6 +897,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 		// sort the alignment list
 		alignments.sort();
+		//alignments.sort(NameLessThan);
 
 		// grab the two best alignments
 		bestIter     = alignments.begin();
@@ -997,7 +1010,12 @@ uint64_t CPairedEndSort::Serialize(list<Alignment>& alignmentCache, const unsign
 	if(numEntries != mSettings.NumCachedReads) alignmentCache.resize(numEntries);
 
 	// sort if have more than one read
-	if(numEntries > 1) alignmentCache.sort();
+	//if(numEntries > 1) {
+	//	if ( mFlags.SortByName )
+			//alignmentCache.sort(NameLessThan);
+	//	else
+			alignmentCache.sort();
+	//}
 
 	// retrieve a temporary filename
 	string tempFilename;

@@ -16,6 +16,17 @@ CMosaikText::CMosaikText(void) {}
 // destructor
 CMosaikText::~CMosaikText(void) {}
 
+// input fastq file
+void CMosaikText::ParseFastqFile( const string& filename ) {
+	mFlags.EnableFastqPatching = true;
+	mSettings.inputFastqFilename = filename;
+}
+
+// input 2nd mate fastq file
+void CMosaikText::ParseFastq2File( const string& filename ) {
+	mSettings.inputFastq2Filename = filename;
+}
+
 // enables AXT output
 void CMosaikText::EnableAxtOutput(const string& filename) { 
 	mFlags.IsAxtEnabled   = true;
@@ -221,6 +232,190 @@ void CMosaikText::InitializeSam(const bool isSortedByPosition, vector<ReferenceS
 // parses the specified MOSAIK alignment file and matching anchors file
 void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 
+	// ============================
+	// patch trimmed information
+	// ============================
+	
+	if (mFlags.EnableFastqPatching) {
+		
+		// sort fastq by names
+		
+		printf("%s\n%s\n", mSettings.inputFastqFilename.c_str(), mSettings.inputFastq2Filename.c_str());
+		
+		string tempFilename;
+		CFileUtilities::GetTempFilename(tempFilename);
+		CFastq fastqReader;
+		fastqReader.Open(mSettings.inputFastqFilename);
+		fastqReader.SortByName(tempFilename);
+		fastqReader.Close();
+		mSettings.inputFastqFilename = tempFilename;
+
+		
+		const bool hasFastq2 = !mSettings.inputFastq2Filename.empty();
+		if ( hasFastq2 ) {
+			CFastq fastqReader2;
+			tempFilename.clear();
+			CFileUtilities::GetTempFilename(tempFilename);
+			fastqReader2.Open(mSettings.inputFastq2Filename);
+			fastqReader2.SortByName(tempFilename);
+			fastqReader2.Close();
+			mSettings.inputFastq2Filename = tempFilename;
+		}
+		
+
+		//mSettings.inputFastqFilename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/43itokbovrmlr2ai9i23cek1l8i7nxvh.tmp";
+		//mSettings.inputFastq2Filename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/sgyxnhb1iblwpd8tst2qfbyl8lc8j1oh.tmp";
+		//const bool hasFastq2 = !mSettings.inputFastq2Filename.empty();
+		
+		// open fastq files and load the first read
+		CFastq fastqReader1, fastqReader2;
+        	CMosaikString readName1, readName2;
+	        Mosaik::Mate m1, m2;
+		fastqReader1.Open( mSettings.inputFastqFilename );
+		fastqReader1.LoadNextMate(readName1, m1);
+		if ( hasFastq2 ) {
+			fastqReader2.Open( mSettings.inputFastq2Filename );
+			fastqReader2.LoadNextMate(readName2, m2);
+		}
+
+		// patch trimmed bases
+		MosaikReadFormat::CAlignmentReader reader;
+		reader.Open(alignmentFilename);
+        	// retrieve all reads from the alignment reader
+		Mosaik::AlignedRead ar;
+
+		// reserve buffer for ReverseStrand
+		unsigned int bufferSize = 1024;
+		char* originalReverseMate1 = new char[bufferSize];
+		char* originalReverseMate2 = new char[bufferSize];
+		unsigned int clipSize = 1024;
+		char* clips = new char[clipSize];
+		memset( clips, 'Z', clipSize);
+
+		while(reader.LoadNextRead(ar)) {
+			
+			// find the read in fastqs
+			while ( ar.Name != readName1 ) {
+				bool loadFastq1 = false, loadFastq2 = false;
+				loadFastq1 = fastqReader1.LoadNextMate(readName1, m1);
+				if ( hasFastq2 )
+					loadFastq2 = fastqReader2.LoadNextMate(readName2, m2);
+
+				if ( !loadFastq1 || ( hasFastq2 && !loadFastq2 ) ) {
+					cout << "ERROR: The targeted read name (" << ar.Name  << ") cannot be found in FASTQs." << endl;
+					exit(1);
+				}
+			}
+
+			// sanity check
+			// we shouldn't have any alignment in ar.Mate2Alignments
+			// since MosaikSort didn't put anything in ar.Mate2Alignments
+			const unsigned int numMate2Alignments = (unsigned int)ar.Mate2Alignments.size();
+			if ( numMate2Alignments > 0 ) {
+				cout << "ERROR: Found alignments in 2nd mate." << endl;
+				exit(1);
+			}
+
+			// Get Reverse Complement
+			unsigned int queryLengthMate1 = m1.Bases.Length();
+			unsigned int queryLengthMate2 = m2.Bases.Length();
+			if ( queryLengthMate1 < bufferSize ) {
+				bufferSize = queryLengthMate1;
+				delete [] originalReverseMate1;
+				originalReverseMate1 = new char[bufferSize];
+			}
+			if ( queryLengthMate2 < bufferSize ) {
+				bufferSize = queryLengthMate2;
+				delete [] originalReverseMate2;
+				originalReverseMate2 = new char[bufferSize];
+			}
+			memcpy(originalReverseMate1, m1.Bases.CData(), queryLengthMate1);
+			memcpy(originalReverseMate2, m2.Bases.CData(), queryLengthMate2);
+			CSequenceUtilities::GetReverseComplement(originalReverseMate1, queryLengthMate1);
+			CSequenceUtilities::GetReverseComplement(originalReverseMate2, queryLengthMate2);
+			
+			
+
+			// patching trimmed bases
+			for ( vector<Alignment>::iterator ite = ar.Mate1Alignments.begin(); ite != ar.Mate1Alignments.end(); ite++ ) {
+				Mosaik::Mate currentMate;
+				unsigned int queryLength;
+				char* reverseMate;
+				if ( ite->IsFirstMate ) {
+					currentMate = m1;
+					queryLength = queryLengthMate1;
+					reverseMate = originalReverseMate1;
+				}
+				else {
+					currentMate = m2;
+					queryLength = queryLengthMate2;
+					reverseMate = originalReverseMate2;
+				}
+				
+				// get the lengths of the read
+				CMosaikString query(ite->Query);
+				query.Remove('-');
+				unsigned int alignedLength = query.Length();
+
+				// soft chip
+				if ( alignedLength != queryLength ) {
+					char* originalBases;
+					if ( ite->IsReverseStrand )
+						originalBases = reverseMate;
+					else
+						originalBases = currentMate.Bases.Data();
+					
+					// find the aligned bases in the original bases
+					string originalBasesStr = originalBases;
+					size_t found;
+					found = originalBasesStr.find(query.CData());
+
+					//printf("%s\n%s\n", query.CData(), originalBasesStr.c_str());
+					
+					if ( found == string::npos ) {
+						cout << "ERROR: The trimmed information cannot be found." << endl;
+						exit(1);
+					}
+					else {
+						// soft clip at the beginning
+						if ( found != 0 ) {
+							if ( found > clipSize ) {
+								clipSize = found;
+								delete [] clips;
+								clips = new char[clipSize];
+								memset( clips, 'Z', clipSize);
+
+							}
+							ite->Reference.Prepend( clips, (unsigned int) found );
+							ite->Query.Prepend( originalBases, (unsigned int) found );
+						}
+
+						// soft clip at the end
+						unsigned int endFound = (unsigned int) found + alignedLength;
+						if ( endFound < queryLength ) {
+							char* suffix = originalBases + endFound;
+							unsigned int suffixLength = queryLength - endFound;
+							ite->Reference.Append( clips, suffixLength );
+							ite->Query.Append( suffix, suffixLength );
+						}
+					}
+
+					//printf("%s\n", ite->Query.CData());
+				}
+				
+			}
+				
+		}
+
+		reader.Close();
+		fastqReader1.Close();
+		fastqReader2.Close();
+	}
+
+	// ============================
+	// sort alignments by positions
+	// ============================
+	
 	// open the alignment archive
 	MosaikReadFormat::CAlignmentReader reader;
 	reader.Open(alignmentFilename);
@@ -283,6 +478,8 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 			}
 		}
 
+		// we shouldn't have any alignment in ar.Mate2Alignments 
+		// since MosaikSort didn't put anything in ar.Mate2Alignments
 		// dump the mate 2 alignments
 		if(numMate2Alignments > 0) {
 			if((mFlags.EvaluateUniqueReadsOnly && (numMate2Alignments == 1)) || !mFlags.EvaluateUniqueReadsOnly) {

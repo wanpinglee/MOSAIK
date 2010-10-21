@@ -41,6 +41,8 @@ struct ConfigurationSettings {
 	bool HasSamFilename;
 	bool EvaluateUniqueReadsOnly;
 	bool UseReferenceFilter;
+	bool HasInputFastqFilename;
+	bool HasInputFastq2Filename;
 
 	// filenames
 	string AxtFilename;
@@ -51,6 +53,8 @@ struct ConfigurationSettings {
 	string InputAlignmentsFilename;
 	string InputReadsFilename;
 	string SamFilename;
+	string InputFastqFilename;
+	string InputFastq2Filename;
 
 	// parameters
 	string FilteredReferenceName;
@@ -68,6 +72,8 @@ struct ConfigurationSettings {
 		, HasSamFilename(false)
 		, EvaluateUniqueReadsOnly(false)
 		, UseReferenceFilter(false)
+		, HasInputFastqFilename(false)
+		, HasInputFastq2Filename(false)
 	{}
 };
 
@@ -99,6 +105,8 @@ int main(int argc, char* argv[]) {
 	// add the alignment archive options
 	OptionGroup* pAlignmentArchiveOpts = COptions::CreateOptionGroup("Alignment Archive Options");
 	COptions::AddValueOption("-in",    "MOSAIK alignment filename", "the input alignment file",                 "", settings.HasInputAlignmentsFilename, settings.InputAlignmentsFilename, pAlignmentArchiveOpts);
+	COptions::AddValueOption("-q",     "FASTQ filename",            "the original FASTQ file",                  "", settings.HasInputFastqFilename,      settings.InputFastqFilename,  pAlignmentArchiveOpts);
+	COptions::AddValueOption("-q2",    "FASTQ filename",            "the original 2nd mate FASTQ file",         "", settings.HasInputFastq2Filename,     settings.InputFastq2Filename, pAlignmentArchiveOpts);
 	COptions::AddValueOption("-axt",   "axt filename",              "stores the data in an AXT file",           "", settings.HasAxtFilename,             settings.AxtFilename,             pAlignmentArchiveOpts);
 	COptions::AddValueOption("-bam",   "bam filename",              "stores the data in a BAM file",            "", settings.HasBamFilename,             settings.BamFilename,             pAlignmentArchiveOpts);
 	COptions::AddValueOption("-bed",   "bed filename",              "stores the data in a BED file",            "", settings.HasBedFilename,             settings.BedFilename,             pAlignmentArchiveOpts);
@@ -140,6 +148,34 @@ int main(int argc, char* argv[]) {
 			foundError = true;
 		}
 	}
+	
+        if(settings.HasInputAlignmentsFilename) {
+		// test to see if the specified input files exist
+		SequencingTechnologies seqTech;
+        	AlignmentStatus alignmentStatus;
+	        MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputAlignmentsFilename, seqTech, alignmentStatus, true);
+		
+		// activate paired-end sorting mode
+	        bool isAlignmentArchivePairedEnd = false;
+        	if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
+
+		bool noneFastqFiles = !settings.HasInputFastqFilename && !settings.HasInputFastq2Filename;
+		bool bothFastqFiles = settings.HasInputFastqFilename && settings.HasInputFastq2Filename;
+		if ( isAlignmentArchivePairedEnd ) {
+			if ( !noneFastqFiles && !bothFastqFiles ) {
+				errorBuilder << ERROR_SPACER << "For paired-end data, both two original FASTQ files are needed, -q and -q2." << endl;
+				foundError = true;
+			}
+		}
+		else {
+			if ( settings.HasInputFastq2Filename ){
+				errorBuilder << ERROR_SPACER << " For single-end data, please use -q." << endl;
+				foundError = true;
+			}
+		}
+	}
+
+
 
 	// print the errors if any were found
 	if(foundError) {
@@ -181,6 +217,12 @@ int main(int argc, char* argv[]) {
 		if(settings.HasElandFilename)        mt.EnableElandOutput(settings.ElandFilename);
 		if(settings.HasSamFilename)          mt.EnableSamOutput(settings.SamFilename);
 		if(settings.UseReferenceFilter)      mt.EnableReferenceFilter(settings.FilteredReferenceName, settings.InputAlignmentsFilename);
+
+		if(settings.HasInputFastqFilename) {
+			mt.ParseFastqFile(settings.InputFastqFilename);
+			printf("- patching the original FASTQ information.\n");
+		}
+		if(settings.HasInputFastq2Filename)  mt.ParseFastq2File(settings.InputFastq2Filename);
 
 		if(!settings.EnableScreenOutput) {
 			printf("- converting the alignment archive to the following formats:");

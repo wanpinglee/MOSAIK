@@ -55,8 +55,8 @@ namespace Mosaik {
 		}
 
                 bool SortAlignment() {
-                        sort(Mate1Alignments.begin(), Mate1Alignments.end() );
-                        sort(Mate2Alignments.begin(), Mate2Alignments.end() );
+                        sort( Mate1Alignments.begin(), Mate1Alignments.end() );
+                        sort( Mate2Alignments.begin(), Mate2Alignments.end() );
 
                         return true;
                 }

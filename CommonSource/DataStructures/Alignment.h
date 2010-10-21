@@ -66,4 +66,8 @@ struct Alignment {
 		if(ReferenceIndex == al.ReferenceIndex) return ReferenceBegin < al.ReferenceBegin;
 		return ReferenceIndex < al.ReferenceIndex;
 	}
+	
+	//bool operator<(const Alignment& al) const {
+	//	return Name < al.Name;
+	//}
 };
