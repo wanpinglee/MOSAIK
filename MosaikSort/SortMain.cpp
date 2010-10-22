@@ -42,16 +42,16 @@ struct ConfigurationSettings {
 	bool SampleAllFragmentLengths;
 	bool UseConsedRenaming;
 	bool UseNonUniqueReads;
-	bool HasInputFastqFilename;
-	bool HasInputFastq2Filename;
+	//bool HasInputFastqFilename;
+	//bool HasInputFastq2Filename;
 
 	// filenames
 	string DuplicateDirectory;
 	string InputMosaikAlignmentFilename;
 	string OutputMosaikAlignmentFilename;
 	string UnresolvedMosaikAlignmentFilename;
-	string InputFastqFilename;
-	string InputFastq2Filename;
+	//string InputFastqFilename;
+	//string InputFastq2Filename;
 
 	// parameters
 	double ConfidenceInterval;
@@ -73,8 +73,8 @@ struct ConfigurationSettings {
 		, SampleAllFragmentLengths(false)
 		, UseConsedRenaming(false)
 		, UseNonUniqueReads(false)
-		, HasInputFastqFilename(false)
-		, HasInputFastq2Filename(false)
+		//, HasInputFastqFilename(false)
+		//, HasInputFastq2Filename(false)
 		, ConfidenceInterval(DEFAULT_CONFIDENCE_INTERVAL)
 		, CacheSize(DEFAULT_CACHE_SIZE)
 	{}

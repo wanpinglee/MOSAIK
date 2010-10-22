@@ -124,7 +124,7 @@ private:
 		bool SampleAllFragmentLengths;
 		bool UseFragmentAlignmentQuality;
 		bool PatchFastq;
-		bool SortByName;
+		//bool SortByName;
 
 		FlagData()
 			: AllowAllUniqueFragmentLengths(false)
@@ -136,8 +136,8 @@ private:
 			, ResolveUU(false)
 			, SampleAllFragmentLengths(false)
 			, UseFragmentAlignmentQuality(true)
-			, PatchFastq(false)
-			, SortByName(false)
+			//, PatchFastq(false)
+			//, SortByName(false)
 		{}
 	} mFlags;
 	// retrieves an alignment from the specified temporary file and adds it to the specified list
@@ -161,7 +161,7 @@ private:
 	// our reference gap hash map vector and associated iterator
 	vector<unordered_map<unsigned int, unsigned short> > mRefGapVector;
 	unordered_map<unsigned int, unsigned short>::iterator mRefGapIter;
-	inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
+	static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
 };
 
 // returns the current alignment model based on the order and orientation of the mates
@@ -200,7 +200,6 @@ inline unsigned char CPairedEndSort::GetFragmentAlignmentQuality(int aq, const b
 }
 
 // sort alignments by their names
-inline bool CPairedEndSort::NameLessThan (const Alignment& al1, const Alignment& al2){
-	if ( al1.Name < al2.Name ) return true;
-	return false;
+inline bool CPairedEndSort::NameLessThan(const Alignment& al1, const Alignment& al2){
+	return al1.Name < al2.Name;
 }

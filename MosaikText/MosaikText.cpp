@@ -240,8 +240,6 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 		
 		// sort fastq by names
 		
-		printf("%s\n%s\n", mSettings.inputFastqFilename.c_str(), mSettings.inputFastq2Filename.c_str());
-		
 		string tempFilename;
 		CFileUtilities::GetTempFilename(tempFilename);
 		CFastq fastqReader;

@@ -631,11 +631,6 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	// rewind the alignment reader
 	reader.Rewind();
 
-	// make alignments sorted by names
-	//if ( mFlags.PatchFastq ) {
-		mFlags.SortByName = true;
-	//}
-
 	while(reader.LoadNextRead(ar)) {
 
 		// localize the read name
@@ -896,8 +891,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	while(alignments.size() > 1) {
 
 		// sort the alignment list
-		alignments.sort();
-		//alignments.sort(NameLessThan);
+		//alignments.sort();
+		alignments.sort(NameLessThan);
 
 		// grab the two best alignments
 		bestIter     = alignments.begin();
@@ -918,7 +913,10 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 		// save these alignments as long as they are better than the next best
 		bool isFileEmpty = false;
-		while(al < *nextBestIter) {
+		// sort by ,ocation
+		//while(al < *nextBestIter) {
+		//sort by name
+		while( strcmp(al.Name.CData(), nextBestIter->Name.CData() ) < 0 ) {
 			aw.SaveAlignment(&al);
 			numSavedAlignments++;
 			isFileEmpty = !GetAlignment(tempFile[bestOwner], bestOwner, al);
@@ -1012,9 +1010,9 @@ uint64_t CPairedEndSort::Serialize(list<Alignment>& alignmentCache, const unsign
 	// sort if have more than one read
 	//if(numEntries > 1) {
 	//	if ( mFlags.SortByName )
-			//alignmentCache.sort(NameLessThan);
+			alignmentCache.sort(NameLessThan);
 	//	else
-			alignmentCache.sort();
+			//alignmentCache.sort();
 	//}
 
 	// retrieve a temporary filename
