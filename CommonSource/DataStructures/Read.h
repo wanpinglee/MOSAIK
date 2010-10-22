@@ -31,12 +31,14 @@ namespace Mosaik {
 
 	struct Read {
 		unsigned int ReadGroupCode;
+		unsigned int Owner; // the temporary file that contains the read
 		CMosaikString Name;
 		Mate Mate1;
 		Mate Mate2;
 		
 		bool clear(void) {
 			ReadGroupCode = 0;
+			Owner         = 0;
 			Name.clear();
 			Mate1.clear();
 			Mate2.clear();

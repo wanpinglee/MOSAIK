@@ -77,4 +77,6 @@ private:
 	unsigned char mIlluminaToPhredLUT[256];
 	// given a vector containing reads, find the min read and return the vector id
 	inline unsigned int FindMinRead ( vector<Mosaik::Read>& tops );
+	// print the record of a read to the given ofstream
+	inline void PrintRead ( Mosaik::Read& read, ofstream& file );
 };
