@@ -367,10 +367,12 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 
 		if(mFlags.IsBamEnabled) mStreams.bam.SaveAlignment(readName, readGroupID, alIter);
 
+		
+		// BED is in 0-based format.
 		if(mFlags.IsBedEnabled) {
-			fprintf(mStreams.bed, "%s %u %u %s 1 %c %u %u %s\n", alIter->ReferenceName, alIter->ReferenceBegin + 1,
+			fprintf(mStreams.bed, "%s %u %u %s 1 %c %u %u %s\n", alIter->ReferenceName, alIter->ReferenceBegin,
 				alIter->ReferenceEnd + 1, readName.CData(), (alIter->IsReverseStrand ? '-' : '+'), 
-				alIter->ReferenceBegin + 1, alIter->ReferenceEnd + 1, (alIter->IsReverseStrand ? "0,0,255" : "255,0,0"));
+				alIter->ReferenceBegin, alIter->ReferenceEnd + 1, (alIter->IsReverseStrand ? "0,0,255" : "255,0,0"));
 		}
 
 		if(mFlags.IsElandEnabled && isUnique) {
