@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef _AlignmentWriter_H_
+#define _AlignmentWriter_H_
 
 #include <algorithm>
 #include <iostream>
@@ -133,3 +134,5 @@ namespace MosaikReadFormat {
 		map<unsigned char, Tag> mHeaderTags;
 	};
 }
+
+#endif

@@ -12,7 +12,7 @@ INCLUDES = -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(CONFIG_DIR) -I$(TD)$(UTILITIES_DIR
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
-SOURCES= AbstractDnaHash.cpp DnaHash.cpp HashRegionTree.cpp JumpDnaHash.cpp MosaikString.cpp MultiDnaHash.cpp NaiveAlignmentSet.cpp UbiqDnaHash.cpp
+SOURCES= AbstractDnaHash.cpp AlignedReadCache.cpp DnaHash.cpp HashRegionTree.cpp JumpDnaHash.cpp MosaikString.cpp MultiDnaHash.cpp NaiveAlignmentSet.cpp UbiqDnaHash.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 

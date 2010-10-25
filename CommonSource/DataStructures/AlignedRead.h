@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include "Alignment.h"
@@ -54,18 +55,25 @@ namespace Mosaik {
                         return true;
 		}
 
-                bool SortAlignment() {
+                bool SortAlignment( void ) {
                         sort( Mate1Alignments.begin(), Mate1Alignments.end() );
                         sort( Mate2Alignments.begin(), Mate2Alignments.end() );
 
                         return true;
                 }
 
-                bool operator<( AlignedRead& x ) {
+                bool operator<( const AlignedRead& x ) {
                         return Name < x.Name;
                 }
 
-
+		void operator=( const AlignedRead& x ) {
+			ReadGroupCode = x.ReadGroupCode;
+			Name = x.Name;
+			Mate1Alignments = x.Mate1Alignments;
+			Mate2Alignments = x.Mate2Alignments;
+			IsLongRead  = x.IsLongRead;
+			IsPairedEnd = x.IsPairedEnd;
+		}
 
 	};
 }

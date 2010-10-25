@@ -239,7 +239,7 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 	if (mFlags.EnableFastqPatching) {
 		
 		// sort fastq by names
-		
+	/*	
 		string tempFilename;
 		CFileUtilities::GetTempFilename(tempFilename);
 		CFastq fastqReader;
@@ -259,11 +259,11 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 			fastqReader2.Close();
 			mSettings.inputFastq2Filename = tempFilename;
 		}
-		
+	*/	
 
-		//mSettings.inputFastqFilename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/43itokbovrmlr2ai9i23cek1l8i7nxvh.tmp";
-		//mSettings.inputFastq2Filename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/sgyxnhb1iblwpd8tst2qfbyl8lc8j1oh.tmp";
-		//const bool hasFastq2 = !mSettings.inputFastq2Filename.empty();
+		mSettings.inputFastqFilename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/fg5735lwp6d71quz18pfxfk1ebh5enuj.tmp";
+		mSettings.inputFastq2Filename = "/home/wanping/Mosaik/data/AVL_test/high_sp1/tmp/d0z47lvdwzw322uxmdxjsizpdvanlb34.tmp";
+		const bool hasFastq2 = !mSettings.inputFastq2Filename.empty();
 		
 		// open fastq files and load the first read
 		CFastq fastqReader1, fastqReader2;
@@ -279,8 +279,13 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 		// patch trimmed bases
 		MosaikReadFormat::CAlignmentReader reader;
 		reader.Open(alignmentFilename);
-        	// retrieve all reads from the alignment reader
-		Mosaik::AlignedRead ar;
+        	// retrieve the read groups
+		vector<MosaikReadFormat::ReadGroup> readGroups;
+		reader.GetReadGroups(readGroups);
+	        // retrieve the reference sequence vector
+		vector<ReferenceSequence>* pReferenceSequences = reader.GetReferenceSequences();
+        	// retrieve the alignment status (clear the sorting status)
+		AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
 
 		// reserve buffer for ReverseStrand
 		unsigned int bufferSize = 1024;
@@ -290,6 +295,12 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 		char* clips = new char[clipSize];
 		memset( clips, 'Z', clipSize);
 
+		unsigned int cacheSize = 50000;
+		CAlignedReadCache cache( cacheSize );
+		vector<string> tempFiles;
+
+		// retrieve all reads from the alignment reader
+		Mosaik::AlignedRead ar;
 		while(reader.LoadNextRead(ar)) {
 			
 			// find the read in fastqs
@@ -401,6 +412,28 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 					//printf("%s\n", ite->Query.CData());
 				}
 				
+				// store the aligned read to cache
+				cache.Add( ar );
+				if ( cache.isFull() ) {
+					cache.SortByPosition();
+					
+					// get temp filename
+					string filename;
+					CFileUtilities::GetTempFilename(filename);
+					tempFiles.push_back(filename);
+
+					// prepare archive
+					MosaikReadFormat::CAlignmentWriter aw;
+					aw.Open(filename, *pReferenceSequences, readGroups, as);
+					Mosaik::AlignedRead sortedAr;
+					
+					cache.Rewind();
+					while( cache.LoadNextAlignedRead( sortedAr ) )
+						aw.SaveAlignedRead( sortedAr );
+					aw.Close();
+					cache.Reset();
+				}
+				
 			}
 				
 		}
@@ -411,8 +444,10 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 	}
 
 	// ============================
-	// sort alignments by positions
+	// sort alignments globally
 	// ============================
+	
+	
 	
 	// open the alignment archive
 	MosaikReadFormat::CAlignmentReader reader;

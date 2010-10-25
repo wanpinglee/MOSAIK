@@ -20,7 +20,9 @@
 #include <vector>
 #include <zlib.h>
 #include "AlignedRead.h"
+#include "AlignedReadCache.h"
 #include "AlignmentReader.h"
+#include "AlignmentWriter.h"
 #include "ColorspaceUtilities.h"
 #include "BamWriter.h"
 #include "Fastq.h"
