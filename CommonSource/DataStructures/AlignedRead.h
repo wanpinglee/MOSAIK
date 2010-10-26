@@ -21,6 +21,7 @@ using namespace std;
 namespace Mosaik {
 	struct AlignedRead {
 		unsigned int ReadGroupCode;
+		unsigned int Owner; // the temporary file that contains the aligned read
 		CMosaikString Name;
 		vector<Alignment> Mate1Alignments;
 		vector<Alignment> Mate2Alignments;
@@ -30,12 +31,14 @@ namespace Mosaik {
 		// constructor
 		AlignedRead()
 			: ReadGroupCode(0)
+			, Owner(0)
 			, IsLongRead(false)
 			, IsPairedEnd(false)
 		{}
 
                 bool Clear(){
-                        ReadGroupCode   = 0;
+                        ReadGroupCode = 0;
+			Owner         = 0;
                         Name.clear();
                         Mate1Alignments.clear();
                         Mate2Alignments.clear();

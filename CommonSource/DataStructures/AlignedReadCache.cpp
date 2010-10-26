@@ -6,6 +6,7 @@ CAlignedReadCache::CAlignedReadCache( unsigned int cacheSize ) {
 	_loadIte    = _cache.begin();
         _cacheSize = cacheSize;
         _currentNo = 0;
+	_loadNo    = 0;
 	_full = false;
 }
 
@@ -14,6 +15,8 @@ bool CAlignedReadCache::Add ( const Mosaik::AlignedRead& ar ) {
 
 	if ( _full ) return false;
 
+	_currentIte->Clear();
+	
 	// copy 
 	_currentIte->ReadGroupCode = ar.ReadGroupCode;
 	_currentIte->Name = ar.Name;
@@ -34,11 +37,9 @@ bool CAlignedReadCache::Add ( const Mosaik::AlignedRead& ar ) {
 bool CAlignedReadCache::LoadNextAlignedRead( Mosaik::AlignedRead& ar ) {
 	
 	if ( _currentNo == 0 ) return false;
-	//if ( _loadNo == _currentNo ) return false;
-	if ( _loadIte == _cache.end() ) {
-		cout << _loadNo << "\t" << _currentNo << endl;
-		return false;
-	}
+	if ( _loadNo == _currentNo ) return false;
+	if ( _loadIte == _cache.end() ) return false;
+	
 
 	ar.ReadGroupCode = _loadIte->ReadGroupCode;
 	ar.Name = _loadIte->Name;
@@ -70,6 +71,19 @@ bool CAlignedReadCache::Reset ( void ) {
 	return true;
 }
 
+// return empty
+bool CAlignedReadCache::isEmpty ( void ) {
+	if ( _currentNo > 0 ) return false;
+	return false;
+}
+
+// clear _cache
+void CAlignedReadCache::Clear( void ) {
+	_cache.clear();
+	_cacheSize = 0;
+	_currentNo = 0;
+	_full = false;
+}
 
 inline bool CAlignedReadCache::SortBy1stMatePosition( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2 ) {
 	

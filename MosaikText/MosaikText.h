@@ -144,6 +144,8 @@ private:
 		unsigned int FilteredReferenceIndex;
 		uint64_t NumFilteredReferenceReads;
 	} mSettings;
+
+	
 	// opens the output file stream for the AXT file
 	void InitializeAxt(void);
 	// opens the output file stream for the BAM file
@@ -167,4 +169,6 @@ private:
 	uint64_t mCurrentRead;
 	// our colorspace to basespace converter
 	CColorspaceUtilities mCS;
+	// the lessthan operator used in MosaikText
+	static inline bool PositionLessThan( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar );
 };

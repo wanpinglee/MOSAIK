@@ -110,7 +110,7 @@ void CFastq::SortByName(const string filename) {
 	CMosaikString readName;
 	Mosaik::Mate m;
 
-	unsigned int cacheSize = 1000000;
+	unsigned int cacheSize = 100000;
 
 	vector<string> tempFastqs;
 	unsigned int readCount = 0;

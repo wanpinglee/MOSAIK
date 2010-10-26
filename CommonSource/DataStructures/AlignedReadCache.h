@@ -26,6 +26,10 @@ class CAlignedReadCache {
 		bool Reset ( void );
 		// return _full
 		bool isFull ( void ) { return _full; };
+		// return
+		bool isEmpty ( void );
+		// clear _cache
+		void Clear( void );
 		// load the next aligned read
 		bool LoadNextAlignedRead( Mosaik::AlignedRead& ar );
 		// rewind the load pointer
