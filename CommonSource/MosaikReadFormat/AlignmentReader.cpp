@@ -345,6 +345,7 @@ namespace MosaikReadFormat {
 		const bool isResolvedAsPair = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
 		ar.IsLongRead               = ((readStatus & RF_IS_LONG_READ)            != 0 ? true : false);
 		ar.IsPairedEnd              = ((readStatus & RF_IS_PAIRED_IN_SEQUENCING) != 0 ? true : false);
+		ar.IsResolvedAsPair         = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
 
 		// =================================
 		// deserialize each mate 1 alignment
@@ -766,6 +767,7 @@ namespace MosaikReadFormat {
 		if(isPairedInSequencing) {
 			if((status & AF_IS_FIRST_MATE) != 0) al.IsFirstMate = true;
 			if(isResolvedAsPair && ((status & AF_IS_MATE_REVERSE_STRAND) != 0)) al.IsMateReverseStrand = true;
+			//if(al.IsResolvedAsPair && ((status & AF_IS_MATE_REVERSE_STRAND) != 0)) al.IsMateReverseStrand = true;
 		}
 
 		if((status & AF_IS_REVERSE_STRAND) != 0) al.IsReverseStrand = true;

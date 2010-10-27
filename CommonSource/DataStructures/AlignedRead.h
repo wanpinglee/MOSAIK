@@ -27,6 +27,7 @@ namespace Mosaik {
 		vector<Alignment> Mate2Alignments;
 		bool IsLongRead;
 		bool IsPairedEnd;
+		bool IsResolvedAsPair;
 
 		// constructor
 		AlignedRead()
@@ -34,6 +35,7 @@ namespace Mosaik {
 			, Owner(0)
 			, IsLongRead(false)
 			, IsPairedEnd(false)
+			, IsResolvedAsPair(false)
 		{}
 
                 bool Clear(){
@@ -44,6 +46,7 @@ namespace Mosaik {
                         Mate2Alignments.clear();
                         IsLongRead = false;
                         IsPairedEnd= false;
+			IsResolvedAsPair = false;
 
 			if ( !Mate1Alignments.empty() ) {
 				cout << "ERROR: Clearing AlignedRead is failed." << endl;

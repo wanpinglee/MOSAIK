@@ -488,6 +488,7 @@ namespace MosaikReadFormat {
 		if(haveMate2)      readStatus |= RF_HAVE_MATE2;
 		if(isLongRead)     readStatus |= RF_IS_LONG_READ;
 		if(ar.IsPairedEnd) readStatus |= RF_IS_PAIRED_IN_SEQUENCING;
+		if(ar.IsResolvedAsPair) readStatus |= RF_RESOLVED_AS_PAIR;
 
 		// write the read header
 		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments);
@@ -503,7 +504,8 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate1Alignments[0];
 			for(alIter = ar.Mate1Alignments.begin(); alIter != ar.Mate1Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate1Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, true, false);
+				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, true, false);
 			}
 		}
 
@@ -515,7 +517,8 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate2Alignments[0];
 			for(alIter = ar.Mate2Alignments.begin(); alIter != ar.Mate2Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate2Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, false, false);
+				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, false, false);
 			}
 		}
 
