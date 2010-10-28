@@ -542,7 +542,6 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		// check the unused percentage
 		//TODO
 
-/*
 		if(unusedPercentage > MODEL_COUNT_THRESHOLD) {
 
 			printf("ERROR: When determining whether to apply mate-pair or paired-end constraints, an irregularity in the alignment model counts was discovered.\n\n");
@@ -556,7 +555,6 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			for(unsigned char i = 0; i < 8; i++) printf("- alignment model %u: %9u hits\n", models[i].ID, models[i].Count);
 			exit(1);
 		}
-*/		
 
 		// emit a warning if the best alignment models are non-standard
 		const bool isModel1Top = (models[0].ID == 1) || (models[1].ID == 1);
@@ -917,7 +915,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		// sort by ,ocation
 		//while(al < *nextBestIter) {
 		//sort by name
-		while( strcmp(al.Name.CData(), nextBestIter->Name.CData() ) < 0 ) {
+		while( NameLessThan( al, *nextBestIter ) ) {
 			aw.SaveAlignment(&al);
 			numSavedAlignments++;
 			isFileEmpty = !GetAlignment(tempFile[bestOwner], bestOwner, al);

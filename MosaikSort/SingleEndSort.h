@@ -77,4 +77,11 @@ private:
 	string mDuplicateDirectory;
 	// toggles if we want to append the alignment count to the read name
 	bool mRenameReads;
+        // sort alignments by their names
+        static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
 };
+
+// sort alignments by their names
+inline bool CSingleEndSort::NameLessThan(const Alignment& al1, const Alignment& al2){
+         return al1.Name < al2.Name;
+}

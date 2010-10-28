@@ -161,6 +161,7 @@ private:
 	// our reference gap hash map vector and associated iterator
 	vector<unordered_map<unsigned int, unsigned short> > mRefGapVector;
 	unordered_map<unsigned int, unsigned short>::iterator mRefGapIter;
+	// sort alignments by their names
 	static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
 };
 
