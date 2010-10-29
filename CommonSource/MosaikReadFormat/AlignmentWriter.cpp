@@ -109,6 +109,10 @@ namespace MosaikReadFormat {
 	// closes the alignment archive
 	void CAlignmentWriter::Close(void) {
 
+		// the archive is not open.
+		if ( !mIsOpen )
+			return;
+		
 		// prevent the archive from being updated elsewhere
 		mIsOpen = false;
 

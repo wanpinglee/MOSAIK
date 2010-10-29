@@ -79,4 +79,5 @@ private:
 	inline unsigned int FindMinRead ( vector<Mosaik::Read>& tops );
 	// print the record of a read to the given ofstream
 	inline void PrintRead ( Mosaik::Read& read, ofstream& file );
+	inline void PrintRead ( Mosaik::Read& read, char*& buffer, char*& bufferPtr, unsigned int& bufferUsed, unsigned int& bufferLen );
 };

@@ -311,6 +311,8 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 			fastqReader2.LoadNextMate(readName2, m2);
 		}
 
+		cout << "Sorting FASTQs done" << endl;
+
 		
 		// patch trimmed bases
 		MosaikReadFormat::CAlignmentReader reader;
