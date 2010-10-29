@@ -255,7 +255,6 @@ namespace MosaikReadFormat {
 		// store mate 1
 		// ============
 		
-
 		// sanity check
 		if ( mr.Mate1.Bases.Length() != mr.Mate1.Qualities.Length() ) {
 			printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", mr.Mate1.Bases.Length(), mr.Mate1.Qualities.Length(), mr.Name.CData());
