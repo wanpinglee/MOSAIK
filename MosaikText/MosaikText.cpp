@@ -532,7 +532,7 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	const char* pReference = alIter->Reference.CData();
 	const char* pQuery     = alIter->Query.CData();
 
-	const unsigned short numBases = alIter->Reference.Length();
+	unsigned short numBases = alIter->Reference.Length();
 	unsigned short currentPos    = 0;
 	unsigned int numBufferBytes  = 0;
 
@@ -588,12 +588,113 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 
 	*pCigar = 0;
 
+	// ==========================
+	// construct the MD string
+	// ==========================
+
+	char* pMd  = mMdBuffer;
+	pReference = alIter->Reference.CData();
+	pQuery     = alIter->Query.CData();
+
+	numBases       = alIter->Reference.Length();
+	currentPos     = 0;
+	numBufferBytes = 0;
+
+	char* tempBases = new char [CIGAR_BUFFER_SIZE];
+	const char zeroChar = '0';
+	bool isPreviousInt = false;
+
+	while(currentPos < numBases) {
+
+		unsigned short testPos = currentPos;
+		unsigned short operationLength = 0;
+		int numWritten = 0;
+
+		if ( ( pReference[currentPos] == pQuery[currentPos] ) || ( pReference[currentPos] == '-' ) ) {
+			
+			while ( ( pReference[testPos] != 0 ) && ( ( pReference[testPos] == pQuery[testPos] ) || ( pReference[testPos] == '-' ) ) ) {
+				++testPos;
+				++operationLength;
+			}
+
+			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "%u", operationLength);
+
+			isPreviousInt = true;
+
+		} else if ( pQuery[currentPos] == '-' ) {
+			
+			char* ptr = tempBases;
+			while ( pQuery[testPos] == '-' ) {
+				memcpy( ptr, &pReference[testPos], 1 );
+				ptr++;
+				++testPos;
+				++operationLength;
+			}
+
+			*ptr = 0;
+
+			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "^%s", tempBases);
+
+			isPreviousInt = false;
+		
+		} else if ( pReference[currentPos] != pQuery[currentPos] ) {
+			
+			char* ptr = tempBases;
+			unsigned short nTemp = 0;
+			while ( ( pReference[testPos] != pQuery[testPos] ) && ( pReference[testPos] != '-' ) && ( pQuery[testPos] != '-' ) ) {
+				
+				if ( isPreviousInt ) {
+					memcpy( ptr, &pReference[testPos], 1 );
+					ptr++;
+					nTemp += 1;
+				}
+				else {
+					memcpy( ptr, &zeroChar, 1 );
+					ptr++;
+					memcpy( ptr, &pReference[testPos], 1 );
+					ptr++;
+					nTemp += 2;
+				}
+				isPreviousInt = false;
+
+				++testPos;
+				++operationLength;
+			}
+
+			*ptr = 0;
+
+			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "%s", tempBases);
+
+			isPreviousInt = false;
+
+		} else {
+			cout << "ERROR: CIGAR string generation failed." << endl;
+			exit(1);
+		}
+
+		// increment our position
+		pMd            += numWritten;
+		numBufferBytes += numWritten;
+		currentPos     += operationLength;
+
+		// make sure aren't creating a buffer overflow
+		if(numBufferBytes >= CIGAR_BUFFER_SIZE) {
+			printf("ERROR: buffer overflow detected when creating the MD tag.\n");
+			exit(1);
+		}
+	}
+
+	//printf("\n%s\n", mMdBuffer);
+
+	*pMd = 0;
+
+	// sanity check
 	// ===================
 	// write the alignment
 	// ===================
 
 	// B7_591:4:96:693:509	73	seq1	1	99	36M	*	0	0	CACTAGTGGCTCATTGTAAATGTGTGGTTTAACTCG	<<<<<<<<<<<<<<<;<<<<<<<<<5<<<<<;:<;7
-	// <QNAME> <FLAG> <RNAME> <POS> <MAPQ> <CIGAR> <MRNM> <MPOS> <ISIZE> <SEQ> <QUAL>
+	// <QNAME> <FLAG> <RNAME> <POS> <MAPQ> <CIGAR> <MRNM> <MPOS> <ISIZE> <SEQ> <QUAL> <TAGS>
 
 	// remove the gaps from the read
 	CMosaikString query(alIter->Query);
@@ -619,5 +720,5 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 		gzprintf(mStreams.sam, "=\t%u\t%u\t", alIter->MateReferenceBegin + 1, insertSize);
 	} else gzprintf(mStreams.sam, "*\t0\t0\t");
 
-	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches);	
+	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, mMdBuffer);	
 }

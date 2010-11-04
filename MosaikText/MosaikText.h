@@ -150,6 +150,8 @@ private:
 	void WriteSamEntry(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter);
 	// cigar buffer
 	char mCigarBuffer[CIGAR_BUFFER_SIZE];
+	// MD tag buffer
+	char mMdBuffer[CIGAR_BUFFER_SIZE];
 	// our current read and alignment counters
 	uint64_t mCurrentAlignment;
 	uint64_t mCurrentRead;
