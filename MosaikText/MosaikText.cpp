@@ -371,7 +371,7 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 			// Get Reverse Complement
 			unsigned int queryLengthMate1 = m1.Bases.Length();
 			unsigned int queryLengthMate2 = 0;
-			if ( queryLengthMate1 < bufferSize ) {
+			if ( queryLengthMate1 > bufferSize ) {
 				bufferSize = queryLengthMate1;
 				delete [] originalReverseMate1;
 				delete [] originalReverseQuality1;
@@ -384,7 +384,7 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 			// handle 2nd mate
 			if ( hasFastq2 ) {
 				queryLengthMate2 = m2.Bases.Length();
-				if ( queryLengthMate2 < bufferSize ) {
+				if ( queryLengthMate2 > bufferSize ) {
 					bufferSize = queryLengthMate2;
 					delete [] originalReverseMate2;
 					delete [] originalReverseQuality2;
@@ -396,6 +396,7 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 				CSequenceUtilities::GetReverseComplement(originalReverseMate2, queryLengthMate2);
 			}
 
+			bool isLongRead = false;
 			for ( vector<Alignment>::iterator ite = ar.Mate1Alignments.begin(); ite != ar.Mate1Alignments.end(); ite++ ) {
 				Mosaik::Mate currentMate;
 				unsigned int queryLength;
@@ -471,8 +472,11 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 					}
 				}
 
+				isLongRead = isLongRead || ( ite->Reference.Length() > 255 ) || ( ite->QueryEnd > 255 );
 				// store the aligned read to cache
+				ar.IsLongRead = isLongRead;
 				cache.Add( ar );
+				/*
 				if ( cache.isFull() ) {
 					cache.SortByPosition();
 					
@@ -494,10 +498,35 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 					aw.Close();
 					cache.Reset();
 				}
-			}		
+				*/
+			}
+
+			if ( cache.isFull() ) {
+				cache.SortByPosition();
+
+				// get temp filename
+				string filename;
+				CFileUtilities::GetTempFilename(filename);
+				tempFiles.push_back(filename);
+
+				// prepare archive
+				MosaikReadFormat::CAlignmentWriter aw;
+				aw.Open(filename, *pReferenceSequences, readGroups, as);
+				Mosaik::AlignedRead sortedAr;
+
+				cache.Rewind();
+				while( cache.LoadNextAlignedRead( sortedAr ) ) {
+					aw.SaveAlignedRead( sortedAr );
+					sortedAr.Clear();
+				}
+				aw.Close();
+				cache.Reset();
+			}
 		}
 
 		if ( !cache.isEmpty() ) {
+			cache.SortByPosition();
+			
 			// get temp filename
 			string filename;
 			CFileUtilities::GetTempFilename(filename);
@@ -795,10 +824,12 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 
 		if(mFlags.IsBamEnabled) mStreams.bam.SaveAlignment(readName, readGroupID, alIter);
 
+		
+		// BED is in 0-based format.
 		if(mFlags.IsBedEnabled) {
-			fprintf(mStreams.bed, "%s %u %u %s 1 %c %u %u %s\n", alIter->ReferenceName, alIter->ReferenceBegin + 1,
+			fprintf(mStreams.bed, "%s %u %u %s 1 %c %u %u %s\n", alIter->ReferenceName, alIter->ReferenceBegin,
 				alIter->ReferenceEnd + 1, readName.CData(), (alIter->IsReverseStrand ? '-' : '+'), 
-				alIter->ReferenceBegin + 1, alIter->ReferenceEnd + 1, (alIter->IsReverseStrand ? "0,0,255" : "255,0,0"));
+				alIter->ReferenceBegin, alIter->ReferenceEnd + 1, (alIter->IsReverseStrand ? "0,0,255" : "255,0,0"));
 		}
 
 		if(mFlags.IsElandEnabled && isUnique) {

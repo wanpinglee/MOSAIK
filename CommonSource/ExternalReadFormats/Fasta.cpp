@@ -190,7 +190,6 @@ bool CFasta::LoadNextMate(FastaTags& ft, Mosaik::Mate& m) {
 			CSequenceUtilities::ChompQuality(mQualityBuffer);
 			sb << mQualityBuffer;
 		}
-
 		string qualities = sb.str();
 		CRegexUtilities::ConvertQualities(qualities, m.Qualities);
 

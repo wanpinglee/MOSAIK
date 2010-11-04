@@ -50,7 +50,7 @@ inline void CSequenceUtilities::ChompQuality(char* s) {
 	size_t sLen = strlen(s);
 	if(sLen == 0) return;
 	sLen--;
-
+	
 	while((s[sLen] == 10) || (s[sLen] == 13)) {
 		s[sLen] = ' ';
 		sLen--;

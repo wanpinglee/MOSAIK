@@ -123,8 +123,6 @@ void CFastq::SortByName(const string filename) {
 	unsigned int bufferLen  = 1000000;
 	char* buffer = new char [bufferLen] ;
 	
-	//CMemoryUtilities::CheckBufferSize( buffer, bufferLen, 1000000 );
-
 	while ( this->LoadNextMate(readName, m) ) {
 		
 		readCount++;
@@ -149,10 +147,12 @@ void CFastq::SortByName(const string filename) {
 			
 			unsigned int bufferUsed = 0;
 			char* bufferPtr = buffer;
+			
 			for ( list<Mosaik::Read>::iterator ite = cache.begin(); ite != cache.end(); ite++ ) 
+				//PrintRead( *ite, file );
 				PrintRead( *ite, buffer, bufferPtr, bufferUsed, bufferLen );
 				//PrintRead( *ite, cacheFile );
-
+			
 			// retrieve a temporary filename
 			string tempFilename;
 			CFileUtilities::GetTempFilename(tempFilename);
@@ -165,11 +165,13 @@ void CFastq::SortByName(const string filename) {
 			cacheFile.write ( buffer, bufferUsed );
 			cacheFile.close();
 
+
 			readCount = 0;
 			cache.clear();
 		}
 
 	}
+
 	// sort the remaining in the list
 	if ( readCount > 0 ) {
 		// sort by read names
@@ -367,6 +369,15 @@ inline void CFastq::PrintRead ( Mosaik::Read& read, char*& buffer, char*& buffer
 	bufferUsed += length;
 }
 
+// print the record of a read to the given ofstream
+inline void CFastq::PrintRead ( Mosaik::Read& read, FILE* file ) {
+	fprintf( file, "@%s\n", read.Name.CData() );
+	fprintf( file, "%s\n", read.Mate1.Bases.CData() );
+	fprintf( file, "+\n" );
+	read.Mate1.Qualities.Increment(mFastqOffset);
+	fprintf( file, "%s\n", read.Mate1.Qualities.CData() );
+	read.Mate1.Qualities.Decrement(mFastqOffset);
+}
 
 // print the record of a read to the given ofstream
 inline void CFastq::PrintRead ( Mosaik::Read& read, ofstream& file ) {

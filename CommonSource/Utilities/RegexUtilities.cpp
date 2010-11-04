@@ -32,8 +32,10 @@ regex CRegexUtilities::mUriRegex("URI\\((.+?)\\)");
 void CRegexUtilities::ConvertQualities(string& qualities, CMosaikString& compQualities) {
 
 	string::iterator strIte = qualities.end() - 1;
-	if ( *strIte == ' ' )
+	while ( *strIte == ' ' ) {
 		qualities.erase( strIte );
+		strIte--;
+	}
 	
 	vector<string> columns;
 	vector<string>::const_iterator sIter;
