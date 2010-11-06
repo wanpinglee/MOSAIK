@@ -79,6 +79,8 @@ public:
 	void EvaluateUniqueReadsOnly(void);
 	// parses the specified MOSAIK alignment file
 	void ParseMosaikAlignmentFile(const string& alignmentFilename);
+	// set the settings of input MOSAIK archive
+	void SetArchiveSetting(const string& alignmentFilename);
 	// parses the specified MOSAIK read file
 	void ParseMosaikReadFile(const string& readFilename);
 	// parse the fastq file
@@ -144,6 +146,12 @@ private:
 		unsigned int FilteredReferenceIndex;
 		uint64_t NumFilteredReferenceReads;
 	} mSettings;
+	// settings of input MOSAIK archive
+	struct ArchiveSetting {
+		vector<MosaikReadFormat::ReadGroup> readGroups;
+		vector<ReferenceSequence> pReferenceSequences;
+		AlignmentStatus as;
+	} mArchiveSetting;
 
 	
 	// opens the output file stream for the AXT file
@@ -162,11 +170,33 @@ private:
 	void ProcessMate(const unsigned char mateNum, const CMosaikString& readName, const bool isColorspace, Mosaik::Mate& mate, const bool isPairedEnd);
 	// writes the current alignment to the SAM output file
 	void WriteSamEntry(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter);
+	// patchs trimmed infomation back from FASTQs
+	void PatchInfo( const string& alignmentFilename, const string& inputFastqFilename, const string& inputFastq2Filename );
+	// given an alignedReadCache, sort them by positions and sorte them in a temp file
+	string StoreReadCache ( CAlignedReadCache& cache );
+	// given a read name, search it in FASTQs
+	void SearchReadInFastq ( const CMosaikString& readName, CFastq& fastqReader1, CFastq& fastqReader2, const bool hasFastq2 );
+	// initialize our patching buffers
+	void InitializePatchingBuffer ( void );
+	// sort FASTQ by read names
+	void SortFastqByName( const string& inputFastqFilename, string& outputFastqFilename );
 	// cigar buffer
 	char mCigarBuffer[CIGAR_BUFFER_SIZE];
 	// our current read and alignment counters
 	uint64_t mCurrentAlignment;
 	uint64_t mCurrentRead;
+	// our buffer for patching function
+	unsigned int _bufferSize1;
+	unsigned int _bufferSize2;
+	unsigned int _clipSize;
+	char* _originalReverseBase1;
+	char* _originalReverseBase2;
+	char* _originalReverseQuality1;
+	char* _originalReverseQuality2;
+	char* _clipBuffer;
+	CMosaikString  _readName1, _readName2;
+	Mosaik::Mate   _m1, _m2;
+	vector<string> _tempFiles;
 	// our colorspace to basespace converter
 	CColorspaceUtilities mCS;
 	// the lessthan operator used in MosaikText

@@ -169,9 +169,19 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			if ( settings.HasInputFastq2Filename ){
-				errorBuilder << ERROR_SPACER << " For single-end data, please use -q." << endl;
+				errorBuilder << ERROR_SPACER << "For single-end data, please use -q." << endl;
 				foundError = true;
 			}
+		}
+
+		if ( ( seqTech == ST_SOLID ) && !noneFastqFiles ) {
+			errorBuilder << ERROR_SPACER << "Soft clipping does not support for SOLiD technology." << endl;
+			foundError = true;
+		}
+
+		if ( ( settings.HasBedFilename || settings.HasElandFilename ) && !noneFastqFiles ) {
+			errorBuilder << ERROR_SPACER << "Soft clipping only supports for SAM/BAM file formats." << endl;
+			foundError = true;
 		}
 	}
 
@@ -234,6 +244,7 @@ int main(int argc, char* argv[]) {
 			printf("\n\n");
 		}
 
+		mt.SetArchiveSetting(settings.InputAlignmentsFilename);
 		mt.ParseMosaikAlignmentFile(settings.InputAlignmentsFilename);
 
 	} else {

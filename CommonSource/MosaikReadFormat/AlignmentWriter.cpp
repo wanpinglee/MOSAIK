@@ -560,6 +560,7 @@ namespace MosaikReadFormat {
 		if(pAl->IsResolvedAsPair) readStatus |= RF_RESOLVED_AS_PAIR;
 
 		// write the read header
+		// has one first mate and doesn't have any second mate
 		WriteReadHeader(pAl->Name, pAl->ReadGroupCode, readStatus, 1, 0);
 
 		// =======================
