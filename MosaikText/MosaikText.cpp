@@ -257,7 +257,6 @@ void CMosaikText::SetArchiveSetting( const string& alignmentFilename ) {
 	// retrieve the read groups
 	reader.GetReadGroups(mArchiveSetting.readGroups);
 	// retrieve the reference sequence vector
-	//mArchiveSetting.pReferenceSequences = reader.GetReferenceSequences();
 	reader.GetReferenceSequences( mArchiveSetting.pReferenceSequences );
 	// retrieve the alignment status (clear the sorting status)
 	mArchiveSetting.as = reader.GetStatus();
@@ -287,6 +286,26 @@ void CMosaikText::InitializePatchingBuffer ( void ) {
 	_clipSize   = 1024;
 	_clipBuffer = new char [ _clipSize ];
 	memset( _clipBuffer, 'Z', _clipSize );
+}
+
+// free patching buffers
+void CMosaikText::FreePatchingBuffer ( void ) {
+	_bufferSize1 = 0;
+	_bufferSize2 = 0;
+	if ( _originalReverseBase1 )    delete [] _originalReverseBase1;
+	if ( _originalReverseBase2 )    delete [] _originalReverseBase2;
+	if ( _originalReverseQuality1 ) delete [] _originalReverseQuality1;
+	if ( _originalReverseQuality2 ) delete [] _originalReverseQuality2;
+
+	_originalReverseBase1    = NULL;
+	_originalReverseBase2    = NULL;
+	_originalReverseQuality1 = NULL;
+	_originalReverseQuality2 = NULL;
+
+
+	_clipSize = 0;
+	if ( _clipBuffer ) delete [] _clipBuffer;
+	_clipBuffer = NULL;
 }
 
 // given a read name, search it in FASTQs
@@ -343,7 +362,7 @@ void CMosaikText::SearchReadInFastq ( const CMosaikString& readName, CFastq& fas
 string CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
 
 	cache.SortByPosition();
-cout << "pass2" << endl;
+	
 	// get temp filename
 	string filename;
 	CFileUtilities::GetTempFilename( filename );
@@ -353,7 +372,7 @@ cout << "pass2" << endl;
 	MosaikReadFormat::CAlignmentWriter aw;
 	aw.Open(filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as);
 	Mosaik::AlignedRead sortedAr;
-cout << "pass3" << endl;
+	
 	cache.Rewind();
 	while( cache.LoadNextAlignedRead( sortedAr ) ) {
 		aw.SaveAlignedRead( sortedAr );
@@ -492,7 +511,7 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 			_tempFiles.push_back( tempfile );
 		}
 	}
-cout << "pass1" << endl;
+	
 	if ( !cache.isEmpty() ) {
 		string tempfile;
 		tempfile = StoreReadCache( cache );
@@ -506,293 +525,140 @@ cout << "pass1" << endl;
 	// delete temp FASTQ files
 	rm( tempFilename1.c_str() );
 	if ( hasFastq2 ) rm( tempFilename2.c_str() );
+
+	// free buffers
+	FreePatchingBuffer();
+}
+
+// merge a vector of partially sorted archive; sorting them by positions
+void CMosaikText::MergeSortedArchive ( const vector <string>& filenames, const string& outArchiveFilename ) {
+	// prepare archive readers
+	unsigned int nTemp = filenames.size();
+	vector<MosaikReadFormat::CAlignmentReader*> readers( nTemp );
+	MosaikReadFormat::CAlignmentReader* readerPtr;
+	for ( unsigned int i = 0; i < nTemp; i++ ) {
+		readerPtr = new MosaikReadFormat::CAlignmentReader;
+		readerPtr->Open( filenames[i] );
+		readers[i] = readerPtr;
+	}
+
+
+	// prepare archive writer
+	MosaikReadFormat::CAlignmentWriter aw;
+	aw.Open( outArchiveFilename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as );
+
+
+	// list for the top in each temp file
+	list<Mosaik::AlignedRead> tops;
+	unsigned int nDone = 0;
+	vector<bool> dones( nTemp );
+	Mosaik::AlignedRead ar;
+
+	// load the first alignment in each temp archive
+	for ( unsigned int i = 0; i < nTemp; i++ ) {
+		ar.Clear();
+		
+		if ( readers[i]->LoadNextRead( ar ) ) {
+			ar.Owner = i;
+			tops.push_back( ar );
+			dones[i] = false;
+		}
+		else {
+			dones[i] = true;
+			nDone++;
+		}
+	}
+
+	unsigned int tempId;
+	Mosaik::AlignedRead nextMin;
+	bool isTempEmpty;
+	// read all alignments and sort them
+	while ( nDone != ( nTemp - 1 ) ) {
+		tops.sort( PositionLessThan );
+		tempId = tops.begin()->Owner;
+
+		// save min
+		aw.SaveAlignedRead( *tops.begin() );
+		tops.pop_front();
+
+		nextMin = *tops.begin();
+
+		isTempEmpty = false;
+		ar.Clear();
+		if ( !dones[tempId] && readers[tempId]->LoadNextRead( ar ) )
+			ar.Owner = tempId;
+		else {
+			nDone++;
+			dones[tempId] = true;
+			isTempEmpty = true;
+			rm( filenames[tempId].c_str() );
+		}
+
+
+		// the file is empty
+		if ( isTempEmpty ) continue;
+
+		while ( PositionLessThan( ar, nextMin ) ) {
+			aw.SaveAlignedRead( ar );
+			ar.Clear();
+			if ( !readers[tempId]->LoadNextRead( ar ) ) {
+				nDone++;
+				dones[tempId] = true;
+				isTempEmpty = true;
+				rm( _tempFiles[tempId].c_str() );
+				break;
+			}
+		}
+
+		ar.Owner = tempId;
+		if ( !isTempEmpty )
+			tops.push_back( ar );
+
+	}
+
+	// store the remaining aligned reads
+	if ( tops.size() != 1 ) {
+		cout << "ERROR: More than one aligned reads remain." << endl;
+		exit(1);
+	}
+
+	tempId = tops.begin()->Owner;
+	aw.SaveAlignedRead( *tops.begin() );
+	ar.Clear();
+	while ( readers[tempId]->LoadNextRead( ar ) ) {
+		aw.SaveAlignedRead( ar );
+		ar.Clear();
+	}
+	rm( filenames[tempId].c_str() );
+
+	// close the reader and writer
+	aw.Close();
+	for ( vector<MosaikReadFormat::CAlignmentReader*>::iterator ite = readers.begin(); ite != readers.end(); ite++ )
+		(*ite)->Close();
+	readers.clear();
 }
 
 // parses the specified MOSAIK alignment file and matching anchors file
-void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
+void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 
 	// ============================
 	// patch trimmed information
 	// ============================
 	
-	//vector<string> tempFiles;
-
-		// patch trimmed bases
-		//MosaikReadFormat::CAlignmentReader reader;
-		//reader.Open(alignmentFilename);
-        	// retrieve the read groups
-		//vector<MosaikReadFormat::ReadGroup> readGroups;
-		//reader.GetReadGroups(readGroups);
-	        // retrieve the reference sequence vector
-		//vector<ReferenceSequence>* pReferenceSequences = reader.GetReferenceSequences();
-        	// retrieve the alignment status (clear the sorting status)
-		//AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
-		//reader.Close();
-	
-	
+	string filename;
 	if (mFlags.EnableFastqPatching) {
-	
 		// patch the trimmed info back and store alignments in temp files
 		// note that the alignments in temp files would be sorted by positions
 		PatchInfo( alignmentFilename, mSettings.inputFastqFilename, mSettings.inputFastq2Filename );
 
-
-		// sort fastq by names
-		
-		//string tempFilename;
-		//CFileUtilities::GetTempFilename(tempFilename);
-		//CFastq fastqReader;
-		//fastqReader.Open(mSettings.inputFastqFilename);
-		//fastqReader.SortByName(tempFilename);
-		//fastqReader.Close();
-		//mSettings.inputFastqFilename = tempFilename;
-
-		
-		//const bool hasFastq2 = !mSettings.inputFastq2Filename.empty();
-		//if ( hasFastq2 ) {
-		//	CFastq fastqReader2;
-		//	tempFilename.clear();
-		//	CFileUtilities::GetTempFilename(tempFilename);
-		//	fastqReader2.Open(mSettings.inputFastq2Filename);
-		//	fastqReader2.SortByName(tempFilename);
-		//	fastqReader2.Close();
-		//	mSettings.inputFastq2Filename = tempFilename;
-		//}
-
-		// open fastq files and load the first read
-		//CFastq fastqReader1, fastqReader2;
-        	//CMosaikString readName1, readName2;
-	        //Mosaik::Mate m1, m2;
-		//fastqReader1.Open( mSettings.inputFastqFilename );
-		//fastqReader1.LoadNextMate(readName1, m1);
-		//if ( hasFastq2 ) {
-		//	fastqReader2.Open( mSettings.inputFastq2Filename );
-		//	fastqReader2.LoadNextMate(readName2, m2);
-		//}
-
-		
-		// patch trimmed bases
-		//MosaikReadFormat::CAlignmentReader reader;
-		//reader.Open(alignmentFilename);
-        	/*
-		// retrieve the read groups
-		vector<MosaikReadFormat::ReadGroup> readGroups;
-		reader.GetReadGroups(readGroups);
-	        // retrieve the reference sequence vector
-		vector<ReferenceSequence>* pReferenceSequences = reader.GetReferenceSequences();
-        	// retrieve the alignment status (clear the sorting status)
-		AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
-		*/
-
-		// reserve buffer for ReverseStrand
-		//unsigned int bufferSize = 1024;
-		//char* originalReverseMate1 = new char[bufferSize];
-		//char* originalReverseMate2 = new char[bufferSize];
-		//char* originalReverseQuality1 = new char[bufferSize];
-		//char* originalReverseQuality2 = new char[bufferSize];
-		//unsigned int clipSize = 1024;
-		//char* clips = new char[clipSize];
-		//memset( clips, 'Z', clipSize);
-
-		//unsigned int cacheSize = 50000;
-		//CAlignedReadCache cache( cacheSize );
-
-		// retrieve all reads from the alignment reader
-		//Mosaik::AlignedRead ar;
-		//while(reader.LoadNextRead(ar)) {
-		
-			//ar.IsResolvedAsPair = ar.Mate1Alignments.begin()->IsResolvedAsPair;
-
-			// find the read in fastqs
-			//while ( ar.Name != readName1 ) {
-			//	bool loadFastq1 = false, loadFastq2 = false;
-			//	loadFastq1 = fastqReader1.LoadNextMate(readName1, m1);
-			//	if ( hasFastq2 )
-			//		loadFastq2 = fastqReader2.LoadNextMate(readName2, m2);
-
-			//	if ( !loadFastq1 || ( hasFastq2 && !loadFastq2 ) ) {
-			//		cout << "ERROR: The targeted read (" << ar.Name  << ") cannot be found in FASTQs." << endl;
-			//		exit(1);
-			//	}
-			//}
-
-			// sanity check
-			// we shouldn't have any alignment in ar.Mate2Alignments
-			// since MosaikSort didn't put anything in ar.Mate2Alignments
-			//const unsigned int numMate2Alignments = (unsigned int)ar.Mate2Alignments.size();
-			//if ( numMate2Alignments > 0 ) {
-			//	cout << "ERROR: Found alignments in 2nd mate." << endl;
-			//	exit(1);
-			//}
-
-			// Get Reverse Complement
-			//unsigned int queryLengthMate1 = m1.Bases.Length();
-			//unsigned int queryLengthMate2 = 0;
-			//if ( queryLengthMate1 > bufferSize ) {
-			//	bufferSize = queryLengthMate1;
-			//	delete [] originalReverseMate1;
-			//	delete [] originalReverseQuality1;
-			//	originalReverseMate1    = new char[bufferSize];
-			//	originalReverseQuality1 = new char[bufferSize];
-			//}
-			//memcpy(originalReverseMate1, m1.Bases.CData(), queryLengthMate1);
-			//CSequenceUtilities::GetReverseComplement(originalReverseMate1, queryLengthMate1);
-
-			// handle 2nd mate
-			//if ( hasFastq2 ) {
-			//	queryLengthMate2 = m2.Bases.Length();
-			//	if ( queryLengthMate2 > bufferSize ) {
-			//		bufferSize = queryLengthMate2;
-			//		delete [] originalReverseMate2;
-			//		delete [] originalReverseQuality2;
-			//		originalReverseMate2    = new char[bufferSize];
-			//		originalReverseQuality2 = new char[bufferSize];
-			//	}
-
-			//	memcpy(originalReverseMate2, m2.Bases.CData(), queryLengthMate2);
-			//	CSequenceUtilities::GetReverseComplement(originalReverseMate2, queryLengthMate2);
-			//}
-/*
-			bool isLongRead = false;
-			for ( vector<Alignment>::iterator ite = ar.Mate1Alignments.begin(); ite != ar.Mate1Alignments.end(); ite++ ) {
-				Mosaik::Mate currentMate;
-				unsigned int queryLength;
-				char* reverseMate;
-				char* reverseQuality;
-				if ( ite->IsFirstMate || !hasFastq2 ) {
-					currentMate    = m1;
-					queryLength    = queryLengthMate1;
-					reverseMate    = originalReverseMate1;
-					reverseQuality = originalReverseQuality1;
-				}
-				else {
-					currentMate    = m2;
-					queryLength    = queryLengthMate2;
-					reverseMate    = originalReverseMate2;
-					reverseQuality = originalReverseQuality2;
-				}
-				
-				// get the lengths of the read
-				CMosaikString query(ite->Query);
-				query.Remove('-');
-				unsigned int alignedLength = query.Length();
-				ite->BaseQualities.Copy( currentMate.Qualities.CData(), queryLength );
-				ite->QueryBegin = 0;
-				ite->QueryEnd   = queryLength - 1;
-				
-				// soft chip
-				if ( alignedLength != queryLength ) {
-					char* originalBases;
-					if ( ite->IsReverseStrand ) {
-						originalBases = reverseMate;
-						ite->BaseQualities.Reverse();
-					}
-					else {
-						originalBases = currentMate.Bases.Data();
-					}
-					
-					// find the aligned bases in the original bases
-					string originalBasesStr = originalBases;
-					size_t found;
-					found = originalBasesStr.find(query.CData());
-
-					//printf("%s\n%s\n", query.CData(), originalBasesStr.c_str());
-					
-					if ( found == string::npos ) {
-						cout << "ERROR: The trimmed bases cannot be found in the FASTQs." << endl;
-						cout << "       Read name:" << ar.Name << endl;
-						cout << "   Aligned bases:" << query.CData() << endl;
-						exit(1);
-					}
-					else {
-						// soft clip at the beginning
-						if ( found != 0 ) {
-							if ( found > clipSize ) {
-								clipSize = found;
-								delete [] clips;
-								clips = new char[clipSize];
-								memset( clips, 'Z', clipSize);
-
-							}
-							ite->Reference.Prepend( clips, (unsigned int) found );
-							ite->Query.Prepend( originalBases, (unsigned int) found );
-						}
-
-						// soft clip at the end
-						unsigned int endFound = (unsigned int) found + alignedLength;
-						if ( endFound < queryLength ) {
-							char* suffix = originalBases + endFound;
-							unsigned int suffixLength = queryLength - endFound;
-							ite->Reference.Append( clips, suffixLength );
-							ite->Query.Append( suffix, suffixLength );
-						}
-					}
-				}
-
-				isLongRead = isLongRead || ( ite->Reference.Length() > 255 ) || ( ite->QueryEnd > 255 );
-				// store the aligned read to cache
-				ar.IsLongRead = isLongRead;
-				cache.Add( ar );
-			}
-
-			if ( cache.isFull() ) {
-				cache.SortByPosition();
-
-				// get temp filename
-				string filename;
-				CFileUtilities::GetTempFilename(filename);
-				tempFiles.push_back(filename);
-
-				// prepare archive
-				MosaikReadFormat::CAlignmentWriter aw;
-				aw.Open(filename, *pReferenceSequences, readGroups, as);
-				Mosaik::AlignedRead sortedAr;
-
-				cache.Rewind();
-				while( cache.LoadNextAlignedRead( sortedAr ) ) {
-					aw.SaveAlignedRead( sortedAr );
-					sortedAr.Clear();
-				}
-				aw.Close();
-				cache.Reset();
-			}
-		}
-
-		if ( !cache.isEmpty() ) {
-			cache.SortByPosition();
-			
-			// get temp filename
-			string filename;
-			CFileUtilities::GetTempFilename(filename);
-			tempFiles.push_back(filename);
-
-			// prepare archive
-			MosaikReadFormat::CAlignmentWriter aw;
-			aw.Open(filename, *pReferenceSequences, readGroups, as);
-			Mosaik::AlignedRead sortedAr;
-
-			cache.Rewind();
-			while( cache.LoadNextAlignedRead( sortedAr ) ) {
-				aw.SaveAlignedRead( sortedAr );
-				//aw.SaveAlignment( &*sortedAr.Mate1Alignments.begin() );
-				sortedAr.Clear();
-			}
-			aw.Close();
-			cache.Clear();
-		}
-
-		reader.Close();
-		fastqReader1.Close();
-		if ( hasFastq2 ) fastqReader2.Close();
-		
-		// delete temp FASTQ files
-		rm(mSettings.inputFastqFilename.c_str());
-		if ( hasFastq2 ) rm(mSettings.inputFastq2Filename.c_str());
-	*/
+		// merge the temp archives which are generated by PatchInfo
+		CFileUtilities::GetTempFilename( filename );
+		MergeSortedArchive( _tempFiles, filename );
+		_tempFiles.clear();
 	}
-	
 
-	string filename;
+	
+/*
 	if (mFlags.EnableFastqPatching) {
 
 	// ============================
@@ -800,19 +666,19 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 	// ============================
 	
 	// prepare archive readers
-	unsigned int nTemp = _tempFiles.size();
-	vector<MosaikReadFormat::CAlignmentReader> readers( nTemp );
-	MosaikReadFormat::CAlignmentReader* readerPtr;
-	for ( unsigned int i = 0; i < _tempFiles.size(); i++ ) {
-		readerPtr = new MosaikReadFormat::CAlignmentReader;
-		readerPtr->Open( _tempFiles[i] );
-		readers[i] = *readerPtr;
-	}
+	//unsigned int nTemp = _tempFiles.size();
+	//vector<MosaikReadFormat::CAlignmentReader> readers( nTemp );
+	//MosaikReadFormat::CAlignmentReader* readerPtr;
+	//for ( unsigned int i = 0; i < _tempFiles.size(); i++ ) {
+	//	readerPtr = new MosaikReadFormat::CAlignmentReader;
+	//	readerPtr->Open( _tempFiles[i] );
+	//	readers[i] = *readerPtr;
+	//}
 
 	// prepare archive writer
-	CFileUtilities::GetTempFilename(filename);
-	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open( filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as );
+	//CFileUtilities::GetTempFilename(filename);
+	//MosaikReadFormat::CAlignmentWriter aw;
+	//aw.Open( filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as );
 
 	// list for the top in each temp file
 	list<Mosaik::AlignedRead> tops;
@@ -903,7 +769,7 @@ void CMosaikText::ParseMosaikAlignmentFile(const string& alignmentFilename) {
 	readers.clear();
 
 	}
-
+*/
 	// open the alignment archive
 	//reader.Open(alignmentFilename);
 	MosaikReadFormat::CAlignmentReader reader;

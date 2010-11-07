@@ -16,6 +16,7 @@ class CAlignedReadCache {
 	public:
 
 		CAlignedReadCache( unsigned int cacheSize );
+		~CAlignedReadCache();
 		// add a new aligned read in _cache
 		bool Add ( const Mosaik::AlignedRead& ar );
 		// sort _cache by the position of the first mate in Mate1Alignments

@@ -418,7 +418,7 @@ namespace MosaikReadFormat {
 		}
 
 		mIsOpen = true;
-
+cout << "open=true" << endl;
 		// ===============
 		// read the header
 		// ===============

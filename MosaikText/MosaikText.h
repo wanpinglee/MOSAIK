@@ -178,8 +178,12 @@ private:
 	void SearchReadInFastq ( const CMosaikString& readName, CFastq& fastqReader1, CFastq& fastqReader2, const bool hasFastq2 );
 	// initialize our patching buffers
 	void InitializePatchingBuffer ( void );
+	// free patching buffers
+	void FreePatchingBuffer ( void );
 	// sort FASTQ by read names
 	void SortFastqByName( const string& inputFastqFilename, string& outputFastqFilename );
+	// merge a vector of partially sorted archive; sorting them by positions
+	void MergeSortedArchive ( const vector <string>& filenames, const string& outArchiveFilename );
 	// cigar buffer
 	char mCigarBuffer[CIGAR_BUFFER_SIZE];
 	// our current read and alignment counters

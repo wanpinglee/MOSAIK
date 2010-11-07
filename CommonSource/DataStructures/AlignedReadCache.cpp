@@ -10,6 +10,10 @@ CAlignedReadCache::CAlignedReadCache( unsigned int cacheSize ) {
 	_full = false;
 }
 
+CAlignedReadCache::~CAlignedReadCache () {
+	_cache.clear();
+}
+
 // add a new aligned read in _cache
 bool CAlignedReadCache::Add ( const Mosaik::AlignedRead& ar ) {
 
