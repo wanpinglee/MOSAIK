@@ -62,7 +62,7 @@ namespace MosaikReadFormat {
 		// retrieves the number of reads written
 		uint64_t GetNumReads(void) const;
 		// opens the alignment archive
-		void Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as);
+		void Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as, const string& signature);
 		// saves the read to the alignment archive
 		void SaveAlignedRead(const Mosaik::AlignedRead& ar);
 		// saves the alignment to the alignment archive
@@ -132,6 +132,8 @@ namespace MosaikReadFormat {
 		bool mStoreIndex;
 		// our header tags
 		map<unsigned char, Tag> mHeaderTags;
+		// MOSAIK_SIGNATURE; Aligner: MKSAA\4; Sort: MKSSA\1
+		char* MosaikSignature;
 	};
 }
 

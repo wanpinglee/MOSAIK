@@ -151,6 +151,11 @@ private:
 		vector<MosaikReadFormat::ReadGroup> readGroups;
 		vector<ReferenceSequence> pReferenceSequences;
 		AlignmentStatus as;
+		char* signature;
+
+		ArchiveSetting(void)
+			:signature(NULL)
+		{}
 	} mArchiveSetting;
 
 	
@@ -173,7 +178,7 @@ private:
 	// patchs trimmed infomation back from FASTQs
 	void PatchInfo( const string& alignmentFilename, const string& inputFastqFilename, const string& inputFastq2Filename );
 	// given an alignedReadCache, sort them by positions and sorte them in a temp file
-	string StoreReadCache ( CAlignedReadCache& cache );
+	void SortAndStoreReadCache ( CAlignedReadCache& cache );
 	// given a read name, search it in FASTQs
 	void SearchReadInFastq ( const CMosaikString& readName, CFastq& fastqReader1, CFastq& fastqReader2, const bool hasFastq2 );
 	// initialize our patching buffers
@@ -184,6 +189,8 @@ private:
 	void SortFastqByName( const string& inputFastqFilename, string& outputFastqFilename );
 	// merge a vector of partially sorted archive; sorting them by positions
 	void MergeSortedArchive ( const vector <string>& filenames, const string& outArchiveFilename );
+	// sort aligned archive by positions
+	void SortAlignmentByPosition( const string& inputArchive, const string& outputArchive );
 	// cigar buffer
 	char mCigarBuffer[CIGAR_BUFFER_SIZE];
 	// our current read and alignment counters

@@ -260,6 +260,8 @@ void CMosaikText::SetArchiveSetting( const string& alignmentFilename ) {
 	reader.GetReferenceSequences( mArchiveSetting.pReferenceSequences );
 	// retrieve the alignment status (clear the sorting status)
 	mArchiveSetting.as = reader.GetStatus();
+	// retrieve the archive signature
+	reader.GetSignature( mArchiveSetting.signature );
 	reader.Close();
 }
 
@@ -359,7 +361,7 @@ void CMosaikText::SearchReadInFastq ( const CMosaikString& readName, CFastq& fas
 
 // given an alignedReadCache, sort them by positions and sorte them in a temp file
 // return the temp file name
-string CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
+void CMosaikText::SortAndStoreReadCache ( CAlignedReadCache& cache ) {
 
 	cache.SortByPosition();
 	
@@ -370,7 +372,7 @@ string CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
 
 	// prepare archive
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as);
+	aw.Open(filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as, ALIGNER_SIGNATURE );
 	Mosaik::AlignedRead sortedAr;
 	
 	cache.Rewind();
@@ -379,9 +381,7 @@ string CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
 		sortedAr.Clear();
 	}
 	aw.Close();
-	cache.Reset();
-
-	return filename;
+	//cache.Reset();
 }
 
 // patchs trimmed infomation back from FASTQs
@@ -506,16 +506,18 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 		cache.Add( ar );
 
 		if ( cache.isFull() ) {
-			string tempfile;
-			tempfile = StoreReadCache( cache );
-			_tempFiles.push_back( tempfile );
+			// sort and store aligned read to a temp file
+			// _tempFiles would collect all temp filenames
+			SortAndStoreReadCache( cache );
+			cache.Reset();
 		}
 	}
 	
 	if ( !cache.isEmpty() ) {
-		string tempfile;
-		tempfile = StoreReadCache( cache );
-		_tempFiles.push_back( tempfile );
+		// sort and store aligned read to a temp file
+		// _tempFiles would collect all temp filenames
+		SortAndStoreReadCache( cache );
+		cache.Clear();
 	}
 
 	reader.Close();
@@ -534,6 +536,7 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 void CMosaikText::MergeSortedArchive ( const vector <string>& filenames, const string& outArchiveFilename ) {
 	// prepare archive readers
 	unsigned int nTemp = filenames.size();
+	
 	vector<MosaikReadFormat::CAlignmentReader*> readers( nTemp );
 	MosaikReadFormat::CAlignmentReader* readerPtr;
 	for ( unsigned int i = 0; i < nTemp; i++ ) {
@@ -545,7 +548,7 @@ void CMosaikText::MergeSortedArchive ( const vector <string>& filenames, const s
 
 	// prepare archive writer
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open( outArchiveFilename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as );
+	aw.Open( outArchiveFilename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as, ALIGNER_SIGNATURE );
 
 
 	// list for the top in each temp file
@@ -636,6 +639,51 @@ void CMosaikText::MergeSortedArchive ( const vector <string>& filenames, const s
 	for ( vector<MosaikReadFormat::CAlignmentReader*>::iterator ite = readers.begin(); ite != readers.end(); ite++ )
 		(*ite)->Close();
 	readers.clear();
+
+	_tempFiles.clear();
+}
+
+// sort aligned archive by positions
+void CMosaikText::SortAlignmentByPosition( const string& inputArchive, const string& outputArchive ) {
+
+	//=================
+	//partially sorting
+	//=================
+
+	// open archive
+	MosaikReadFormat::CAlignmentReader reader;
+	reader.Open(inputArchive);
+	
+	// retrieve AlignedReadCache
+	unsigned int cacheSize = 50000;
+	CAlignedReadCache cache( cacheSize );
+	
+	_tempFiles.clear();
+	// read all alignments from archive and compare them with reads in FASTQs
+	Mosaik::AlignedRead ar;
+	while(reader.LoadNextRead(ar)) {
+		// store the aligned read to cache
+		cache.Add( ar );
+
+		if ( cache.isFull() ) {
+			// sort and store aligned read to a temp file
+			// _tempFiles would collect all temp filenames
+			SortAndStoreReadCache( cache );
+			cache.Reset();
+		}
+	}
+
+	if ( !cache.isEmpty() ) {
+		// sort and store aligned read to a temp file
+		// _tempFiles would collect all temp filenames
+		SortAndStoreReadCache( cache );
+		cache.Clear();
+	}
+
+	//===========================================
+	// globally sorting and merging as an archive
+	//===========================================
+	MergeSortedArchive( _tempFiles, outputArchive );
 }
 
 // parses the specified MOSAIK alignment file and matching anchors file
@@ -646,138 +694,35 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	// ============================
 	
 	string filename;
-	if (mFlags.EnableFastqPatching) {
-		// patch the trimmed info back and store alignments in temp files
-		// note that the alignments in temp files would be sorted by positions
-		PatchInfo( alignmentFilename, mSettings.inputFastqFilename, mSettings.inputFastq2Filename );
+	bool isSort = ( strcmp(mArchiveSetting.signature, SORT_SIGNATURE) == 0 ) ? true : false;
+	if ( mFlags.EnableFastqPatching ) {
+		if ( isSort ) {
+			// patch the trimmed info back and store alignments in temp files
+			// note that the alignments in temp files would be sorted by positions
+			PatchInfo( alignmentFilename, mSettings.inputFastqFilename, mSettings.inputFastq2Filename );
 
-		// merge the temp archives which are generated by PatchInfo
-		CFileUtilities::GetTempFilename( filename );
-		MergeSortedArchive( _tempFiles, filename );
-		_tempFiles.clear();
+			// merge the temp archives which are generated by PatchInfo
+			CFileUtilities::GetTempFilename( filename );
+			MergeSortedArchive( _tempFiles, filename );
+			_tempFiles.clear();
+		} else {
+			cout << "ERROR: The input archive should be processed by MosaikSort when outputing soft-clipped alignments." << endl;
+			exit(1);
+		}
+	}
+	else {
+		if ( isSort ) {
+			// note that MosaikSort sorts alignments by names
+			CFileUtilities::GetTempFilename( filename );
+			SortAlignmentByPosition( alignmentFilename, filename );
+		} else
+			filename = alignmentFilename;
 	}
 
 	
-/*
-	if (mFlags.EnableFastqPatching) {
-
-	// ============================
-	// sort alignments globally
-	// ============================
-	
-	// prepare archive readers
-	//unsigned int nTemp = _tempFiles.size();
-	//vector<MosaikReadFormat::CAlignmentReader> readers( nTemp );
-	//MosaikReadFormat::CAlignmentReader* readerPtr;
-	//for ( unsigned int i = 0; i < _tempFiles.size(); i++ ) {
-	//	readerPtr = new MosaikReadFormat::CAlignmentReader;
-	//	readerPtr->Open( _tempFiles[i] );
-	//	readers[i] = *readerPtr;
-	//}
-
-	// prepare archive writer
-	//CFileUtilities::GetTempFilename(filename);
-	//MosaikReadFormat::CAlignmentWriter aw;
-	//aw.Open( filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as );
-
-	// list for the top in each temp file
-	list<Mosaik::AlignedRead> tops;
-	unsigned int nDone = 0;
-	vector<bool> dones( nTemp );
-	Mosaik::AlignedRead ar;
-	for ( unsigned int i = 0; i < nTemp; i++ ) {
-		ar.Clear();
-		
-		if ( readers[i].LoadNextRead( ar ) ) {
-			ar.Owner = i;
-			tops.push_back( ar );
-			dones[i] = false;
-		}
-		else {
-			dones[i] = true;
-			nDone++;
-		}
-	}
-
-	unsigned int tempId;
-	Mosaik::AlignedRead nextMin;
-	bool isTempEmpty;
-	while ( nDone != ( nTemp - 1 ) ) {
-		tops.sort( PositionLessThan );
-		tempId = tops.begin()->Owner;
-
-		// save min
-		
-		aw.SaveAlignedRead( *tops.begin() );
-		tops.pop_front();
-
-		nextMin = *tops.begin();
-
-		isTempEmpty = false;
-		ar.Clear();
-		if ( !dones[tempId] && readers[tempId].LoadNextRead( ar ) ) {
-			ar.Owner = tempId;
-			//tops.push_back( ar );
-		}
-		else {
-			nDone++;
-			dones[tempId] = true;
-			isTempEmpty = true;
-			rm( _tempFiles[tempId].c_str() );
-		}
-
-
-		if ( isTempEmpty ) continue;
-
-		while ( PositionLessThan( ar, nextMin ) ) {
-			aw.SaveAlignedRead( ar );
-			ar.Clear();
-			if ( !readers[tempId].LoadNextRead( ar ) ) {
-				nDone++;
-				dones[tempId] = true;
-				isTempEmpty = true;
-				rm( _tempFiles[tempId].c_str() );
-				break;
-			}
-		}
-
-		ar.Owner = tempId;
-		if ( !isTempEmpty )
-			tops.push_back( ar );
-
-	}
-
-	// store the remaining aligned reads
-	if ( tops.size() != 1 ) {
-		cout << "ERROR: More than one aligned reads remain." << endl;
-		exit(1);
-	}
-
-	tempId = tops.begin()->Owner;
-	aw.SaveAlignedRead( *tops.begin() );
-	ar.Clear();
-	while ( readers[tempId].LoadNextRead( ar ) ) {
-		aw.SaveAlignedRead( ar );
-		ar.Clear();
-	}
-	rm( _tempFiles[tempId].c_str() );
-
-	aw.Close();
-	for ( vector<MosaikReadFormat::CAlignmentReader>::iterator ite = readers.begin(); ite != readers.end(); ite++ )
-		ite->Close();
-	_tempFiles.clear();
-	readers.clear();
-
-	}
-*/
 	// open the alignment archive
-	//reader.Open(alignmentFilename);
 	MosaikReadFormat::CAlignmentReader reader;
-	if (mFlags.EnableFastqPatching)
-		reader.Open( filename );
-	else
-		reader.Open(alignmentFilename);
-
+	reader.Open( filename );
 
 	// retrieve the alignment archive status
 	//const AlignmentStatus as = reader.GetStatus();

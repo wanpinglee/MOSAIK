@@ -31,6 +31,7 @@ namespace MosaikReadFormat {
 		, mLastReferenceIndex(0)
 		, mLastReferencePosition(0)
 		, mStoreIndex(false)
+		, MosaikSignature(NULL)
 	{
 		// set the buffer threshold
 		mBufferThreshold = mBufferLen - MEMORY_BUFFER_SIZE;
@@ -49,6 +50,7 @@ namespace MosaikReadFormat {
 		if(mIsOpen)            Close();
 		if(mBuffer)            delete [] mBuffer;
 		if(mCompressionBuffer) delete [] mCompressionBuffer;
+		if(MosaikSignature)    delete [] MosaikSignature;
 	}
 
 	// adds a header tag
@@ -330,7 +332,7 @@ namespace MosaikReadFormat {
 	}
 
 	// opens the alignment archive
-	void CAlignmentWriter::Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as) {
+	void CAlignmentWriter::Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as, const string& signature) {
 
 		if(mIsOpen) {
 			cout << "ERROR: An attempt was made to open an already open alignment archive." << endl;
@@ -399,9 +401,14 @@ namespace MosaikReadFormat {
 		// INDEX[*]
 
 		// write the MOSAIK signature
-		const unsigned char SIGNATURE_LENGTH = 6;
-		const char* MOSAIK_SIGNATURE = "MSKAA\4";
-		fwrite(MOSAIK_SIGNATURE, SIGNATURE_LENGTH, 1, mOutStream);
+		//const unsigned char SIGNATURE_LENGTH = 6;
+		//const char* MOSAIK_SIGNATURE = "MSKAA\4";
+		//fwrite(MOSAIK_SIGNATURE, SIGNATURE_LENGTH, 1, mOutStream);
+		if ( ( signature != ALIGNER_SIGNATURE ) && ( signature != SORT_SIGNATURE ) ) {
+			cout << "ERROR: The signature for MOSAIK archive is invalid." << endl;
+			exit(1);
+		}
+		fwrite( signature.c_str(), SIGNATURE_LENGTH, 1, mOutStream );
 
 		// write the alignment status
 		fputc((unsigned char)as, mOutStream);

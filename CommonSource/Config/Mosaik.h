@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef _MOSAIK_H_
+#define _MOSAIK_H_
 
 #ifndef WIN32
 #include <stdint.h>
@@ -19,12 +20,12 @@
 // MOSAIK version
 // ==============
 
-#define MOSAIK_VERSION_DATE "2010-11-07"
+#define MOSAIK_VERSION_DATE "2010-11-08"
 
 // adopt a major.minor.build version number [1].[1].[3]
 const unsigned char  MOSAIK_MAJOR_VERSION = 1;
 const unsigned char  MOSAIK_MINOR_VERSION = 1;
-const unsigned short MOSAIK_BUILD_VERSION = 29;
+const unsigned short MOSAIK_BUILD_VERSION = 30;
 
 // ================================
 // Platform specific variable sizes
@@ -83,3 +84,13 @@ const char OS_DIRECTORY_SEPARATOR = '/';
 #define NUM_REFERENCE_DIVIDER_BASES 500
 const double HASH_REGION_EXTENSION_PERCENT     = 0.025;
 const unsigned char REFERENCE_SEQUENCE_QUALITY = 40;
+
+// ==================
+// Archive signatures
+// ==================
+
+const unsigned char SIGNATURE_LENGTH = 6;
+const char ALIGNER_SIGNATURE[ ] = "MSKAA\4";
+const char SORT_SIGNATURE[ ]    = "MSKSA\1";
+
+#endif

@@ -439,7 +439,7 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, *pReferenceSequences, readGroups, AS_SORTED_ALIGNMENT);
+	aw.Open(outputFilename, *pReferenceSequences, readGroups, AS_SORTED_ALIGNMENT, SORT_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = (unsigned int)mTempFiles.size();

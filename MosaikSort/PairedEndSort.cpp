@@ -853,7 +853,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, *pReferenceSequences, readGroups, as);
+	aw.Open(outputFilename, *pReferenceSequences, readGroups, as, SORT_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = (unsigned int)mTempFiles.size();

@@ -13,8 +13,8 @@
 namespace MosaikReadFormat {
 
 	// define our MOSAIK file signature
-	const char* CAlignmentReader::MOSAIK_SIGNATURE         = "MSKAA\4";
-	const unsigned char CAlignmentReader::SIGNATURE_LENGTH = 6;
+	//const char* CAlignmentReader::MOSAIK_SIGNATURE         = "MSKAA\4";
+	//const unsigned char CAlignmentReader::SIGNATURE_LENGTH = 6;
 
 	// constructor
 	CAlignmentReader::CAlignmentReader(void)
@@ -36,6 +36,7 @@ namespace MosaikReadFormat {
 		, mRefSeqLUT(NULL)
 		, mStatus(AS_UNKNOWN)
 		, mSeqTech(ST_UNKNOWN)
+		, MosaikSignature(NULL)
 	{}
 
 	// destructor
@@ -43,6 +44,7 @@ namespace MosaikReadFormat {
 		if(mIsOpen)            Close();
 		if(mBuffer)            delete [] mBuffer;
 		if(mCompressionBuffer) delete [] mCompressionBuffer;
+		if(MosaikSignature)    delete [] MosaikSignature;
 
 		// delete the reference sequence LUT
 		for(unsigned short i = 0; i < mNumRefSeqs; ++i) delete [] mRefSeqLUT[i];
@@ -82,7 +84,8 @@ namespace MosaikReadFormat {
 			}
 
 			// check if the read signatures match
-			if(!foundError && (strncmp(signature, MOSAIK_SIGNATURE, 5) != 0)) {
+			//if(!foundError && (strncmp(signature, MOSAIK_SIGNATURE, 5) != 0)) {
+			if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) && ( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
 				if(showError) {
 					printf("ERROR: It seems that the input file (%s) is not in the MOSAIK alignment format.\n", filename.c_str());
 					exit(1);
@@ -92,9 +95,10 @@ namespace MosaikReadFormat {
 			}
 
 			// check if the file format is from another version
-			if(!foundError && (MOSAIK_SIGNATURE[5] != signature[5])) {
+			if( !foundError && ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) ) {
 				if(showError) {
-					printf("ERROR: It seems that the input file (%s) was created in another version of MosaikAligner. This version of MOSAIK expected to find an alignment archive using version: %hu, but the alignment archive uses version: %hu. A new alignment archive is required.\n", filename.c_str(), MOSAIK_SIGNATURE[5], signature[5]);
+					char version = ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) == 0 ) ? ALIGNER_SIGNATURE[5] : SORT_SIGNATURE[5];
+					printf("ERROR: It seems that the input file (%s) was created in another version of MosaikAligner. This version of MOSAIK expected to find an alignment archive using version: %hu, but the alignment archive uses version: %hu. A new alignment archive is required.\n", filename.c_str(), version, signature[5]);
 					exit(1);
 				}
 
@@ -204,6 +208,15 @@ namespace MosaikReadFormat {
 	// gets the alignment archive sequencing technology
 	SequencingTechnologies CAlignmentReader::GetSequencingTechnology(void) const {
 		return mSeqTech;
+	}
+
+	// retrieves the signature
+	void CAlignmentReader::GetSignature ( char*& signature ) {
+		if ( signature ) delete [] signature;
+
+		signature = new char [ SIGNATURE_LENGTH + 1 ];
+		memcpy( signature, MosaikSignature, SIGNATURE_LENGTH );
+		signature[ SIGNATURE_LENGTH ] = 0;
 	}
 
 	// retrieves the file status
@@ -368,6 +381,12 @@ namespace MosaikReadFormat {
 		return true;
 	}
 
+	// gets archive signature
+	void CAlignmentReader:: GetArchiveSignature ( string& signature ) {
+		signature.clear();
+		signature = *MosaikSignature;
+	}
+
 	// load the read header from disk
 	void CAlignmentReader::LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments) {
 
@@ -418,7 +437,7 @@ namespace MosaikReadFormat {
 		}
 
 		mIsOpen = true;
-cout << "open=true" << endl;
+		
 		// ===============
 		// read the header
 		// ===============
@@ -440,22 +459,29 @@ cout << "open=true" << endl;
 		// check the MOSAIK signature
 		char signature[SIGNATURE_LENGTH + 1];
 		signature[SIGNATURE_LENGTH] = 0;
-		fread(signature, SIGNATURE_LENGTH, 1, mInStream);
+		fread( signature, SIGNATURE_LENGTH, 1, mInStream );
 
 		// check if the read signatures match
-		if(strncmp(signature, MOSAIK_SIGNATURE, 5) != 0) {
+		//if(strncmp(signature, MOSAIK_SIGNATURE, 5) != 0) {
+		if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) && ( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
 			printf("ERROR: It seems that the input file (%s) is not in the MOSAIK alignment format.\n", 
 				filename.c_str());
 			exit(1);
 		}
 
-		if(MOSAIK_SIGNATURE[5] != signature[5]) {
+		//if(MOSAIK_SIGNATURE[5] != signature[5]) {
+		if ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) {
+			char version = ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) == 0 ) ? ALIGNER_SIGNATURE[5] : SORT_SIGNATURE[5];
 			printf("ERROR: It seems that the input file (%s) was created in another version of MosaikAligner. "
 				"This version of MOSAIK expected to find an alignment archive using version: %hu, but the "
 				"alignment archive uses version: %hu. A new alignment archive is required.\n", 
-				filename.c_str(), MOSAIK_SIGNATURE[5], signature[5]);
+				filename.c_str(), version, signature[5]);
 			exit(1);
 		}
+
+		MosaikSignature = new char [ SIGNATURE_LENGTH + 1 ];
+		memcpy( MosaikSignature, signature, SIGNATURE_LENGTH );
+		MosaikSignature[ SIGNATURE_LENGTH ] = 0;
 
 		// retrieve the alignment file status
 		mStatus = (AlignmentStatus)fgetc(mInStream);
