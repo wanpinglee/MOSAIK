@@ -170,8 +170,8 @@ int main(int argc, char* argv[]) {
 
 	// add the essential options
 	OptionGroup* pEssentialOpts = COptions::CreateOptionGroup("Essential parameters");
-	COptions::AddValueOption("-a",  "algorithm",  "alignment algorithm: fast, single, multi, or all",  "", settings.HasAlgorithm, settings.Algorithm, pEssentialOpts, DEFAULT_ALGORITHM);
-	COptions::AddValueOption("-m",  "mode",       "alignment mode: unique or all",                     "", settings.HasMode,      settings.Mode,      pEssentialOpts, DEFAULT_MODE);
+	COptions::AddValueOption("-a",  "algorithm",  "alignment algorithm: [fast, single, multi, all]",  "", settings.HasAlgorithm, settings.Algorithm, pEssentialOpts, DEFAULT_ALGORITHM);
+	COptions::AddValueOption("-m",  "mode",       "alignment mode: [unique, all]",                     "", settings.HasMode,      settings.Mode,      pEssentialOpts, DEFAULT_MODE);
 	COptions::AddValueOption("-hs", "hash size",  "hash size [4 - 32]",                                "", settings.HasHashSize,  settings.HashSize,  pEssentialOpts, DEFAULT_HASH_SIZE);
 
 	// add the filtering options

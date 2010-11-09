@@ -439,7 +439,7 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, *pReferenceSequences, readGroups, AS_SORTED_ALIGNMENT);
+	aw.Open(outputFilename, *pReferenceSequences, readGroups, AS_SORTED_ALIGNMENT, SORT_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = (unsigned int)mTempFiles.size();
@@ -476,7 +476,8 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 	while(alignments.size() > 1) {
 
 		// sort the alignment list
-		alignments.sort();
+		//alignments.sort();
+		alignments.sort(NameLessThan);
 
 		// grab the two best alignments
 		bestIter     = alignments.begin();
@@ -497,7 +498,9 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 
 		// save these alignments as long as they are better than the next best
 		bool isFileEmpty = false;
-		while(al < *nextBestIter) {
+		//while(al < *nextBestIter) {
+		// sort by names
+		while ( NameLessThan( al, *nextBestIter ) ) {
 			aw.SaveAlignment(&al);
 			numSavedAlignments++;
 			isFileEmpty = !GetAlignment(tempFile[bestOwner], bestOwner, al);
@@ -569,7 +572,8 @@ uint64_t CSingleEndSort::Serialize(list<Alignment>& alignmentCache, const unsign
 	if(numEntries != mNumCachedAlignments) alignmentCache.resize(numEntries);
 
 	// sort if have more than one read
-	if(numEntries > 1) alignmentCache.sort();
+	//if(numEntries > 1) alignmentCache.sort();
+	if(numEntries > 1) alignmentCache.sort(NameLessThan);
 
 	// retrieve a temporary filename
 	string tempFilename;

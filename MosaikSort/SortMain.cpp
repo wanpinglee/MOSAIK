@@ -69,6 +69,8 @@ struct ConfigurationSettings {
 		, SampleAllFragmentLengths(false)
 		, UseConsedRenaming(false)
 		, UseNonUniqueReads(false)
+		//, HasInputFastqFilename(false)
+		//, HasInputFastq2Filename(false)
 		, ConfidenceInterval(DEFAULT_CONFIDENCE_INTERVAL)
 		, CacheSize(DEFAULT_CACHE_SIZE)
 	{}
@@ -95,11 +97,11 @@ int main(int argc, char* argv[]) {
 
 	// add the input/output options
 	OptionGroup* pIOOpts = COptions::CreateOptionGroup("Input & Output");
-	COptions::AddOption("-consed",                                "appends a number to read names for consed compatibility",                   settings.UseConsedRenaming,                                                        pIOOpts);
-	COptions::AddValueOption("-dup", "directory",                 "enables duplicate filtering with databases in the specified directory", "", settings.HasDuplicateDirectory,            settings.DuplicateDirectory,            pIOOpts);
-	COptions::AddValueOption("-in",  "MOSAIK alignment filename", "the input MOSAIK alignment file",  "An input MOSAIK alignment filename",    settings.HasInputMosaikAlignmentFilename,  settings.InputMosaikAlignmentFilename,  pIOOpts);
-	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output MOSAIK alignment file", "An output MOSAIK alignment filename",   settings.HasOutputMosaikAlignmentFilename, settings.OutputMosaikAlignmentFilename, pIOOpts);
-	COptions::AddValueOption("-mem", "# of alignments in memory", "sets the sorting cache size",                                           "", settings.HasCacheSize,                     settings.CacheSize,                     pIOOpts, DEFAULT_CACHE_SIZE);
+	COptions::AddOption("-consed",                                "appends a number to read names for consed compatibility",                     settings.UseConsedRenaming,                                                        pIOOpts);
+	COptions::AddValueOption("-dup", "directory",                 "enables duplicate filtering with databases in the specified directory", "",   settings.HasDuplicateDirectory,            settings.DuplicateDirectory,            pIOOpts);
+	COptions::AddValueOption("-in",  "MOSAIK alignment filename", "the input MOSAIK alignment file",      "An input MOSAIK alignment filename",  settings.HasInputMosaikAlignmentFilename,  settings.InputMosaikAlignmentFilename,  pIOOpts);
+	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output MOSAIK alignment file",     "An output MOSAIK alignment filename", settings.HasOutputMosaikAlignmentFilename, settings.OutputMosaikAlignmentFilename, pIOOpts);
+	COptions::AddValueOption("-mem", "# of alignments in memory", "sets the sorting cache size",                                           "",   settings.HasCacheSize,                     settings.CacheSize,                     pIOOpts, DEFAULT_CACHE_SIZE);
 
 	// add the single-end options
 	OptionGroup* pSingleOpts = COptions::CreateOptionGroup("Single-end Options");
@@ -122,10 +124,19 @@ int main(int argc, char* argv[]) {
 	// parse the current command line
 	COptions::Parse(argc, argv);
 
+	// test to see if the specified input files exist
+	SequencingTechnologies seqTech;
+	AlignmentStatus alignmentStatus;
+	MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputMosaikAlignmentFilename, seqTech, alignmentStatus, true);
+
+	// activate paired-end sorting mode
+	bool isAlignmentArchivePairedEnd = false;
+	if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
+
 	// =============================
 	// check for missing information
 	// =============================
-
+	
 	bool foundError = false;
 	ostringstream errorBuilder;
 	const string ERROR_SPACER(7, ' ');
@@ -159,15 +170,6 @@ int main(int argc, char* argv[]) {
 		const unsigned int directoryNameLen = (unsigned int)settings.DuplicateDirectory.size();
 		if(settings.DuplicateDirectory[directoryNameLen - 1] != OS_DIRECTORY_SEPARATOR) settings.DuplicateDirectory += OS_DIRECTORY_SEPARATOR;
 	}
-
-	// test to see if the specified input files exist
-	SequencingTechnologies seqTech;
-	AlignmentStatus alignmentStatus;
-	MosaikReadFormat::CAlignmentReader::CheckFile(settings.InputMosaikAlignmentFilename, seqTech, alignmentStatus, true);
-
-	// activate paired-end sorting mode
-	bool isAlignmentArchivePairedEnd = false;
-	if((alignmentStatus & AS_PAIRED_END_READ) != 0) isAlignmentArchivePairedEnd = true;
 
 	// start benchmarking
 	CBenchmark bench;

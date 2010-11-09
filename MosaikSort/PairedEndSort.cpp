@@ -536,7 +536,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 		// check the unused percentage
 		//TODO
-		
+
 		if(unusedPercentage > MODEL_COUNT_THRESHOLD) {
 
 			printf("ERROR: When determining whether to apply mate-pair or paired-end constraints, an irregularity in the alignment model counts was discovered.\n\n");
@@ -550,7 +550,6 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			for(unsigned char i = 0; i < 8; i++) printf("- alignment model %u: %9u hits\n", models[i].ID, models[i].Count);
 			exit(1);
 		}
-		
 
 		// emit a warning if the best alignment models are non-standard
 		const bool isModel1Top = (models[0].ID == 1) || (models[1].ID == 1);
@@ -639,7 +638,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		const bool isUO = ar.Mate1Alignments.empty() || ar.Mate2Alignments.empty();
 		const bool isUU =  isMate1Unique &&  isMate2Unique;
 		const bool isMM = !isMate1Unique && !isMate2Unique;
-		const bool isUM = !isUO && !isUU && !isMM;
+		//const bool isUM = !isUO && !isUU && !isMM;
 
 		// handle orphans
 		if(isUO) {
@@ -837,6 +836,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	if(acIter != alignmentCache.begin()) numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
 
+	
+	
 	// =======================
 	// sort the resolved reads
 	// =======================
@@ -847,7 +848,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, *pReferenceSequences, readGroups, as);
+	aw.Open(outputFilename, *pReferenceSequences, readGroups, as, SORT_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = (unsigned int)mTempFiles.size();
@@ -884,7 +885,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	while(alignments.size() > 1) {
 
 		// sort the alignment list
-		alignments.sort();
+		//alignments.sort();
+		alignments.sort(NameLessThan);
 
 		// grab the two best alignments
 		bestIter     = alignments.begin();
@@ -905,7 +907,10 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 		// save these alignments as long as they are better than the next best
 		bool isFileEmpty = false;
-		while(al < *nextBestIter) {
+		// sort by ,ocation
+		//while(al < *nextBestIter) {
+		//sort by name
+		while( NameLessThan( al, *nextBestIter ) ) {
 			aw.SaveAlignment(&al);
 			numSavedAlignments++;
 			isFileEmpty = !GetAlignment(tempFile[bestOwner], bestOwner, al);
@@ -997,7 +1002,12 @@ uint64_t CPairedEndSort::Serialize(list<Alignment>& alignmentCache, const unsign
 	if(numEntries != mSettings.NumCachedReads) alignmentCache.resize(numEntries);
 
 	// sort if have more than one read
-	if(numEntries > 1) alignmentCache.sort();
+	//if(numEntries > 1) {
+	//	if ( mFlags.SortByName )
+			alignmentCache.sort(NameLessThan);
+	//	else
+			//alignmentCache.sort();
+	//}
 
 	// retrieve a temporary filename
 	string tempFilename;

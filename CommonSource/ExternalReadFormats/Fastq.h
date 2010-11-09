@@ -10,13 +10,16 @@
 
 #pragma once
 
-#include <iostream>
-#include <sstream>
-#include <string>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <zlib.h>
+#include "FileUtilities.h"
 #include "LargeFileSupport.h"
 #include "Mosaik.h"
 #include "MosaikString.h"
@@ -48,6 +51,8 @@ public:
 	void Rewind(void);
 	// sets the BQ offset
 	void SetOffset(const unsigned char offset);
+	// create a temporary FASTQ which is sorted by read names
+	void SortByName(const string filename);
 
 private:
 	// denotes the status of the output stream
@@ -70,4 +75,10 @@ private:
 	off_type mReadDataOffset;
 	// our Illumina to Phred BQ LUT
 	unsigned char mIlluminaToPhredLUT[256];
+	// given a vector containing reads, find the min read and return the vector id
+	inline unsigned int FindMinRead ( vector<Mosaik::Read>& tops );
+	// print the record of a read to the given ofstream
+	inline void PrintRead ( Mosaik::Read& read, ofstream& file );
+	inline void PrintRead ( Mosaik::Read& read, FILE* file );
+	inline void PrintRead ( Mosaik::Read& read, char*& buffer, char*& bufferPtr, unsigned int& bufferUsed, unsigned int& bufferLen );
 };

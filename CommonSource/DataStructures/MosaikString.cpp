@@ -12,9 +12,11 @@
 #include "MosaikString.h"
 
 // our packing and unpacking vectors
+// ASCII 0-90
 //                                                                                                                                                                                       -                                                           A  B  C  D  E  F  G  H  I  J  K  L  M  N  O  P  Q  R  S  T  U  V  W  X  Y  Z
-const char* CMosaikString::FOUR_BIT_PACKING   = "\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xc\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\x0\xf\x1\xf\xf\xf\x2\xf\xf\xf\x9\xf\x4\xa\xf\xf\xf\x5\x7\x3\xf\xf\x6\xb\x8\xf";
-const char* CMosaikString::FOUR_BIT_UNPACKING = "ACGTMRWSYKNX-XXX";
+const char* CMosaikString::FOUR_BIT_PACKING   = "\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xc\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\xf\x0\xf\x1\xf\xf\xf\x2\xf\xf\xf\x9\xf\x4\xa\xf\xf\xf\x5\x7\x3\xf\xf\x6\xb\x8\xd";
+const char* CMosaikString::FOUR_BIT_UNPACKING = "ACGTMRWSYKNX-ZXX";
+// Z is used for determing soft-clip locations
 
 // constructor
 CMosaikString::CMosaikString(void)
@@ -121,13 +123,17 @@ bool CMosaikString::operator>(const CMosaikString& ms) const {
 
 // less than operator
 bool CMosaikString::operator<(const CMosaikString& ms) const {
-	if((mLength == 0) || (ms.mLength == 0)) return true;
+	//if((mLength == 0) || (ms.mLength == 0)) return true;
+	
+	if(mLength == 0)                        return true;
+	if(ms.mLength == 0)                     return false;
 	if(strcmp(mData, ms.mData) < 0)         return true;
 	return false;
 }
 
 // not equal operator
 bool CMosaikString::operator!=(const CMosaikString& ms) const {
+	
 	if((mLength == 0) || (ms.mLength == 0)) return true;
 	if(strcmp(mData, ms.mData) != 0)        return true;
 	return false;
@@ -196,6 +202,37 @@ void CMosaikString::Append(const char* s) {
 
 	mLength = newLength;
 	mData[newLength] = 0;
+}
+
+// append the specified string to the current string
+void CMosaikString::Append(const char* s, const unsigned int sLen) {
+
+	// check the allocated room
+	const unsigned int suffixLength  = sLen;
+	const unsigned int currentLength = mLength;
+	unsigned int newLength = suffixLength + currentLength;
+
+	if((newLength + 1) > mAllocatedLength) {
+
+		// save the old string
+		char* newData = new char[currentLength + 1];
+		memcpy(newData, mData, currentLength);
+		newData[currentLength] = 0;
+
+		// copy the old string
+		Reserve(newLength);
+		memcpy(mData, newData, currentLength);
+
+		// clean up
+		delete [] newData;
+	}
+	
+	// copy the suffix
+	memcpy(mData + currentLength, s, suffixLength);
+
+	mLength = newLength;
+	mData[newLength] = 0;
+
 }
 
 // copies the specified c-style string
@@ -480,6 +517,7 @@ void CMosaikString::Unpack(CMosaikString& ms) {
 	// OBS: FOUR_BIT_UNPACKING translations have been checked
 
 	// unpack the current string
+	// PACK_MASK = 15 = 0x1111
 	for(unsigned int i = 0; i < mLength; i++) {		
 		ms.mData[i] = FOUR_BIT_UNPACKING[(mData[i] >> 4) & PACK_MASK];
 		mData[i]    = FOUR_BIT_UNPACKING[mData[i] & PACK_MASK];

@@ -31,6 +31,7 @@ namespace MosaikReadFormat {
 		, mLastReferenceIndex(0)
 		, mLastReferencePosition(0)
 		, mStoreIndex(false)
+		, MosaikSignature(NULL)
 	{
 		// set the buffer threshold
 		mBufferThreshold = mBufferLen - MEMORY_BUFFER_SIZE;
@@ -49,6 +50,7 @@ namespace MosaikReadFormat {
 		if(mIsOpen)            Close();
 		if(mBuffer)            delete [] mBuffer;
 		if(mCompressionBuffer) delete [] mCompressionBuffer;
+		if(MosaikSignature)    delete [] MosaikSignature;
 	}
 
 	// adds a header tag
@@ -109,6 +111,10 @@ namespace MosaikReadFormat {
 	// closes the alignment archive
 	void CAlignmentWriter::Close(void) {
 
+		// the archive is not open.
+		if ( !mIsOpen )
+			return;
+		
 		// prevent the archive from being updated elsewhere
 		mIsOpen = false;
 
@@ -326,7 +332,7 @@ namespace MosaikReadFormat {
 	}
 
 	// opens the alignment archive
-	void CAlignmentWriter::Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as) {
+	void CAlignmentWriter::Open(const string& filename, const vector<ReferenceSequence>& referenceSequences, const vector<ReadGroup>& readGroups, const AlignmentStatus as, const string& signature) {
 
 		if(mIsOpen) {
 			cout << "ERROR: An attempt was made to open an already open alignment archive." << endl;
@@ -395,9 +401,14 @@ namespace MosaikReadFormat {
 		// INDEX[*]
 
 		// write the MOSAIK signature
-		const unsigned char SIGNATURE_LENGTH = 6;
-		const char* MOSAIK_SIGNATURE = "MSKAA\4";
-		fwrite(MOSAIK_SIGNATURE, SIGNATURE_LENGTH, 1, mOutStream);
+		//const unsigned char SIGNATURE_LENGTH = 6;
+		//const char* MOSAIK_SIGNATURE = "MSKAA\4";
+		//fwrite(MOSAIK_SIGNATURE, SIGNATURE_LENGTH, 1, mOutStream);
+		if ( ( signature != ALIGNER_SIGNATURE ) && ( signature != SORT_SIGNATURE ) ) {
+			cout << "ERROR: The signature for MOSAIK archive is invalid." << endl;
+			exit(1);
+		}
+		fwrite( signature.c_str(), SIGNATURE_LENGTH, 1, mOutStream );
 
 		// write the alignment status
 		fputc((unsigned char)as, mOutStream);
@@ -488,6 +499,7 @@ namespace MosaikReadFormat {
 		if(haveMate2)      readStatus |= RF_HAVE_MATE2;
 		if(isLongRead)     readStatus |= RF_IS_LONG_READ;
 		if(ar.IsPairedEnd) readStatus |= RF_IS_PAIRED_IN_SEQUENCING;
+		if(ar.IsResolvedAsPair) readStatus |= RF_RESOLVED_AS_PAIR;
 
 		// write the read header
 		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments);
@@ -503,7 +515,8 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate1Alignments[0];
 			for(alIter = ar.Mate1Alignments.begin(); alIter != ar.Mate1Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate1Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, true, false);
+				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, true, false);
 			}
 		}
 
@@ -515,7 +528,8 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate2Alignments[0];
 			for(alIter = ar.Mate2Alignments.begin(); alIter != ar.Mate2Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate2Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, false, false);
+				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, false, false);
 			}
 		}
 
@@ -553,6 +567,7 @@ namespace MosaikReadFormat {
 		if(pAl->IsResolvedAsPair) readStatus |= RF_RESOLVED_AS_PAIR;
 
 		// write the read header
+		// has one first mate and doesn't have any second mate
 		WriteReadHeader(pAl->Name, pAl->ReadGroupCode, readStatus, 1, 0);
 
 		// =======================

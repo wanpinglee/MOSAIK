@@ -64,6 +64,8 @@ namespace MosaikReadFormat {
 		SequencingTechnologies GetSequencingTechnology(void) const;
 		// retrieves the file status
 		AlignmentStatus GetStatus(void) const;
+		// retrieves the signature
+		void GetSignature ( char*& signature );
 		// jumps to the block containing the specified reference index and position
 		void Jump(const unsigned int referenceIndex, const unsigned int referencePosition);
 		// loads the next alignment from the alignment archive
@@ -129,7 +131,8 @@ namespace MosaikReadFormat {
 		// our read group LUT
 		map<unsigned int, ReadGroup> mReadGroupLUT;
 		// our file signature
-		static const char* MOSAIK_SIGNATURE;
-		static const unsigned char SIGNATURE_LENGTH;
+		//static const char* MOSAIK_SIGNATURE;
+		//static const unsigned char SIGNATURE_LENGTH;
+		char* MosaikSignature;
 	};
 }

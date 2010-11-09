@@ -251,7 +251,7 @@ void CArchiveMerge::Merge() {
 	
 	// prepare MOSAIK writer
 	MosaikReadFormat::CAlignmentWriter writer;
-	writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus);
+	writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
 	writer.AdjustPartitionSize(1000);
 
 	

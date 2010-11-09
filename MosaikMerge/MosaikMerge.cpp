@@ -281,7 +281,7 @@ void CMosaikMerge::MergeFiles(vector<string>& fileVector, string& outputFilename
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, referenceSequences, readGroups, as);
+	aw.Open(outputFilename, referenceSequences, readGroups, as, ALIGNER_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = mTempFiles.size();

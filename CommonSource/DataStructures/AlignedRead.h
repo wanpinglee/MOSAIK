@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include "Alignment.h"
@@ -20,26 +21,32 @@ using namespace std;
 namespace Mosaik {
 	struct AlignedRead {
 		unsigned int ReadGroupCode;
+		unsigned int Owner; // the temporary file that contains the aligned read
 		CMosaikString Name;
 		vector<Alignment> Mate1Alignments;
 		vector<Alignment> Mate2Alignments;
 		bool IsLongRead;
 		bool IsPairedEnd;
+		bool IsResolvedAsPair;
 
 		// constructor
 		AlignedRead()
 			: ReadGroupCode(0)
+			, Owner(0)
 			, IsLongRead(false)
 			, IsPairedEnd(false)
+			, IsResolvedAsPair(false)
 		{}
 
                 bool Clear(){
-                        ReadGroupCode   = 0;
+                        ReadGroupCode = 0;
+			Owner         = 0;
                         Name.clear();
                         Mate1Alignments.clear();
                         Mate2Alignments.clear();
                         IsLongRead = false;
                         IsPairedEnd= false;
+			IsResolvedAsPair = false;
 
 			if ( !Mate1Alignments.empty() ) {
 				cout << "ERROR: Clearing AlignedRead is failed." << endl;
@@ -54,18 +61,27 @@ namespace Mosaik {
                         return true;
 		}
 
-                bool SortAlignment() {
-                        sort(Mate1Alignments.begin(), Mate1Alignments.end() );
-                        sort(Mate2Alignments.begin(), Mate2Alignments.end() );
+                bool SortAlignment( void ) {
+                        sort( Mate1Alignments.begin(), Mate1Alignments.end() );
+                        sort( Mate2Alignments.begin(), Mate2Alignments.end() );
 
                         return true;
                 }
 
-                bool operator<( AlignedRead& x ) {
+                bool operator<( const AlignedRead& x ) {
                         return Name < x.Name;
                 }
 
-
+		void operator=( const AlignedRead& x ) {
+			ReadGroupCode    = x.ReadGroupCode;
+			Owner            = x.Owner;
+			Name             = x.Name;
+			Mate1Alignments  = x.Mate1Alignments;
+			Mate2Alignments  = x.Mate2Alignments;
+			IsLongRead       = x.IsLongRead;
+			IsPairedEnd      = x.IsPairedEnd;
+			IsResolvedAsPair = x.IsResolvedAsPair;
+		}
 
 	};
 }
