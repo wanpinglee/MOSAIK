@@ -42,11 +42,6 @@ void CPairedEndSort::ConfigureResolution(const bool uo, const bool uu, const boo
 	mFlags.ResolveMM = mm;
 }
 
-// patch the original fastq information
-void CPairedEndSort::PatchFastq(void) {
-	mFlags.PatchFastq = true;
-}
-
 // disables fragment alignment quality calculation
 void CPairedEndSort::DisableFragmentAlignmentQuality(void) {
 	mFlags.UseFragmentAlignmentQuality = false;

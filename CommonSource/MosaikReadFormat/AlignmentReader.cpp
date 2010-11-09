@@ -381,12 +381,6 @@ namespace MosaikReadFormat {
 		return true;
 	}
 
-	// gets archive signature
-	void CAlignmentReader:: GetArchiveSignature ( string& signature ) {
-		signature.clear();
-		signature = *MosaikSignature;
-	}
-
 	// load the read header from disk
 	void CAlignmentReader::LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments) {
 

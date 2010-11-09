@@ -22,12 +22,14 @@ bool CAlignedReadCache::Add ( const Mosaik::AlignedRead& ar ) {
 	_currentIte->Clear();
 	
 	// copy 
-	_currentIte->ReadGroupCode = ar.ReadGroupCode;
-	_currentIte->Name = ar.Name;
-	_currentIte->Mate1Alignments = ar.Mate1Alignments;
-	_currentIte->Mate2Alignments = ar.Mate2Alignments;
-	_currentIte->IsLongRead  = ar.IsLongRead;
-	_currentIte->IsPairedEnd = ar.IsPairedEnd;
+	//_currentIte->ReadGroupCode    = ar.ReadGroupCode;
+	//_currentIte->Name             = ar.Name;
+	//_currentIte->Mate1Alignments  = ar.Mate1Alignments;
+	//_currentIte->Mate2Alignments  = ar.Mate2Alignments;
+	//_currentIte->IsLongRead       = ar.IsLongRead;
+	//_currentIte->IsPairedEnd      = ar.IsPairedEnd;
+	//_currentIte->IsResolvedAsPair = ar.IsResolvedAsPair;
+	*_currentIte = ar;
 	
 	_currentIte++;
 	_currentNo++;
@@ -45,12 +47,14 @@ bool CAlignedReadCache::LoadNextAlignedRead( Mosaik::AlignedRead& ar ) {
 	if ( _loadIte == _cache.end() ) return false;
 	
 
-	ar.ReadGroupCode = _loadIte->ReadGroupCode;
-	ar.Name = _loadIte->Name;
-	ar.Mate1Alignments = _loadIte->Mate1Alignments;
-	ar.Mate2Alignments = _loadIte->Mate2Alignments;
-	ar.IsLongRead  = _loadIte->IsLongRead;
-	ar.IsPairedEnd = _loadIte->IsPairedEnd;
+	//ar.ReadGroupCode = _loadIte->ReadGroupCode;
+	//ar.Name = _loadIte->Name;
+	//ar.Mate1Alignments  = _loadIte->Mate1Alignments;
+	//ar.Mate2Alignments  = _loadIte->Mate2Alignments;
+	//ar.IsLongRead       = _loadIte->IsLongRead;
+	//ar.IsPairedEnd      = _loadIte->IsPairedEnd;
+	//ar.IsResolvedAsPair = _loadIte->IsResolvedAsPair;
+	ar = *_loadIte;
 
 	_loadIte++;
 	_loadNo++;

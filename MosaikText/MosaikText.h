@@ -87,6 +87,8 @@ public:
 	void ParseFastqFile(const string& readFilename);
 	// parse the 2nd mate fastq file
 	void ParseFastq2File(const string& readFilename);
+	// set sorting order
+	void SetSortingOrder ( const unsigned short sortingModel );
 
 private:
 	struct PslBlock {
@@ -117,6 +119,7 @@ private:
 		bool IsScreenEnabled;
 		bool UseReferenceFilter;
 		bool EnableFastqPatching;
+		bool IsSortingByPosition; // false: dose not change the order in the input archive
 
 		Flags(void)
 			: EvaluateUniqueReadsOnly(false)
@@ -130,6 +133,7 @@ private:
 			, IsScreenEnabled(false)
 			, UseReferenceFilter(false)
 			, EnableFastqPatching(false)
+			, IsSortingByPosition(true)
 		{}
 	} mFlags;
 	// our settings data structure
@@ -143,8 +147,10 @@ private:
 		string SamFilename;
 		string inputFastqFilename;
 		string inputFastq2Filename;
+		string SortingModel;
 		unsigned int FilteredReferenceIndex;
 		uint64_t NumFilteredReferenceReads;
+
 	} mSettings;
 	// settings of input MOSAIK archive
 	struct ArchiveSetting {
@@ -162,13 +168,13 @@ private:
 	// opens the output file stream for the AXT file
 	void InitializeAxt(void);
 	// opens the output file stream for the BAM file
-	void InitializeBam(const bool isSortedByPosition, vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups);
+	void InitializeBam(vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups);
 	// opens the output file stream for the BED file
 	void InitializeBed(void);
 	// opens the output file stream for the Eland file
 	void InitializeEland(void);
 	// opens the output file stream for the SAM file
-	void InitializeSam(const bool isSortedByPosition, vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups);
+	void InitializeSam(vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups);
 	// processes the alignments according to the chosen file format
 	void ProcessAlignments(const unsigned char mateNum, const CMosaikString& readName, const bool isColorspace, vector<Alignment>& alignments, const string& readGroupID);
 	// processes the mates according to the chosen file format
@@ -178,7 +184,7 @@ private:
 	// patchs trimmed infomation back from FASTQs
 	void PatchInfo( const string& alignmentFilename, const string& inputFastqFilename, const string& inputFastq2Filename );
 	// given an alignedReadCache, sort them by positions and sorte them in a temp file
-	void SortAndStoreReadCache ( CAlignedReadCache& cache );
+	void StoreReadCache ( CAlignedReadCache& cache );
 	// given a read name, search it in FASTQs
 	void SearchReadInFastq ( const CMosaikString& readName, CFastq& fastqReader1, CFastq& fastqReader2, const bool hasFastq2 );
 	// initialize our patching buffers

@@ -73,12 +73,14 @@ namespace Mosaik {
                 }
 
 		void operator=( const AlignedRead& x ) {
-			ReadGroupCode = x.ReadGroupCode;
-			Name = x.Name;
-			Mate1Alignments = x.Mate1Alignments;
-			Mate2Alignments = x.Mate2Alignments;
-			IsLongRead  = x.IsLongRead;
-			IsPairedEnd = x.IsPairedEnd;
+			ReadGroupCode    = x.ReadGroupCode;
+			Owner            = x.Owner;
+			Name             = x.Name;
+			Mate1Alignments  = x.Mate1Alignments;
+			Mate2Alignments  = x.Mate2Alignments;
+			IsLongRead       = x.IsLongRead;
+			IsPairedEnd      = x.IsPairedEnd;
+			IsResolvedAsPair = x.IsResolvedAsPair;
 		}
 
 	};

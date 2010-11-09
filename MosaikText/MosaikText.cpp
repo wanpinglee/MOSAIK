@@ -9,6 +9,10 @@
 // ***************************************************************************
 
 #include "MosaikText.h"
+        const char SORTED_POSITION[ ] = "coordinate";
+	        const char SORTED_READNAME[ ] = "queryname";
+		        const char SORTED_UNSORTED[ ] = "unsorted";
+
 
 // constructor
 CMosaikText::CMosaikText(void) {}
@@ -16,14 +20,35 @@ CMosaikText::CMosaikText(void) {}
 // destructor
 CMosaikText::~CMosaikText(void) {}
 
+// set sorting order
+void CMosaikText::SetSortingOrder ( const unsigned short sortingModel ) {
+	switch ( sortingModel ) {
+		case 0: 
+			mFlags.IsSortingByPosition  = true;
+			mSettings.SortingModel      = SORTED_POSITION;
+			break;
+		case 1: 
+			mFlags.IsSortingByPosition  = false;
+			mSettings.SortingModel      = SORTED_READNAME;
+			break;
+		case 2: 
+			mFlags.IsSortingByPosition  = false;
+			mSettings.SortingModel      = SORTED_UNSORTED;
+			break;
+		default:
+			cout << "The sorting model is invalid." << endl;
+			exit(1);
+	}
+}
+
 // input fastq file
-void CMosaikText::ParseFastqFile( const string& filename ) {
+void CMosaikText::ParseFastqFile ( const string& filename ) {
 	mFlags.EnableFastqPatching = true;
 	mSettings.inputFastqFilename = filename;
 }
 
 // input 2nd mate fastq file
-void CMosaikText::ParseFastq2File( const string& filename ) {
+void CMosaikText::ParseFastq2File ( const string& filename ) {
 	mSettings.inputFastq2Filename = filename;
 }
 
@@ -134,11 +159,17 @@ void CMosaikText::InitializeAxt(void) {
 }
 
 // opens the output file stream for the BAM file
-void CMosaikText::InitializeBam(const bool isSortedByPosition, vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups) {
+void CMosaikText::InitializeBam(vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups) {
 
 	// set the sort order
 	BamHeader header;
-	header.SortOrder = (isSortedByPosition ? SORTORDER_POSITION : SORTORDER_UNSORTED);
+	//header.SortOrder = (isSortedByPosition ? SORTORDER_POSITION : SORTORDER_UNSORTED);
+	if ( mSettings.SortingModel == SORTED_POSITION )
+		header.SortOrder = SORTORDER_POSITION;
+	else if ( mSettings.SortingModel == SORTED_READNAME )
+		header.SortOrder = SORTORDER_READNAME;
+	else
+		header.SortOrder = SORTORDER_UNSORTED;
 
 	// set the reference sequences and read groups
 	header.pReferenceSequences = pRefSeqs;
@@ -169,7 +200,7 @@ void CMosaikText::InitializeEland(void) {
 }
 
 // opens the output file stream for the SAM file
-void CMosaikText::InitializeSam(const bool isSortedByPosition, vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups) {
+void CMosaikText::InitializeSam(vector<ReferenceSequence>* pRefSeqs, vector<MosaikReadFormat::ReadGroup>& readGroups) {
 	mStreams.sam = gzopen(mSettings.SamFilename.c_str(), "wb");
 
 	if(!mStreams.sam) {
@@ -179,8 +210,11 @@ void CMosaikText::InitializeSam(const bool isSortedByPosition, vector<ReferenceS
 
 	// store the header
 	gzprintf(mStreams.sam, "@HD\tVN:1.0\tSO:");
-	if(isSortedByPosition) gzprintf(mStreams.sam, "coordinate\n");
-	else gzprintf(mStreams.sam, "unsorted\n");
+	//if(isSortedByPosition) gzprintf(mStreams.sam, "coordinate\n");
+	//else gzprintf(mStreams.sam, "unsorted\n");
+	gzprintf( mStreams.sam, mSettings.SortingModel.c_str() );
+	gzprintf( mStreams.sam, "\n");
+
 
 	// store the sequence dictionary
 	vector<ReferenceSequence>::const_iterator rsIter;
@@ -361,9 +395,9 @@ void CMosaikText::SearchReadInFastq ( const CMosaikString& readName, CFastq& fas
 
 // given an alignedReadCache, sort them by positions and sorte them in a temp file
 // return the temp file name
-void CMosaikText::SortAndStoreReadCache ( CAlignedReadCache& cache ) {
+void CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
 
-	cache.SortByPosition();
+	//cache.SortByPosition();
 	
 	// get temp filename
 	string filename;
@@ -506,17 +540,21 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 		cache.Add( ar );
 
 		if ( cache.isFull() ) {
-			// sort and store aligned read to a temp file
+			if ( mFlags.IsSortingByPosition )
+				cache.SortByPosition();
+			// store aligned read to a temp file
 			// _tempFiles would collect all temp filenames
-			SortAndStoreReadCache( cache );
+			StoreReadCache( cache );
 			cache.Reset();
 		}
 	}
 	
 	if ( !cache.isEmpty() ) {
+		if ( mFlags.IsSortingByPosition )
+			cache.SortByPosition();
 		// sort and store aligned read to a temp file
 		// _tempFiles would collect all temp filenames
-		SortAndStoreReadCache( cache );
+		StoreReadCache( cache );
 		cache.Clear();
 	}
 
@@ -666,17 +704,21 @@ void CMosaikText::SortAlignmentByPosition( const string& inputArchive, const str
 		cache.Add( ar );
 
 		if ( cache.isFull() ) {
+			if ( mFlags.IsSortingByPosition )
+				cache.SortByPosition();
 			// sort and store aligned read to a temp file
 			// _tempFiles would collect all temp filenames
-			SortAndStoreReadCache( cache );
+			StoreReadCache( cache );
 			cache.Reset();
 		}
 	}
 
 	if ( !cache.isEmpty() ) {
+		if ( mFlags.IsSortingByPosition )
+			cache.SortByPosition();
 		// sort and store aligned read to a temp file
 		// _tempFiles would collect all temp filenames
-		SortAndStoreReadCache( cache );
+		StoreReadCache( cache );
 		cache.Clear();
 	}
 
@@ -694,28 +736,23 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	// ============================
 	
 	string filename;
-	bool isSort = ( strcmp(mArchiveSetting.signature, SORT_SIGNATURE) == 0 ) ? true : false;
+	bool isNewSorted = ( strcmp(mArchiveSetting.signature, SORT_SIGNATURE) == 0 ) ? true : false;
 	if ( mFlags.EnableFastqPatching ) {
-		if ( isSort ) {
-			// patch the trimmed info back and store alignments in temp files
-			// note that the alignments in temp files would be sorted by positions
-			PatchInfo( alignmentFilename, mSettings.inputFastqFilename, mSettings.inputFastq2Filename );
+		// patch the trimmed info back and store alignments in temp files
+		// note that the alignments in temp files would be sorted by positions
+		PatchInfo( alignmentFilename, mSettings.inputFastqFilename, mSettings.inputFastq2Filename );
 
-			// merge the temp archives which are generated by PatchInfo
-			CFileUtilities::GetTempFilename( filename );
-			MergeSortedArchive( _tempFiles, filename );
-			_tempFiles.clear();
-		} else {
-			cout << "ERROR: The input archive should be processed by MosaikSort when outputing soft-clipped alignments." << endl;
-			exit(1);
-		}
+		// merge the temp archives which are generated by PatchInfo
+		CFileUtilities::GetTempFilename( filename );
+		MergeSortedArchive( _tempFiles, filename );
+		_tempFiles.clear();
 	}
 	else {
-		if ( isSort ) {
+		if ( isNewSorted && mFlags.IsSortingByPosition ) {
 			// note that MosaikSort sorts alignments by names
 			CFileUtilities::GetTempFilename( filename );
 			SortAlignmentByPosition( alignmentFilename, filename );
-		} else
+		} else 
 			filename = alignmentFilename;
 	}
 
@@ -726,10 +763,10 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 
 	// retrieve the alignment archive status
 	//const AlignmentStatus as = reader.GetStatus();
-	const bool isSortedByPosition = ((mArchiveSetting.as & AS_SORTED_ALIGNMENT) != 0 ? true : false);
+	//const bool isSortedByPosition = ((mArchiveSetting.as & AS_SORTED_ALIGNMENT) != 0 ? true : false);
 
 	// retrieve the reference sequences
-	vector<ReferenceSequence>* pRefSeqs = reader.GetReferenceSequences();
+	//vector<ReferenceSequence>* pRefSeqs = reader.GetReferenceSequences();
 
 	// retrieve the read groups
 	//vector<MosaikReadFormat::ReadGroup> readGroups;	
@@ -739,17 +776,18 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	uint64_t numReads = reader.GetNumReads();
 
 	// jump to the desired reference index
-	if(mFlags.UseReferenceFilter && isSortedByPosition) {
+	//if(mFlags.UseReferenceFilter && isSortedByPosition) {
+	if(mFlags.UseReferenceFilter && mFlags.IsSortingByPosition) {
 		reader.Jump(mSettings.FilteredReferenceIndex, 0);
 		numReads = mSettings.NumFilteredReferenceReads;
 	}
 
 	// open our output file streams
 	if(mFlags.IsAxtEnabled)   InitializeAxt();
-	if(mFlags.IsBamEnabled)   InitializeBam(isSortedByPosition, pRefSeqs, mArchiveSetting.readGroups);
+	if(mFlags.IsBamEnabled)   InitializeBam(&mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups);
 	if(mFlags.IsBedEnabled)   InitializeBed();
 	if(mFlags.IsElandEnabled) InitializeEland();
-	if(mFlags.IsSamEnabled)   InitializeSam(isSortedByPosition, pRefSeqs, mArchiveSetting.readGroups);
+	if(mFlags.IsSamEnabled)   InitializeSam(&mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups);
 
 	// initialize
 	mCurrentRead      = 0;
@@ -757,7 +795,8 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 
 	if(!mFlags.IsScreenEnabled) {
 		CConsole::Heading(); printf("Converting alignment archive:\n"); CConsole::Reset();
-		CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, (isSortedByPosition ? "alignments" : "reads"));
+		//CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, (isSortedByPosition ? "alignments" : "reads"));
+		CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, "alignments");
 	}
 
 	// retrieve all reads from the alignment reader
@@ -765,7 +804,7 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	while(reader.LoadNextRead(ar)) {
 
 		// stop processing reads if we're already past the current reference sequence
-		if(mFlags.UseReferenceFilter && isSortedByPosition && 
+		if(mFlags.UseReferenceFilter && mFlags.IsSortingByPosition && 
 			(ar.Mate1Alignments.begin()->ReferenceIndex > mSettings.FilteredReferenceIndex)) break;
 
 		const unsigned int numMate1Alignments = (unsigned int)ar.Mate1Alignments.size();
@@ -795,8 +834,9 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 		++mCurrentRead;
 		ar.Clear();
 	}
-
-	rm(filename.c_str());
+	
+	if ( mFlags.EnableFastqPatching || ( isNewSorted && mFlags.IsSortingByPosition ) )
+		rm(filename.c_str());
 
 	// wait for the progress bar to finish
 	if(!mFlags.IsScreenEnabled) CProgressBar<uint64_t>::WaitThread();

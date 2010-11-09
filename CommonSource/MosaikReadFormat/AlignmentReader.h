@@ -76,8 +76,6 @@ namespace MosaikReadFormat {
 		void Open(const string& filename);
 		// sets the file pointer to the beginning of the read data
 		void Rewind(void);
-		// gets archive signature
-		void GetArchiveSignature ( string& signature );
 
 	private:
 		// load the read header from disk
