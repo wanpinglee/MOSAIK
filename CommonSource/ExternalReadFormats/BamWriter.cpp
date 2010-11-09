@@ -526,6 +526,12 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	const unsigned int numMismatches = alIter->NumMismatches;
 	memcpy((char*)mismatchTag.data() + 3, (char*)&numMismatches, SIZEOF_INT);
 
+	// create our MD tag
+	//string mdTag;
+	//char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	//mdTag = "MDZ" + *pMd;
+	//const unsigned int mdTagLen = mdTag.size();
+
 	// retrieve our bin
 	unsigned int bin = CalculateMinimumBin(alIter->ReferenceBegin, alIter->ReferenceEnd);
 
@@ -572,4 +578,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 	// write the mismatch tag
 	BgzfWrite(mismatchTag.data(), MISMATCH_TAG_LEN);
+
+	// write the MD tag
+	//BgzfWrite(mdTag.data(), mdTagLen);
 }

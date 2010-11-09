@@ -1143,6 +1143,8 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 
 	*pCigar = 0;
 
+	char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+/*
 	// ==========================
 	// construct the MD string
 	// ==========================
@@ -1242,7 +1244,7 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	//printf("\n%s\n", mMdBuffer);
 
 	*pMd = 0;
-
+*/
 	// sanity check
 	// ===================
 	// write the alignment
@@ -1275,5 +1277,5 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 		gzprintf(mStreams.sam, "=\t%u\t%u\t", alIter->MateReferenceBegin + 1, insertSize);
 	} else gzprintf(mStreams.sam, "*\t0\t0\t");
 
-	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, mMdBuffer);	
+	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd);	
 }

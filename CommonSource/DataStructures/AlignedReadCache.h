@@ -51,27 +51,6 @@ class CAlignedReadCache {
 
 		
 		static inline bool SortBy1stMatePosition( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2 );
-		/*
-		struct Sort {
-			bool operator()( const Mosaik::AlignedRead ar1, const Mosaik::AlignedRead ar2 ) {
-				unsigned int nMate1Ar1 = ar1.Mate1Alignments.size();
-				unsigned int nMate1Ar2 = ar2.Mate1Alignments.size();
-
-				if ( nMate1Ar1 == 0 ) return true;
-				if ( nMate1Ar2 == 0 ) return false;
-				
-				unsigned int refIndexAr1 = ar1.Mate1Alignments.begin()->ReferenceIndex;
-				unsigned int refIndexAr2 = ar2.Mate1Alignments.begin()->ReferenceIndex;
-				unsigned int refBeginAr1 = ar1.Mate1Alignments.begin()->ReferenceBegin;
-				unsigned int refBeginAr2 = ar2.Mate1Alignments.begin()->ReferenceBegin;
-	
-				if ( refIndexAr1 == refIndexAr2 )
-					return refBeginAr1 < refBeginAr2;
-	
-				return refIndexAr1 < refIndexAr2;
-			}
-		};
-		*/
 };
 
 #endif 

@@ -27,6 +27,7 @@
 #include "BamWriter.h"
 #include "Fastq.h"
 #include "FileUtilities.h"
+#include "MdTager.h"
 #include "Mosaik.h"
 #include "MosaikString.h"
 #include "ProgressBar.h"
@@ -199,8 +200,8 @@ private:
 	void SortAlignmentByPosition( const string& inputArchive, const string& outputArchive );
 	// cigar buffer
 	char mCigarBuffer[CIGAR_BUFFER_SIZE];
-	// MD tag buffer
-	char mMdBuffer[CIGAR_BUFFER_SIZE];
+	// MD tager
+	CMdTager mdTager;
 	// our current read and alignment counters
 	uint64_t mCurrentAlignment;
 	uint64_t mCurrentRead;

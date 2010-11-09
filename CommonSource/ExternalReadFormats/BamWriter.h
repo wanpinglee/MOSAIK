@@ -18,6 +18,7 @@
 #include <cstring>
 #include <zlib.h>
 #include "Alignment.h"
+#include "MdTager.h"
 #include "ReadGroup.h"
 #include "ReferenceSequence.h"
 #include "SequencingTechnologies.h"
@@ -167,6 +168,8 @@ private:
 	static void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations);
 	// encodes the supplied query sequence into 4-bit notation
 	static void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
+	// MD tager
+	CMdTager mdTager;
 	// our BGZF output object
 	BGZF mBGZF;
 };

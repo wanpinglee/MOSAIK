@@ -14,7 +14,7 @@ INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(EXTERNAL_DIR)
 # ----------------------------------
 SOURCES= TextMain.cpp MosaikText.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS= AlignedReadCache.o AlignmentReader.o AlignmentWriter.o AlignmentQuality.o BamWriter.o Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o fastlz.o FastLZIO.o Fastq.o FileUtilities.o MemoryUtilities.o MosaikString.o NaiveAlignmentSet.o Options.o ReadReader.o RegexUtilities.o SequenceUtilities.o SHA1.o TimeSupport.o
+_EXT_OBJECTS= AlignedReadCache.o AlignmentReader.o AlignmentWriter.o AlignmentQuality.o BamWriter.o Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o fastlz.o FastLZIO.o Fastq.o FileUtilities.o MdTager.o MemoryUtilities.o MosaikString.o NaiveAlignmentSet.o Options.o ReadReader.o RegexUtilities.o SequenceUtilities.o SHA1.o TimeSupport.o
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikText
