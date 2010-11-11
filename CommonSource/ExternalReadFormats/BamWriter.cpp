@@ -527,10 +527,12 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	memcpy((char*)mismatchTag.data() + 3, (char*)&numMismatches, SIZEOF_INT);
 
 	// create our MD tag
-	//string mdTag;
-	//char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
-	//mdTag = "MDZ" + *pMd;
-	//const unsigned int mdTagLen = mdTag.size();
+	string mdTag;
+	char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	const unsigned int mdTagLen = 3 + strlen( pMd ) + 1;
+	mdTag.resize( mdTagLen );
+	char* pMdTag = (char*)mdTag.data();
+	sprintf(pMdTag, "MDZ%s", pMd);
 
 	// retrieve our bin
 	unsigned int bin = CalculateMinimumBin(alIter->ReferenceBegin, alIter->ReferenceEnd);
@@ -554,7 +556,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN + mdTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -580,5 +582,5 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	BgzfWrite(mismatchTag.data(), MISMATCH_TAG_LEN);
 
 	// write the MD tag
-	//BgzfWrite(mdTag.data(), mdTagLen);
+	BgzfWrite(mdTag.data(), mdTagLen);
 }

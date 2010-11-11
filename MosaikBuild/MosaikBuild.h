@@ -44,7 +44,7 @@ using namespace std::tr1;
 using namespace std;
 
 #define NUM_N_BASES_ALLOWED  4
-#define MIN_READ_LENGTH     20
+#define MIN_READ_LENGTH      8
 
 #define NORMAL_FASTQ_OFFSET 33
 #define SOLEXA_FASTQ_OFFSET 64
