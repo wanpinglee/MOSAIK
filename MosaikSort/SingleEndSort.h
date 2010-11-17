@@ -49,6 +49,8 @@ public:
 	void EnableNonUniqueMode(void);
 	// sorts the input alignments and saves them to the output file
 	void SaveAlignmentsOrderedByPosition(const string& inputFilename, const string& outputFilename);
+	// sets quiet mode
+	void SetQuietMode( void );
 private:
 	// retrieves an alignment from the specified temporary file and adds it to the specified list
 	void AddAlignment(FILE* tempFile, const unsigned int owner, list<Alignment>& alignments);
@@ -79,6 +81,8 @@ private:
 	bool mRenameReads;
         // sort alignments by their names
         static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
+	// quiet mode
+	bool IsQuietMode;
 };
 
 // sort alignments by their names

@@ -77,7 +77,6 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 
 }
 
-
 void CArchiveMerge::PrintReferenceSequence( vector<ReferenceSequence>& refVec ){
 
 	for ( unsigned int i = 0; i < refVec.size(); i++ ) {

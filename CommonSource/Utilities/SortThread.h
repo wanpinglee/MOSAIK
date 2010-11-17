@@ -90,6 +90,7 @@ class SortThread {
 	public:
 		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, unsigned int nRead, const unsigned int medianFragmentLength )
 			:_nThread(nThread)
+			, IsQuietMode(false)
 		{
 			_td._input      = input;
 			_td._output     = output;
@@ -103,7 +104,6 @@ class SortThread {
 			pthread_mutex_init(&_td._mutex, NULL);
 			pthread_mutex_init(&_td._readCounterMutex, NULL);
 			_threads = new pthread_t[nThread];
-
 		}
 
 		~SortThread(){
@@ -113,6 +113,7 @@ class SortThread {
 		}
 
 		void Start();
+		void SetQuietMode( void );
 	
 	private:
 		SortThreadData::ThreadData _td;
@@ -120,6 +121,7 @@ class SortThread {
 		
 		unsigned int _nThread;
 		pthread_t *_threads;
+		bool IsQuietMode;
 		
 };
 

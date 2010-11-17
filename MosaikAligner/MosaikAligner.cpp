@@ -455,6 +455,8 @@ void CMosaikAligner::MergeArchives(void) {
 	cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
 	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength );
+	if ( mFlags.IsQuietMode )
+		sThread.SetQuietMode();
 	sThread.Start();
 
 	CConsole::Heading();
@@ -463,10 +465,12 @@ void CMosaikAligner::MergeArchives(void) {
 
         unsigned int readNo        = 0;
 	unsigned int nMaxAlignment = 1000;
-        CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
+	if ( !mFlags.IsQuietMode )
+	        CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
         CArchiveMerge merger( temporaryFiles, mSettings.OutputReadArchiveFilename, nMaxAlignment, &readNo );
         merger.Merge();
-        CProgressBar<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+	        CProgressBar<unsigned int>::WaitThread();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
 		rm(outputFilenames[i].c_str());
@@ -655,7 +659,8 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	if ( !mFlags.UseLowMemory )
 	CConsole::Reset();
 
-	CProgressBar<uint64_t>::StartThread(&readCounter, 0, numReadArchiveReads, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::StartThread(&readCounter, 0, numReadArchiveReads, "reads");
 
 	// create our threads
 	for(unsigned int i = 0; i < mSettings.NumThreads; i++)
@@ -672,7 +677,8 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 		pthread_join(activeThreads[i], &status);
 
 	// wait for the progress bar to finish
-	CProgressBar<uint64_t>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::WaitThread();
 
 	alignmentBench.Stop();
 
@@ -946,6 +952,11 @@ unsigned char CMosaikAligner::CalculateHashTableSize(const unsigned int referenc
 	return bitSize;
 }
 
+// sets quiet mode
+void CMosaikAligner::SetQuietMode( void ) {
+	mFlags.IsQuietMode = true;
+}
+
 // enables the alignment candidate threshold
 void CMosaikAligner::EnableAlignmentCandidateThreshold(const unsigned short alignmentCandidateThreshold) {
 	mFlags.IsUsingAlignmentCandidateThreshold   = true;
@@ -1118,7 +1129,8 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 	CConsole::Heading();
 	cout << endl << "Hashing reference sequence:" << endl;
 	CConsole::Reset();
-	CProgressBar<unsigned int>::StartThread(&j, 0, maxPositions, "ref bases");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::StartThread(&j, 0, maxPositions, "ref bases");
 
 	//unsigned int counter = 1;
 	for(; j < maxPositions; j++) {
@@ -1195,7 +1207,8 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 		mpDNAHash->Add(key, j);
 	}
 
-	CProgressBar<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::WaitThread();
 	cout << endl;
 
 	// clean up

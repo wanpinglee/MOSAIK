@@ -20,6 +20,11 @@ CMosaikText::CMosaikText(void) {}
 // destructor
 CMosaikText::~CMosaikText(void) {}
 
+// set quiet mode
+void CMosaikText::SetQuietMode ( void ) {
+	mFlags.IsQuietMode = true;
+}
+
 // set sorting order
 void CMosaikText::SetSortingOrder ( const unsigned short sortingModel ) {
 	switch ( sortingModel ) {
@@ -796,7 +801,8 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	if(!mFlags.IsScreenEnabled) {
 		CConsole::Heading(); printf("Converting alignment archive:\n"); CConsole::Reset();
 		//CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, (isSortedByPosition ? "alignments" : "reads"));
-		CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, "alignments");
+		if ( !mFlags.IsQuietMode )
+			CProgressBar<uint64_t>::StartThread(&mCurrentRead, 0, numReads, "alignments");
 	}
 
 	// retrieve all reads from the alignment reader
@@ -839,7 +845,7 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 		rm(filename.c_str());
 
 	// wait for the progress bar to finish
-	if(!mFlags.IsScreenEnabled) CProgressBar<uint64_t>::WaitThread();
+	if( !mFlags.IsScreenEnabled && !mFlags.IsQuietMode ) CProgressBar<uint64_t>::WaitThread();
 
 	// close our file streams
 	reader.Close();
@@ -1262,7 +1268,8 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	bq.Increment(33);
 
 	// sanity check
-	alIter->BaseQualities.CheckQuality();
+	if ( !alIter->BaseQualities.CheckQuality() )
+		cout << readName.CData() << endl;
 	//if ( alIter->Query.Length() != alIter->BaseQualities.Length() ) {
 	//	printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", alIter->Query.Length(), alIter->BaseQualities.Length(), readName.CData());
 	//	exit(1);

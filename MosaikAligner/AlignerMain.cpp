@@ -70,6 +70,7 @@ struct ConfigurationSettings {
 	bool UseAlignedLengthForMismatches;
 	bool UseJumpDB;
 	bool UseLowMemory;
+	bool IsQuietMode;
 
 	// filenames
 	string AlignmentsFilename;
@@ -133,6 +134,7 @@ struct ConfigurationSettings {
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
 		, UseLowMemory(false)
+		, IsQuietMode(false)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
@@ -213,6 +215,10 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-gop",  "gap open penalty",   "the gap open penalty",        "", settings.HasGapOpenPenalty,            settings.GapOpenPenalty,            pPairwiseOpts, CPairwiseUtilities::GapOpenPenalty);
 	COptions::AddValueOption("-gep",  "gap extend penalty", "the gap extend penalty",      "", settings.HasGapExtendPenalty,          settings.GapExtendPenalty,          pPairwiseOpts, CPairwiseUtilities::GapExtendPenalty);
 	COptions::AddValueOption("-hgop", "gap open penalty",   "enables the homopolymer gop", "", settings.HasHomoPolymerGapOpenPenalty, settings.HomoPolymerGapOpenPenalty, pPairwiseOpts, CPairwiseUtilities::HomoPolymerGapOpenPenalty);
+
+	// add interface options
+	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
+	COptions::AddOption("-quiet",  "enable progress bars and counters", settings.IsQuietMode, pInterface);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -491,6 +497,9 @@ int main(int argc, char* argv[]) {
 	// ===============
 	// enable features
 	// ===============
+
+	// enable quiet mode
+	if( settings.IsQuietMode ) ma.SetQuietMode();
 
 	// enable the hash positions threshold
 	if(settings.LimitHashPositions) ma.EnableHashPositionThreshold(settings.HashPositionThreshold);

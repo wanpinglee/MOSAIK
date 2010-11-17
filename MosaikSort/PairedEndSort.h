@@ -94,8 +94,8 @@ public:
 	void ResolvePairedEndReads(const string& inputFilename, const string& outputFilename);
 	// sets the desired confidence interval
 	void SetConfidenceInterval(const double& percent);
-	// patch the original fastq information
-	void PatchFastq(void);
+	// sets quiet mode
+	void SetQuietMode ( void );
 
 private:
 	// define our sort configuration structure
@@ -124,6 +124,7 @@ private:
 		bool SampleAllFragmentLengths;
 		bool UseFragmentAlignmentQuality;
 		bool PatchFastq;
+		bool IsQuietMode;
 		//bool SortByName;
 
 		FlagData()
@@ -136,6 +137,7 @@ private:
 			, ResolveUU(false)
 			, SampleAllFragmentLengths(false)
 			, UseFragmentAlignmentQuality(true)
+			, IsQuietMode(false)
 			//, PatchFastq(false)
 			//, SortByName(false)
 		{}

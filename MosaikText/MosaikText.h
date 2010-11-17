@@ -90,6 +90,8 @@ public:
 	void ParseFastq2File(const string& readFilename);
 	// set sorting order
 	void SetSortingOrder ( const unsigned short sortingModel );
+	// set quiet mode
+	void SetQuietMode( void );
 
 private:
 	struct PslBlock {
@@ -121,6 +123,7 @@ private:
 		bool UseReferenceFilter;
 		bool EnableFastqPatching;
 		bool IsSortingByPosition; // false: dose not change the order in the input archive
+		bool IsQuietMode;
 
 		Flags(void)
 			: EvaluateUniqueReadsOnly(false)
@@ -135,6 +138,7 @@ private:
 			, UseReferenceFilter(false)
 			, EnableFastqPatching(false)
 			, IsSortingByPosition(true)
+			, IsQuietMode(false)
 		{}
 	} mFlags;
 	// our settings data structure

@@ -18,11 +18,17 @@ CSingleEndSort::CSingleEndSort(const unsigned int numCachedAlignments)
 , mSortNonUniqueMates(false)
 , mRemoveDuplicates(false)
 , mRenameReads(false)
+, IsQuietMode(false)
 {
 }
 
 // destructor
 CSingleEndSort::~CSingleEndSort(void) {}
+
+// set quiet mode
+void CSingleEndSort::SetQuietMode ( void ) {
+	IsQuietMode = true;
+}
 
 // retrieves an alignment from the specified temporary file and adds it to the specified vector
 void CSingleEndSort::AddAlignment(FILE* tempFile, const unsigned int owner, list<Alignment>& alignments) {
@@ -359,7 +365,8 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 	printf("- phase 1 of 2: serialize alignments:\n");
 	CConsole::Reset();
 
-	CProgressBar<uint64_t>::StartThread(&currentRead, 0, numReads, "reads");
+	if ( !IsQuietMode )
+		CProgressBar<uint64_t>::StartThread(&currentRead, 0, numReads, "reads");
 
 	Mosaik::AlignedRead ar;	
 	while(reader.LoadNextRead(ar)) {
@@ -418,7 +425,8 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 	}
 
 	// wait for the progress bar to end
-	CProgressBar<uint64_t>::WaitThread();
+	if ( !IsQuietMode )
+		CProgressBar<uint64_t>::WaitThread();
 
 	// close the input alignment archive
 	reader.Close();
@@ -469,7 +477,8 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 	for(unsigned int i = 0; i < numTempFiles; i++) AddAlignment(tempFile[i], i, alignments);
 
 	// show the progress bar
-	CProgressBar<uint64_t>::StartThread(&numSavedAlignments, 0, numSerializedAlignments, "alignments");
+	if ( !IsQuietMode )
+		CProgressBar<uint64_t>::StartThread(&numSavedAlignments, 0, numSerializedAlignments, "alignments");
 
 	// keep processing until only one active file remains
 	unsigned short bestOwner = 0;
@@ -524,7 +533,8 @@ void CSingleEndSort::SaveAlignmentsOrderedByPosition(const string& inputFilename
 	}
 
 	// wait for the progress bar to end
-	CProgressBar<uint64_t>::WaitThread();
+	if ( !IsQuietMode )
+		CProgressBar<uint64_t>::WaitThread();
 
 	// close the file streams
 	aw.SetReferenceGaps(&mRefGapVector);

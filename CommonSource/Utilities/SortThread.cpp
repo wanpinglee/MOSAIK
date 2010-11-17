@@ -29,11 +29,15 @@
 
 //class SortThread {
 
+void SortThread::SetQuietMode( void ) {
+	IsQuietMode = true;
+}
 
 void SortThread::Start() {
 	
 	
-	CProgressBar<unsigned int>::StartThread(&_td._readNo, 0, _td._nRead * 2, "reads");
+	if ( !IsQuietMode )
+		CProgressBar<unsigned int>::StartThread(&_td._readNo, 0, _td._nRead * 2, "reads");
 
 	for ( unsigned int i = 0 ; i < _nThread; i++ ) {
 		int rc = pthread_create(&_threads[i], &_td._attr, StartThread, (void*)&_td);
@@ -53,6 +57,7 @@ void SortThread::Start() {
 	}
 
 	//CProgressCounter<unsigned int>::WaitThread();
-	CProgressBar<unsigned int>::WaitThread();
+	if ( !IsQuietMode )
+		CProgressBar<unsigned int>::WaitThread();
 }
 

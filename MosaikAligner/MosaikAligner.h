@@ -72,6 +72,9 @@ public:
 	void SetFilenames(const string& inputReadArchiveFilename, const string& outputReadArchiveFilename, const string& referenceFilename);
 	// enables the use of the aligned read length when calculating mismatches
 	void UseAlignedReadLengthForMismatchCalculation(void);
+	// sets quiet mode
+	void SetQuietMode( void );
+
 private:
 	// denotes the active alignment algorithm
 	CAlignmentThread::AlignerAlgorithmType mAlgorithm;

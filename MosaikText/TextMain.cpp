@@ -44,6 +44,7 @@ struct ConfigurationSettings {
 	bool HasInputFastqFilename;
 	bool HasInputFastq2Filename;
 	bool HasSortingOrder;
+	bool IsQuietMode;
 
 	// filenames
 	string AxtFilename;
@@ -79,6 +80,7 @@ struct ConfigurationSettings {
 		, HasInputFastqFilename(false)
 		, HasInputFastq2Filename(false)
 		, HasSortingOrder(false)
+		, IsQuietMode(false)
 	{}
 };
 
@@ -122,6 +124,9 @@ int main(int argc, char* argv[]) {
 	COptions::AddOption("-u",                                       "limit output to unique reads",                 settings.EvaluateUniqueReadsOnly,                                      pAlignmentArchiveOpts);
 	COptions::AddValueOption("-sort",  "order",                     "sorting order: [queryname, coordinate(default)]", "", settings.HasSortingOrder,     settings.SortingOrder,            pAlignmentArchiveOpts);
 
+        // add the interface options
+	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
+	COptions::AddOption("-quiet",  "enable progress bars and counters", settings.IsQuietMode, pInterface);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -272,6 +277,7 @@ int main(int argc, char* argv[]) {
 
 	CMosaikText mt;
 	if(settings.EnableScreenOutput) mt.EnableScreenOutput();
+	if(settings.IsQuietMode)         mt.SetQuietMode();
 
 	if(settings.HasInputAlignmentsFilename) {
 

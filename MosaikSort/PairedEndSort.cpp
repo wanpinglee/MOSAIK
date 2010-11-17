@@ -28,6 +28,11 @@ CPairedEndSort::~CPairedEndSort(void) {
 	for(unsigned int i = 0; i < mTempFiles.size(); i++) rm(mTempFiles[i].c_str());
 }
 
+// set quiet mode
+void CPairedEndSort::SetQuietMode ( void ) {
+	mFlags.IsQuietMode = true;
+}
+
 // retrieves an alignment from the specified temporary file and adds it to the specified list
 void CPairedEndSort::AddAlignment(FILE* tempFile, const unsigned int owner, list<Alignment>& alignments) {
 	Alignment al;
@@ -479,7 +484,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		CConsole::Reset();
 
 		bool gatheringFragmentLengths = true;
-		CProgressCounter<unsigned int>::StartThread(&numFragmentLengthsCollected, &gatheringFragmentLengths, "samples");
+		if ( !mFlags.IsQuietMode )
+			CProgressCounter<unsigned int>::StartThread(&numFragmentLengthsCollected, &gatheringFragmentLengths, "samples");
 
 		for(; numFragmentLengthsCollected < numFragmentLengthsDesired; numFragmentLengthsCollected++) {
 
@@ -520,7 +526,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 		// wait for the thread to end
 		gatheringFragmentLengths = false;
-		CProgressCounter<unsigned int>::WaitThread();
+		if ( !mFlags.IsQuietMode )
+			CProgressCounter<unsigned int>::WaitThread();
 		printf("\n");
 
 		// sanity check: make sure there is a large difference between the active
@@ -620,7 +627,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	Alignment *pMate1Al = NULL, *pMate2Al = NULL;
 
-	CProgressBar<uint64_t>::StartThread(&currentRead, 0, numReads, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::StartThread(&currentRead, 0, numReads, "reads");
 
 	// rewind the alignment reader
 	reader.Rewind();
@@ -825,7 +833,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	}
 
 	// wait for the progress bar to finish
-	CProgressBar<uint64_t>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::WaitThread();
 
 	// close our files
 	reader.Close();
@@ -878,7 +887,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	for(unsigned int i = 0; i < numTempFiles; i++) AddAlignment(tempFile[i], i, alignments);
 
 	// show the progress bar
-	CProgressBar<uint64_t>::StartThread(&numSavedAlignments, 0, numSerializedAlignments, "alignments");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::StartThread(&numSavedAlignments, 0, numSerializedAlignments, "alignments");
 
 	// keep processing until only one active file remains
 	unsigned short bestOwner = 0;
@@ -934,7 +944,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	}
 
 	// wait for the progress bar to end
-	CProgressBar<uint64_t>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<uint64_t>::WaitThread();
 
 	// close the file streams
 	aw.SetReferenceGaps(&mRefGapVector);

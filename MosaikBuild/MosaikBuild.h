@@ -104,8 +104,18 @@ public:
 	void SetSpecies(const string& name);
 	// Sets the uniform resource identifier
 	void SetURI(const string& uri);
+	// Sets quiet mode
+	void SetQuietMode( void );
 
 private:
+	// Stores flags pertinent to the building process
+	struct BuildFlags {
+		bool IsQuietMode;
+
+		BuildFlags ( void )
+			: IsQuietMode (false)
+		{}
+	} mFlags;
 	// Stores settings pertinent to the building process
 	struct BuildSettings {
 		string BaseQualityFastaFilename;

@@ -38,6 +38,7 @@ struct ConfigurationSettings {
 	bool IgnoreUM;
 	bool IgnoreUU;
 	bool IgnoreUniqueOrphans;
+	bool IsQuietMode;
 	bool ResolveMM;
 	bool SampleAllFragmentLengths;
 	bool UseConsedRenaming;
@@ -65,6 +66,7 @@ struct ConfigurationSettings {
 		, IgnoreUM(false)
 		, IgnoreUU(false)
 		, IgnoreUniqueOrphans(false)
+		, IsQuietMode(false)
 		, ResolveMM(false)
 		, SampleAllFragmentLengths(false)
 		, UseConsedRenaming(false)
@@ -120,6 +122,11 @@ int main(int argc, char* argv[]) {
 	COptions::AddOption("-iuu", "ignore unique vs unique read pairs",      settings.IgnoreUU,            pResolveOpts);
 	COptions::AddOption("-ium", "ignore unique vs multiple read pairs",    settings.IgnoreUM,            pResolveOpts);
 	COptions::AddOption("-rmm", "resolve multiple vs multiple read pairs", settings.ResolveMM,           pResolveOpts);
+
+        // add the interface options
+	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
+	COptions::AddOption("-quiet",  "enable progress bars and counters", settings.IsQuietMode, pInterface);
+
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -180,6 +187,8 @@ int main(int argc, char* argv[]) {
 		// resolve paired-end reads
 		CPairedEndSort pes(settings.CacheSize);
 
+		if ( settings.IsQuietMode ) pes.SetQuietMode();
+
 		// display which types are being resolved
 		printf("- resolving the following types of read pairs: ");
 		if(!settings.IgnoreUniqueOrphans) printf("[unique orphans] ");
@@ -233,6 +242,8 @@ int main(int argc, char* argv[]) {
 
 		// sort single-end reads
 		CSingleEndSort ses(settings.CacheSize);
+
+		if ( settings.IsQuietMode ) ses.SetQuietMode();
 
 		// enable unique resolution if the file was aligned in unique mode
 		if(settings.UseNonUniqueReads && ((alignmentStatus & AS_UNIQUE_MODE) != 0)) {
