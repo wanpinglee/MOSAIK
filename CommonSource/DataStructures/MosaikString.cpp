@@ -320,8 +320,8 @@ size_t CMosaikString::GetHash(void) const {
 // checks values of qualities which shouldn't be larger than 60
 bool CMosaikString::CheckQuality( void ) {
 	for(unsigned int i = 0; i < mLength; i++) {
-		if ( mData[i] > 60 ) {
-			printf("ERROR: The base quality(%u) is larger than 60.\n", mData[i]);
+		if ( mData[i] > 93 ) {
+			printf("ERROR: The base quality(%u) is larger than 93.\n", mData[i]);
 			return false;
 		}
 	}
