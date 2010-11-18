@@ -47,7 +47,13 @@ char* CMdTager::GetMdTag( const char* reference, const char* query, const unsign
 		unsigned short operationLength = 0;
 		int numWritten = 0;
 
-		if ( ( pReference[currentPos] == pQuery[currentPos] ) || ( pReference[currentPos] == '-' ) ) {
+		if ( pReference[currentPos] == 'Z' ) {
+			while ( pReference[testPos] == 'Z' ) {
+				++testPos;
+				++operationLength;
+			}
+		}
+		else if ( ( pReference[currentPos] == pQuery[currentPos] ) || ( pReference[currentPos] == '-' ) ) {
 			
 			while ( ( pReference[testPos] != 0 ) && ( ( pReference[testPos] == pQuery[testPos] ) || ( pReference[testPos] == '-' ) ) ) {
 				++testPos;
