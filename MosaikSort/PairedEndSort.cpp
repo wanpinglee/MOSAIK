@@ -840,6 +840,9 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			Mosaik::AlignedRead pairMate1;
 			pairMate1.Name = ar.Name;
 			pairMate1.ReadGroupCode = ar.ReadGroupCode;
+			pairMate1.IsResolvedAsPair = true;
+			pairMate1.IsPairedEnd = true;
+			pairMate1.IsLongRead = ar.IsLongRead;
 			//pMate1Al->Name = ar.Name;
 			if(mFlags.RenameMates) pairMate1.Name.Append("/1");
 			if(mFlags.UseFragmentAlignmentQuality)
@@ -878,6 +881,9 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			Mosaik::AlignedRead pairMate2;
 			pairMate2.Name = ar.Name;
 			pairMate2.ReadGroupCode = ar.ReadGroupCode;
+			pairMate2.IsResolvedAsPair = true;
+			pairMate2.IsPairedEnd = true;
+			pairMate2.IsLongRead = ar.IsLongRead;
 			if(mFlags.RenameMates) pairMate2.Name.Append("/2");
 			if(mFlags.UseFragmentAlignmentQuality)
 				pMate2Al->Quality = GetFragmentAlignmentQuality(pMate2Al->Quality, isUU, isMM);
