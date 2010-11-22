@@ -28,11 +28,13 @@ CPairedEndSort::~CPairedEndSort(void) {
 	for(unsigned int i = 0; i < mTempFiles.size(); i++) rm(mTempFiles[i].c_str());
 }
 
+/*
 // retrieves an alignment from the specified temporary file and adds it to the specified list
 void CPairedEndSort::AddAlignment(FILE* tempFile, const unsigned int owner, list<Alignment>& alignments) {
 	Alignment al;
 	if(GetAlignment(tempFile, owner, al)) alignments.push_back(al);
 }
+*/
 
 // configures which read pair types should be resolved
 void CPairedEndSort::ConfigureResolution(const bool uo, const bool uu, const bool um, const bool mm) {
@@ -68,6 +70,7 @@ void CPairedEndSort::EnableFullFragmentLengthSampling(void) {
 	mFlags.SampleAllFragmentLengths = true;
 }
 
+/*
 // retrieves a read from the specified temporary file
 bool CPairedEndSort::GetAlignment(FILE* tempFile, const unsigned int owner, Alignment& al) {
 
@@ -142,7 +145,7 @@ bool CPairedEndSort::GetAlignment(FILE* tempFile, const unsigned int owner, Alig
 		memcpy((char*)&al.MateReferenceIndex, pBuffer, SIZEOF_INT);
 		pBuffer += SIZEOF_INT;
 
-	} /*else al.MateReferenceIndex = ALIGNMENT_NO_MATE_INFO*/;
+	} //else al.MateReferenceIndex = ALIGNMENT_NO_MATE_INFO//;
 
 	unsigned short pairwiseLength = 0;
 	if(isLongRead) {
@@ -200,6 +203,7 @@ bool CPairedEndSort::GetAlignment(FILE* tempFile, const unsigned int owner, Alig
 
 	return true;
 }
+*/
 
 // records the observed gaps in the specified reference 
 void CPairedEndSort::RecordReferenceGaps(Alignment& al) {
@@ -248,6 +252,26 @@ void CPairedEndSort::RecordReferenceGaps(Alignment& al) {
 	}
 }
 
+// given an alignedReadCache, sort them by positions and sorte them in a temp file
+void CPairedEndSort::StoreReadCache( CAlignedReadCache& cache ) {
+        // get temp filename
+        string filename;
+        CFileUtilities::GetTempFilename( filename );
+        mTempFiles.push_back( filename );
+
+        // prepare archive
+        MosaikReadFormat::CAlignmentWriter aw;
+        aw.Open(filename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as, ALIGNER_SIGNATURE );
+        Mosaik::AlignedRead sortedAr;
+
+        cache.Rewind();
+        while( cache.LoadNextAlignedRead( sortedAr ) ) {
+	        aw.SaveAlignedRead( sortedAr );
+                sortedAr.Clear();
+        }
+        aw.Close();
+}
+
 // resolves the paired-end reads found in the specified input file
 void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const string& outputFilename) {
 
@@ -256,15 +280,22 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	reader.Open(inputFilename);
 
 	// retrieve the read groups
-	vector<MosaikReadFormat::ReadGroup> readGroups;
-	reader.GetReadGroups(readGroups);
+	//vector<MosaikReadFormat::ReadGroup> readGroups;
+	//reader.GetReadGroups(readGroups);
+	reader.GetReadGroups(mArchiveSetting.readGroups);
+	cout << mArchiveSetting.readGroups.size() << endl;
+	cout << mArchiveSetting.readGroups[0].ReadGroupCode << endl;
+	cout << mArchiveSetting.readGroups[0].ReadGroupID << endl;
 
 	// retrieve the alignment status (clear the sorting status)
-	AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
+	//AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
+	mArchiveSetting.as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
 
 	// retrieve the reference sequence vector
-	vector<ReferenceSequence>* pReferenceSequences = reader.GetReferenceSequences();
-	mRefGapVector.resize(pReferenceSequences->size());
+	//vector<ReferenceSequence>* pReferenceSequences = reader.GetReferenceSequences();
+	//mRefGapVector.resize(pReferenceSequences->size());
+	reader.GetReferenceSequences( mArchiveSetting.pReferenceSequences );
+	mRefGapVector.resize( mArchiveSetting.pReferenceSequences.size() );
 
 	// retrieve the number of reads in the archive
 	const uint64_t numReads = reader.GetNumReads();
@@ -287,8 +318,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	uint64_t numOneNonUniqueDuplicateRemoved      = 0;
 
 	// sanity check: we should only have one read group
-	if(readGroups.size() != 1) {
-		printf("ERROR: Expected one read group in the alignment archive. Found %u read groups.\n", (unsigned int)readGroups.size());
+	if( mArchiveSetting.readGroups.size() != 1 ) {
+		printf("ERROR: Expected one read group in the alignment archive. Found %u read groups.\n", (unsigned int)mArchiveSetting.readGroups.size());
 		exit(1);
 	}
 
@@ -323,7 +354,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	if(mFlags.RemoveDuplicates) {
 
 		// derive the database filename
-		string databasePath = mSettings.DuplicateDirectory + readGroups[0].LibraryName + ".db";
+		string databasePath = mSettings.DuplicateDirectory + mArchiveSetting.readGroups[0].LibraryName + ".db";
 		CFileUtilities::CheckFile(databasePath.c_str(), true);
 
 		printf("- retrieving read names from the duplicate database... ");
@@ -372,7 +403,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 		// look up the database ID for our read group ID
 		// =============================================
 
-		const string readGroupID = readGroups[0].ReadGroupID;
+		const string readGroupID = mArchiveSetting.readGroups[0].ReadGroupID;
 
 		sprintf_s(sqlBuffer, SQL_BUFFER_SIZE, "SELECT ID FROM ReadGroups WHERE Name='%s';", readGroupID.c_str());
 
@@ -608,15 +639,19 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	CConsole::Reset();
 
 	// initialize
-	set<string>::const_iterator dsIter;
+	//set<string>::const_iterator dsIter;
 	vector<Alignment>::const_iterator mate1Iter, mate2Iter;
 	uint64_t currentRead             = 0;
 	uint64_t numSerializedAlignments = 0;
 
-	list<Alignment> alignmentCache;
-	alignmentCache.resize(mSettings.NumCachedReads);
-	list<Alignment>::iterator acIter = alignmentCache.begin();
+	//list<Alignment> alignmentCache;
+	//alignmentCache.resize(mSettings.NumCachedReads);
+	//list<Alignment>::iterator acIter = alignmentCache.begin();
 	unsigned int numCachedEntries = 0;
+
+        // retrieve AlignedReadCache
+	unsigned int cacheSize = mSettings.NumCachedReads;
+	CAlignedReadCache cache( cacheSize );
 
 	Alignment *pMate1Al = NULL, *pMate2Al = NULL;
 
@@ -625,6 +660,8 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	// rewind the alignment reader
 	reader.Rewind();
 
+	ar.Clear();
+	mTempFiles.clear();
 	while(reader.LoadNextRead(ar)) {
 
 		// localize the read name
@@ -660,20 +697,28 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 					if(isMate1Unique) pMate1Al = &ar.Mate1Alignments[0];
 					else pMate1Al = &ar.Mate2Alignments[0];
 
+					cache.Add( ar );
+
+					if ( cache.isFull() ) {
+						cache.SortByName();
+						StoreReadCache( cache );
+						cache.Reset();
+					}
+
 					// copy the mate1 alignment
-					*acIter = *pMate1Al;
-					acIter->Name               = ar.Name;
-					acIter->ReadGroupCode      = ar.ReadGroupCode;
+					//*acIter = *pMate1Al;
+					//acIter->Name               = ar.Name;
+					//acIter->ReadGroupCode      = ar.ReadGroupCode;
 					//acIter->MateReferenceIndex = ALIGNMENT_NO_MATE_INFO;
-					numCachedEntries++;
-					acIter++;
+					//numCachedEntries++;
+					//acIter++;
 
 					// serialize the alignment cache
-					if(acIter == alignmentCache.end()) {
-						numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-						acIter = alignmentCache.begin();
-						numCachedEntries = 0;
-					}
+					//if(acIter == alignmentCache.end()) {
+					//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
+					//	acIter = alignmentCache.begin();
+					//	numCachedEntries = 0;
+					//}
 
 					numUniqueOrphansResolved++;
 				}
@@ -755,6 +800,9 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			}
 		}
 
+		// TODO:
+		// We didn't consider which pair is the best one
+
 		// handle duplicates
 		if(mFlags.RemoveDuplicates && (numMatches == 1)) {
 
@@ -782,42 +830,78 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			//const unsigned char fragmentAlignmentQuality = pMate1Al->Quality + pMate2Al->Quality;
 
 			// copy the mate1 alignment
-			*acIter = *pMate1Al;
-			acIter->Name = ar.Name;
-			if(mFlags.RenameMates) acIter->Name.Append("/1");
+			//*acIter = *pMate1Al;
+			//acIter->Name = ar.Name;
+			//if(mFlags.RenameMates) acIter->Name.Append("/1");
 
-			if(mFlags.UseFragmentAlignmentQuality) 
-				acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
+			//if(mFlags.UseFragmentAlignmentQuality) 
+			//	acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
+			
+			Mosaik::AlignedRead pairMate1;
+			pairMate1.Name = ar.Name;
+			pairMate1.ReadGroupCode = ar.ReadGroupCode;
+			//pMate1Al->Name = ar.Name;
+			if(mFlags.RenameMates) pairMate1.Name.Append("/1");
+			if(mFlags.UseFragmentAlignmentQuality)
+				pMate1Al->Quality = GetFragmentAlignmentQuality(pMate1Al->Quality, isUU, isMM);
+			pairMate1.Mate1Alignments.push_back( *pMate1Al );
+			pairMate1.Mate2Alignments.push_back( *pMate2Al );
 
-			acIter->ReadGroupCode = ar.ReadGroupCode;
+			//acIter->ReadGroupCode = ar.ReadGroupCode;
 			numCachedEntries++;
-			acIter++;
+			//acIter++;
+			pMate1Al->ReadGroupCode = ar.ReadGroupCode;
+			cache.Add( pairMate1 );
+
+			if ( cache.isFull() ) {
+				cache.SortByName();
+				StoreReadCache( cache );
+				cache.Reset();
+			}
+
 
 			// serialize the alignment cache
-			if(acIter == alignmentCache.end()) {
-				numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-				acIter = alignmentCache.begin();
-				numCachedEntries = 0;
-			}
+			//if(acIter == alignmentCache.end()) {
+			//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
+			//	acIter = alignmentCache.begin();
+			//	numCachedEntries = 0;
+			//}
 
 			// copy the mate2 alignment
-			*acIter = *pMate2Al;
-			acIter->Name = ar.Name;
-			if(mFlags.RenameMates) acIter->Name.Append("/2");
+			//*acIter = *pMate2Al;
+			//acIter->Name = ar.Name;
+			//if(mFlags.RenameMates) acIter->Name.Append("/2");
 
-			if(mFlags.UseFragmentAlignmentQuality) 
-				acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
+			//if(mFlags.UseFragmentAlignmentQuality) 
+			//	acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
 
-			acIter->ReadGroupCode = ar.ReadGroupCode;
+			Mosaik::AlignedRead pairMate2;
+			pairMate2.Name = ar.Name;
+			pairMate2.ReadGroupCode = ar.ReadGroupCode;
+			if(mFlags.RenameMates) pairMate2.Name.Append("/2");
+			if(mFlags.UseFragmentAlignmentQuality)
+				pMate2Al->Quality = GetFragmentAlignmentQuality(pMate2Al->Quality, isUU, isMM);
+			pairMate2.Mate1Alignments.push_back( *pMate2Al );
+			pairMate2.Mate2Alignments.push_back( *pMate1Al );
+
+			//acIter->ReadGroupCode = ar.ReadGroupCode;
 			numCachedEntries++;
-			acIter++;
+			//acIter++;
+			pMate2Al->ReadGroupCode = ar.ReadGroupCode;
+			cache.Add( pairMate2 );
+
+			if ( cache.isFull() ) {
+				cache.SortByName();
+				StoreReadCache( cache );
+				cache.Reset();
+			}
 
 			// serialize the alignment cache
-			if(acIter == alignmentCache.end()) {
-				numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-				acIter = alignmentCache.begin();
-				numCachedEntries = 0;
-			}
+			//if(acIter == alignmentCache.end()) {
+			//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
+			//	acIter = alignmentCache.begin();
+			//	numCachedEntries = 0;
+			//}
 		}
 
 		// increment the read counter
@@ -834,7 +918,12 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	// serialize the remaining reads in the alignment cache
 	// ====================================================
 
-	if(acIter != alignmentCache.begin()) numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
+	//if(acIter != alignmentCache.begin()) numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
+	if ( !cache.isEmpty() ) {
+		cache.SortByName();
+		StoreReadCache( cache );
+		cache.Clear();
+	}
 
 	
 	
@@ -848,11 +937,20 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 	// open our output file
 	MosaikReadFormat::CAlignmentWriter aw;
-	aw.Open(outputFilename, *pReferenceSequences, readGroups, as, SORT_SIGNATURE);
+	aw.Open(outputFilename, mArchiveSetting.pReferenceSequences, mArchiveSetting.readGroups, mArchiveSetting.as, SORT_SIGNATURE);
 
 	// allocate the file stream array
 	const unsigned int numTempFiles = (unsigned int)mTempFiles.size();
-	FILE** tempFile = new FILE*[numTempFiles];
+	//FILE** tempFile = new FILE*[numTempFiles];
+	vector<MosaikReadFormat::CAlignmentReader*> readers( numTempFiles );
+	for ( unsigned int i = 0; i < numTempFiles; i++ ) { 
+		MosaikReadFormat::CAlignmentReader* ptr;
+		ptr = new MosaikReadFormat::CAlignmentReader;
+		ptr->Open( mTempFiles[i] );
+		readers[i] = ptr;
+	}
+	
+
 
 	// sanity check: check the number of temp files
 	if(numTempFiles > 65535) {
@@ -861,77 +959,125 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	}
 
 	// allocate the alignments list
-	list<Alignment>::iterator bestIter, nextBestIter;
-	list<Alignment> alignments;
-	Alignment al, *pBestAlignment = NULL;
-	uint64_t numSavedAlignments = 0;
+	//list<Alignment>::iterator bestIter, nextBestIter;
+	//list<Alignment> alignments;
+	//Alignment al, *pBestAlignment = NULL;
+	//uint64_t numSavedAlignments = 0;
 
 	// open the file streams
-	for(unsigned int i = 0; i < mTempFiles.size(); i++) {
-		if(fopen_s(&tempFile[i], mTempFiles[i].c_str(), "rb") != 0) {
-			cout << "ERROR: Unable to open temporary file (" << mTempFiles[i] << ") for reading." << endl;
-			exit(1);
-		}
-	}
+	//for(unsigned int i = 0; i < mTempFiles.size(); i++) {
+	//	if(fopen_s(&tempFile[i], mTempFiles[i].c_str(), "rb") != 0) {
+	//		cout << "ERROR: Unable to open temporary file (" << mTempFiles[i] << ") for reading." << endl;
+	//		exit(1);
+	//	}
+	//}
 
 	// fill the alignment list
-	for(unsigned int i = 0; i < numTempFiles; i++) AddAlignment(tempFile[i], i, alignments);
+	//for(unsigned int i = 0; i < numTempFiles; i++) AddAlignment(tempFile[i], i, alignments);
 
 	// show the progress bar
+	uint64_t numSavedAlignments = 0;
 	CProgressBar<uint64_t>::StartThread(&numSavedAlignments, 0, numSerializedAlignments, "alignments");
 
+
+	// load top aligned in each temp archivs
+        list<Mosaik::AlignedRead> tops;
+        unsigned int nDone = 0;
+        vector<bool> dones( numTempFiles );
+        //Mosaik::AlignedRead ar;
+
+        // load the first alignment in each temp archive
+        for ( unsigned int i = 0; i < numTempFiles; i++ ) {
+	        ar.Clear();
+
+                if ( readers[i]->LoadNextRead( ar ) ) {
+		        ar.Owner = i;
+	                tops.push_back( ar );
+	                dones[i] = false;
+	        }
+	        else {
+	                readers[i]->Close();
+			dones[i] = true;
+	                nDone++;
+	        }
+	}
+
 	// keep processing until only one active file remains
-	unsigned short bestOwner = 0;
-	while(alignments.size() > 1) {
+	list<Mosaik::AlignedRead>::iterator nextBestIter;
+	unsigned int bestOwner = 0;
+	while ( nDone != ( numTempFiles - 1 ) ) {
+		tops.sort( NameLessThan );
 
-		// sort the alignment list
-		//alignments.sort();
-		alignments.sort(NameLessThan);
-
-		// grab the two best alignments
-		bestIter     = alignments.begin();
-		nextBestIter = alignments.begin();
-		nextBestIter++;
-
-		// save the best alignment
-		pBestAlignment = &(*bestIter);
-		aw.SaveAlignment(pBestAlignment);
+		bestOwner = tops.begin()->Owner;
+		aw.SaveAlignedRead( *tops.begin() );
 		numSavedAlignments++;
+		tops.pop_front();
 
-		// remove the best alignment
-		bestOwner = bestIter->Owner;
-		alignments.pop_front();
+		nextBestIter = tops.begin();
 
-		// grab another alignment from the best alignment's file
-		if(!GetAlignment(tempFile[bestOwner], bestOwner, al)) continue;
-
-		// save these alignments as long as they are better than the next best
 		bool isFileEmpty = false;
-		// sort by ,ocation
-		//while(al < *nextBestIter) {
-		//sort by name
-		while( NameLessThan( al, *nextBestIter ) ) {
-			aw.SaveAlignment(&al);
-			numSavedAlignments++;
-			isFileEmpty = !GetAlignment(tempFile[bestOwner], bestOwner, al);
-			if(isFileEmpty) break;
+
+		if ( !dones[bestOwner] && readers[bestOwner]->LoadNextRead( ar ) )
+			ar.Owner = bestOwner;
+		else {
+			readers[bestOwner]->Close();
+			dones[bestOwner] = true;
+			nDone++;
+			isFileEmpty = true;
+			rm( mTempFiles[bestOwner].c_str() );
 		}
 
-		// add the new alignment to the sorting list
-		if(!isFileEmpty) alignments.push_back(al);
+		if ( isFileEmpty ) continue;
+
+		while ( NameLessThan( ar, *nextBestIter ) ) {
+			aw.SaveAlignedRead( ar );
+			numSavedAlignments++;
+			ar.Clear();
+                        if ( !readers[bestOwner]->LoadNextRead( ar ) ) {
+                                readers[bestOwner]->Close();
+				nDone++;
+                                dones[bestOwner] = true;
+                                isFileEmpty = true;
+                                rm( mTempFiles[bestOwner].c_str() );
+                                break;
+                        }
+
+		}
+
+		ar.Owner = bestOwner;
+		if ( !isFileEmpty )
+			tops.push_back( ar );
 	}
 
-	// save the last alignment in our vector
-	pBestAlignment = &(*alignments.begin());
-	bestOwner = pBestAlignment->Owner;
-	aw.SaveAlignment(pBestAlignment);
-	numSavedAlignments++;
+	if ( tops.size() != 1 ) {
+		cout << "ERROR: More than one aligned reads remain." << endl;
+		exit(1);
+	}
 
-	// save the alignments in the remaining file
-	while(GetAlignment(tempFile[bestOwner], bestOwner, al)) {
-		aw.SaveAlignment(&al);
+	bestOwner = tops.begin()->Owner;
+	aw.SaveAlignedRead( *tops.begin() );
+	numSavedAlignments++;
+	ar.Clear();
+	while ( readers[bestOwner]->LoadNextRead( ar ) ) {
+		aw.SaveAlignedRead( ar );
+		ar.Clear();
 		numSavedAlignments++;
 	}
+
+	readers[bestOwner]->Close();
+	rm( mTempFiles[bestOwner].c_str() );
+
+	// save the last alignment in our vector
+	//pBestAlignment = &(*alignments.begin());
+	//bestOwner = pBestAlignment->Owner;
+	//aw.SaveAlignment(pBestAlignment);
+	//numSavedAlignments++;
+
+	// save the alignments in the remaining file
+	//while(GetAlignment(tempFile[bestOwner], bestOwner, al)) {
+	//	aw.SaveAlignment(&al);
+	//	numSavedAlignments++;
+	//}
 
 	// wait for the progress bar to end
 	CProgressBar<uint64_t>::WaitThread();
@@ -939,10 +1085,10 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	// close the file streams
 	aw.SetReferenceGaps(&mRefGapVector);
 	aw.Close();
-	for(unsigned int i = 0; i < numTempFiles; i++) fclose(tempFile[i]);
+	//for(unsigned int i = 0; i < numTempFiles; i++) fclose(tempFile[i]);
 
 	// clean up
-	if(tempFile) delete [] tempFile;
+	//if(tempFile) delete [] tempFile;
 
 	// ======================
 	// display our statistics
@@ -991,6 +1137,7 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 }
 
 // serializes the specified list to a temporary file
+/*
 uint64_t CPairedEndSort::Serialize(list<Alignment>& alignmentCache, const unsigned int numEntries) {
 
 	uint64_t numSerializedAlignments = 0;
@@ -1158,7 +1305,7 @@ uint64_t CPairedEndSort::Serialize(list<Alignment>& alignmentCache, const unsign
 
 	return numSerializedAlignments;
 }
-
+*/
 // sets the desired confidence interval
 void CPairedEndSort::SetConfidenceInterval(const double& percent) {
 	mSettings.ConfidenceInterval = percent;

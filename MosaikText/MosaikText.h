@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -25,6 +28,7 @@
 #include "AlignmentWriter.h"
 #include "ColorspaceUtilities.h"
 #include "BamWriter.h"
+#include "CigarTager.h"
 #include "Fastq.h"
 #include "FileUtilities.h"
 #include "MdTager.h"
@@ -37,7 +41,7 @@
 
 using namespace std;
 
-#define CIGAR_BUFFER_SIZE 4096
+//#define CIGAR_BUFFER_SIZE 4096
 
 // define some SAM/BAM FLAGS
 #define BAM_SEQUENCED_AS_PAIRS         1
@@ -199,9 +203,13 @@ private:
 	// sort aligned archive by positions
 	void SortAlignmentByPosition( const string& inputArchive, const string& outputArchive );
 	// cigar buffer
-	char mCigarBuffer[CIGAR_BUFFER_SIZE];
+	//char mCigarBuffer[CIGAR_BUFFER_SIZE];
+	// ZA buffer
+	char zaBuffer[2048];
 	// MD tager
 	CMdTager mdTager;
+	// Cigar tager
+	CCigarTager cigarTager;
 	// our current read and alignment counters
 	uint64_t mCurrentAlignment;
 	uint64_t mCurrentRead;

@@ -27,7 +27,8 @@ CMosaikString::CMosaikString(void)
 
 // destructor
 CMosaikString::~CMosaikString(void) {
-	if(mData) delete [] mData;
+	if( mAllocatedLength > 1 ) delete [] mData;
+	else if ( mAllocatedLength == 1 ) delete mData;
 	mData = NULL;
 }
 

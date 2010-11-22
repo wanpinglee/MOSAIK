@@ -14,7 +14,7 @@ INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(UTILITIES_DIR
 # ----------------------------------
 SOURCES= PairedEndSort.cpp SortMain.cpp SingleEndSort.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS= AlignmentQuality.o AlignmentReader.o AlignmentWriter.o Benchmark.o ConsoleUtilities.o fastlz.o FastLZIO.o FileUtilities.o MemoryUtilities.o MosaikString.o NaiveAlignmentSet.o Options.o SequenceUtilities.o SHA1.o sqlite3.o TimeSupport.o
+_EXT_OBJECTS= AlignedReadCache.o AlignmentQuality.o AlignmentReader.o AlignmentWriter.o Benchmark.o ConsoleUtilities.o fastlz.o FastLZIO.o FileUtilities.o MemoryUtilities.o MosaikString.o NaiveAlignmentSet.o Options.o SequenceUtilities.o SHA1.o sqlite3.o TimeSupport.o
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikSort

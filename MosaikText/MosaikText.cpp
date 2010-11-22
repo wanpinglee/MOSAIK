@@ -394,7 +394,6 @@ void CMosaikText::SearchReadInFastq ( const CMosaikString& readName, CFastq& fas
 }
 
 // given an alignedReadCache, sort them by positions and sorte them in a temp file
-// return the temp file name
 void CMosaikText::StoreReadCache ( CAlignedReadCache& cache ) {
 
 	//cache.SortByPosition();
@@ -493,14 +492,16 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 			ite->BaseQualities.Copy( currentMate.Qualities.CData(), queryLength );
 			ite->QueryBegin = 0;
 			ite->QueryEnd   = queryLength - 1;
+
+			if ( ite->IsReverseStrand )
+				ite->BaseQualities.Reverse();
 				
 			// add soft chip
 			if ( alignedLength != queryLength ) {
 				char* originalBases;
-				if ( ite->IsReverseStrand ) {
+				if ( ite->IsReverseStrand )
 					originalBases = reverseMate;
-					ite->BaseQualities.Reverse();
-				}
+					//ite->BaseQualities.Reverse();
 				else
 					originalBases = currentMate.Bases.Data();
 					
@@ -817,14 +818,63 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 		// dump the mate 1 alignments
 		if(numMate1Alignments > 0) {
 			if((mFlags.EvaluateUniqueReadsOnly && (numMate1Alignments == 1)) || !mFlags.EvaluateUniqueReadsOnly) {
+				// prepare ZA tag
+				
+				if ( numMate2Alignments > 0 ) {
+				bool hasLessPosition = ( ar.Mate1Alignments[0].ReferenceBegin < ar.Mate2Alignments[0].ReferenceBegin ) ? true : false;
+				if ( hasLessPosition && isNewSorted ) {
+					char* zaPtr = zaBuffer;
+					unsigned int len;
+					len = sprintf( zaPtr, "1<");
+					zaPtr += len;
+					len = sprintf( zaPtr, "%s;", ar.Mate1Alignments[0].ReferenceName );
+					zaPtr += len;
+					len = sprintf( zaPtr, "%u;", ar.Mate1Alignments[0].ReferenceBegin );
+					zaPtr += len;
+					len = sprintf( zaPtr, "%u;", ar.Mate1Alignments[0].Quality);
+					zaPtr += len;
+					char strand = ( ar.Mate1Alignments[0].IsReverseStrand ) ? '-' : '+';
+					len = sprintf( zaPtr, "%c;", strand );
+					zaPtr += len;
+					char* pCigar = cigarTager.GetCigarTag( ar.Mate1Alignments[0].Reference.CData(), ar.Mate1Alignments[0].Query.CData(), ar.Mate1Alignments[0].Reference.Length() );
+					len = strlen( pCigar );
+					memcpy( zaPtr, pCigar, len );
+					zaPtr += len;
+
+					len = sprintf( zaPtr, ">2<");
+					zaPtr += len;
+					
+					len = sprintf( zaPtr, "%s;", ar.Mate2Alignments[0].ReferenceName );
+					zaPtr += len;
+					len = sprintf( zaPtr, "%u;", ar.Mate2Alignments[0].ReferenceBegin );
+					zaPtr += len;
+					len = sprintf( zaPtr, "%u;", ar.Mate2Alignments[0].Quality);
+					zaPtr += len;
+					strand = ( ar.Mate2Alignments[0].IsReverseStrand ) ? '-' : '+';
+					len = sprintf( zaPtr, "%c;", strand );
+					zaPtr += len;
+					pCigar = cigarTager.GetCigarTag( ar.Mate2Alignments[0].Reference.CData(), ar.Mate2Alignments[0].Query.CData(), ar.Mate2Alignments[0].Reference.Length() );
+					len = strlen( pCigar );
+					memcpy( zaPtr, pCigar, len );
+					zaPtr += len;
+					len = sprintf( zaPtr, ">");
+					zaPtr += len;
+					*zaPtr = 0;
+					
+				}
+				else {
+					zaBuffer[0] = 0;
+				}
+				}
 				ProcessAlignments(1, ar.Name, isColorspace, ar.Mate1Alignments, rg.ReadGroupID);
 			}
 		}
+		zaBuffer[0] = 0;
 
 		// we shouldn't have any alignment in ar.Mate2Alignments 
 		// since MosaikSort didn't put anything in ar.Mate2Alignments
 		// dump the mate 2 alignments
-		if(numMate2Alignments > 0) {
+		if( !isNewSorted && numMate2Alignments > 0) {
 			if((mFlags.EvaluateUniqueReadsOnly && (numMate2Alignments == 1)) || !mFlags.EvaluateUniqueReadsOnly) {
 				ProcessAlignments(2, ar.Name, isColorspace, ar.Mate2Alignments, rg.ReadGroupID);
 			}
@@ -909,6 +959,7 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 			fprintf(mStreams.axt, "%s\n%s\n", alIter->Reference.CData(), alIter->Query.CData());
 		}
 
+		
 		if(mFlags.IsBamEnabled) mStreams.bam.SaveAlignment(readName, readGroupID, alIter);
 
 		
@@ -932,6 +983,7 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 			}
 		}
 
+		// SAM
 		if(mFlags.IsSamEnabled) WriteSamEntry(readName, readGroupID, alIter);
 
 		if(mFlags.IsScreenEnabled) {
@@ -1027,7 +1079,7 @@ void CMosaikText::ProcessMate(const unsigned char mateNum, const CMosaikString& 
 }
 
 // writes the current alignment to the SAM output file
-void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter) {
+void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter ) {
 
 	// =================
 	// set the SAM flags
@@ -1071,7 +1123,7 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	// ==========================
 	// construct the cigar string
 	// ==========================
-
+/*
 	char* pCigar = mCigarBuffer;
 	const char* pReference = alIter->Reference.CData();
 	const char* pQuery     = alIter->Query.CData();
@@ -1142,8 +1194,10 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	}
 
 	*pCigar = 0;
-
-	char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+*/
+	char* pCigar = cigarTager.GetCigarTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	char* pMd    = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	//char* pZa = zaTager.GetZaTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
 /*
 	// ==========================
 	// construct the MD string
@@ -1270,12 +1324,15 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 	
 
 	gzprintf(mStreams.sam, "%s\t%u\t%s\t%u\t%u\t%s\t", readName.CData(), flag, alIter->ReferenceName, 
-		alIter->ReferenceBegin + 1, alIter->Quality, mCigarBuffer);
+		alIter->ReferenceBegin + 1, alIter->Quality, pCigar);
 
 	if(alIter->IsResolvedAsPair) {
 		// N.B. we already checked that the reference indexes were identical
 		gzprintf(mStreams.sam, "=\t%u\t%u\t", alIter->MateReferenceBegin + 1, insertSize);
 	} else gzprintf(mStreams.sam, "*\t0\t0\t");
 
-	gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd);	
+	if ( strlen(zaBuffer) != 0 )
+		gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\tZA:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd, zaBuffer );
+	else
+		gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd);
 }

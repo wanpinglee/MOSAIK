@@ -21,6 +21,7 @@
 #include "AlignmentStatus.h"
 #include "AlignmentWriter.h"
 #include "AlignedRead.h"
+#include "AlignedReadCache.h"
 #include "ConsoleUtilities.h"
 #include "ReadGroup.h"
 #include "Mosaik.h"
@@ -140,6 +141,19 @@ private:
 			//, SortByName(false)
 		{}
 	} mFlags;
+
+	// settings of input MOSAIK archive
+	struct ArchiveSetting {
+		vector<MosaikReadFormat::ReadGroup> readGroups;
+		vector<ReferenceSequence> pReferenceSequences;
+		AlignmentStatus as;
+		char* signature;
+
+		ArchiveSetting(void)
+			:signature(NULL)
+		{}
+	} mArchiveSetting;
+
 	// retrieves an alignment from the specified temporary file and adds it to the specified list
 	void AddAlignment(FILE* tempFile, const unsigned int owner, list<Alignment>& alignments);
 	// returns the current alignment model based on the order and orientation of the mates
@@ -162,7 +176,10 @@ private:
 	vector<unordered_map<unsigned int, unsigned short> > mRefGapVector;
 	unordered_map<unsigned int, unsigned short>::iterator mRefGapIter;
 	// sort alignments by their names
-	static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
+	//static inline bool NameLessThan(const Alignment& al1, const Alignment& al2);
+	static inline bool NameLessThan(const Mosaik::AlignedRead& al1, const Mosaik::AlignedRead& al2);
+	// store the alignments in temp archive
+	void StoreReadCache( CAlignedReadCache& cache );
 };
 
 // returns the current alignment model based on the order and orientation of the mates
@@ -201,6 +218,11 @@ inline unsigned char CPairedEndSort::GetFragmentAlignmentQuality(int aq, const b
 }
 
 // sort alignments by their names
-inline bool CPairedEndSort::NameLessThan(const Alignment& al1, const Alignment& al2){
-	return al1.Name < al2.Name;
+//inline bool CPairedEndSort::NameLessThan(const Alignment& al1, const Alignment& al2){
+//	return al1.Name < al2.Name;
+//}
+
+// sort alignments by their names
+inline bool CPairedEndSort::NameLessThan(const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2){
+	return ar1.Name < ar2.Name;
 }

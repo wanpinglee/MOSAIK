@@ -22,7 +22,8 @@
 using namespace std;
 
 // define our default values
-const unsigned int DEFAULT_CACHE_SIZE = 6000000;
+//const unsigned int DEFAULT_CACHE_SIZE = 6000000;
+const unsigned int DEFAULT_CACHE_SIZE = 1000000;
 
 // create a configuration variable struct
 struct ConfigurationSettings {

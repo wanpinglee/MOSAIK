@@ -67,6 +67,11 @@ void CAlignedReadCache::SortByPosition ( void ) {
 	_cache.sort( SortBy1stMatePosition );
 }
 
+// sort _cache by read names
+void CAlignedReadCache::SortByName ( void ) {
+	_cache.sort( SortByReadName );
+}
+
 
 // reset _cache
 bool CAlignedReadCache::Reset ( void ) {
@@ -75,6 +80,9 @@ bool CAlignedReadCache::Reset ( void ) {
 	_currentNo = 0;
 	_loadNo    = 0;
 	_full = false;
+
+	for ( list<Mosaik::AlignedRead>::iterator ite = _cache.begin(); ite != _cache.end(); ite++ )
+		ite->Clear();
 
 	return true;
 }
@@ -110,5 +118,12 @@ inline bool CAlignedReadCache::SortBy1stMatePosition( const Mosaik::AlignedRead&
 		return refBeginAr1 < refBeginAr2;
 	
 	return refIndexAr1 < refIndexAr2;
+}
+
+inline bool CAlignedReadCache::SortByReadName( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2 ) {
+	if ( ar1.Name.Length() == 0 ) return false;
+	else if ( ar2.Name.Length() == 0 ) return true;
+
+	return ar1.Name < ar2.Name;
 }
 

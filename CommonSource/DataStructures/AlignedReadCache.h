@@ -21,6 +21,8 @@ class CAlignedReadCache {
 		bool Add ( const Mosaik::AlignedRead& ar );
 		// sort _cache by the position of the first mate in Mate1Alignments
 		void SortByPosition ( void );
+		// sort _cache by read names
+		void SortByName ( void );
 		// store _cache in the given filename by CAlignmentWriter
 		//bool StoreCacheInFile ( const string& filename, const vector<ReferenceSequence>* pReferenceSequences, const vector<MosaikReadFormat::ReadGroup>& readGrou, const AlignmentStatus& as );
 		// reset _cache
@@ -51,6 +53,7 @@ class CAlignedReadCache {
 
 		
 		static inline bool SortBy1stMatePosition( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2 );
+		static inline bool SortByReadName( const Mosaik::AlignedRead& ar1, const Mosaik::AlignedRead& ar2 );
 };
 
 #endif 
