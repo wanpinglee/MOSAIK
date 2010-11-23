@@ -803,7 +803,7 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 	// retrieve all reads from the alignment reader
 	Mosaik::AlignedRead ar;
 	while(reader.LoadNextRead(ar)) {
-
+		
 		// stop processing reads if we're already past the current reference sequence
 		if(mFlags.UseReferenceFilter && mFlags.IsSortingByPosition && 
 			(ar.Mate1Alignments.begin()->ReferenceIndex > mSettings.FilteredReferenceIndex)) break;
@@ -819,60 +819,21 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 		if(numMate1Alignments > 0) {
 			if((mFlags.EvaluateUniqueReadsOnly && (numMate1Alignments == 1)) || !mFlags.EvaluateUniqueReadsOnly) {
 				// prepare ZA tag
-				
 				if ( numMate2Alignments > 0 ) {
-				bool hasLessPosition = ( ar.Mate1Alignments[0].ReferenceBegin < ar.Mate2Alignments[0].ReferenceBegin ) ? true : false;
-				if ( hasLessPosition && isNewSorted ) {
-					char* zaPtr = zaBuffer;
-					unsigned int len;
-					len = sprintf( zaPtr, "1<");
-					zaPtr += len;
-					len = sprintf( zaPtr, "%s;", ar.Mate1Alignments[0].ReferenceName );
-					zaPtr += len;
-					len = sprintf( zaPtr, "%u;", ar.Mate1Alignments[0].ReferenceBegin );
-					zaPtr += len;
-					len = sprintf( zaPtr, "%u;", ar.Mate1Alignments[0].Quality);
-					zaPtr += len;
-					char strand = ( ar.Mate1Alignments[0].IsReverseStrand ) ? '-' : '+';
-					len = sprintf( zaPtr, "%c;", strand );
-					zaPtr += len;
-					char* pCigar = cigarTager.GetCigarTag( ar.Mate1Alignments[0].Reference.CData(), ar.Mate1Alignments[0].Query.CData(), ar.Mate1Alignments[0].Reference.Length() );
-					len = strlen( pCigar );
-					memcpy( zaPtr, pCigar, len );
-					zaPtr += len;
+					bool hasLessPosition = ( ar.Mate1Alignments[0].ReferenceBegin < ar.Mate2Alignments[0].ReferenceBegin ) ? true : false;
+					if ( hasLessPosition && isNewSorted ) 
+						zaString = (char*) zaTager.GetZaTag( ar.Mate1Alignments, ar.Mate2Alignments );
+					else 
+						zaString = 0;
+				}
 
-					len = sprintf( zaPtr, ">2<");
-					zaPtr += len;
-					
-					len = sprintf( zaPtr, "%s;", ar.Mate2Alignments[0].ReferenceName );
-					zaPtr += len;
-					len = sprintf( zaPtr, "%u;", ar.Mate2Alignments[0].ReferenceBegin );
-					zaPtr += len;
-					len = sprintf( zaPtr, "%u;", ar.Mate2Alignments[0].Quality);
-					zaPtr += len;
-					strand = ( ar.Mate2Alignments[0].IsReverseStrand ) ? '-' : '+';
-					len = sprintf( zaPtr, "%c;", strand );
-					zaPtr += len;
-					pCigar = cigarTager.GetCigarTag( ar.Mate2Alignments[0].Reference.CData(), ar.Mate2Alignments[0].Query.CData(), ar.Mate2Alignments[0].Reference.Length() );
-					len = strlen( pCigar );
-					memcpy( zaPtr, pCigar, len );
-					zaPtr += len;
-					len = sprintf( zaPtr, ">");
-					zaPtr += len;
-					*zaPtr = 0;
-					
-				}
-				else {
-					zaBuffer[0] = 0;
-				}
-				}
 				ProcessAlignments(1, ar.Name, isColorspace, ar.Mate1Alignments, rg.ReadGroupID);
 			}
 		}
-		zaBuffer[0] = 0;
+		zaString = 0;
 
-		// we shouldn't have any alignment in ar.Mate2Alignments 
-		// since MosaikSort didn't put anything in ar.Mate2Alignments
+		// we shouldn't use any alignment in ar.Mate2Alignments if it is the sorted archive 
+		// since the information there are just used for ZA tags
 		// dump the mate 2 alignments
 		if( !isNewSorted && numMate2Alignments > 0) {
 			if((mFlags.EvaluateUniqueReadsOnly && (numMate2Alignments == 1)) || !mFlags.EvaluateUniqueReadsOnly) {
@@ -960,7 +921,7 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 		}
 
 		
-		if(mFlags.IsBamEnabled) mStreams.bam.SaveAlignment(readName, readGroupID, alIter);
+		if(mFlags.IsBamEnabled) mStreams.bam.SaveAlignment(readName, readGroupID, alIter, zaString);
 
 		
 		// BED is in 0-based format.
@@ -1120,185 +1081,9 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 
 	if(alIter->IsReverseStrand) flag |= BAM_QUERY_REVERSE_COMPLEMENT;
 
-	// ==========================
-	// construct the cigar string
-	// ==========================
-/*
-	char* pCigar = mCigarBuffer;
-	const char* pReference = alIter->Reference.CData();
-	const char* pQuery     = alIter->Query.CData();
-
-	unsigned short numBases = alIter->Reference.Length();
-	unsigned short currentPos    = 0;
-	unsigned int numBufferBytes  = 0;
-
-	while(currentPos < numBases) {
-
-		unsigned short testPos = currentPos;
-		unsigned short operationLength = 0;
-		int numWritten = 0;
-
-
-		if( (pReference[currentPos] != '-') && (pQuery[currentPos] != '-') && (pReference[currentPos] != 'Z') ) {
-
-			while((pReference[testPos] != '-') && (pQuery[testPos] != '-') && (pReference[testPos] != 'Z') && (testPos < numBases)) {
-				++testPos;					
-				++operationLength;
-			}
-
-			numWritten = sprintf_s(pCigar, CIGAR_BUFFER_SIZE, "%uM", operationLength);
-
-		} else if ( pReference[currentPos] == 'Z' ) {
-
-			while( ( pReference[testPos] == 'Z' ) && ( testPos < numBases ) ){
-				++testPos;
-				++operationLength;
-			}
-
-			numWritten = sprintf_s(pCigar, CIGAR_BUFFER_SIZE, "%uS", operationLength);
-
-		
-		} else if(pReference[currentPos] == '-') {
-
-			while((pReference[testPos] == '-') && (testPos < numBases)) {
-				++testPos;					
-				++operationLength;
-			}
-
-			numWritten = sprintf_s(pCigar, CIGAR_BUFFER_SIZE, "%uI", operationLength);
-
-		} else if(pQuery[currentPos] == '-') {
-
-			while((pQuery[testPos] == '-') && (testPos < numBases)) {
-				++testPos;					
-				++operationLength;
-			}
-
-			numWritten = sprintf_s(pCigar, CIGAR_BUFFER_SIZE, "%uD", operationLength);
-
-		} else {
-			cout << "ERROR: CIGAR string generation failed." << endl;
-			exit(1);
-		}
-
-		// increment our position
-		pCigar         += numWritten;
-		numBufferBytes += numWritten;
-		currentPos     += operationLength;
-
-		// make sure aren't creating a buffer overflow
-		if(numBufferBytes >= CIGAR_BUFFER_SIZE) {
-			printf("ERROR: buffer overflow detected when creating the cigar string.\n");
-			exit(1);
-		}
-	}
-
-	*pCigar = 0;
-*/
-	char* pCigar = cigarTager.GetCigarTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
-	char* pMd    = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
-	//char* pZa = zaTager.GetZaTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
-/*
-	// ==========================
-	// construct the MD string
-	// ==========================
-
-	char* pMd  = mMdBuffer;
-	pReference = alIter->Reference.CData();
-	pQuery     = alIter->Query.CData();
-
-	numBases       = alIter->Reference.Length();
-	currentPos     = 0;
-	numBufferBytes = 0;
-
-	char* tempBases = new char [CIGAR_BUFFER_SIZE];
-	const char zeroChar = '0';
-	bool isPreviousInt = false;
-
-	while(currentPos < numBases) {
-
-		unsigned short testPos = currentPos;
-		unsigned short operationLength = 0;
-		int numWritten = 0;
-
-		if ( ( pReference[currentPos] == pQuery[currentPos] ) || ( pReference[currentPos] == '-' ) ) {
-			
-			while ( ( pReference[testPos] != 0 ) && ( ( pReference[testPos] == pQuery[testPos] ) || ( pReference[testPos] == '-' ) ) ) {
-				++testPos;
-				++operationLength;
-			}
-
-			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "%u", operationLength);
-
-			isPreviousInt = true;
-
-		} else if ( pQuery[currentPos] == '-' ) {
-			
-			char* ptr = tempBases;
-			while ( pQuery[testPos] == '-' ) {
-				memcpy( ptr, &pReference[testPos], 1 );
-				ptr++;
-				++testPos;
-				++operationLength;
-			}
-
-			*ptr = 0;
-
-			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "^%s", tempBases);
-
-			isPreviousInt = false;
-		
-		} else if ( pReference[currentPos] != pQuery[currentPos] ) {
-			
-			char* ptr = tempBases;
-			unsigned short nTemp = 0;
-			while ( ( pReference[testPos] != pQuery[testPos] ) && ( pReference[testPos] != '-' ) && ( pQuery[testPos] != '-' ) ) {
-				
-				if ( isPreviousInt ) {
-					memcpy( ptr, &pReference[testPos], 1 );
-					ptr++;
-					nTemp += 1;
-				}
-				else {
-					memcpy( ptr, &zeroChar, 1 );
-					ptr++;
-					memcpy( ptr, &pReference[testPos], 1 );
-					ptr++;
-					nTemp += 2;
-				}
-				isPreviousInt = false;
-
-				++testPos;
-				++operationLength;
-			}
-
-			*ptr = 0;
-
-			numWritten = sprintf_s(pMd, CIGAR_BUFFER_SIZE, "%s", tempBases);
-
-			isPreviousInt = false;
-
-		} else {
-			cout << "ERROR: CIGAR string generation failed." << endl;
-			exit(1);
-		}
-
-		// increment our position
-		pMd            += numWritten;
-		numBufferBytes += numWritten;
-		currentPos     += operationLength;
-
-		// make sure aren't creating a buffer overflow
-		if(numBufferBytes >= CIGAR_BUFFER_SIZE) {
-			printf("ERROR: buffer overflow detected when creating the MD tag.\n");
-			exit(1);
-		}
-	}
-
-	//printf("\n%s\n", mMdBuffer);
-
-	*pMd = 0;
-*/
+	const char* pCigar = cigarTager.GetCigarTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	const char* pMd    = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	
 	// sanity check
 	// ===================
 	// write the alignment
@@ -1317,22 +1102,17 @@ void CMosaikText::WriteSamEntry(const CMosaikString& readName, const string& rea
 
 	// sanity check
 	alIter->BaseQualities.CheckQuality();
-	//if ( alIter->Query.Length() != alIter->BaseQualities.Length() ) {
-	//	printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", alIter->Query.Length(), alIter->BaseQualities.Length(), readName.CData());
-	//	exit(1);
-	//}
-	
 
 	gzprintf(mStreams.sam, "%s\t%u\t%s\t%u\t%u\t%s\t", readName.CData(), flag, alIter->ReferenceName, 
 		alIter->ReferenceBegin + 1, alIter->Quality, pCigar);
 
 	if(alIter->IsResolvedAsPair) {
 		// N.B. we already checked that the reference indexes were identical
-		gzprintf(mStreams.sam, "=\t%u\t%u\t", alIter->MateReferenceBegin + 1, insertSize);
+		gzprintf(mStreams.sam, "=\t%u\t%d\t", alIter->MateReferenceBegin + 1, insertSize);
 	} else gzprintf(mStreams.sam, "*\t0\t0\t");
 
-	if ( strlen(zaBuffer) != 0 )
-		gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\tZA:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd, zaBuffer );
+	if ( zaString != 0 )
+		gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\tZA:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd, zaString );
 	else
 		gzprintf(mStreams.sam, "%s\t%s\tRG:Z:%s\tNM:i:%u\tMD:Z:%s\n", query.CData(), bq.CData(), readGroupID.c_str(), alIter->NumMismatches, pMd);
 }

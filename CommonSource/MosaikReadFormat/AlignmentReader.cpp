@@ -576,8 +576,6 @@ namespace MosaikReadFormat {
 			
 			// set the read group code
 			rgIter->ReadGroupCode = ReadGroup::GetCode(*rgIter);
-			cout << rgIter->ReadGroupCode << endl;
-			cout << rgIter->ReadGroupID.data() << endl;
 
 			// add the read group to our LUT
 			mReadGroupLUT[rgIter->ReadGroupCode] = *rgIter;

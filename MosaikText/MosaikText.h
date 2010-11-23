@@ -38,6 +38,7 @@
 #include "Read.h"
 #include "ReadReader.h"
 #include "SequenceUtilities.h"
+#include "ZaTager.h"
 
 using namespace std;
 
@@ -202,10 +203,9 @@ private:
 	void MergeSortedArchive ( const vector <string>& filenames, const string& outArchiveFilename );
 	// sort aligned archive by positions
 	void SortAlignmentByPosition( const string& inputArchive, const string& outputArchive );
-	// cigar buffer
-	//char mCigarBuffer[CIGAR_BUFFER_SIZE];
-	// ZA buffer
-	char zaBuffer[2048];
+	// ZA tager
+	CZaTager zaTager;
+	char* zaString;
 	// MD tager
 	CMdTager mdTager;
 	// Cigar tager

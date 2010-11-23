@@ -3,6 +3,7 @@
 CMdTager::CMdTager( void )
 	: bufferLen(1024)
 	, buffer(NULL)
+	, tempBases(NULL)
 {
 	buffer    = new char [ bufferLen ];
 	tempBases = new char [ bufferLen ];
@@ -10,6 +11,11 @@ CMdTager::CMdTager( void )
 	memset(tempBases, 0, bufferLen);
 
 	zeroChar = '0';
+}
+
+CMdTager::~CMdTager( void ) {
+	if ( buffer )    delete [] buffer;
+	if ( tempBases ) delete [] tempBases;
 }
 
 void CMdTager::ExtendBuffer( const unsigned int& length ) {
@@ -29,7 +35,7 @@ inline void CMdTager::InitializeVar( const char* reference, const char* query, c
 	numBufferBytes = 0;
 }
 
-char* CMdTager::GetMdTag( const char* reference, const char* query, const unsigned int& referenceLen ) {
+const char* CMdTager::GetMdTag( const char* reference, const char* query, const unsigned int& referenceLen ) {
 	
 	// check the buffer size
 	if ( ( referenceLen * 2 ) > bufferLen )

@@ -438,7 +438,7 @@ void CBamWriter::Open(const string& filename, const BamHeader& header) {
 }
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter) {
+void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString ) {
 
 	// =================
 	// set the BAM flags
@@ -528,11 +528,21 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 	// create our MD tag
 	string mdTag;
-	char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
+	const char* pMd = mdTager.GetMdTag( alIter->Reference.CData(), alIter->Query.CData(), alIter->Reference.Length() );
 	const unsigned int mdTagLen = 3 + strlen( pMd ) + 1;
 	mdTag.resize( mdTagLen );
 	char* pMdTag = (char*)mdTag.data();
 	sprintf(pMdTag, "MDZ%s", pMd);
+
+	unsigned int zaTagLen = 0;
+	string zaTag;
+	char* pZaTag;
+	if ( zaString != 0 ) {
+		zaTagLen = 3 + strlen( zaString ) + 1;
+		zaTag.resize( zaTagLen );
+		pZaTag = (char*)zaTag.data();
+		sprintf(pZaTag, "ZAZ%s",zaString);
+	}
 
 	// retrieve our bin
 	unsigned int bin = CalculateMinimumBin(alIter->ReferenceBegin, alIter->ReferenceEnd);
@@ -556,7 +566,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN + mdTagLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN + mdTagLen + zaTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -583,4 +593,8 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 	// write the MD tag
 	BgzfWrite(mdTag.data(), mdTagLen);
+
+	// write the ZA tag
+	if ( zaString != 0 )
+		BgzfWrite(zaTag.data(), zaTagLen);
 }

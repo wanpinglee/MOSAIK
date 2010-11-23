@@ -1,21 +1,20 @@
 
-#ifndef _MdTager_H_
-#define _MdTager_H_
+#ifndef _CigarTager_H_
+#define _CigarTager_H_
 
 #include <stdlib.h>
 #include <string.h>
 #include "FileUtilities.h"
 
-class CMdTager {
+class CCigarTager {
 	public:
-		CMdTager();
-		~CMdTager();
-		const char* GetMdTag( const char* reference, const char* query, const unsigned int& referenceLen );
+		CCigarTager();
+		~CCigarTager();
+		const char* GetCigarTag( const char* reference, const char* query, const unsigned int& referenceLen );
 	private:
-		// our MD tag buffer
+		// our cigar buffer
 		unsigned int bufferLen;
 		char* buffer;
-		char* tempBases;
 
 		// extend the buffer
 		void ExtendBuffer( const unsigned int& length );
@@ -23,13 +22,12 @@ class CMdTager {
 		inline void InitializeVar( const char* reference, const char* query, const unsigned int& referenceLen );
 
 		// our used variables
-		char* pMd;
+		char* pCigar;
 		char* pReference;
 		char* pQuery;
 		unsigned int numBases;
 		unsigned int currentPos;
 		unsigned int numBufferBytes;
-		char zeroChar;
 };
 
 #endif
