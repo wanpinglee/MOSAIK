@@ -17,7 +17,9 @@
 #include "AbstractDnaHash.h"
 #include "AlignmentWriter.h"
 #include "BandedSmithWaterman.h"
+#include "BamWriter.h"
 #include "ColorspaceUtilities.h"
+#include "MdTager.h"
 #include "NaiveAlignmentSet.h"
 #include "PairwiseUtilities.h"
 #include "PosixThreads.h"
@@ -25,6 +27,7 @@
 #include "ReferenceSequence.h"
 #include "SequenceUtilities.h"
 #include "SmithWatermanGotoh.h"
+#include "StatisticsMaps.h"
 
 using namespace std;
 
@@ -160,6 +163,16 @@ public:
 			, UniqueMates(0)
 		{}
 	};
+	// bam writers
+	struct BamWriters {
+		BamHeader mHeader; // multiply alignments
+		BamHeader sHeader; // special alignments
+		BamHeader uHeader; // unaligned reads
+
+		CBamWriter mBam; // multiply alignments
+		CBamWriter sBam; // special alignments
+		CBamWriter uBam; // unaligned reads
+	};
 	// constructor
 	CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, 
 		AlignerModeType& algorithmMode, char* pReference, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, 
@@ -174,6 +187,7 @@ public:
 		FilterSettings Filters;
 		FlagData Flags;
 		StatisticsCounters* pCounters;
+		CStatisticsMaps* pMaps;
 		CAbstractDnaHash* pDnaHash;
 		MosaikReadFormat::CReadReader* pIn;
 		MosaikReadFormat::CAlignmentWriter* pOut;
@@ -185,9 +199,10 @@ public:
 		uint64_t* pReadCounter;
 		bool IsPairedEnd;
 		char** pBsRefSeqs;
+		BamWriters* pBams;
 	};
 	// aligns the read archive
-	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd);
+	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);
 	// activates the current alignment thread
 	static void* StartThread(void* arg);
 	// register our thread mutexes
@@ -196,6 +211,8 @@ public:
 	static pthread_mutex_t mReportUnalignedMate2Mutex;
 	static pthread_mutex_t mSaveReadMutex;
 	static pthread_mutex_t mStatisticsMutex;
+	static pthread_mutex_t mStatisticsMapsMutex;
+	static pthread_mutex_t mSaveBamMutex;
 	// stores the statistical counters
 	StatisticsCounters mStatisticsCounters;
 private:

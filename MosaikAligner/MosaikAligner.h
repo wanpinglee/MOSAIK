@@ -21,7 +21,7 @@
 #include "AlignmentWriter.h"
 #include "AlignmentReader.h"
 #include "ArchiveMerge.h"
-#include "ReferenceSequence.h"
+#include "BamWriter.h"
 #include "Benchmark.h"
 #include "ConsoleUtilities.h"
 #include "DnaHash.h"
@@ -30,11 +30,13 @@
 #include "MultiDnaHash.h"
 #include "PosixThreads.h"
 #include "ProgressBar.h"
+#include "ReferenceSequence.h"
 #include "ReferenceSequenceReader.h"
 #include "UbiqDnaHash.h"
 #include "FileUtilities.h"
 #include "SortThread.h"
 #include "SortNMergeUtilities.h"
+#include "StatisticsMaps.h"
 
 using namespace std;
 
@@ -85,6 +87,10 @@ private:
 	CAlignmentThread::FlagData mFlags;
 	// stores the statistical counters
 	CAlignmentThread::StatisticsCounters mStatisticsCounters;
+	// stores the statistical maps
+	CStatisticsMaps mStatisticsMaps;
+	// bam writers
+	CAlignmentThread::BamWriters bams;
 	// estimates the appropriate hash table size
 	static unsigned char CalculateHashTableSize(const unsigned int referenceLength, const unsigned char hashSize);
 	// hashes the reference sequence

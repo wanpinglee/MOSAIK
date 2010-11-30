@@ -16,6 +16,8 @@ pthread_mutex_t CAlignmentThread::mReportUnalignedMate1Mutex;
 pthread_mutex_t CAlignmentThread::mReportUnalignedMate2Mutex;
 pthread_mutex_t CAlignmentThread::mSaveReadMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMutex;
+pthread_mutex_t CAlignmentThread::mStatisticsMapsMutex;
+pthread_mutex_t CAlignmentThread::mSaveBamMutex;
 
 // define our constants
 const double CAlignmentThread::P_ERR_REF  = pow(10.0, -REFERENCE_SEQUENCE_QUALITY / 10.0);
@@ -62,7 +64,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 
 	// align reads
 	CAlignmentThread at(pTD->Algorithm, pTD->Filters, pTD->Flags, pTD->Mode, pTD->pReference, pTD->ReferenceLen, pTD->pDnaHash, pTD->Settings, pTD->pRefBegin, pTD->pRefEnd, pTD->pBsRefSeqs);
-	at.AlignReadArchive(pTD->pIn, pTD->pOut, pTD->pUnalignedStream, pTD->pReadCounter, pTD->IsPairedEnd);
+	at.AlignReadArchive(pTD->pIn, pTD->pOut, pTD->pUnalignedStream, pTD->pReadCounter, pTD->IsPairedEnd, pTD->pMaps, pTD->pBams );
 
 	vector<ReferenceSequence>::iterator refIter;
 
@@ -90,7 +92,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 }
 
 // aligns the read archive
-void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd) {
+void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams) {
 
 	// create our local alignment models
 	const bool isUsing454      = (mSettings.SequencingTechnology == ST_454      ? true : false);
@@ -362,6 +364,28 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		// update the mate bases aligned
 		if(isMate1Aligned) mStatisticsCounters.MateBasesAligned += numMate1Bases;
 		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
+
+		pthread_mutex_lock(&mStatisticsMapsMutex);
+		pMaps->SaveRecord( mr, *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), areBothMatesPresent, mSettings.SequencingTechnology );
+		pthread_mutex_unlock(&mStatisticsMapsMutex);
+		
+		
+		// save multiple alignments in bam
+		if ( mate1Alignments.IsMultiple() ) {
+			vector<Alignment>* pMateSet = mate1Alignments.GetSet();
+			pthread_mutex_lock(&mSaveBamMutex);
+			for(vector<Alignment>::iterator alIter = pMateSet->begin(); alIter != pMateSet->end(); ++alIter) {
+				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+			}
+			pthread_mutex_unlock(&mSaveBamMutex);
+		}
+		if ( isPairedEnd && mate2Alignments.IsMultiple() ) {
+			vector<Alignment>* pMateSet = mate2Alignments.GetSet();
+			pthread_mutex_lock(&mSaveBamMutex);
+			for(vector<Alignment>::iterator alIter = pMateSet->begin(); alIter != pMateSet->end(); ++alIter)
+				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+			pthread_mutex_unlock(&mSaveBamMutex);
+		}
 
 		// =================
 		// save aligned read

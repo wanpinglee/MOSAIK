@@ -12,7 +12,7 @@ INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DI
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
-SOURCES= AlignmentQuality.cpp ArchiveMerge.cpp ArchiveSort.cpp Benchmark.cpp CigarTager.cpp ColorspaceUtilities.cpp ConsoleUtilities.cpp FastLZIO.cpp FileUtilities.cpp MdTager.cpp MemoryUtilities.cpp Options.cpp PairwiseUtilities.cpp RegexUtilities.cpp SequenceUtilities.cpp SHA1.cpp SortThread.cpp TimeSupport.cpp ZaTager.cpp
+SOURCES= AlignmentQuality.cpp ArchiveMerge.cpp ArchiveSort.cpp Benchmark.cpp CigarTager.cpp ColorspaceUtilities.cpp ConsoleUtilities.cpp FastLZIO.cpp FileUtilities.cpp MdTager.cpp MemoryUtilities.cpp Options.cpp PairwiseUtilities.cpp RegexUtilities.cpp SequenceUtilities.cpp SHA1.cpp SortThread.cpp StatisticsMaps.cpp TimeSupport.cpp ZaTager.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 

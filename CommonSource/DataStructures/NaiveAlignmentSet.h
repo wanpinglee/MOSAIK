@@ -77,6 +77,8 @@ public:
 	bool IsEmpty(void) const;
 	// returns true if the alignment set contains only one entry
 	bool IsUnique(void) const;
+	// returns true if the alignment set contains more than one entry
+	bool IsMultiple ( void ) const;
 
 private:
 	// calculates the correction coefficient

@@ -224,3 +224,8 @@ bool CNaiveAlignmentSet::IsEmpty(void) const {
 bool CNaiveAlignmentSet::IsUnique(void) const {
 	return (mAlignments.size() == 1 ? true : false);
 }
+
+// returns true if the alignment set contains more than one entry
+bool CNaiveAlignmentSet::IsMultiple( void ) const {
+	return (mAlignments.size() > 1 ? true : false);
+}

@@ -147,6 +147,8 @@ public:
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
 	void SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString);
+	// saves the reference and position of an alignment to the alignment archive
+	void SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd );
 private:
 	// closes the BAM file
 	void BgzfClose(void);

@@ -436,6 +436,58 @@ void CBamWriter::Open(const string& filename, const BamHeader& header) {
 		BgzfWrite((char*)&rsIter->NumBases, SIZEOF_INT);
 	}
 }
+// saves the reference and position of an alignment to the alignment archive
+void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd ) {
+	// =================
+	// set the BAM flags
+	// =================
+	
+	unsigned int flag                = 0;
+
+	// retrieve our bin
+	unsigned int bin = CalculateMinimumBin(refBegin, refEnd);
+	const unsigned int quality = 0;
+	const unsigned int nameLen = 2;
+	const unsigned int numCigarOperations = 0;
+	const unsigned int packedCigarLen = 2;
+	const unsigned int queryLen = 2;
+	const unsigned int encodedQueryLen = 2;
+
+	// assign the BAM core data
+	unsigned int buffer[8];
+	buffer[0] = refIndex;
+	buffer[1] = refBegin;
+	buffer[2] = (bin << 16) | (quality << 8) | nameLen;
+	buffer[3] = (flag << 16) | numCigarOperations;
+	buffer[4] = queryLen;    // read_len
+	buffer[5] = 0xffffffff;  // mate_rID
+	buffer[6] = 0xffffffff;  // mate_pos
+	buffer[7] = 0;           // ins_size
+
+	const char* startChar = "*\0";
+	
+	// write the block size
+	//const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen;
+	const unsigned int dataBlockSize = nameLen;
+	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
+	BgzfWrite((char*)&blockSize, SIZEOF_INT);
+
+	// write the BAM core
+	BgzfWrite((char*)&buffer, BAM_CORE_SIZE);
+
+	// write the query name
+	BgzfWrite(startChar, nameLen);
+
+	// write the packed cigar
+	//BgzfWrite(startChar, packedCigarLen);
+
+	// write the encoded query sequence
+	//BgzfWrite(startChar, encodedQueryLen);
+
+	// write the base qualities
+	//BgzfWrite(startChar, queryLen);
+
+}
 
 // saves the alignment to the alignment archive
 void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString ) {

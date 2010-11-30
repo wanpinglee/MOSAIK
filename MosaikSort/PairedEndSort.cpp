@@ -694,31 +694,23 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 
 				if(!skipOrphan) {
 
-					if(isMate1Unique) pMate1Al = &ar.Mate1Alignments[0];
-					else pMate1Al = &ar.Mate2Alignments[0];
+					Mosaik::AlignedRead pairMate1;
+					
+					pairMate1.Name             = ar.Name;
+					pairMate1.ReadGroupCode    = ar.ReadGroupCode;
+					pairMate1.IsResolvedAsPair = false;
+					pairMate1.IsPairedEnd      = true;
+					pairMate1.IsLongRead       = ar.IsLongRead;
+					if(isMate1Unique) pairMate1.Mate1Alignments = ar.Mate1Alignments;
+					else pairMate1.Mate1Alignments = ar.Mate2Alignments;
 
-					cache.Add( ar );
+					cache.Add( pairMate1 );
 
 					if ( cache.isFull() ) {
 						cache.SortByName();
 						StoreReadCache( cache );
 						cache.Reset();
 					}
-
-					// copy the mate1 alignment
-					//*acIter = *pMate1Al;
-					//acIter->Name               = ar.Name;
-					//acIter->ReadGroupCode      = ar.ReadGroupCode;
-					//acIter->MateReferenceIndex = ALIGNMENT_NO_MATE_INFO;
-					//numCachedEntries++;
-					//acIter++;
-
-					// serialize the alignment cache
-					//if(acIter == alignmentCache.end()) {
-					//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-					//	acIter = alignmentCache.begin();
-					//	numCachedEntries = 0;
-					//}
 
 					numUniqueOrphansResolved++;
 				}
@@ -830,30 +822,23 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			//const unsigned char fragmentAlignmentQuality = pMate1Al->Quality + pMate2Al->Quality;
 
 			// copy the mate1 alignment
-			//*acIter = *pMate1Al;
-			//acIter->Name = ar.Name;
-			//if(mFlags.RenameMates) acIter->Name.Append("/1");
-
-			//if(mFlags.UseFragmentAlignmentQuality) 
-			//	acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
-			
 			Mosaik::AlignedRead pairMate1;
-			pairMate1.Name = ar.Name;
-			pairMate1.ReadGroupCode = ar.ReadGroupCode;
+			pairMate1.Name             = ar.Name;
+			pairMate1.ReadGroupCode    = ar.ReadGroupCode;
 			pairMate1.IsResolvedAsPair = true;
-			pairMate1.IsPairedEnd = true;
-			pairMate1.IsLongRead = ar.IsLongRead;
-			//pMate1Al->Name = ar.Name;
+			pairMate1.IsPairedEnd      = true;
+			pairMate1.IsLongRead       = ar.IsLongRead;
+
+
 			if(mFlags.RenameMates) pairMate1.Name.Append("/1");
 			if(mFlags.UseFragmentAlignmentQuality)
 				pMate1Al->Quality = GetFragmentAlignmentQuality(pMate1Al->Quality, isUU, isMM);
+			// also record mate in the archive
 			pairMate1.Mate1Alignments.push_back( *pMate1Al );
 			pairMate1.Mate2Alignments.push_back( *pMate2Al );
 
-			//acIter->ReadGroupCode = ar.ReadGroupCode;
+			// save the aligned read in cache
 			numCachedEntries++;
-			//acIter++;
-			pMate1Al->ReadGroupCode = ar.ReadGroupCode;
 			cache.Add( pairMate1 );
 
 			if ( cache.isFull() ) {
@@ -863,37 +848,21 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 			}
 
 
-			// serialize the alignment cache
-			//if(acIter == alignmentCache.end()) {
-			//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-			//	acIter = alignmentCache.begin();
-			//	numCachedEntries = 0;
-			//}
-
-			// copy the mate2 alignment
-			//*acIter = *pMate2Al;
-			//acIter->Name = ar.Name;
-			//if(mFlags.RenameMates) acIter->Name.Append("/2");
-
-			//if(mFlags.UseFragmentAlignmentQuality) 
-			//	acIter->Quality = GetFragmentAlignmentQuality(acIter->Quality, isUU, isMM);
-
 			Mosaik::AlignedRead pairMate2;
-			pairMate2.Name = ar.Name;
-			pairMate2.ReadGroupCode = ar.ReadGroupCode;
+			pairMate2.Name             = ar.Name;
+			pairMate2.ReadGroupCode    = ar.ReadGroupCode;
 			pairMate2.IsResolvedAsPair = true;
-			pairMate2.IsPairedEnd = true;
-			pairMate2.IsLongRead = ar.IsLongRead;
+			pairMate2.IsPairedEnd      = true;
+			pairMate2.IsLongRead       = ar.IsLongRead;
 			if(mFlags.RenameMates) pairMate2.Name.Append("/2");
 			if(mFlags.UseFragmentAlignmentQuality)
 				pMate2Al->Quality = GetFragmentAlignmentQuality(pMate2Al->Quality, isUU, isMM);
+			// also record mate in the archive
 			pairMate2.Mate1Alignments.push_back( *pMate2Al );
 			pairMate2.Mate2Alignments.push_back( *pMate1Al );
 
-			//acIter->ReadGroupCode = ar.ReadGroupCode;
+			// save the aligned read in cache
 			numCachedEntries++;
-			//acIter++;
-			pMate2Al->ReadGroupCode = ar.ReadGroupCode;
 			cache.Add( pairMate2 );
 
 			if ( cache.isFull() ) {
@@ -901,13 +870,6 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 				StoreReadCache( cache );
 				cache.Reset();
 			}
-
-			// serialize the alignment cache
-			//if(acIter == alignmentCache.end()) {
-			//	numSerializedAlignments += Serialize(alignmentCache, numCachedEntries);
-			//	acIter = alignmentCache.begin();
-			//	numCachedEntries = 0;
-			//}
 		}
 
 		// increment the read counter
