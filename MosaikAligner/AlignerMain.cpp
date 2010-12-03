@@ -31,6 +31,7 @@ unsigned char DEFAULT_HASH_SIZE      = 15;
 unsigned char DEFAULT_NUM_MISMATCHES = 4;
 unsigned int DEFAULT_BANDWIDTH       = 9;
 unsigned int DEFAULT_NUM_THREADS     = 1;
+unsigned int DEFAULT_SPECIAL_HASHES  = 5;
 
 #define MIN_HASH_SIZE     4
 #define MAX_HASH_SIZE     32
@@ -63,6 +64,8 @@ struct ConfigurationSettings {
 	bool HasNumThreads;
 	bool HasReadsFilename;
 	bool HasReferencesFilename;
+	bool HasSpecialHashCount;
+	bool HasSpecialReferencePrefix;
 	bool KeepJumpKeysOnDisk;
 	bool KeepJumpPositionsOnDisk;
 	bool LimitHashPositions;
@@ -89,6 +92,7 @@ struct ConfigurationSettings {
 	float MismatchScore;
 	string Algorithm;
 	string Mode;
+	string SpecialReferencePrefix;
 	unsigned char AlignmentCandidateThreshold;
 	unsigned char AlignmentQualityThreshold;
 	unsigned char HashSize;
@@ -99,6 +103,7 @@ struct ConfigurationSettings {
 	unsigned int MinimumAlignment;
 	unsigned int NumMismatches;
 	unsigned int NumThreads;
+	unsigned int SpecialHashCount;
 
 	// constructor
 	ConfigurationSettings()
@@ -126,6 +131,8 @@ struct ConfigurationSettings {
 		, HasNumThreads(false)
 		, HasReadsFilename(false)
 		, HasReferencesFilename(false)
+		, HasSpecialHashCount(false)
+		, HasSpecialReferencePrefix(false)
 		, KeepJumpKeysOnDisk(false)
 		, KeepJumpPositionsOnDisk(false)
 		, LimitHashPositions(false)
@@ -139,6 +146,7 @@ struct ConfigurationSettings {
 		, JumpCacheMemory(0)
 		, NumMismatches(DEFAULT_NUM_MISMATCHES)
 		, NumThreads(DEFAULT_NUM_THREADS)
+		, SpecialHashCount(DEFAULT_SPECIAL_HASHES)
 	{}
 };
 
@@ -201,7 +209,9 @@ int main(int argc, char* argv[]) {
 	//COptions::AddValueOption("-jc", "# of hashes",   "caches the most recently used hashes", "", settings.HasJumpCacheMemory,        settings.JumpCacheMemory,  pJumpOpts);
 	COptions::AddOption("-kd",                       "keeps the keys file on disk",              settings.KeepJumpKeysOnDisk,                                 pJumpOpts);
 	COptions::AddOption("-pd",                       "keeps the positions file on disk",         settings.KeepJumpPositionsOnDisk,                            pJumpOpts);
-
+	COptions::AddValueOption("-sref", "reference prefixes", "specifies the prefixes of special references", "", settings.HasSpecialReferencePrefix, settings.SpecialReferencePrefix, pJumpOpts);
+	COptions::AddValueOption("-srefp", "percent", "the maximum special hashes percentage [0.0 - 1.0]", "", settings.HasSpecialHashCount, settings.SpecialHashCount, pJumpOpts);
+	
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
@@ -521,6 +531,15 @@ int main(int argc, char* argv[]) {
 
 	// enable low-memory algorithm
 	if(settings.UseLowMemory) ma.EnableLowMemory();
+
+	// enables special references checker
+	if(settings.HasSpecialReferencePrefix) {
+		ma.EnableSpecialReference(settings.SpecialReferencePrefix);
+		if ( settings.HasSpecialHashCount )
+			ma.SetSpecialHashCount(settings.SpecialHashCount);
+		else
+			ma.SetSpecialHashCount(DEFAULT_SPECIAL_HASHES);
+	}
 
 	// =============
 	// set filenames

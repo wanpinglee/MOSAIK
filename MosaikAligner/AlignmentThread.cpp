@@ -371,6 +371,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		
 		
 		// save multiple alignments in bam
+		
+		
 		if ( mate1Alignments.IsMultiple() ) {
 			vector<Alignment>* pMateSet = mate1Alignments.GetSet();
 			pthread_mutex_lock(&mSaveBamMutex);
@@ -386,6 +388,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
 			pthread_mutex_unlock(&mSaveBamMutex);
 		}
+		
+		
 
 		// =================
 		// save aligned read

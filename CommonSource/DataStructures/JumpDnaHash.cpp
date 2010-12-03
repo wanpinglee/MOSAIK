@@ -13,7 +13,7 @@
 #include "JumpDnaHash.h"
 
 // constructor
-CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset, const unsigned int expectedMemory, const bool useLowMemory)
+CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset, const unsigned int expectedMemory, const bool useLowMemory, const bool bubbleSpecialHashes, const uint64_t specialBegin, const unsigned int nSpecialHash)
 : mNumPositions(numPositions)
 , mLimitPositions(false)
 , mKeepKeysInMemory(keepKeysInMemory)
@@ -35,6 +35,9 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char hashSize, const string& filenameS
 , _offset(offset)
 , _expectedMemory(expectedMemory)
 , _useLowMemory(useLowMemory)
+, _bubbleSpecialHashes(bubbleSpecialHashes)
+, _specialBegin(specialBegin)
+, _nSpecialHash(nSpecialHash)
 {
 	mHashSize = hashSize;
 
@@ -584,10 +587,6 @@ void CJumpDnaHash::LoadPositions(void) {
 	off_type offset          = 0;                   // for mKeyBufferPtr
 	off_type curFilePosition = 0;                   // for mPositionBufferPtr
 	off_type left            = mPositionBufferLen1; // for mPositionBuffer full detection
-	//cout << endl << mPositionBufferLen1 << endl;
-
-	//cout << "- loading jump positions database into memory... ";
-	//cout.flush();
 
 	while ( (uint64_t)offset < mKeyBufferLen ) {
 
@@ -657,11 +656,48 @@ void CJumpDnaHash::LoadPositions(void) {
 			memset((char*)(mKeyBufferPtr + offset), 0xff, KEY_LENGTH);
 		}
 		else {
-			random_shuffle( positions.begin(), positions.end() );
-			
-			//if(mLimitPositions && (positions.size() > mMaxHashPositions))
-			//	positions.erase( positions.begin() + mMaxHashPositions, positions.end() );
+			// Note that low-memory won't go into here
+			if ( _bubbleSpecialHashes ) {
+				unsigned int totalPos     = positions.size();
+				unsigned int totalSpecial = 0;
+				for ( vector <unsigned int>::reverse_iterator rit = positions.rbegin(); rit != positions.rend(); ++rit ) {
+					if ( *rit > _specialBegin )
+						totalSpecial++;
+				}
+/*
+				if ( totalSpecial > 0 ) {
+					unsigned short i = 0;
+					uint64_t keyt = offset / KEY_LENGTH;
+					string keys;
+					keys.resize(15);
+					while ( i < 15 ) {
+						uint64_t keyc = keyt & 0x0000000000000003ULL;
+						if ( keyc == 0 ) keys[14-i] = 'A';
+						else if ( keyc == 1 ) keys[14-i] = 'C';
+						else if ( keyc == 2 ) keys[14-i] = 'G';
+						else if ( keyc == 3 ) keys[14-i] = 'T';
+						keyt = keyt >> 2;
+						++i;
+					}
+					cerr << keys << "\t" << totalSpecial << "\t" << totalPos << endl;
+				}
+*/
+				if ( ( totalSpecial != totalPos ) && ( totalSpecial > 0 ) ) {
+					unsigned int specialBegin = totalPos - totalSpecial;
+					unsigned int normalEnd    = totalPos - totalSpecial - 1;
+					random_shuffle( positions.begin(), positions.begin() + normalEnd);
+					random_shuffle( positions.begin() + specialBegin, positions.end() );
+					unsigned int temp;
+					for ( unsigned int i = 0; i < totalSpecial; ++i ) {
+						temp = positions[i];
+						positions[i] = positions[ specialBegin + i ];
+						positions[ specialBegin + i ] = temp;
+					}
 
+				}else
+					random_shuffle( positions.begin(), positions.end() );
+			} else
+				random_shuffle( positions.begin(), positions.end() );
 			StorePositions(curFilePosition, left, positions, offset);
 		}
 
@@ -702,17 +738,16 @@ inline void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& 
 	}
 
 	// store number of hash hits
-	//unsigned int nPositions = positions.size();
 	unsigned int nPositions = 0;
 	if ( mLimitPositions && (positions.size() > mMaxHashPositions) )
 		nPositions = mMaxHashPositions;
 	else
 		nPositions = positions.size();
+	
 	memcpy((char*)(mPositionBufferPtr + curFilePosition), (char*)&nPositions, SIZEOF_INT);
 	curFilePosition += SIZEOF_INT;
 	left            -= SIZEOF_INT;
 
-	//for ( vector<unsigned int>::iterator ptr = positions.begin(); ptr != positions.end(); ptr++ ) {
 	for ( unsigned int i = 0; i < nPositions; i++ ) {
 		// mPositionBuffer is full
 		if ( left < SIZEOF_INT ) {
@@ -720,7 +755,6 @@ inline void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& 
 			exit(1);
 		}
 
-		//unsigned int position = *ptr;
 		unsigned int position = positions[i];
 		memcpy((char*)(mPositionBufferPtr + curFilePosition), (char*)&position, SIZEOF_INT);
 		curFilePosition += SIZEOF_INT;

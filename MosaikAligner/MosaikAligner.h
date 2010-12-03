@@ -48,8 +48,6 @@ public:
 		CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads);
 	// destructor
 	~CMosaikAligner(void);
-	// aligns the read archive
-	void AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs);
 	// aligns the read archive chromosome by chromosome
 	void AlignReadArchiveLowMemory(void);
 	// enables the alignment candidate threshold
@@ -70,6 +68,10 @@ public:
 	void EnablePairedEndOutput(void);
 	// enables reporting of unaligned reads
 	void EnableUnalignedReadReporting(const string& unalignedReadReportFilename);
+	// enables special references checker
+	void EnableSpecialReference ( const string referencePrefix );
+	// sets special hashes percentage
+	void SetSpecialHashCount ( const unsigned int count );
 	// sets the filenames used by the aligner
 	void SetFilenames(const string& inputReadArchiveFilename, const string& outputReadArchiveFilename, const string& referenceFilename);
 	// enables the use of the aligned read length when calculating mismatches
@@ -90,13 +92,15 @@ private:
 	// stores the statistical maps
 	CStatisticsMaps mStatisticsMaps;
 	// bam writers
-	CAlignmentThread::BamWriters bams;
+	CAlignmentThread::BamWriters mBams;
+	// special reference
+	CAlignmentThread::SReference mSReference;
 	// estimates the appropriate hash table size
 	static unsigned char CalculateHashTableSize(const unsigned int referenceLength, const unsigned char hashSize);
 	// hashes the reference sequence
 	void HashReferenceSequence(MosaikReadFormat::CReferenceSequenceReader& refseq);
 	// initializes the hash tables
-	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end, const unsigned int offset, const bool useLowMemory, const unsigned int expectedMemory);
+	void InitializeHashTables(const unsigned char bitSize, const unsigned int begin, const unsigned int end, const unsigned int offset, const bool useLowMemory, const unsigned int expectedMemory, const bool bubbleSpecialHashes);
 	// the reference sequence
 	char* mReference;
 	// the length of the reference sequence
@@ -114,5 +118,7 @@ private:
 	void PrintStatistics(void);
 	void GroupReferences(void);
 	void GetHashStatistics(vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, uint64_t& nTotalHash);
+	// aligns the read archive
+	void AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs);
 };
 

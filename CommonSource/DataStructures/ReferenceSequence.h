@@ -19,9 +19,9 @@ using namespace std;
 struct ReferenceSequence {
 	off_type BasesOffset;
 	uint64_t NumAligned;
-	unsigned int Begin;
-	unsigned int End;
-	unsigned int NumBases;
+	uint64_t Begin;
+	uint64_t End;
+	uint64_t NumBases;
 	string Name;
 	string Bases;
 	string GenomeAssemblyID;

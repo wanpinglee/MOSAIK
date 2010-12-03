@@ -173,6 +173,23 @@ public:
 		CBamWriter sBam; // special alignments
 		CBamWriter uBam; // unaligned reads
 	};
+	// special reference 
+	struct SReference {
+		bool     enable;
+		bool     found;
+		uint64_t begin;
+		uint64_t nReference;
+		double   count;
+		string   prefix;
+
+		SReference()
+			: enable(false)
+			, found(false)
+			, begin(0)
+			, nReference(0)
+			, count(0)
+		{}
+	};
 	// constructor
 	CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, 
 		AlignerModeType& algorithmMode, char* pReference, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, 
@@ -200,6 +217,7 @@ public:
 		bool IsPairedEnd;
 		char** pBsRefSeqs;
 		BamWriters* pBams;
+		SReference  pSReference;
 	};
 	// aligns the read archive
 	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);

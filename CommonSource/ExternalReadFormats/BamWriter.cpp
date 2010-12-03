@@ -467,8 +467,8 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 	const char* startChar = "*\0";
 	
 	// write the block size
-	//const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen;
-	const unsigned int dataBlockSize = nameLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen;
+	//const unsigned int dataBlockSize = nameLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -479,13 +479,13 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 	BgzfWrite(startChar, nameLen);
 
 	// write the packed cigar
-	//BgzfWrite(startChar, packedCigarLen);
+	BgzfWrite(startChar, packedCigarLen);
 
 	// write the encoded query sequence
-	//BgzfWrite(startChar, encodedQueryLen);
+	BgzfWrite(startChar, encodedQueryLen);
 
 	// write the base qualities
-	//BgzfWrite(startChar, queryLen);
+	BgzfWrite(startChar, queryLen);
 
 }
 

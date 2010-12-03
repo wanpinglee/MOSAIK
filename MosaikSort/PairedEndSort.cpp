@@ -283,9 +283,9 @@ void CPairedEndSort::ResolvePairedEndReads(const string& inputFilename, const st
 	//vector<MosaikReadFormat::ReadGroup> readGroups;
 	//reader.GetReadGroups(readGroups);
 	reader.GetReadGroups(mArchiveSetting.readGroups);
-	cout << mArchiveSetting.readGroups.size() << endl;
-	cout << mArchiveSetting.readGroups[0].ReadGroupCode << endl;
-	cout << mArchiveSetting.readGroups[0].ReadGroupID << endl;
+	//cout << mArchiveSetting.readGroups.size() << endl;
+	//cout << mArchiveSetting.readGroups[0].ReadGroupCode << endl;
+	//cout << mArchiveSetting.readGroups[0].ReadGroupID << endl;
 
 	// retrieve the alignment status (clear the sorting status)
 	//AlignmentStatus as = (reader.GetStatus() & 0xf3) | AS_SORTED_ALIGNMENT;
