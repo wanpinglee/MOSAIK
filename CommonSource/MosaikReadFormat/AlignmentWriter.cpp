@@ -678,12 +678,17 @@ namespace MosaikReadFormat {
 		if(pAl->IsReverseStrand)                         status |= AF_IS_REVERSE_STRAND;
 		if(isResolvedAsPair && pAl->IsMateReverseStrand) status |= AF_IS_MATE_REVERSE_STRAND;
 		if(pAl->WasRescued)                              status |= AF_WAS_RESCUED;
+		if(pAl->IsJunk)                                  status |= AF_IS_JUNK;
 
 		// not really sure how this applies to single-end and paired-end reads. Disabling the flag for now.
 		//if(!isPrimaryAlignment)                              status |= AF_IS_NOT_PRIMARY;
 
 		mBuffer[mBufferPosition++] = status;
 
+		if ( pAl->IsJunk )
+			mBuffer[mBufferPosition++] = 0;
+		else {	
+		
 		// store the number of mismatches
 		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumMismatches, SIZEOF_SHORT);
 		mBufferPosition += SIZEOF_SHORT;
@@ -769,7 +774,8 @@ namespace MosaikReadFormat {
 
 		// update our statistics
 		mNumBases += bqLength;
-
+		}
+		
 		// check the buffer
 		if(mBufferPosition >= mBufferLen) {
 			cout << endl << "ERROR: Buffer overrun detected when saving read. Used " << mBufferPosition << " bytes, but allocated " << mBufferLen << " bytes." << endl;

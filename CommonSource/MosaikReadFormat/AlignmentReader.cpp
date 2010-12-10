@@ -792,6 +792,9 @@ namespace MosaikReadFormat {
 
 		if((status & AF_IS_REVERSE_STRAND) != 0) al.IsReverseStrand = true;
 		if((status & AF_WAS_RESCUED)       != 0) al.WasRescued      = true;
+		if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
+
+		if ( !al.IsJunk ) {
 
 		// get the number of mismatches
 		memcpy((char*)&al.NumMismatches, mBufferPtr, SIZEOF_SHORT);
@@ -861,6 +864,8 @@ namespace MosaikReadFormat {
 		const unsigned short bqLength = al.QueryEnd - al.QueryBegin + 1;
 		al.BaseQualities.Copy((const char*)mBufferPtr, bqLength);
 		mBufferPtr += bqLength;
+		}
+
 
 		// read the number of tags present in this alignment
 		const unsigned char numTags = (unsigned char)*mBufferPtr;

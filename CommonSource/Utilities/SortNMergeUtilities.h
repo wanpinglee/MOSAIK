@@ -133,6 +133,7 @@ namespace SortNMergeUtilities {
 					continue;
 				}
 				else {
+					// TODO: this is only for illumina
 					if ( ite->IsReverseStrand != ite2->IsReverseStrand ) {
 						ite->Mark  = true;
 						ite2->Mark = true;

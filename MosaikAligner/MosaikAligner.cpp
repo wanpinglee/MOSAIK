@@ -540,7 +540,7 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	td.IsPairedEnd         = isPairedEnd;
 	td.pBsRefSeqs          = pBsRefSeqs;
 	td.pBams               = &mBams;
-	td.pSReference         = mSReference;
+	td.SpecialReference         = mSReference;
 
 
 	pthread_attr_t attr;

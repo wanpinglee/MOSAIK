@@ -951,10 +951,10 @@ void CMosaikText::ProcessAlignments(const unsigned char mateNum, const CMosaikSt
 			CMosaikString bq = alIter->BaseQualities;
 			bq.Increment(33);
 
-			printf("%llu %s %u %u %s %u %u %c %u %s%s\n", (unsigned long long)(mCurrentAlignment + 1), alIter->ReferenceName, 
+			printf("%llu %s %u %u %s %u %u %c %u %s %s%s\n", (unsigned long long)(mCurrentAlignment + 1), alIter->ReferenceName, 
 				alIter->ReferenceBegin + 1, alIter->ReferenceEnd + 1, readName.CData(), alIter->QueryBegin + 1,
 				alIter->QueryEnd + 1, (alIter->IsReverseStrand ? '-' : '+'), alIter->Quality, readGroupID.c_str(),
-				(alIter->WasRescued ? " [rescued]" : ""));
+				( alIter->IsFirstMate ? "mate1" : "mate2" ), (alIter->WasRescued ? " [rescued]" : ""));
 			printf("%s\n%s\n%s\n\n", alIter->Reference.CData(), alIter->Query.CData(), bq.CData());
 		}
 

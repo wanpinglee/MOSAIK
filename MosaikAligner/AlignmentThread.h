@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include <limits.h>
+
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -193,7 +196,7 @@ public:
 	// constructor
 	CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, 
 		AlignerModeType& algorithmMode, char* pReference, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, 
-		AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs);
+		AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs, SReference& SpecialReference);
 	// destructor
 	~CAlignmentThread(void);
 	// define our thread data structure
@@ -217,7 +220,7 @@ public:
 		bool IsPairedEnd;
 		char** pBsRefSeqs;
 		BamWriters* pBams;
-		SReference  pSReference;
+		SReference  SpecialReference;
 	};
 	// aligns the read archive
 	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);
@@ -276,6 +279,8 @@ private:
 	FlagData mFlags;
 	// the reference sequence
 	char* mReference;
+	// the sepcial references
+	SReference mSReference;
 	// our forward and reverse complement copy of the read
 	char* mForwardRead;
 	char* mReverseRead;
@@ -299,4 +304,15 @@ private:
 	// our colorspace to basespace converter
 	CColorspaceUtilities mCS;
 	vector<ReferenceSequence> mpBsRefSeqs;
+	// best and second best utilities
+	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
+	inline bool IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength );
+	static inline bool GreaterThanMQ ( const Alignment& al1, const Alignment& al2);
+	/*
+	static struct compare {
+		bool operator() ( const Alignment& al1, const Alignment& al2) {
+			return al1.Quality >= al2.Quality;
+		}
+	} GreaterThanMQ;
+	*/
 };

@@ -664,25 +664,26 @@ void CJumpDnaHash::LoadPositions(void) {
 					if ( *rit > _specialBegin )
 						totalSpecial++;
 				}
-/*
-				if ( totalSpecial > 0 ) {
-					unsigned short i = 0;
-					uint64_t keyt = offset / KEY_LENGTH;
-					string keys;
-					keys.resize(15);
-					while ( i < 15 ) {
-						uint64_t keyc = keyt & 0x0000000000000003ULL;
-						if ( keyc == 0 ) keys[14-i] = 'A';
-						else if ( keyc == 1 ) keys[14-i] = 'C';
-						else if ( keyc == 2 ) keys[14-i] = 'G';
-						else if ( keyc == 3 ) keys[14-i] = 'T';
-						keyt = keyt >> 2;
-						++i;
-					}
-					cerr << keys << "\t" << totalSpecial << "\t" << totalPos << endl;
-				}
-*/
-				if ( ( totalSpecial != totalPos ) && ( totalSpecial > 0 ) ) {
+				
+				//if ( totalSpecial > 0 ) {
+				//	unsigned short i = 0;
+				//	uint64_t keyt = offset / KEY_LENGTH;
+				//	string keys;
+				//	keys.resize(15);
+				//	while ( i < 15 ) {
+				//		uint64_t keyc = keyt & 0x0000000000000003ULL;
+				//		if ( keyc == 0 ) keys[14-i] = 'A';
+				//		else if ( keyc == 1 ) keys[14-i] = 'C';
+				//		else if ( keyc == 2 ) keys[14-i] = 'G';
+				//		else if ( keyc == 3 ) keys[14-i] = 'T';
+				//		keyt = keyt >> 2;
+				//		++i;
+				//	}
+				//	cerr << keys << "\t" << totalSpecial << "\t" << totalPos << endl;
+				//}
+				
+				unsigned int movedSpecial = ( totalSpecial > _nSpecialHash ) ? _nSpecialHash : totalSpecial;
+				if ( ( totalSpecial != totalPos ) && ( movedSpecial > 0 ) ) {
 					unsigned int specialBegin = totalPos - totalSpecial;
 					unsigned int normalEnd    = totalPos - totalSpecial - 1;
 					random_shuffle( positions.begin(), positions.begin() + normalEnd);
