@@ -223,7 +223,8 @@ public:
 		SReference  SpecialReference;
 	};
 	// aligns the read archive
-	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);
+	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, 
+		FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);
 	// activates the current alignment thread
 	static void* StartThread(void* arg);
 	// register our thread mutexes
@@ -266,7 +267,8 @@ private:
 	// consolidates hash hits into read candidates
 	void GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList);
 	// attempts to rescue the mate paired with a unique mate
-	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al);
+	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, 
+		const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al);
 	// denotes the active alignment algorithm
 	AlignerAlgorithmType mAlgorithm;
 	// denotes the active alignment mode
@@ -306,13 +308,8 @@ private:
 	vector<ReferenceSequence> mpBsRefSeqs;
 	// best and second best utilities
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
-	inline bool IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength );
-	static inline bool GreaterThanMQ ( const Alignment& al1, const Alignment& al2);
-	/*
-	static struct compare {
-		bool operator() ( const Alignment& al1, const Alignment& al2) {
-			return al1.Quality >= al2.Quality;
-		}
-	} GreaterThanMQ;
-	*/
+	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set );
+	inline bool IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, 
+		const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength );
+	static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2);
 };

@@ -401,10 +401,11 @@ namespace MosaikReadFormat {
 		// INDEX[*]
 
 		// write the MOSAIK signature
+		// the definations of MOSAIK signatures are in Mosaik.h
 		//const unsigned char SIGNATURE_LENGTH = 6;
 		//const char* MOSAIK_SIGNATURE = "MSKAA\4";
 		//fwrite(MOSAIK_SIGNATURE, SIGNATURE_LENGTH, 1, mOutStream);
-		if ( ( signature != ALIGNER_SIGNATURE ) && ( signature != SORT_SIGNATURE ) ) {
+		if ( ( signature != ALIGNER_SIGNATURE ) && ( signature != ALIGNER_SIGNATURE5 ) && ( signature != SORT_SIGNATURE ) ) {
 			cout << "ERROR: The signature for MOSAIK archive is invalid." << endl;
 			exit(1);
 		}

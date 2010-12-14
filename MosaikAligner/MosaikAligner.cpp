@@ -175,7 +175,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		else alignmentStatus |= AS_UNIQUE_MODE;
 
 		MosaikReadFormat::CAlignmentWriter out;
-		out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
+		out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE5);
 
 		AlignReadArchive(inn, out, pRefBegin, pRefEnd, pBsRefSeqs);
 
@@ -300,7 +300,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			}
 
 			MosaikReadFormat::CAlignmentWriter out;
-			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
+			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE5);
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 

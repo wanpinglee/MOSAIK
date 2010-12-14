@@ -29,14 +29,15 @@ struct Alignment {
 	unsigned short NumMismatches;      // number of mismatches
 	unsigned short QueryBegin;
 	unsigned short QueryEnd;
-	unsigned char Quality;             // alignment quality
+	unsigned char Quality;             // alignment qualitya
+	bool CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
 	bool IsFirstMate;                  // is this alignment from the first mate in a paired-end read
 	bool IsJunk;                       // are the fileds in this alignment used for other propose, e.g. counting total numbers of alignments?
 	bool IsMateReverseStrand;          // read orientation for the mate
 	bool IsPairedEnd;                  // is the read sequenced as a paired-end read
 	bool IsResolvedAsPair;             // is the alignment part of resolved paired-end read
 	bool IsReverseStrand;              // read orientation
-	bool IsMappedSpecialReference;     // is this alignment mapped to the special references which is defined by "-sref"?
+	bool IsMappedSpecialReference;     // is this alignment mapped to the special references which is defined by "-sref"? 
 	bool WasRescued;                   // was the alignment rescued during local alignment search
 	char* ReferenceName;               // only filled via CAlignmentReader (temp)
 	CMosaikString Reference;

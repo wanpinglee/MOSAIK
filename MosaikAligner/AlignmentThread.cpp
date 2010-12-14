@@ -393,6 +393,14 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			pthread_mutex_unlock(&mSaveBamMutex);
 		}
 
+		// process alignments mapped in special references and delete them in vectors
+		if ( mSReference.found )
+			ProcessSpecialAlignment( *mate1Alignments.GetSet(), *mate2Alignments.GetSet() );
+		// deleting special alignments may let mate1Alignments or mate2Alignments become empty
+		// so we have to check them again
+		isMate1Aligned = !mate1Alignments.IsEmpty();
+		isMate2Aligned = !mate2Alignments.IsEmpty();
+		
 		// select best and second best
 		// if any alignments hit the special references, we'll select it.
 		if ( mate1Alignments.IsMultiple() || ( isPairedEnd && mate2Alignments.IsMultiple() ) )
@@ -405,6 +413,37 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			pthread_mutex_lock(&mSaveReadMutex);
 			pOut->SaveRead(mr, mate1Alignments, mate2Alignments);
 			pthread_mutex_unlock(&mSaveReadMutex);
+		}
+	}
+}
+
+void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set ) {
+	unsigned int nMobAl = 0;
+	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+		if ( ite->IsMappedSpecialReference ) nMobAl++;;
+	}
+
+	if ( nMobAl == mate1Set.size() ) {
+		mate1Set.clear();
+	} else if ( nMobAl > 0 ) {
+		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+			if ( !ite->IsMappedSpecialReference ) ite->CanBeMappedToSpecialReference = true;
+			else mate1Set.erase(ite);
+		}
+	}
+
+	nMobAl = 0;
+
+	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
+		if ( ite->IsMappedSpecialReference ) nMobAl++;;
+	}
+
+	if ( nMobAl == mate2Set.size() ) {
+		mate2Set.clear();
+	} else if ( nMobAl > 0 ) {
+		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
+			if ( !ite->IsMappedSpecialReference ) ite->CanBeMappedToSpecialReference = true;
+			else mate2Set.erase(ite);
 		}
 	}
 }
@@ -434,10 +473,8 @@ inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, 
 // Select and only keep best and 2nd best
 void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned) {
 	
-	unsigned short special = 0;
-	unsigned short regular = 0;
-	vector<Alignment> newPMate1Set;
-	vector<Alignment> newPMate2Set;
+	vector<Alignment> newMate1Set;
+	vector<Alignment> newMate2Set;
 	// store the number of alignments
 	Alignment junkAl;
 	junkAl.IsJunk = true;
@@ -446,18 +483,12 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 
 	Alignment bestMate1, bestMate2; 
 	Alignment secondBestMate1, secondBestMate2;
-	Alignment bestSpecialMate1, bestSpecialMate2;
-	Alignment secondSpecialMate1, secondSpecialMate2;
 
 	bool best          = false;
 	bool secondBest    = false;
-	bool bestSpecial   = false;
-	bool secondSpecial = false;
 
 	unsigned int bestFl          = INT_MAX;
 	unsigned int secondBestFl    = INT_MAX;
-	unsigned int bestSpecialFl   = INT_MAX;
-	unsigned int secondSpecialFl = INT_MAX;
 	
 	if ( isMate1Aligned && isMate2Aligned ) {
 		
@@ -467,14 +498,8 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 		sort( mate1Set.begin(), mate1Set.end() );
 		sort( mate2Set.begin(), mate2Set.end() );
 
-		cerr << "total: " << nMate1 << endl;
-		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-			cerr << ite->ReferenceBegin << endl;
-		}
 
 		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
-
-		
 		//bool found = false;
 		//if ( mate1Set[0].ReferenceBegin == 10029605 )
 		//	found = true;
@@ -491,148 +516,121 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 						break;
 					}
 					
-				}
-				
-				else {
-					if ( ite->IsMappedSpecialReference ) {
-						//if ( IsBetterPair( *ite, *ite2, length, bestSpecialMate1, bestSpecialMate2, bestSpecialFl ) ) {
-						if ( !bestSpecial ) {
-							bestSpecial = true;
-							bestSpecialMate1 = *ite;
-							bestSpecialMate2 = *ite2;
-						} else {
-							//if ( bestSpecial && IsBetterPair( *ite, *ite2, length, secondSpecialMate1, secondSpecialMate2, secondSpecialFl) ) {
-							if ( !secondSpecial ) {
-								secondSpecial = true;
-								secondSpecialMate1 = *ite;
-								secondSpecialMate2 = *ite2;
-							}
+				// in the fragment length threshold
+				} else {
+					//cerr << "=================" << length << endl;
+					if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl ) ) {
+						// store the current best as second best
+						if ( best ) {
+							secondBest = true;
+							secondBestMate1 = bestMate1;
+							secondBestMate2 = bestMate2;
+							secondBestFl    = bestFl;
 						}
+						best = true;
+						bestMate1 = *ite;
+						bestMate2 = *ite2;
+						bestFl    = length;
+
+						//cerr << "best" << endl;
 					} else {
-						//cerr << "=================" << length << endl;
-						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl ) ) {
-							// store the current best as second best
-							if ( best ) {
-								secondBest = true;
-								secondBestMate1 = bestMate1;
-								secondBestMate2 = bestMate2;
-								secondBestFl    = bestFl;
-							}
-							best = true;
-							bestMate1 = *ite;
-							bestMate2 = *ite2;
-							bestFl    = length;
-
-							//cerr << "best" << endl;
-						} else {
-							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl ) ) {
-								secondBest = true;
-								secondBestMate1 = *ite;
-								secondBestMate2 = *ite2;
-								secondBestFl    = length;
-							}
-
-							//cerr << "second best" << endl;
+						if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl ) ) {
+							secondBest = true;
+						secondBestMate1 = *ite;
+							secondBestMate2 = *ite2;
+							secondBestFl    = length;
 						}
+
+						//cerr << "second best" << endl;
 					}
 				}
 				
 			}
 		}
-		mate1Set.clear();
-		mate2Set.clear();
 
-		cerr << "12\t" << nMate1 << " " << nMate2 << endl;
-
+		
 		if ( best ) {
-			mate1Set.push_back( bestMate1 );
-			mate2Set.push_back( bestMate2 );
+			newMate1Set.push_back( bestMate1 );
+			newMate2Set.push_back( bestMate2 );
+		}
+		else {
+			sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+			sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+			newMate1Set.push_back( *mate1Set.rbegin() );
+			newMate2Set.push_back( *mate2Set.rbegin() );
 		}
 
 		if ( secondBest ) {
-			mate1Set.push_back( secondBestMate1 );
-			mate2Set.push_back( secondBestMate2 );
+			newMate1Set.push_back( secondBestMate1 );
+			newMate2Set.push_back( secondBestMate2 );
+		} else {
+			if ( best ) {
+				sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+				sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+			}
+			if ( nMate1 == 1 )
+				newMate1Set.push_back( *mate1Set.rbegin() );
+			else
+				newMate1Set.push_back( *( mate1Set.rbegin() + 1 ) );
+
+			if ( nMate2 == 1 )
+				newMate2Set.push_back( *mate2Set.rbegin() );
+			else
+				newMate2Set.push_back( *( mate2Set.rbegin() + 1 ) );
 		}
 
-		if ( bestSpecial ) {
-			mate1Set.push_back( bestSpecialMate1 );
-			mate2Set.push_back( bestSpecialMate2 );
-		}
-
-		if ( secondSpecial ) {
-			mate1Set.push_back( secondSpecialMate1 );
-			mate2Set.push_back( secondSpecialMate2 );
-		}
-
-	
 		junkAl.ReferenceBegin = nMate1;
-		mate1Set.push_back( junkAl );
+		newMate1Set.push_back( junkAl );
 		junkAl.ReferenceBegin = nMate2;
-		mate2Set.push_back( junkAl );
+		newMate2Set.push_back( junkAl );
+
+		mate1Set.clear();
+		mate2Set.clear();
+		mate1Set = newMate1Set;
+		mate2Set = newMate2Set;
 		
 		
 	} else if ( isMate1Aligned ) {
 		nMate1 = mate1Set.size();
 
-		//sort ( mate1Set.begin(), mate1Set.end(), GreaterThanMQ );
-		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-			if ( ite->IsMappedSpecialReference ) {
-				if ( special < 2 ) {
-					special++;
-					newPMate1Set.push_back( *ite );
-				}
-				continue;
-			}
+		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+		// note: the size of mate1Set must be larger than one
+		vector<Alignment>::reverse_iterator ite = mate1Set.rbegin();
+		// the one having the highest MQ
+		newMate1Set.push_back( *ite );
+		// the one having the second highest MQ
+		ite++;
+		newMate1Set.push_back( *ite );
 
-			if ( regular < 2 ) {
-				regular++;
-				newPMate1Set.push_back( *ite );
-			}
-		}
-
-		cerr << "1\t" << newPMate1Set.begin()->ReferenceBegin << "\t" << nMate1 << endl;
 		junkAl.ReferenceBegin = nMate1;
-		newPMate1Set.push_back( junkAl );
+		newMate1Set.push_back( junkAl );
 		mate1Set.clear();
-		mate1Set = newPMate1Set;
+		mate1Set = newMate1Set;
 
 	} else if ( isMate2Aligned ) {
 		nMate2 = mate2Set.size();
 		
-		//sort ( mate2Set.begin(), mate2Set.end(), GreaterThanMQ );
-		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
-			if ( ite->IsMappedSpecialReference ) {
-				if ( special < 2 ) {
-					special++;
-					newPMate2Set.push_back( *ite );
-				}
-				continue;
-			}
+		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+		// note: the size of mate2Set must be larger than one
+		vector<Alignment>::reverse_iterator ite = mate2Set.rbegin();
+		// the one having the highest MQ
+		newMate2Set.push_back( *ite );
+		// the one having the second highest MQ
+		ite++;
+		newMate2Set.push_back( *ite );
 
-			if ( regular < 2 ) {
-				regular++;
-				newPMate2Set.push_back( *ite );
-			}
-		}
-
-		cerr << "2\t" << newPMate2Set.begin()->ReferenceBegin << "\t" << nMate2 << endl;
 		junkAl.ReferenceBegin = nMate2;
-		newPMate2Set.push_back( junkAl );
+		newMate2Set.push_back( junkAl );
 		mate2Set.clear();
-		mate2Set = newPMate2Set;
+		mate2Set = newMate2Set;
 
 	}
 }
 
 
 // greater-than operator of mapping qualities
-inline bool CAlignmentThread::GreaterThanMQ ( const Alignment& al1, const Alignment& al2){
-	if ( al2.Quality == 0 ) return true;
-	if ( al1.Quality == 0 ) return false;
-	
-	return al1.Quality > al2.Quality;
-	//if ( al1.Quality >= al2.Quality ) return true;
-	//else return false;
+inline bool CAlignmentThread::LessThanMQ ( const Alignment& al1, const Alignment& al2){
+	return al1.Quality < al2.Quality;
 }
 
 // aligns the read against the reference sequence and returns true if the read was aligned
