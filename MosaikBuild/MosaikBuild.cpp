@@ -1552,37 +1552,46 @@ void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
 	}
 
 	// trim the leading and lagging N's
-	const char* pBases = mate.Bases.CData();
-	int pos = 0;
 	unsigned short numLeadingNs = 0;
-	while((pBases[pos] == 'N') && (pos < (int)mate.Bases.Length())) {
-		numLeadingNs++;
-		pos++;
-	}
-
-	mate.Bases.TrimBegin(numLeadingNs);
-	mate.Qualities.TrimBegin(numLeadingNs);
-
-	pBases = mate.Bases.CData();
-	pos = mate.Bases.Length() - 1;
 	unsigned short numLaggingNs = 0;
-	while((pBases[pos] == 'N') && (pos >= 0)) {
-		numLaggingNs++;
-		pos--;
-	}
+	if ( !mFlags.DisableTrimmer ) {
+		const char* pBases = mate.Bases.CData();
+		int pos = 0;
 
-	mate.Bases.TrimEnd(numLaggingNs);
-	mate.Qualities.TrimEnd(numLaggingNs);
+		while((pBases[pos] == 'N') && (pos < (int)mate.Bases.Length())) {
+			numLeadingNs++;
+			pos++;
+		}
+
+		mate.Bases.TrimBegin(numLeadingNs);
+		mate.Qualities.TrimBegin(numLeadingNs);
+	}
+	
+
+	if ( !mFlags.DisableTrimmer ) {
+		const char* pBases = mate.Bases.CData();
+		int pos = mate.Bases.Length() - 1;
+
+		while((pBases[pos] == 'N') && (pos >= 0)) {
+			numLaggingNs++;
+			pos--;
+		}
+
+		mate.Bases.TrimEnd(numLaggingNs);
+		mate.Qualities.TrimEnd(numLaggingNs);
+	}
 
 	// determine if the read has too many remaining N's
-	unsigned short numRemainingNs = 0;
-	const unsigned int mateLength = mate.Bases.Length();
-	pBases = mate.Bases.CData();
-	for(unsigned short i = 0; i < mateLength; i++) if(pBases[i] == 'N') numRemainingNs++;
-
 	bool deleteMate = false;
-	if((mNumNBasesAllowed != 0) && (numRemainingNs > mNumNBasesAllowed)) deleteMate = true;
-	if(mateLength < mMinimumReadLength)                                  deleteMate = true;
+	if ( !mFlags.DisableTrimmer ) {
+		unsigned short numRemainingNs = 0;
+		const unsigned int mateLength = mate.Bases.Length();
+		const char* pBases = mate.Bases.CData();
+		for(unsigned short i = 0; i < mateLength; i++) if(pBases[i] == 'N') numRemainingNs++;
+
+		if((mNumNBasesAllowed != 0) && (numRemainingNs > mNumNBasesAllowed)) deleteMate = true;
+		if(mateLength < mMinimumReadLength)                                  deleteMate = true;
+	}
 
 	// delete the mate
 	if(deleteMate) {
@@ -1799,6 +1808,12 @@ void CMosaikBuild::SetSpecies(const string& name) {
 // Sets the uniform resource identifier
 void CMosaikBuild::SetURI(const string& uri) {
 	mSettings.UniformResourceIdentifier = uri;
+}
+
+// Disable trimmer; don't trim any bases
+void CMosaikBuild::DisableTrimmer( void ) {
+	mFlags.DisableTrimmer = true;
+	mTrimReads = false;
 }
 
 // shows the conversion statistics

@@ -23,6 +23,7 @@ using namespace std;
 struct ConfigurationSettings {
 
 	// flags
+	bool DisableTrimmer;
 	bool EnableColorspace;
 	bool HasBaseQualityFasta2Filename;
 	bool HasBaseQualityFastaFilename;
@@ -94,7 +95,8 @@ struct ConfigurationSettings {
 
 	// constructor
 	ConfigurationSettings()
-		: EnableColorspace(false)
+		: DisableTrimmer(false)
+		, EnableColorspace(false)
 		, HasBaseQualityFasta2Filename(false)
 		, HasBaseQualityFastaFilename(false)
 		, HasBustardDirectory(false)
@@ -203,6 +205,7 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-out", "MOSAIK read filename", "the output read file",                     "", settings.HasOutputReadsFilename, settings.OutputReadsFilename, pReadArchiveOpts);
 	COptions::AddValueOption("-p",   "read name prefix",     "adds the prefix to each read name",        "", settings.HasReadNamePrefix,      settings.ReadNamePrefix,      pReadArchiveOpts);
 	COptions::AddValueOption("-rl",  "# of reads",           "limits the # of reads processed",          "", settings.HasReadLimit,           settings.ReadLimit,           pReadArchiveOpts);
+	COptions::AddOption("-nt",  "don't trim any bases", settings.DisableTrimmer, pReadArchiveOpts);
 	COptions::AddValueOption("-tn",  "# of characters",      "sets the max # of internal Ns allowed",    "", settings.SetNumNBasesAllowed,    settings.NumNBasesAllowed,    pReadArchiveOpts);
 	COptions::AddValueOption("-tp",  "# of beginning bases", "trims the first # of bases",               "", settings.HasTrimPrefixBases,     settings.NumTrimPrefixBases,  pReadArchiveOpts);
 	COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
@@ -472,10 +475,14 @@ int main(int argc, char* argv[]) {
 
 	// set the max number of N's allowed
 	if(!settings.HasOutputReferenceFilename) {
-		cout << "- trimming leading and lagging N's. ";
-		if(settings.NumNBasesAllowed == 0) cout << "Mates with interior N's will not be deleted." << endl;	
-		else cout << "Mates with >" << settings.NumNBasesAllowed << " interior N's will be deleted." << endl;
-		if(settings.SetNumNBasesAllowed) mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
+		if ( settings.DisableTrimmer ) {
+			mb.DisableTrimmer();
+		} else {
+			cout << "- trimming leading and lagging N's. ";
+			if(settings.NumNBasesAllowed == 0) cout << "Mates with interior N's will not be deleted." << endl;	
+			else cout << "Mates with >" << settings.NumNBasesAllowed << " interior N's will be deleted." << endl;
+			if(settings.SetNumNBasesAllowed) mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
+		}
 	} else {
 
 		if(settings.HasGenomeAssemblyID) {

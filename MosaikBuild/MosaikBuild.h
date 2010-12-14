@@ -62,6 +62,8 @@ public:
 	static void CreateReadGroupID(string& readGroupID);
 	// creates a MOSAIK reference archive
 	void CreateReferenceArchive(const string& fastaFilename, const string& archiveFilename);
+	// Disable trimmer; don't trim any bases
+	void DisableTrimmer( void );
 	// Enables the processing of base qualities
 	void EnableBaseQualities(const string& filename);
 	// Enables the processing of base qualities for the 2nd mate
@@ -117,6 +119,14 @@ private:
 		string UniformResourceIdentifier;
 		unsigned char AssignedBaseQuality;
 	} mSettings;
+	// store flags
+	struct BuildFlags {
+		bool DisableTrimmer;
+
+		BuildFlags( void )
+			: DisableTrimmer(false)
+		{}
+	} mFlags;
 	// stores the colorspace triplet
 	struct ColorspaceName {
 		unsigned short first;

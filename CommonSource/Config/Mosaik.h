@@ -25,7 +25,7 @@
 // adopt a major.minor.build version number [1].[1].[3]
 const unsigned char  MOSAIK_MAJOR_VERSION = 1;
 const unsigned char  MOSAIK_MINOR_VERSION = 1;
-const unsigned short MOSAIK_BUILD_VERSION = 42;
+const unsigned short MOSAIK_BUILD_VERSION = 43;
 
 // ================================
 // Platform specific variable sizes
