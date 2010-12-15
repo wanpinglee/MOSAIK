@@ -42,6 +42,7 @@ CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSe
 	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth)
 	, mReferenceBegin(pRefBegin)
 	, mReferenceEnd(pRefEnd)
+	, softClippedIdentifierLength(2048)
 {
 	// calculate our base quality LUT
 	for(unsigned char i = 0; i < 100; i++) mBaseQualityLUT[i] = pow(10.0, -i / 10.0);
@@ -51,6 +52,12 @@ CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSe
 
 	// assign the reference sequences to the colorspace utilities object
 	mCS.SetReferenceSequences(pBsRefSeqs);
+
+	// initialize our soft clip identifier
+	softClippedIdentifier = new char [ softClippedIdentifierLength + 1 ];
+	memset(softClippedIdentifier, 'Z', softClippedIdentifierLength);
+	softClippedIdentifier[ softClippedIdentifierLength ] = 0;
+
 }
 
 // destructor
@@ -796,7 +803,25 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				AlignRegion(forwardRegions[i], al, mForwardRead, queryLength, numExtensionBases);
 
 				// add the alignment to the alignments vector
-				if(ApplyReadFilters(al, qualities, queryLength)) alignments.Add(al);
+				if(ApplyReadFilters(al, qualities, queryLength)) {
+					
+					if ( al.QueryBegin > 0 ) {
+						al.Query.Prepend    ( query, al.QueryBegin );
+						al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
+					}
+
+					if ( al.QueryEnd != ( queryLength - 1 ) ) {
+						const char* startPoint    = query + al.QueryEnd + 1;
+						const unsigned int length = queryLength - al.QueryEnd - 1;
+						al.Query.Append    ( startPoint, length );
+						al.Reference.Append( softClippedIdentifier, length );
+					}
+
+					al.QueryBegin = 0;
+					al.QueryEnd   = queryLength - 1;
+					al.BaseQualities.Copy( qualities, queryLength);
+					alignments.Add(al);
+				}
 
 				// increment our candidates counter
 				mStatisticsCounters.AlignmentCandidates++;
@@ -832,7 +857,26 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					AlignRegion(reverseRegions[i], al, mReverseRead, queryLength, numExtensionBases);
 
 					// add the alignment to the alignments vector
-					if(ApplyReadFilters(al, qualities, queryLength)) alignments.Add(al);
+					if(ApplyReadFilters(al, qualities, queryLength)) {
+					
+						if ( al.QueryBegin > 0 ) {
+							al.Query.Prepend    ( query, al.QueryBegin );
+							al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
+						}
+
+						if ( al.QueryEnd != ( queryLength - 1 ) ) {
+							const char* startPoint    = query + al.QueryEnd + 1;
+							const unsigned int length = queryLength - al.QueryEnd - 1;
+							al.Query.Append    ( startPoint, length );
+							al.Reference.Append( softClippedIdentifier, length );
+						}
+
+						al.QueryBegin = 0;
+						al.QueryEnd   = queryLength - 1;
+						al.BaseQualities.Copy( qualities, queryLength);
+						al.BaseQualities.Reverse();
+						alignments.Add(al);
+					}
 
 					// increment our candidates counter
 					mStatisticsCounters.AlignmentCandidates++;
@@ -946,8 +990,8 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* qualities, co
 
 	// copy the base qualities
 	// TODO: there may be a significant penalty involved in performing this on all aligned reads
-	al.BaseQualities.Copy(qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1);
-	if(al.IsReverseStrand) al.BaseQualities.Reverse();
+	//al.BaseQualities.Copy(qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1);
+	//if(al.IsReverseStrand) al.BaseQualities.Reverse();
 
 	unsigned short numNonAlignedBases = queryLength - al.QueryLength;
 

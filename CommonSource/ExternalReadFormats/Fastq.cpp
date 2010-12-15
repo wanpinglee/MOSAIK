@@ -504,10 +504,10 @@ bool CFastq::LoadNextMate(CMosaikString& readName, Mosaik::Mate& m) {
 	m.Qualities.Decrement(mFastqOffset);
 
 	// convert the base qualities
-	if(mUsingIlluminaStyle) {
-		for(unsigned int i = 0; i < m.Qualities.Length(); i++) 
-			m.Qualities[i] = mIlluminaToPhredLUT[m.Qualities[i] + 128];
-	}
+	//if(mUsingIlluminaStyle) {
+	//	for(unsigned int i = 0; i < m.Qualities.Length(); i++) 
+	//		m.Qualities[i] = mIlluminaToPhredLUT[m.Qualities[i] + 128];
+	//}
 
 	return true;
 }

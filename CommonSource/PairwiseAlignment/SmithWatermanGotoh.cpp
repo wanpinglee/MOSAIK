@@ -337,6 +337,16 @@ void CSmithWatermanGotoh::CreateScoringMatrix(void) {
 	}
 
 	// add ambiguity codes
+	
+	mScoringMatrix['N' - 'A']['A' - 'A'] = mMatchScore;	// V - A
+	mScoringMatrix['A' - 'A']['N' - 'A'] = mMatchScore;
+	mScoringMatrix['N' - 'A']['C' - 'A'] = mMatchScore; // V - C
+	mScoringMatrix['C' - 'A']['N' - 'A'] = mMatchScore;
+	mScoringMatrix['N' - 'A']['G' - 'A'] = mMatchScore; // V - G
+	mScoringMatrix['G' - 'A']['N' - 'A'] = mMatchScore;
+	mScoringMatrix['N' - 'A']['T' - 'A'] = mMatchScore; // V - T
+	mScoringMatrix['T' - 'A']['N' - 'A'] = mMatchScore;
+	
 	mScoringMatrix['M' - 'A']['A' - 'A'] = mMatchScore;	// M - A
 	mScoringMatrix['A' - 'A']['M' - 'A'] = mMatchScore;
 	mScoringMatrix['M' - 'A']['C' - 'A'] = mMatchScore; // M - C
