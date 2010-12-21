@@ -444,7 +444,7 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			isMate2Empty = mate2Set.empty();
 
 			if ( isMate1Empty | isMate2Empty ) {
-				cout << "ERROR: both of them are empty;" << endl;
+				cout << "ERROR: Both of them are empty after apllying best and second best selection." << endl;
 				exit(1);
 			}
 
@@ -461,8 +461,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 				exit(1);
 			}
 
-			SetRequiredInfo( mate1Set[0], mr.Mate1, mr, true, properPair1, true, isPairedEnd );
-			SetRequiredInfo( mate2Set[0], mr.Mate2, mr, true, properPair2, false, isPairedEnd );
+			SetRequiredInfo( mate1Set[0], mate2Set[0], mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
+			SetRequiredInfo( mate2Set[0], mate1Set[0], mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
 			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
 			CZaTager za1, za2;
@@ -470,26 +470,16 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			zaTag1 = (char*) za1.GetZaTag( al1, al2, true );
 			zaTag2 = (char*) za2.GetZaTag( al2, al1, false );
 			pthread_mutex_lock(&mSaveReadMutex);
-			//pBams->rBam.SaveAlignment( mate1Set.begin()->Name, mate1Set.begin()->ReadGroup, mate1Set.begin(), 0 );
-			//pBams->rBam.SaveAlignment( mate2Set.begin()->Name, mate2Set.begin()->ReadGroup, mate2Set.begin(), 0 );
 			pBams->rBam.SaveAlignment( al1, zaTag1 );
 			pBams->rBam.SaveAlignment( al2, zaTag2 );
 			pthread_mutex_unlock(&mSaveReadMutex);
 
 		// UO and MO pair
-		
 		} else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
 			
-			bool found = false;
 			if ( isMate1Multiple || isMate2Multiple ) {
-				if ( isMate1Aligned == isMate2Aligned ) {
-					cout << "ERROR: ..." << endl;
-					cout << mate1Set.size() << "\t" << mate2Set.size() << endl;
-					exit(1);
-				}
 				SelectBestNSecondBest( mate1Set, mate2Set, isMate1Aligned, isMate2Aligned );
-				found = true;
 			}
 
 			isMate1Empty = mate1Set.empty();
@@ -501,58 +491,82 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			} else if ( !isMate2Empty ) {
 				isFirstMate = false;
 			} else {
-				cout << "ERROR: Both mate sets are empty." << endl;
+				cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
 				exit(1);
 			}
 			
 			
-			SetRequiredInfo( ( isFirstMate ? mate1Set[0] : mate2Set[0]), 
-				( isFirstMate ? mr.Mate1 : mr.Mate2 ), 
-				mr, false, false, isFirstMate, isPairedEnd );
-
 			Alignment al = isFirstMate ? mate1Set[0] : mate2Set[0];
+			Alignment unmappedAl;
+			SetRequiredInfo( al, unmappedAl,
+				( isFirstMate ? mr.Mate1 : mr.Mate2 ), mr, false, false, isFirstMate, isPairedEnd, true, false );
+
+			
+			// set information for unmapped alignment
+			SetRequiredInfo( unmappedAl, al,
+				( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
+			//unmappedAl.Name  = mr.Name;
+			//unmappedAl.Query = isFirstMate ? mr.Mate2.Bases : mr.Mate1.Bases;
+			//unmappedAl.BaseQualities = isFirstMate ? mr.Mate2.Qualities : mr.Mate1.Qualities;
+			//unmappedAl.IsResolvedAsPair = true;
+			//unmappedAl.IsResolvedAsProperPair = false;
+			//unmappedAl.IsMapped = false;
+			//unmappedAl.IsMateMapped = true;
+			//unmappedAl.IsFirstMate = !isFirstMate;
+			//unmappedAl.IsPairedEnd = isPairedEnd;
+			//unmappedAl.MateReferenceBegin = al.ReferenceBegin;
+			//unmappedAl.MateReferenceIndex = al.ReferenceIndex;
+			//unmappedAl.IsMateReverseStrand = al.IsReverseStrand;
+			unmappedAl.BaseQualities.Increment(33);
+			cerr << unmappedAl.Name.CData() << endl << unmappedAl.Query.CData() << endl << unmappedAl.BaseQualities.CData() << endl;
+			unmappedAl.BaseQualities.Decrement(33);
+
+			//map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
+			//rgIte = mReadGroupsMap->find( mr.ReadGroupCode );
+			// sanity check
+			//if ( rgIte == mReadGroupsMap->end() ) {
+			//	cout << "ERROR: ReadGroup cannot be found." << endl;
+			//	exit(1);
+			//}	
+			//else
+			//	unmappedAl.ReadGroup = rgIte->second.ReadGroupID;
 
 			pthread_mutex_lock(&mSaveReadMutex);
-			//pBams->rBam.SaveAlignment( ( isFirstMate ? mate1Set[0].Name : mate2Set[0].Name), 
-			//	( isFirstMate ? mate1Set[0].ReadGroup : mate2Set[0].ReadGroup), 
-			//	( isFirstMate ? mate1Set.begin() : mate2Set.begin()), 0 );
 			pBams->rBam.SaveAlignment( al, 0 );
+			pBams->uBam.SaveAlignment( unmappedAl, 0, true );
 			pthread_mutex_unlock(&mSaveReadMutex);
 		
 		// OO
 		} else if ( isMate1Empty && isMate2Empty ) {
-			;
+			Alignment unmappedAl1, unmappedAl2;
+
+			SetRequiredInfo( unmappedAl1, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, false, false );
+			SetRequiredInfo( unmappedAl2, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
+			pthread_mutex_lock(&mSaveReadMutex);
+			pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
+			pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
+			pthread_mutex_unlock(&mSaveReadMutex);
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
 			cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
 			exit(1);
 		}
 
-		// select best and second best
-		// if any alignments hit the special references, we'll select it.
-		//if ( mate1Alignments.IsMultiple() || ( isPairedEnd && mate2Alignments.IsMultiple() ) )
-		//	SelectBestNSecondBest( *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), isMate1Aligned, isMate2Aligned );
-		
-		
-		// if any of the two mates aligned, save the read
-		//if(isMate1Aligned || isMate2Aligned) {
-		//	mStatisticsCounters.AlignedReads++;
-		//	pthread_mutex_lock(&mSaveReadMutex);
-		//	pOut->SaveRead(mr, mate1Alignments, mate2Alignments);
-		//	pthread_mutex_unlock(&mSaveReadMutex);
-		//}
 	}
 }
 
 // Save alignment
 void CAlignmentThread::SetRequiredInfo (
 	Alignment& al,
+	const Alignment& mate,
 	const Mosaik::Mate& m,
 	const Mosaik::Read& r,
 	const bool& isPair,
 	const bool& isProperPair,
 	const bool& isFirstMate,
-	const bool& isPairTech) {
+	const bool& isPairTech,
+	const bool& isItselfMapped,
+	const bool& isMateMapped) {
 
 	al.BaseQualities = m.Qualities;
 	CMosaikString patchBases   = m.Bases;
@@ -568,11 +582,16 @@ void CAlignmentThread::SetRequiredInfo (
 	}
 	
 	
-	al.IsResolvedAsPair = isPair;
+	al.IsResolvedAsPair       = isPair;
 	al.IsResolvedAsProperPair = isProperPair;
-	al.IsFirstMate = isFirstMate;
-	al.IsPairedEnd = isPairTech;
-	al.Name = r.Name;
+	al.IsFirstMate            = isFirstMate;
+	al.IsPairedEnd            = isPairTech;
+	al.Name                   = r.Name;
+	al.IsMateReverseStrand    = mate.IsReverseStrand;
+	al.MateReferenceIndex     = mate.ReferenceIndex;
+	al.MateReferenceBegin     = mate.ReferenceBegin;
+	al.IsMapped               = isItselfMapped;
+	al.IsMateMapped           = isMateMapped;
 
 	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
 	rgIte = mReadGroupsMap->find( r.ReadGroupCode );
@@ -584,7 +603,11 @@ void CAlignmentThread::SetRequiredInfo (
 	else 
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
-	// patch bases and base qualities	
+	//if ( !isItselfMapped )
+	//	al.Query = m.Bases;
+	//else {
+		
+	// patch bases and base qualities
 	if ( patchStartLen > 0 ) {
 		al.Query.Prepend    ( patchBases.CData(), patchStartLen );
 		al.Reference.Prepend( softClippedIdentifier, patchStartLen );
@@ -602,6 +625,7 @@ void CAlignmentThread::SetRequiredInfo (
 		al.Query.Append    ( startPoint, patchEndLen );
 		al.Reference.Append( softClippedIdentifier, patchEndLen );
 	}
+	//}
 }
 
 // handle and then delete special alignments
@@ -662,7 +686,10 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 
 // compare the given proper pairs
 inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength ) {
-	
+
+	// rescured mate always wins
+	if ( competitor_mate1.WasRescued ) return true;
+	if ( competitor_mate2.WasRescued ) return true;
 	// proper pair always wins improper pair
 	bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
 	bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;

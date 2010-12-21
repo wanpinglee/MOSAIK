@@ -278,8 +278,8 @@ private:
 	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, 
 		const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al);
 	// Prepare bam required info
-	void SetRequiredInfo ( Alignment& al, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
-		const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech);
+	void SetRequiredInfo ( Alignment& al, const Alignment& mate, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
+		const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech, const bool& isItselfMapped, const bool& isMateMapped);
 	// denotes the active alignment algorithm
 	AlignerAlgorithmType mAlgorithm;
 	// denotes the active alignment mode

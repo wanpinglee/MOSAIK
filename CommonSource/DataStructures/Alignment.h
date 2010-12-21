@@ -44,6 +44,8 @@ struct Alignment {
 	bool IsResolvedAsProperPair;       // is the alignment resolved as proper pair
 	bool IsReverseStrand;              // read orientation
 	bool IsMappedSpecialReference;     // is this alignment mapped to the special references which is defined by "-sref"? 
+	bool IsMapped;                     // is this alignment mapped?
+	bool IsMateMapped;                 // is its mate mapped?
 	bool WasRescued;                   // was the alignment rescued during local alignment search
 	char* ReferenceName;               // only filled via CAlignmentReader (temp)
 	CMosaikString Reference;
@@ -78,6 +80,8 @@ struct Alignment {
 		, IsResolvedAsPair(false)
 		, IsReverseStrand(false)
 		, IsMappedSpecialReference(false)
+		, IsMapped(true)
+		, IsMateMapped(false)
 		, WasRescued(false)
 		, ReferenceName(NULL)
 		, Mark(false)
@@ -92,9 +96,11 @@ struct Alignment {
 	bool SetPairFlags ( const Alignment& pairMate, const int& allowedFragmentLength, const bool& expectedMateStrand ) {
 		unsigned int queryPosition5Prime = ( IsReverseStrand ) ? ReferenceEnd : ReferenceBegin;
 		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;
-		FragmentLength = matePosition5Prime - queryPosition5Prime;
+		FragmentLength = ( ReferenceIndex != pairMate.ReferenceIndex ) ? 0 : matePosition5Prime - queryPosition5Prime;
 		
 		if ( expectedMateStrand != pairMate.IsReverseStrand )
+			IsResolvedAsProperPair = false;
+		else if ( ReferenceIndex != pairMate.ReferenceIndex )
 			IsResolvedAsProperPair = false;
 		else {
 			if ( ( allowedFragmentLength >= 0 ) && ( FragmentLength <= allowedFragmentLength ) )
@@ -105,9 +111,9 @@ struct Alignment {
 				IsResolvedAsProperPair = false;
 		}
 
-		IsMateReverseStrand = pairMate.IsReverseStrand;
-		MateReferenceIndex = pairMate.ReferenceIndex;
-		MateReferenceBegin = pairMate.ReferenceBegin;
+		//IsMateReverseStrand = pairMate.IsReverseStrand;
+		//MateReferenceIndex = pairMate.ReferenceIndex;
+		//MateReferenceBegin = pairMate.ReferenceBegin;
 
 		return IsResolvedAsProperPair;
 	}

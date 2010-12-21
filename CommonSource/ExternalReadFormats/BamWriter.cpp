@@ -678,7 +678,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
+void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm ) {
 
 	// =================
 	// set the BAM flags
@@ -718,7 +718,13 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
 			//insertSize = matePosition5Prime - queryPosition5Prime;
 			insertSize = al.FragmentLength;
 
-		} else flag |= BAM_MATE_UNMAPPED;
+		}
+
+		if ( !al.IsMapped )
+			flag |= BAM_QUERY_UNMAPPED;
+		if ( !al.IsMateMapped )
+			flag |= BAM_MATE_UNMAPPED;
+			
 	}
 
 	if(al.IsReverseStrand) flag |= BAM_QUERY_REVERSE_COMPLEMENT;
@@ -728,11 +734,12 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
 	// ==========================
 
 	string packedCigar;
-	unsigned int numCigarOperations;
-	CreatePackedCigar(al, packedCigar, numCigarOperations);
-	//TranslateCigarToPackCigar( alIter->Cigar, packedCigar );
-	//const unsigned int numCigarOperations = packedCigar.size();
-	const unsigned int packedCigarLen = packedCigar.size();
+	unsigned int numCigarOperations = 0;
+	if ( !noCigarMdNm )
+		CreatePackedCigar(al, packedCigar, numCigarOperations);
+	else
+		packedCigar = "\0";
+	const unsigned int packedCigarLen = !noCigarMdNm ? packedCigar.size() : 0;
 
 	// ===================
 	// write the alignment
@@ -766,18 +773,29 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
 	sprintf(pReadGroupTag, "RGZ%s", al.ReadGroup.c_str());
 
 	// create our mismatch tag
-	string mismatchTag = "NMi";
-	mismatchTag.resize(MISMATCH_TAG_LEN);
-	const unsigned int numMismatches = al.NumMismatches;
-	memcpy((char*)mismatchTag.data() + 3, (char*)&numMismatches, SIZEOF_INT);
+	string mismatchTag;
+	unsigned int numMismatches = 0;
+	unsigned int nmTagLen = 0;
+	if ( !noCigarMdNm ) {
+		mismatchTag = "NMi";
+		mismatchTag.resize(MISMATCH_TAG_LEN);
+		nmTagLen = MISMATCH_TAG_LEN;
+		numMismatches = al.NumMismatches;
+		memcpy((char*)mismatchTag.data() + 3, (char*)&numMismatches, SIZEOF_INT);
+	}
 
 	// create our MD tag
 	string mdTag;
-	const char* pMd = mdTager.GetMdTag( al.Reference.CData(), al.Query.CData(), al.Reference.Length() );
-	const unsigned int mdTagLen = 3 + strlen( pMd ) + 1;
-	mdTag.resize( mdTagLen );
-	char* pMdTag = (char*)mdTag.data();
-	sprintf(pMdTag, "MDZ%s", pMd);
+	char* pMd = 0;
+	unsigned int mdTagLen = 0;
+	char* pMdTag;
+	if ( !noCigarMdNm ) {
+		pMd = (char*) mdTager.GetMdTag( al.Reference.CData(), al.Query.CData(), al.Reference.Length() );
+		mdTagLen = 3 + strlen( pMd ) + 1;
+		mdTag.resize( mdTagLen );
+		pMdTag = (char*)mdTag.data();
+		sprintf(pMdTag, "MDZ%s", pMd);
+	}
 
 	unsigned int zaTagLen = 0;
 	string zaTag;
@@ -811,7 +829,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN + mdTagLen + zaTagLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -834,9 +852,11 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
 	BgzfWrite(readGroupTag.data(), readGroupTagLen);
 
 	// write the mismatch tag
-	BgzfWrite(mismatchTag.data(), MISMATCH_TAG_LEN);
+	if ( !noCigarMdNm )
+		BgzfWrite(mismatchTag.data(), MISMATCH_TAG_LEN);
 
 	// write the MD tag
+	if ( !noCigarMdNm )
 	BgzfWrite(mdTag.data(), mdTagLen);
 
 	// write the ZA tag
