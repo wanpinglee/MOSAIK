@@ -455,6 +455,32 @@ void CMosaikString::Reverse(void) {
 		swapByte(mData[mLength - y], mData[y - 1]);
 }
 
+// Performs an in-place reverse complement conversion
+void CMosaikString::ReverseComplement(void) {
+
+	for(unsigned int y = mLength; y >= (mLength / 2) + 1; y--)
+		swapByte(mData[mLength - y], mData[y - 1]);
+
+	for(unsigned int i = 0; i < mLength; i++) {
+		switch(mData[i]) {
+			case 'A':
+				mData[i] = 'T';
+				break;
+			case 'C':
+				mData[i] = 'G';
+				break;
+			case 'G':
+				mData[i] = 'C';
+				break;
+			case 'T':
+				mData[i] = 'A';
+				break;
+			default:
+				break;
+		}
+	}
+}
+
 // sets the length to the specified size
 void CMosaikString::SetLength(const unsigned int length) {
 

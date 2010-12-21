@@ -50,8 +50,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	mSettings.SequencingTechnology = readGroup.SequencingTechnology;
 	mSettings.MedianFragmentLength = readGroup.MedianFragmentLength;
 
-	vector<MosaikReadFormat::ReadGroup> readGroups;
+	//vector<MosaikReadFormat::ReadGroup> readGroups;
+	readGroups.clear();
 	readGroups.push_back(readGroup);
+	for ( vector<MosaikReadFormat::ReadGroup>::iterator ite = readGroups.begin(); ite != readGroups.end(); ++ite ) {
+		readGroupsMap[ ite->ReadGroupCode ] = *ite;
+	}
 
 	// close open file streams
 	in.Close();
@@ -87,6 +91,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				mSReference.found = true;
 				mSReference.nReference++;
 				mSReference.begin = rit->Begin;
+				rit->Species = rit->Name.substr( found + mSReference.prefix.size() + 1, 2 );
+				rit->Special = true;
 			}
 			else
 				break;
@@ -101,17 +107,21 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
 	mBams.sHeader.SortOrder = SORTORDER_UNSORTED;
 	mBams.uHeader.SortOrder = SORTORDER_UNSORTED;
+	mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
 
 	mBams.mHeader.pReferenceSequences = &referenceSequences;
 	mBams.sHeader.pReferenceSequences = &referenceSequences;
 	mBams.uHeader.pReferenceSequences = &referenceSequences;
+	mBams.rHeader.pReferenceSequences = &referenceSequences;
 	mBams.mHeader.pReadGroups = &readGroups;
 	mBams.sHeader.pReadGroups = &readGroups;
 	mBams.uHeader.pReadGroups = &readGroups;
+	mBams.rHeader.pReadGroups = &readGroups;
 
 	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 	mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.mHeader);
 	mBams.uBam.Open( mSettings.OutputReadArchiveFilename + ".unaligned.bam", mBams.mHeader);
+	mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.mHeader);
 	
 
 	if ( !mFlags.UseLowMemory ) {
@@ -143,9 +153,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		
 		unsigned int* pRefBegin = new unsigned int[numRefSeqs];
 		unsigned int* pRefEnd   = new unsigned int[numRefSeqs];
+		char** pRefSpecies      = new char*[numRefSeqs];
+		bool* pRefSpecial       = new bool[numRefSeqs];
 		for(unsigned int j = 0; j < numRefSeqs; j++) {
-			pRefBegin[j] = referenceSequences[j].Begin;
-			pRefEnd[j]   = referenceSequences[j].End;
+			pRefBegin[j]   = referenceSequences[j].Begin;
+			pRefEnd[j]     = referenceSequences[j].End;
+			pRefSpecies[j] = new char [2];
+			memcpy( pRefSpecies[j], referenceSequences[j].Species.data(), 2 );
+			pRefSpecial[j] = referenceSequences[j].Special;
+
 		}
 		
 		// initialize our hash tables
@@ -175,9 +191,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		else alignmentStatus |= AS_UNIQUE_MODE;
 
 		MosaikReadFormat::CAlignmentWriter out;
-		out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE5);
+		out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
 
-		AlignReadArchive(inn, out, pRefBegin, pRefEnd, pBsRefSeqs);
+		AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs);
 
 		// close open file streams
 		inn.Close();
@@ -188,17 +204,24 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 		// free memory
 		if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
-		if(pRefBegin)  delete [] pRefBegin;
-		if(pRefEnd)    delete [] pRefEnd;
-		if(mReference) delete [] mReference;
+		if(pRefBegin)   delete [] pRefBegin;
+		if(pRefEnd)     delete [] pRefEnd;
+		if(mReference)  delete [] mReference;
+		if(pRefSpecial) delete [] pRefSpecial;
 		if(pBsRefSeqs) {
 			for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pBsRefSeqs[i];
 			delete [] pBsRefSeqs;
 		}
-		pRefBegin  = NULL;
-		pRefEnd    = NULL;
-		mReference = NULL;
-		pBsRefSeqs = NULL;
+		if(pRefSpecies) {
+			for(unsigned int i = 0; i < numRefSeqs; ++i) delete [] pRefSpecies[i];
+			delete [] pRefSpecies;
+		}
+		pRefBegin   = NULL;
+		pRefEnd     = NULL;
+		mReference  = NULL;
+		pRefSpecial = NULL;
+		pBsRefSeqs  = NULL;
+		pRefSpecies = NULL;
 	}
 	else {
 		// grouping reference and store information in referenceGroups vector
@@ -245,9 +268,14 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			// set reference information
 			unsigned int* pRefBegin = new unsigned int[referenceGroups[i].second];
 			unsigned int* pRefEnd   = new unsigned int[referenceGroups[i].second];
+			char** pRefSpecies      = new char* [referenceGroups[i].second];
+			bool* pRefSpecial       = new bool [referenceGroups[i].second];
 			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
-				pRefBegin[j] = referenceSequences[startRef+j].Begin - referenceSequences[startRef].Begin;
-				pRefEnd[j]   = referenceSequences[startRef+j].End   - referenceSequences[startRef].Begin;
+				pRefBegin[j]   = referenceSequences[startRef+j].Begin - referenceSequences[startRef].Begin;
+				pRefEnd[j]     = referenceSequences[startRef+j].End   - referenceSequences[startRef].Begin;
+				pRefSpecies[j] = new char [2];
+				memcpy( pRefSpecies[j], referenceSequences[startRef+j].Species.data(), 2 );
+				pRefSpecial[j] = referenceSequences[startRef+j].Special;
 			}
 
 			// prepare BS reference sequence for SOLiD data
@@ -300,11 +328,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			}
 
 			MosaikReadFormat::CAlignmentWriter out;
-			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE5);
+			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 
-			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pBsRefSeqs);
+			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs);
 
 			// close open file streams
 			inn.Close();
@@ -315,19 +343,24 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 			// free memory
 			if(mFlags.IsUsingJumpDB) mpDNAHash->FreeMemory();
-			if(pRefBegin)  delete [] pRefBegin;
-			if(pRefEnd)    delete [] pRefEnd;
-			if(mReference) delete [] mReference;
+			if(pRefBegin)   delete [] pRefBegin;
+			if(pRefEnd)     delete [] pRefEnd;
+			if(mReference)  delete [] mReference;
+			if(pRefSpecial) delete [] pRefSpecial;
 			if(pBsRefSeqs) {
-				for(unsigned int j = 0; j < referenceGroups[i].second; j++)
-					delete [] pBsRefSeqs[j];
-				
+				for(unsigned int j = 0; j < referenceGroups[i].second; j++) delete [] pBsRefSeqs[j];
 				delete [] pBsRefSeqs;
 			}
-			pRefBegin  = NULL;
-			pRefEnd    = NULL;
-			mReference = NULL;
-			pBsRefSeqs = NULL;
+			if(pRefSpecies) {
+				for(unsigned int j = 0; j < referenceGroups[i].second; j++) delete [] pRefSpecies[j];
+				delete [] pRefSpecies;
+			}
+			pRefBegin   = NULL;
+			pRefEnd     = NULL;
+			mReference  = NULL;
+			pRefSpecial = NULL;
+			pBsRefSeqs  = NULL;
+			pRefSpecies = NULL;
 		}
 	}
 
@@ -338,6 +371,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	mBams.mBam.Close();
 	mBams.sBam.Close();
 	mBams.uBam.Close();
+	mBams.rBam.Close();
 
 	PrintStatistics();
 }
@@ -496,7 +530,7 @@ void CMosaikAligner::MergeArchives(void) {
 }
 
 // aligns the read archive
-void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs) {
+void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikReadFormat::CAlignmentWriter& out, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pRefSpecies, bool* pRefSpecial, char** pBsRefSeqs) {
 
 	ReadStatus readStatus          = in.GetStatus();
 	
@@ -535,12 +569,15 @@ void CMosaikAligner::AlignReadArchive(MosaikReadFormat::CReadReader& in, MosaikR
 	td.pUnalignedStream    = unalignedStream;
 	td.pRefBegin           = pRefBegin;
 	td.pRefEnd             = pRefEnd;
+	td.pRefSpecies         = pRefSpecies;
+	td.pRefSpecial         = pRefSpecial;
 	td.Settings            = mSettings;
 	td.pReadCounter        = &readCounter;
 	td.IsPairedEnd         = isPairedEnd;
 	td.pBsRefSeqs          = pBsRefSeqs;
 	td.pBams               = &mBams;
-	td.SpecialReference         = mSReference;
+	td.SpecialReference    = mSReference;
+	td.pReadGroups         = &readGroupsMap;
 
 
 	pthread_attr_t attr;

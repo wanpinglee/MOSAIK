@@ -489,6 +489,24 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 			query.Remove('-');
 			unsigned int alignedLength = query.Length();
 			// assign the original qualities to the alignment
+
+			// compare qualities for MOSAIK mess
+			CMosaikString tempq3 = ite->BaseQualities;
+			if ( ite->IsReverseStrand )
+				tempq3.Reverse();
+			tempq3.Increment(33);
+			string tempq2 = tempq3.Data();
+			currentMate.Qualities.Increment(33);
+			string tempq1 = currentMate.Qualities.Data();
+			currentMate.Qualities.Decrement(33);
+			size_t tempFound = tempq1.find( tempq2 );
+			if ( tempFound == string::npos ) {
+				cerr << "ERROR: The qualities cannot be found in the FASTQs." << endl;
+				cerr << "       Read name:" << ar.Name << endl;
+				cerr << "   Base qualites:" << tempq2 << endl;
+				cerr << "           FASTQ:" << tempq1 << endl;
+			}
+
 			ite->BaseQualities.Copy( currentMate.Qualities.CData(), queryLength );
 			ite->QueryBegin = 0;
 			ite->QueryEnd   = queryLength - 1;
@@ -514,6 +532,10 @@ void CMosaikText::PatchInfo( const string& alignmentFilename, const string& inpu
 						cout << "ERROR: The trimmed bases cannot be found in the FASTQs." << endl;
 						cout << "       Read name:" << ar.Name << endl;
 						cout << "   Aligned bases:" << query.CData() << endl;
+						if ( ite->IsReverseStrand )
+							cout << "         Reverse: True" << endl;
+						else
+							cout << "         Reverse: False" << endl;
 						exit(1);
 				}
 				else {

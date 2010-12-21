@@ -14,7 +14,7 @@ INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DI
 # ----------------------------------
 SOURCES= AlignerMain.cpp AlignmentThread.cpp MosaikAligner.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS= AbstractDnaHash.o AlignmentQuality.o AlignmentReader.o AlignmentWriter.o ArchiveMerge.o ArchiveSort.o BamWriter.o BandedSmithWaterman.o Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o DnaHash.o fastlz.o FastLZIO.o FileUtilities.o HashRegionTree.o JumpDnaHash.o MdTager.o MosaikString.o MemoryUtilities.o MultiDnaHash.o NaiveAlignmentSet.o Options.o PairwiseUtilities.o ReadReader.o ReferenceSequenceReader.o RegexUtilities.o SequenceUtilities.o SHA1.o SmithWatermanGotoh.o SortThread.o StatisticsMaps.o TimeSupport.o UbiqDnaHash.o 
+_EXT_OBJECTS= AbstractDnaHash.o AlignmentQuality.o AlignmentReader.o AlignmentWriter.o ArchiveMerge.o ArchiveSort.o BamWriter.o BandedSmithWaterman.o Benchmark.o CigarTager.o ColorspaceUtilities.o ConsoleUtilities.o DnaHash.o fastlz.o FastLZIO.o FileUtilities.o HashRegionTree.o JumpDnaHash.o MdTager.o MosaikString.o MemoryUtilities.o MultiDnaHash.o NaiveAlignmentSet.o Options.o PairwiseUtilities.o ReadReader.o ReferenceSequenceReader.o RegexUtilities.o SequenceUtilities.o SHA1.o SmithWatermanGotoh.o SortThread.o StatisticsMaps.o TimeSupport.o UbiqDnaHash.o ZaTager.o
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikAligner

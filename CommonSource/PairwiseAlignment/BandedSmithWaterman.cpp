@@ -347,14 +347,14 @@ void CBandedSmithWaterman::CreateScoringMatrix(void) {
 	}
 
 	// add ambiguity codes
-	mScoringMatrix['N' - 'A']['A' - 'A'] = mMatchScore;	// N - A
-	mScoringMatrix['A' - 'A']['N' - 'A'] = mMatchScore;
-	mScoringMatrix['N' - 'A']['C' - 'A'] = mMatchScore; // N - C
-	mScoringMatrix['C' - 'A']['N' - 'A'] = mMatchScore;
-	mScoringMatrix['N' - 'A']['G' - 'A'] = mMatchScore; // N - G
-	mScoringMatrix['G' - 'A']['N' - 'A'] = mMatchScore;
-	mScoringMatrix['N' - 'A']['T' - 'A'] = mMatchScore; // N - G
-	mScoringMatrix['T' - 'A']['N' - 'A'] = mMatchScore;
+	//mScoringMatrix['N' - 'A']['A' - 'A'] = mMatchScore;	// N - A
+	//mScoringMatrix['A' - 'A']['N' - 'A'] = mMatchScore;
+	//mScoringMatrix['N' - 'A']['C' - 'A'] = mMatchScore; // N - C
+	//mScoringMatrix['C' - 'A']['N' - 'A'] = mMatchScore;
+	//mScoringMatrix['N' - 'A']['G' - 'A'] = mMatchScore; // N - G
+	//mScoringMatrix['G' - 'A']['N' - 'A'] = mMatchScore;
+	//mScoringMatrix['N' - 'A']['T' - 'A'] = mMatchScore; // N - G
+	//mScoringMatrix['T' - 'A']['N' - 'A'] = mMatchScore;
 	
 	mScoringMatrix['M' - 'A']['A' - 'A'] = mMatchScore;	// M - A
 	mScoringMatrix['A' - 'A']['M' - 'A'] = mMatchScore;

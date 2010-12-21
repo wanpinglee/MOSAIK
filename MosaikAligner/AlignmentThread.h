@@ -21,6 +21,7 @@
 #include "AlignmentWriter.h"
 #include "BandedSmithWaterman.h"
 #include "BamWriter.h"
+#include "CigarTager.h"
 #include "ColorspaceUtilities.h"
 #include "MdTager.h"
 #include "NaiveAlignmentSet.h"
@@ -31,6 +32,7 @@
 #include "SequenceUtilities.h"
 #include "SmithWatermanGotoh.h"
 #include "StatisticsMaps.h"
+#include "ZaTager.h"
 
 using namespace std;
 
@@ -171,10 +173,12 @@ public:
 		BamHeader mHeader; // multiply alignments
 		BamHeader sHeader; // special alignments
 		BamHeader uHeader; // unaligned reads
+		BamHeader rHeader; // regular bam
 
 		CBamWriter mBam; // multiply alignments
 		CBamWriter sBam; // special alignments
 		CBamWriter uBam; // unaligned reads
+		CBamWriter rBam;
 	};
 	// special reference 
 	struct SReference {
@@ -196,31 +200,35 @@ public:
 	// constructor
 	CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, 
 		AlignerModeType& algorithmMode, char* pReference, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, 
-		AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs, SReference& SpecialReference);
+		AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pRefSpecies, bool* pRefSpecial,
+		char** pBsRefSeqs, SReference& SpecialReference, map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap);
 	// destructor
 	~CAlignmentThread(void);
 	// define our thread data structure
 	struct ThreadData {
 		AlignerAlgorithmType Algorithm;
-		AlignerModeType Mode;
-		AlignerSettings Settings;
-		FilterSettings Filters;
-		FlagData Flags;
-		StatisticsCounters* pCounters;
-		CStatisticsMaps* pMaps;
-		CAbstractDnaHash* pDnaHash;
-		MosaikReadFormat::CReadReader* pIn;
+		AlignerModeType      Mode;
+		AlignerSettings      Settings;
+		FilterSettings       Filters;
+		FlagData             Flags;
+		StatisticsCounters*  pCounters;
+		CStatisticsMaps*     pMaps;
+		CAbstractDnaHash*    pDnaHash;
+		MosaikReadFormat::CReadReader*      pIn;
 		MosaikReadFormat::CAlignmentWriter* pOut;
-		FILE* pUnalignedStream;
-		unsigned int ReferenceLen;
-		char* pReference;
+		FILE*         pUnalignedStream;
+		unsigned int  ReferenceLen;
+		char*         pReference;
 		unsigned int* pRefBegin;
 		unsigned int* pRefEnd;
-		uint64_t* pReadCounter;
-		bool IsPairedEnd;
-		char** pBsRefSeqs;
-		BamWriters* pBams;
-		SReference  SpecialReference;
+		char**        pRefSpecies;
+		bool*         pRefSpecial;
+		uint64_t*     pReadCounter;
+		bool          IsPairedEnd;
+		char**        pBsRefSeqs;
+		BamWriters*   pBams;
+		SReference    SpecialReference;
+		map< unsigned int, MosaikReadFormat::ReadGroup >* pReadGroups;
 	};
 	// aligns the read archive
 	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, 
@@ -259,7 +267,7 @@ private:
 	// aligns the read against a specified hash region using Smith-Waterman-Gotoh
 	void AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int queryLength, unsigned int extensionBases);
 	// returns true if the alignment passes all of the user-specified filters
-	bool ApplyReadFilters(Alignment& al, const char* qualities, const unsigned int queryLength);
+	bool ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength);
 	// creates the hash for a supplied fragment
 	void CreateHash(const char* fragment, const unsigned char fragmentLen, uint64_t& key);
 	// consolidates hash hits into a read candidate (fast algorithm)
@@ -269,6 +277,9 @@ private:
 	// attempts to rescue the mate paired with a unique mate
 	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, 
 		const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al);
+	// Prepare bam required info
+	void SetRequiredInfo ( Alignment& al, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
+		const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech);
 	// denotes the active alignment algorithm
 	AlignerAlgorithmType mAlgorithm;
 	// denotes the active alignment mode
@@ -298,6 +309,8 @@ private:
 	// our reference sequence LUTs
 	unsigned int* mReferenceBegin;
 	unsigned int* mReferenceEnd;
+	char** mReferenceSpecies;
+	bool*  mReferenceSpecial;
 	// our alignment quality constants
 	static const double P_ERR_REF;
 	static const double P_CORR_REF;
@@ -309,6 +322,8 @@ private:
 	// our colorspace to basespace converter
 	CColorspaceUtilities mCS;
 	vector<ReferenceSequence> mpBsRefSeqs;
+	// read groups map
+	map<unsigned int, MosaikReadFormat::ReadGroup>* mReadGroupsMap;
 	// best and second best utilities
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set );

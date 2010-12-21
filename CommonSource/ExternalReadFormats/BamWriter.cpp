@@ -198,6 +198,18 @@ void CBamWriter::Close(void) {
 	if(mBGZF.IsOpen) BgzfClose();
 }
 
+/*
+void CBamWriter::TranslateCigarToPackCigar ( const string cigar, string packCigar ) {
+
+	packCigar.resize( cigar.size() * SIZEOF_INT );
+	for ( unsigned int i = 0; i < cigar.size(); ++i ) {
+		switch( cigar[i] ) {
+		}
+	}
+}
+*/
+
+
 // creates a cigar string from the supplied alignment
 void CBamWriter::CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations) {
 
@@ -218,15 +230,23 @@ void CBamWriter::CreatePackedCigar(const Alignment& al, string& packedCigar, uns
 		unsigned int testPos         = currentPos;
 		unsigned int operationLength = 0;
 
-		if((pReference[currentPos] != '-') && (pQuery[currentPos] != '-')) {
+		if((pReference[currentPos] != '-') && (pQuery[currentPos] != '-') && (pReference[currentPos] != 'Z')) {
 
 			// find the matches or mismatches
-			while((pReference[testPos] != '-') && (pQuery[testPos] != '-') && (testPos < numBases)) {
+			while((pReference[testPos] != '-') && (pQuery[testPos] != '-') && (testPos < numBases) && (pReference[testPos] != 'Z') && (testPos < numBases)) {
 				++testPos;					
 				++operationLength;
 			}
 
 			*pPackedCigar = operationLength << BAM_CIGAR_SHIFT | BAM_CMATCH;
+
+		} else if ( pReference[currentPos] == 'Z' ) {
+			while( ( pReference[testPos] == 'Z' ) && ( testPos < numBases ) ){
+				++testPos;
+				++operationLength;
+			}
+
+			*pPackedCigar = operationLength << BAM_CIGAR_SHIFT | BAM_CSOFT_CLIP;
 
 		} else if(pReference[currentPos] == '-') {
 
@@ -498,8 +518,8 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 	// define our flags
 	unsigned int flag                = 0;
-	unsigned int queryPosition5Prime = 0;
-	unsigned int matePosition5Prime  = 0;
+	//unsigned int queryPosition5Prime = 0;
+	//unsigned int matePosition5Prime  = 0;
 	int insertSize                   = 0;
 
 	if(alIter->IsPairedEnd) {
@@ -511,21 +531,24 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 		if(alIter->IsResolvedAsPair) {
 
-			flag |= BAM_PROPER_PAIR;
+			if ( alIter->IsResolvedAsProperPair ) 
+				flag |= BAM_PROPER_PAIR;
+				
 			if(alIter->IsMateReverseStrand) flag |= BAM_MATE_REVERSE_COMPLEMENT;
 
 			// sanity check
-			if(alIter->ReferenceIndex != alIter->MateReferenceIndex) {
-				printf("ERROR: The resolved paired-end reads occur on different reference sequences.\n");
-				exit(1);
-			}
+			//if(alIter->ReferenceIndex != alIter->MateReferenceIndex) {
+			//	printf("ERROR: The resolved paired-end reads occur on different reference sequences.\n");
+			//	exit(1);
+			//}
 
 			// set the 5' coordinates
-			queryPosition5Prime = (alIter->IsReverseStrand     ? alIter->ReferenceEnd     : alIter->ReferenceBegin);
-			matePosition5Prime  = (alIter->IsMateReverseStrand ? alIter->MateReferenceEnd : alIter->MateReferenceBegin);
+			//queryPosition5Prime = (alIter->IsReverseStrand     ? alIter->ReferenceEnd     : alIter->ReferenceBegin);
+			//matePosition5Prime  = (alIter->IsMateReverseStrand ? alIter->MateReferenceEnd : alIter->MateReferenceBegin);
 
 			// calculate the insert size
-			insertSize = matePosition5Prime - queryPosition5Prime;
+			//insertSize = matePosition5Prime - queryPosition5Prime;
+			insertSize = alIter->FragmentLength;
 
 		} else flag |= BAM_MATE_UNMAPPED;
 	}
@@ -539,6 +562,8 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	string packedCigar;
 	unsigned int numCigarOperations;
 	CreatePackedCigar(*alIter, packedCigar, numCigarOperations);
+	//TranslateCigarToPackCigar( alIter->Cigar, packedCigar );
+	//const unsigned int numCigarOperations = packedCigar.size();
 	const unsigned int packedCigarLen = packedCigar.size();
 
 	// ===================
@@ -636,6 +661,174 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 	// write the base qualities
 	BgzfWrite(alIter->BaseQualities.CData(), queryLen);
+
+	// write the read group tag
+	BgzfWrite(readGroupTag.data(), readGroupTagLen);
+
+	// write the mismatch tag
+	BgzfWrite(mismatchTag.data(), MISMATCH_TAG_LEN);
+
+	// write the MD tag
+	BgzfWrite(mdTag.data(), mdTagLen);
+
+	// write the ZA tag
+	if ( zaString != 0 )
+		BgzfWrite(zaTag.data(), zaTagLen);
+}
+
+
+// saves the alignment to the alignment archive
+void CBamWriter::SaveAlignment(const Alignment al, const char* zaString ) {
+
+	// =================
+	// set the BAM flags
+	// =================
+
+	// define our flags
+	unsigned int flag                = 0;
+	//unsigned int queryPosition5Prime = 0;
+	//unsigned int matePosition5Prime  = 0;
+	int insertSize                   = 0;
+
+	if(al.IsPairedEnd) {
+
+		flag |= BAM_SEQUENCED_AS_PAIRS;
+
+		// first or second mate?
+		flag |= (al.IsFirstMate ? BAM_QUERY_FIRST_MATE : BAM_QUERY_SECOND_MATE);
+
+		if(al.IsResolvedAsPair) {
+
+			if ( al.IsResolvedAsProperPair ) 
+				flag |= BAM_PROPER_PAIR;
+				
+			if(al.IsMateReverseStrand) flag |= BAM_MATE_REVERSE_COMPLEMENT;
+
+			// sanity check
+			//if(alIter->ReferenceIndex != alIter->MateReferenceIndex) {
+			//	printf("ERROR: The resolved paired-end reads occur on different reference sequences.\n");
+			//	exit(1);
+			//}
+
+			// set the 5' coordinates
+			//queryPosition5Prime = (alIter->IsReverseStrand     ? alIter->ReferenceEnd     : alIter->ReferenceBegin);
+			//matePosition5Prime  = (alIter->IsMateReverseStrand ? alIter->MateReferenceEnd : alIter->MateReferenceBegin);
+
+			// calculate the insert size
+			//insertSize = matePosition5Prime - queryPosition5Prime;
+			insertSize = al.FragmentLength;
+
+		} else flag |= BAM_MATE_UNMAPPED;
+	}
+
+	if(al.IsReverseStrand) flag |= BAM_QUERY_REVERSE_COMPLEMENT;
+
+	// ==========================
+	// construct the cigar string
+	// ==========================
+
+	string packedCigar;
+	unsigned int numCigarOperations;
+	CreatePackedCigar(al, packedCigar, numCigarOperations);
+	//TranslateCigarToPackCigar( alIter->Cigar, packedCigar );
+	//const unsigned int numCigarOperations = packedCigar.size();
+	const unsigned int packedCigarLen = packedCigar.size();
+
+	// ===================
+	// write the alignment
+	// ===================
+
+	// remove the gaps from the read
+	CMosaikString query(al.Query);
+	query.Remove('-');
+
+	// initialize
+	const unsigned int nameLen  = al.Name.Length() + 1;
+	const unsigned int queryLen = query.Length();
+
+	// sanity check
+	//al.BaseQualities.CheckQuality();
+	//if ( queryLen != alIter->BaseQualities.Length() ) {
+	//        printf("ERROR: The lengths of bases(%u) and qualities(%u) of Read (%s) didn't match.\n", queryLen, alIter->BaseQualities.Length(), readName.CData());
+        //        exit(1);
+        //}
+	
+	// encode the query
+	string encodedQuery;
+	EncodeQuerySequence(query, encodedQuery);
+	const unsigned int encodedQueryLen = encodedQuery.size();
+
+	// create our read group tag
+	string readGroupTag;
+	const unsigned int readGroupTagLen = 3 + al.ReadGroup.size() + 1;
+	readGroupTag.resize(readGroupTagLen);
+	char* pReadGroupTag = (char*)readGroupTag.data();
+	sprintf(pReadGroupTag, "RGZ%s", al.ReadGroup.c_str());
+
+	// create our mismatch tag
+	string mismatchTag = "NMi";
+	mismatchTag.resize(MISMATCH_TAG_LEN);
+	const unsigned int numMismatches = al.NumMismatches;
+	memcpy((char*)mismatchTag.data() + 3, (char*)&numMismatches, SIZEOF_INT);
+
+	// create our MD tag
+	string mdTag;
+	const char* pMd = mdTager.GetMdTag( al.Reference.CData(), al.Query.CData(), al.Reference.Length() );
+	const unsigned int mdTagLen = 3 + strlen( pMd ) + 1;
+	mdTag.resize( mdTagLen );
+	char* pMdTag = (char*)mdTag.data();
+	sprintf(pMdTag, "MDZ%s", pMd);
+
+	unsigned int zaTagLen = 0;
+	string zaTag;
+	char* pZaTag;
+	if ( zaString != 0 ) {
+		zaTagLen = 3 + strlen( zaString ) + 1;
+		zaTag.resize( zaTagLen );
+		pZaTag = (char*)zaTag.data();
+		sprintf(pZaTag, "ZAZ%s",zaString);
+	}
+
+	// retrieve our bin
+	unsigned int bin = CalculateMinimumBin(al.ReferenceBegin, al.ReferenceEnd);
+
+	// assign the BAM core data
+	unsigned int buffer[8];
+	buffer[0] = al.ReferenceIndex;
+	buffer[1] = al.ReferenceBegin;
+	buffer[2] = (bin << 16) | (al.Quality << 8) | nameLen;
+	buffer[3] = (flag << 16) | numCigarOperations;
+	buffer[4] = queryLen;
+
+	if(al.IsResolvedAsPair) {
+		buffer[5] = al.MateReferenceIndex;
+		buffer[6] = al.MateReferenceBegin;
+		buffer[7] = insertSize;
+	} else {
+		buffer[5] = 0xffffffff;
+		buffer[6] = 0xffffffff;
+		buffer[7] = 0;
+	}
+
+	// write the block size
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + MISMATCH_TAG_LEN + mdTagLen + zaTagLen;
+	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
+	BgzfWrite((char*)&blockSize, SIZEOF_INT);
+
+	// write the BAM core
+	BgzfWrite((char*)&buffer, BAM_CORE_SIZE);
+
+	// write the query name
+	BgzfWrite(al.Name.CData(), nameLen);
+
+	// write the packed cigar
+	BgzfWrite(packedCigar.data(), packedCigarLen);
+
+	// write the encoded query sequence
+	BgzfWrite(encodedQuery.data(), encodedQueryLen);
+
+	// write the base qualities
+	BgzfWrite(al.BaseQualities.CData(), queryLen);
 
 	// write the read group tag
 	BgzfWrite(readGroupTag.data(), readGroupTagLen);

@@ -7,7 +7,7 @@
 # define our includes
 # -------------------
 TD = ../../
-INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I.
+INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(EXTERNAL_DIR) -I.
 
 # ----------------------------------
 # define our source and object files

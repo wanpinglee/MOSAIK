@@ -26,7 +26,8 @@ const double CAlignmentThread::ONE_THIRD  = 1.0 / 3.0;
 const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
 
 // constructor
-CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, AlignerModeType& algorithmMode, char* pAnchor, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pBsRefSeqs, SReference& SpecialReference)
+CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, AlignerModeType& algorithmMode, char* pAnchor, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pRefSpecies, bool* pRefSpecial, char** pBsRefSeqs, SReference& SpecialReference, 
+	map<unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap )
 	: mAlgorithm(algorithmType)
 	, mMode(algorithmMode)
 	, mSettings(settings)
@@ -42,7 +43,10 @@ CAlignmentThread::CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSe
 	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth)
 	, mReferenceBegin(pRefBegin)
 	, mReferenceEnd(pRefEnd)
+	, mReferenceSpecies(pRefSpecies)
+	, mReferenceSpecial(pRefSpecial)
 	, softClippedIdentifierLength(2048)
+	, mReadGroupsMap(pReadGroupsMap)
 {
 	// calculate our base quality LUT
 	for(unsigned char i = 0; i < 100; i++) mBaseQualityLUT[i] = pow(10.0, -i / 10.0);
@@ -71,7 +75,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 	ThreadData* pTD = (ThreadData*)arg;
 
 	// align reads
-	CAlignmentThread at(pTD->Algorithm, pTD->Filters, pTD->Flags, pTD->Mode, pTD->pReference, pTD->ReferenceLen, pTD->pDnaHash, pTD->Settings, pTD->pRefBegin, pTD->pRefEnd, pTD->pBsRefSeqs, pTD->SpecialReference);
+	CAlignmentThread at(pTD->Algorithm, pTD->Filters, pTD->Flags, pTD->Mode, pTD->pReference, pTD->ReferenceLen, pTD->pDnaHash, pTD->Settings, pTD->pRefBegin, pTD->pRefEnd, pTD->pRefSpecies, pTD->pRefSpecial, pTD->pBsRefSeqs, pTD->SpecialReference, pTD->pReadGroups );
 	at.AlignReadArchive(pTD->pIn, pTD->pOut, pTD->pUnalignedStream, pTD->pReadCounter, pTD->IsPairedEnd, pTD->pMaps, pTD->pBams );
 
 	vector<ReferenceSequence>::iterator refIter;
@@ -223,8 +227,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		// local alignment search
 		// ======================
 
-		const bool isMate1Unique = mate1Alignments.IsUnique();
-		const bool isMate2Unique = mate2Alignments.IsUnique();
+		bool isMate1Unique = mate1Alignments.IsUnique();
+		bool isMate2Unique = mate2Alignments.IsUnique();
 
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
@@ -254,10 +258,12 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 				if(RescueMate(lam, mr.Mate2.Bases, uniqueBegin, uniqueEnd, refIndex, al)) {
 
 					const char* pQualities = mr.Mate2.Qualities.CData();
+					const char* pBases = mr.Mate2.Bases.CData();
 
 					// add the alignment to the alignment set if it passes the filters
-					if(ApplyReadFilters(al, pQualities, mr.Mate2.Bases.Length())) {
+					if(ApplyReadFilters(al, pBases, pQualities, mr.Mate2.Bases.Length())) {
 						al.WasRescued = true;
+						//al.Bases = pBases;
 						if(mate2Alignments.Add(al)) {
 							mStatisticsCounters.AdditionalLocalMates++;
 							mate2Status    = ALIGNMENTSTATUS_GOOD;
@@ -298,10 +304,12 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 				if(RescueMate(lam, mr.Mate1.Bases, uniqueBegin, uniqueEnd, refIndex, al)) {
 
 					const char* pQualities = mr.Mate1.Qualities.CData();
+					const char* pBases = mr.Mate1.Bases.Data();
 
 					// add the alignment to the alignment set if it passes the filters
-					if(ApplyReadFilters(al, pQualities, mr.Mate1.Bases.Length())) {
+					if(ApplyReadFilters(al, pBases, pQualities, mr.Mate1.Bases.Length())) {
 						al.WasRescued = true;
+						//al.Bases = pBases;
 						if(mate1Alignments.Add(al)) {
 							mStatisticsCounters.AdditionalLocalMates++;
 							mate1Status    = ALIGNMENTSTATUS_GOOD;
@@ -375,7 +383,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
 
 		pthread_mutex_lock(&mStatisticsMapsMutex);
-		pMaps->SaveRecord( mr, *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), areBothMatesPresent, mSettings.SequencingTechnology );
+		pMaps->SaveRecord( mr, *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), 
+			areBothMatesPresent, mSettings.SequencingTechnology );
 		pthread_mutex_unlock(&mStatisticsMapsMutex);
 		
 		
@@ -401,57 +410,253 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		}
 
 		// process alignments mapped in special references and delete them in vectors
+		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
+		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
 		if ( mSReference.found )
-			ProcessSpecialAlignment( *mate1Alignments.GetSet(), *mate2Alignments.GetSet() );
+			ProcessSpecialAlignment( mate1Set, mate2Set );
 		// deleting special alignments may let mate1Alignments or mate2Alignments become empty
 		// so we have to check them again
-		isMate1Aligned = !mate1Alignments.IsEmpty();
-		isMate2Aligned = !mate2Alignments.IsEmpty();
+		isMate1Aligned = !mate1Set.empty();
+		isMate2Aligned = !mate2Set.empty();
+
+		isMate1Unique = ( mate1Set.size() == 1 ) ? true: false;
+		isMate2Unique = ( mate2Set.size() == 1 ) ? true: false;
+
+		bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true: false;
+		bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true: false;
+
+		bool isMate1Empty = mate1Set.empty();
+		bool isMate2Empty = mate2Set.empty();
 		
+		// UU, UM, and MM pair
+		if ( ( isMate1Unique && isMate2Unique )
+			|| ( isMate1Unique && isMate2Multiple )
+			|| ( isMate1Multiple && isMate2Unique )
+			|| ( isMate1Multiple && isMate2Multiple ) ) {
+			
+			if ( ( isMate1Unique && isMate2Multiple )
+				|| ( isMate1Multiple && isMate2Unique )
+				|| ( isMate1Multiple && isMate2Multiple ) )
+				SelectBestNSecondBest( mate1Set, mate2Set, isMate1Aligned, isMate2Aligned );
+		
+
+			isMate1Empty = mate1Set.empty();
+			isMate2Empty = mate2Set.empty();
+
+			if ( isMate1Empty | isMate2Empty ) {
+				cout << "ERROR: both of them are empty;" << endl;
+				exit(1);
+			}
+
+			// TODO: handle fragment length for others sequencing techs
+			int fl = ( mate1Set[0].IsReverseStrand ) 
+				? 0 - ( 2 * mSettings.MedianFragmentLength ) 
+				: 2 * mSettings.MedianFragmentLength;
+			bool properPair1 = false, properPair2 = false;
+			properPair1 = mate1Set[0].SetPairFlags( mate2Set[0], fl,  !mate1Set[0].IsReverseStrand );
+			properPair2 = mate2Set[0].SetPairFlags( mate1Set[0], -fl, !mate2Set[0].IsReverseStrand );
+
+			if ( properPair1 != properPair2 ) {
+				cout << "ERROR: An inconsistent proper pair is found." << endl;
+				exit(1);
+			}
+
+			SetRequiredInfo( mate1Set[0], mr.Mate1, mr, true, properPair1, true, isPairedEnd );
+			SetRequiredInfo( mate2Set[0], mr.Mate2, mr, true, properPair2, false, isPairedEnd );
+
+			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
+			CZaTager za1, za2;
+			char *zaTag1, *zaTag2;
+			zaTag1 = (char*) za1.GetZaTag( al1, al2, true );
+			zaTag2 = (char*) za2.GetZaTag( al2, al1, false );
+			pthread_mutex_lock(&mSaveReadMutex);
+			//pBams->rBam.SaveAlignment( mate1Set.begin()->Name, mate1Set.begin()->ReadGroup, mate1Set.begin(), 0 );
+			//pBams->rBam.SaveAlignment( mate2Set.begin()->Name, mate2Set.begin()->ReadGroup, mate2Set.begin(), 0 );
+			pBams->rBam.SaveAlignment( al1, zaTag1 );
+			pBams->rBam.SaveAlignment( al2, zaTag2 );
+			pthread_mutex_unlock(&mSaveReadMutex);
+
+		// UO and MO pair
+		
+		} else if ( ( isMate1Empty || isMate2Empty )
+			&&  !( isMate1Empty && isMate2Empty ) ) {
+			
+			bool found = false;
+			if ( isMate1Multiple || isMate2Multiple ) {
+				if ( isMate1Aligned == isMate2Aligned ) {
+					cout << "ERROR: ..." << endl;
+					cout << mate1Set.size() << "\t" << mate2Set.size() << endl;
+					exit(1);
+				}
+				SelectBestNSecondBest( mate1Set, mate2Set, isMate1Aligned, isMate2Aligned );
+				found = true;
+			}
+
+			isMate1Empty = mate1Set.empty();
+			isMate2Empty = mate2Set.empty();
+
+			bool isFirstMate;
+			if ( !isMate1Empty ) {
+				isFirstMate = true;
+			} else if ( !isMate2Empty ) {
+				isFirstMate = false;
+			} else {
+				cout << "ERROR: Both mate sets are empty." << endl;
+				exit(1);
+			}
+			
+			
+			SetRequiredInfo( ( isFirstMate ? mate1Set[0] : mate2Set[0]), 
+				( isFirstMate ? mr.Mate1 : mr.Mate2 ), 
+				mr, false, false, isFirstMate, isPairedEnd );
+
+			Alignment al = isFirstMate ? mate1Set[0] : mate2Set[0];
+
+			pthread_mutex_lock(&mSaveReadMutex);
+			//pBams->rBam.SaveAlignment( ( isFirstMate ? mate1Set[0].Name : mate2Set[0].Name), 
+			//	( isFirstMate ? mate1Set[0].ReadGroup : mate2Set[0].ReadGroup), 
+			//	( isFirstMate ? mate1Set.begin() : mate2Set.begin()), 0 );
+			pBams->rBam.SaveAlignment( al, 0 );
+			pthread_mutex_unlock(&mSaveReadMutex);
+		
+		// OO
+		} else if ( isMate1Empty && isMate2Empty ) {
+			;
+		} else {
+			cout << "ERROR: Unknown pairs." << endl;
+			cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
+			exit(1);
+		}
+
 		// select best and second best
 		// if any alignments hit the special references, we'll select it.
-		if ( mate1Alignments.IsMultiple() || ( isPairedEnd && mate2Alignments.IsMultiple() ) )
-			SelectBestNSecondBest( *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), isMate1Aligned, isMate2Aligned );
+		//if ( mate1Alignments.IsMultiple() || ( isPairedEnd && mate2Alignments.IsMultiple() ) )
+		//	SelectBestNSecondBest( *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), isMate1Aligned, isMate2Aligned );
 		
 		
 		// if any of the two mates aligned, save the read
-		if(isMate1Aligned || isMate2Aligned) {
-			mStatisticsCounters.AlignedReads++;
-			pthread_mutex_lock(&mSaveReadMutex);
-			pOut->SaveRead(mr, mate1Alignments, mate2Alignments);
-			pthread_mutex_unlock(&mSaveReadMutex);
-		}
+		//if(isMate1Aligned || isMate2Aligned) {
+		//	mStatisticsCounters.AlignedReads++;
+		//	pthread_mutex_lock(&mSaveReadMutex);
+		//	pOut->SaveRead(mr, mate1Alignments, mate2Alignments);
+		//	pthread_mutex_unlock(&mSaveReadMutex);
+		//}
 	}
 }
 
+// Save alignment
+void CAlignmentThread::SetRequiredInfo (
+	Alignment& al,
+	const Mosaik::Mate& m,
+	const Mosaik::Read& r,
+	const bool& isPair,
+	const bool& isProperPair,
+	const bool& isFirstMate,
+	const bool& isPairTech) {
+
+	al.BaseQualities = m.Qualities;
+	CMosaikString patchBases   = m.Bases;
+	unsigned int patchStartLen = al.QueryBegin;
+	unsigned int patchEndLen   = patchBases.Length() - al.QueryEnd - 1;
+	if ( al.IsReverseStrand ) {
+		al.BaseQualities.Reverse();
+		patchBases.ReverseComplement();
+		unsigned int temp;
+		temp = patchStartLen;
+		patchStartLen = patchEndLen;
+		patchEndLen = temp;
+	}
+	
+	
+	al.IsResolvedAsPair = isPair;
+	al.IsResolvedAsProperPair = isProperPair;
+	al.IsFirstMate = isFirstMate;
+	al.IsPairedEnd = isPairTech;
+	al.Name = r.Name;
+
+	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
+	rgIte = mReadGroupsMap->find( r.ReadGroupCode );
+	// sanity check
+	if ( rgIte == mReadGroupsMap->end() ) {
+		cout << "ERROR: ReadGroup cannot be found." << endl;
+		exit(1);
+	}	
+	else 
+		al.ReadGroup = rgIte->second.ReadGroupID;
+
+	// patch bases and base qualities	
+	if ( patchStartLen > 0 ) {
+		al.Query.Prepend    ( patchBases.CData(), patchStartLen );
+		al.Reference.Prepend( softClippedIdentifier, patchStartLen );
+	}
+
+	if ( patchEndLen > 0 ) {
+		const unsigned int length = patchBases.Length();
+		const unsigned int start  = length - patchEndLen;
+		const char* startPoint    = patchBases.CData() + start;
+		// sanity check
+		if ( length > patchBases.Length() ) {
+			cout << "ERROR: The soft chip position is wrong" << endl;
+			exit(1);
+		}
+		al.Query.Append    ( startPoint, patchEndLen );
+		al.Reference.Append( softClippedIdentifier, patchEndLen );
+	}
+}
+
+// handle and then delete special alignments
 void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set ) {
 	unsigned int nMobAl = 0;
+	string specialCode;
+	specialCode.resize(3);
 	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-		if ( ite->IsMappedSpecialReference ) nMobAl++;;
+		if ( ite->IsMappedSpecialReference ) {
+			nMobAl++;
+			specialCode = mReferenceSpecies[ ite->ReferenceIndex ];
+			specialCode[2] = 0;
+		}
 	}
 
 	if ( nMobAl == mate1Set.size() ) {
 		mate1Set.clear();
 	} else if ( nMobAl > 0 ) {
+		vector<Alignment> newMate1Set;
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-			if ( !ite->IsMappedSpecialReference ) ite->CanBeMappedToSpecialReference = true;
-			else mate1Set.erase(ite);
+			if ( !ite->IsMappedSpecialReference ) {
+				ite->CanBeMappedToSpecialReference = true;
+				ite->SpecialCode = specialCode;
+				newMate1Set.push_back( *ite );
+			}
 		}
+		mate1Set.clear();
+		mate1Set = newMate1Set;
 	}
 
 	nMobAl = 0;
+	specialCode.clear();
+	specialCode.resize(3);
 
 	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
-		if ( ite->IsMappedSpecialReference ) nMobAl++;;
+		if ( ite->IsMappedSpecialReference ) {
+			nMobAl++;
+			specialCode = mReferenceSpecies[ ite->ReferenceIndex ];
+			specialCode[2] = 0;
+		}
 	}
 
 	if ( nMobAl == mate2Set.size() ) {
 		mate2Set.clear();
 	} else if ( nMobAl > 0 ) {
+		vector<Alignment> newMate2Set;
 		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
-			if ( !ite->IsMappedSpecialReference ) ite->CanBeMappedToSpecialReference = true;
-			else mate2Set.erase(ite);
+			if ( !ite->IsMappedSpecialReference ) {
+				ite->CanBeMappedToSpecialReference = true;
+				ite->SpecialCode = specialCode;
+				newMate2Set.push_back( *ite );
+			}
 		}
+		mate2Set.clear();
+		mate2Set = newMate2Set;
 	}
 }
 
@@ -513,9 +718,12 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
-				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin) ? ite->ReferenceEnd - ite2->ReferenceBegin : ite2->ReferenceEnd - ite->ReferenceBegin;
+				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin) 
+					? ite->ReferenceEnd - ite2->ReferenceBegin 
+					: ite2->ReferenceEnd - ite->ReferenceBegin;
 				
-				if ( ( ite->ReferenceIndex == ite2->ReferenceIndex ) && ( length > ( 2 * mSettings.MedianFragmentLength ) ) ) {
+				if ( ( ite->ReferenceIndex == ite2->ReferenceIndex ) 
+					&& ( length > ( 2 * mSettings.MedianFragmentLength ) ) ) {
 					if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
 						lastMinM2 = ( ite->ReferenceBegin > ite2->ReferenceBegin) ? ite2 : lastMinM2;
 						continue;
@@ -525,7 +733,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 					
 				// in the fragment length threshold
 				} else {
-					//cerr << "=================" << length << endl;
 					if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl ) ) {
 						// store the current best as second best
 						if ( best ) {
@@ -543,7 +750,7 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 					} else {
 						if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl ) ) {
 							secondBest = true;
-						secondBestMate1 = *ite;
+							secondBestMate1 = *ite;
 							secondBestMate2 = *ite2;
 							secondBestFl    = length;
 						}
@@ -561,36 +768,41 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 			newMate2Set.push_back( bestMate2 );
 		}
 		else {
+			// pick up mates having highest MQ
 			sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
 			sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
 			newMate1Set.push_back( *mate1Set.rbegin() );
 			newMate2Set.push_back( *mate2Set.rbegin() );
 		}
 
+		
 		if ( secondBest ) {
-			newMate1Set.push_back( secondBestMate1 );
-			newMate2Set.push_back( secondBestMate2 );
+			newMate1Set.begin()->NextBestQuality = secondBestMate1.Quality;
+			newMate2Set.begin()->NextBestQuality = secondBestMate2.Quality;
 		} else {
 			if ( best ) {
 				sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
 				sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
 			}
+
 			if ( nMate1 == 1 )
-				newMate1Set.push_back( *mate1Set.rbegin() );
+				newMate1Set.begin()->NextBestQuality = 0;
 			else
-				newMate1Set.push_back( *( mate1Set.rbegin() + 1 ) );
+				newMate1Set.begin()->NextBestQuality = ( mate1Set.rbegin() + 1 )->Quality;
 
 			if ( nMate2 == 1 )
-				newMate2Set.push_back( *mate2Set.rbegin() );
+				newMate2Set.begin()->NextBestQuality = 0;
 			else
-				newMate2Set.push_back( *( mate2Set.rbegin() + 1 ) );
+				newMate2Set.begin()->NextBestQuality = ( mate2Set.rbegin() + 1 )->Quality;
 		}
 
-		junkAl.ReferenceBegin = nMate1;
-		newMate1Set.push_back( junkAl );
-		junkAl.ReferenceBegin = nMate2;
-		newMate2Set.push_back( junkAl );
-
+		newMate1Set.begin()->NumMapped = nMate1;
+		newMate2Set.begin()->NumMapped = nMate2;
+		//junkAl.ReferenceBegin = nMate1;
+		//newMate1Set.push_back( junkAl );
+		//junkAl.ReferenceBegin = nMate2;
+		//newMate2Set.push_back( junkAl );
+		
 		mate1Set.clear();
 		mate2Set.clear();
 		mate1Set = newMate1Set;
@@ -605,12 +817,12 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 		vector<Alignment>::reverse_iterator ite = mate1Set.rbegin();
 		// the one having the highest MQ
 		newMate1Set.push_back( *ite );
-		// the one having the second highest MQ
 		ite++;
-		newMate1Set.push_back( *ite );
+		newMate1Set.begin()->NextBestQuality = ite->Quality;
+		newMate1Set.begin()->NumMapped = nMate1;
 
-		junkAl.ReferenceBegin = nMate1;
-		newMate1Set.push_back( junkAl );
+		//junkAl.ReferenceBegin = nMate1;
+		//newMate1Set.push_back( junkAl );
 		mate1Set.clear();
 		mate1Set = newMate1Set;
 
@@ -622,12 +834,12 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 		vector<Alignment>::reverse_iterator ite = mate2Set.rbegin();
 		// the one having the highest MQ
 		newMate2Set.push_back( *ite );
-		// the one having the second highest MQ
 		ite++;
-		newMate2Set.push_back( *ite );
+		newMate2Set.begin()->NextBestQuality = ite->Quality;
+		newMate2Set.begin()->NumMapped = nMate2;
 
-		junkAl.ReferenceBegin = nMate2;
-		newMate2Set.push_back( junkAl );
+		//junkAl.ReferenceBegin = nMate2;
+		//newMate2Set.push_back( junkAl );
 		mate2Set.clear();
 		mate2Set = newMate2Set;
 
@@ -780,7 +992,10 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 			AlignRegion(fastHashRegion, al, fastHashRead, queryLength, numExtensionBases);
 
 			// add the alignment to the vector if it passes the filters
-			if(ApplyReadFilters(al, qualities, queryLength)) alignments.Add(al);
+			if(ApplyReadFilters(al, query, qualities, queryLength)) {
+				//al.Bases = query;
+				alignments.Add(al);
+			}
 
 			// increment our candidates counter
 			mStatisticsCounters.AlignmentCandidates++;
@@ -803,23 +1018,24 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				AlignRegion(forwardRegions[i], al, mForwardRead, queryLength, numExtensionBases);
 
 				// add the alignment to the alignments vector
-				if(ApplyReadFilters(al, qualities, queryLength)) {
+				if(ApplyReadFilters(al, query, qualities, queryLength)) {
 					
-					if ( al.QueryBegin > 0 ) {
-						al.Query.Prepend    ( query, al.QueryBegin );
-						al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
-					}
+					//if ( al.QueryBegin > 0 ) {
+					//	al.Query.Prepend    ( query, al.QueryBegin );
+					//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
+					//}
 
-					if ( al.QueryEnd != ( queryLength - 1 ) ) {
-						const char* startPoint    = query + al.QueryEnd + 1;
-						const unsigned int length = queryLength - al.QueryEnd - 1;
-						al.Query.Append    ( startPoint, length );
-						al.Reference.Append( softClippedIdentifier, length );
-					}
+					//if ( al.QueryEnd != ( queryLength - 1 ) ) {
+					//	const char* startPoint    = query + al.QueryEnd + 1;
+					//	const unsigned int length = queryLength - al.QueryEnd - 1;
+					//	al.Query.Append    ( startPoint, length );
+					//	al.Reference.Append( softClippedIdentifier, length );
+					//}
 
-					al.QueryBegin = 0;
-					al.QueryEnd   = queryLength - 1;
-					al.BaseQualities.Copy( qualities, queryLength);
+					//al.QueryBegin = 0;
+					//al.QueryEnd   = queryLength - 1;
+					//al.BaseQualities.Copy( qualities, queryLength);
+					//al.Bases = query;
 					alignments.Add(al);
 				}
 
@@ -857,24 +1073,25 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					AlignRegion(reverseRegions[i], al, mReverseRead, queryLength, numExtensionBases);
 
 					// add the alignment to the alignments vector
-					if(ApplyReadFilters(al, qualities, queryLength)) {
+					if(ApplyReadFilters(al, query, qualities, queryLength)) {
 					
-						if ( al.QueryBegin > 0 ) {
-							al.Query.Prepend    ( query, al.QueryBegin );
-							al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
-						}
+						//if ( al.QueryBegin > 0 ) {
+						//	al.Query.Prepend    ( query, al.QueryBegin );
+						//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
+						//}
 
-						if ( al.QueryEnd != ( queryLength - 1 ) ) {
-							const char* startPoint    = query + al.QueryEnd + 1;
-							const unsigned int length = queryLength - al.QueryEnd - 1;
-							al.Query.Append    ( startPoint, length );
-							al.Reference.Append( softClippedIdentifier, length );
-						}
+						//if ( al.QueryEnd != ( queryLength - 1 ) ) {
+						//	const char* startPoint    = query + al.QueryEnd + 1;
+						//	const unsigned int length = queryLength - al.QueryEnd - 1;
+						//	al.Query.Append    ( startPoint, length );
+						//	al.Reference.Append( softClippedIdentifier, length );
+						//}
 
-						al.QueryBegin = 0;
-						al.QueryEnd   = queryLength - 1;
-						al.BaseQualities.Copy( qualities, queryLength);
-						al.BaseQualities.Reverse();
+						//al.QueryBegin = 0;
+						//al.QueryEnd   = queryLength - 1;
+						//al.BaseQualities.Copy( qualities, queryLength);
+						//al.BaseQualities.Reverse();
+						//al.Bases = query;
 						alignments.Add(al);
 					}
 
@@ -983,7 +1200,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 }
 
 // returns true if the alignment passes all of the user-specified filters
-bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* qualities, const unsigned int queryLength) {
+bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength) {
 
 	// assuming this is a good read
 	bool ret = true;
@@ -994,6 +1211,18 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* qualities, co
 	//if(al.IsReverseStrand) al.BaseQualities.Reverse();
 
 	unsigned short numNonAlignedBases = queryLength - al.QueryLength;
+
+	// don't count leading and lagging N's as mismatches
+	unsigned int pos = 0;
+	while( ( bases[pos] == 'N' ) && ( pos < queryLength ) ) {
+		numNonAlignedBases--;
+		pos++;
+	}
+	pos = queryLength - 1;
+	while( ( bases[pos] == 'N' ) && ( pos >= 0 ) ) {
+		numNonAlignedBases--;
+		pos--;
+	}
 
 	// convert from colorspace to basespace
 	// unenable EnableColorspace flag for low-memory algorithm, deal with the SOLiD convertion when sorting the aligned archives
@@ -1025,7 +1254,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* qualities, co
 
 	// aligned to special references
 	if ( ret && mSReference.found )
-		al.IsMappedSpecialReference = ( al.ReferenceBegin >= mSReference.begin ) ? true : false;
+		al.IsMappedSpecialReference = mReferenceSpecial[ al.ReferenceIndex ];
 
 	return ret;
 }

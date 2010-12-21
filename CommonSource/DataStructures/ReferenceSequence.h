@@ -28,6 +28,7 @@ struct ReferenceSequence {
 	string Species;
 	string MD5;
 	string URI;
+	bool   Special;
 
 	// constructor
 	ReferenceSequence()
@@ -36,5 +37,6 @@ struct ReferenceSequence {
 		, Begin(0)
 		, End(0)
 		, NumBases(0)
+		, Special(false)
 	{}
 };

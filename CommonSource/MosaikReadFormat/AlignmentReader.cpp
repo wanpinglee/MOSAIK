@@ -85,9 +85,9 @@ namespace MosaikReadFormat {
 
 			// check if the read signatures match
 			//if(!foundError && (strncmp(signature, MOSAIK_SIGNATURE, 5) != 0)) {
-			//if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 )
-			//   &&( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
-			if(!foundError && (strncmp(signature, ALIGNER_SIGNATURE, 5) != 0)) {
+			if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 )
+			   &&( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
+			//if(!foundError && (strncmp(signature, ALIGNER_SIGNATURE, 5) != 0)) {
 				if(showError) {
 					printf("ERROR: It seems that the input file (%s) is not in the MOSAIK alignment format.\n", filename.c_str());
 					exit(1);
@@ -97,8 +97,8 @@ namespace MosaikReadFormat {
 			}
 
 			// check if the file format is from another version
-			//if( !foundError && ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) ) {
-			if( !foundError && ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) ) ) {
+			if( !foundError && ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) ) {
+			//if( !foundError && ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) ) ) {
 				if(showError) {
 					//char version = ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) == 0 ) ? ALIGNER_SIGNATURE[5] : SORT_SIGNATURE[5];
 					//printf("ERROR: It seems that the input file (%s) was created in another version of MosaikAligner. This version of MOSAIK expected to find an alignment archive using version: %hu, but the alignment archive uses version: %hu. A new alignment archive is required.\n", filename.c_str(), version, signature[5]);
@@ -463,16 +463,16 @@ namespace MosaikReadFormat {
 
 		// check if the read signatures match
 		//if(strncmp(signature, MOSAIK_SIGNATURE, 5) != 0) {
-		//if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) && ( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
-		if(strncmp(signature, ALIGNER_SIGNATURE, 5) != 0) {
+		if ( ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) && ( strncmp( signature, SORT_SIGNATURE, SIGNATURE_LENGTH - 1 ) != 0 ) ) {
+		//if(strncmp(signature, ALIGNER_SIGNATURE, 5) != 0) {
 			printf("ERROR: It seems that the input file (%s) is not in the MOSAIK alignment format.\n", 
 				filename.c_str());
 			exit(1);
 		}
 
 		//if(MOSAIK_SIGNATURE[5] != signature[5]) {
-		//if ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) {
-		if ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) ) {
+		if ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) && ( signature[5] != SORT_SIGNATURE[5] ) ) {
+		//if ( ( signature[5] != ALIGNER_SIGNATURE[5] ) && ( signature[5] != ALIGNER_SIGNATURE5[5] ) ) {
 			//char version = ( strncmp( signature, ALIGNER_SIGNATURE, SIGNATURE_LENGTH - 1 ) == 0 ) ? ALIGNER_SIGNATURE[5] : SORT_SIGNATURE[5];
 			//printf("ERROR: It seems that the input file (%s) was created in another version of MosaikAligner. "
 			//	"This version of MOSAIK expected to find an alignment archive using version: %hu, but the "

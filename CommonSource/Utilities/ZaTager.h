@@ -13,6 +13,7 @@ class CZaTager {
 		CZaTager();
 		~CZaTager();
 		const char* GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 );
+		const char* GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate );
 
 	private:
 		// our ZA tag buffer

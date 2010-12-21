@@ -87,6 +87,8 @@ public:
 	void Reserve(const unsigned int numBytes);
 	// reverses the contents of the string
 	void Reverse(void);
+	// Performs an in-place reverse complement conversion
+	void ReverseComplement(void);
 	// sets the length to the specified size
 	void SetLength(const unsigned int length);
 	// retrieves the specified substring

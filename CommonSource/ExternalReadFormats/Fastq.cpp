@@ -497,10 +497,10 @@ bool CFastq::LoadNextMate(CMosaikString& readName, Mosaik::Mate& m) {
 	//
 	//	mIsFastqStyleKnown = true;
 	//}
-	mFastqOffset = NORMAL_FASTQ_OFFSET;
+	//mFastqOffset = NORMAL_FASTQ_OFFSET;
 	
 	
-	m.Bases.Uppercase();
+	//m.Bases.Uppercase();
 	m.Qualities.Decrement(mFastqOffset);
 
 	// convert the base qualities
