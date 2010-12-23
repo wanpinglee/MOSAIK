@@ -1,7 +1,7 @@
 #include "ZaTager.h"
 
 CZaTager::CZaTager( void )
-	: bufferLen(1024)
+	: bufferLen(256)
 	, buffer(NULL)
 {
 	buffer = new char [ bufferLen ];
@@ -16,6 +16,7 @@ void CZaTager::ExtendBuffer( const unsigned int& length ) {
 
 	if ( buffer ) delete [] buffer;
 
+	bufferLen = length + 10;
 	buffer = new char [ length + 10 ];
 	memset(buffer, 0, bufferLen);
 }
@@ -124,7 +125,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	zaPtr += len;
 	len = sprintf( zaPtr, "%u;%u;", al2.Quality, al2.NextBestQuality );
 	zaPtr += len;
-	if ( al1.SpecialCode.size() != 0 )
+	if ( al2.SpecialCode.size() != 0 )
 		len = sprintf( zaPtr, "%s;%u;", al2.SpecialCode.c_str(), al2.NumMapped );
 	else
 		len = sprintf( zaPtr, ";%u;", al2.NumMapped );

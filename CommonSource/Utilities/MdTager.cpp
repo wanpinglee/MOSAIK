@@ -1,7 +1,7 @@
 #include "MdTager.h"
 
 CMdTager::CMdTager( void )
-	: bufferLen(1024)
+	: bufferLen(256)
 	, buffer(NULL)
 	, tempBases(NULL)
 {
@@ -19,10 +19,14 @@ CMdTager::~CMdTager( void ) {
 }
 
 void CMdTager::ExtendBuffer( const unsigned int& length ) {
-	if ( buffer ) delete [] buffer;
+	if ( buffer )    delete [] buffer;
+	if ( tempBases ) delete [] tempBases;
 
-	buffer = new char [ length + 10 ];
+	bufferLen = length + 10;
+	buffer    = new char [ bufferLen ];
+	tempBases = new char [ bufferLen ];
 	memset(buffer, 0, bufferLen);
+	memset(tempBases, 0, bufferLen);
 }
 
 inline void CMdTager::InitializeVar( const char* reference, const char* query, const unsigned int& referenceLen ) {

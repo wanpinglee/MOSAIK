@@ -158,10 +158,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		for(unsigned int j = 0; j < numRefSeqs; j++) {
 			pRefBegin[j]   = referenceSequences[j].Begin;
 			pRefEnd[j]     = referenceSequences[j].End;
-			pRefSpecies[j] = new char [2];
-			memcpy( pRefSpecies[j], referenceSequences[j].Species.data(), 2 );
 			pRefSpecial[j] = referenceSequences[j].Special;
-
+			if ( pRefSpecial[j] ) {
+				pRefSpecies[j] = new char [3];
+				memcpy( pRefSpecies[j], referenceSequences[j].Species.data(), 2 );
+				pRefSpecies[j][2] = 0;
+			} else {
+				pRefSpecies[j] = new char [1];
+				pRefSpecies[j][0] = 0;
+			}
 		}
 		
 		// initialize our hash tables

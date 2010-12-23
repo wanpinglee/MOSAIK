@@ -412,8 +412,22 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 		// process alignments mapped in special references and delete them in vectors
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
+		Alignment mate1SpecialAl, mate2SpecialAl;
+		bool isMate1Special = false, isMate2Special = false;
+
+		//string name = mr.Name.CData();
+		//bool found = false;
+		//if ( name == "SRR023378.1495" ) {
+		//	found = true;
+		//	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite )
+		//		cerr << ite->ReferenceBegin << endl << ite->Reference << endl << ite->Query << endl;
+
+		//	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite )
+		//		cerr << ite->ReferenceBegin << endl << ite->Reference << endl << ite->Query << endl;
+		//}
+
 		if ( mSReference.found )
-			ProcessSpecialAlignment( mate1Set, mate2Set );
+			ProcessSpecialAlignment( mate1Set, mate2Set, mate1SpecialAl, mate2SpecialAl, isMate1Special, isMate2Special );
 		// deleting special alignments may let mate1Alignments or mate2Alignments become empty
 		// so we have to check them again
 		isMate1Aligned = !mate1Set.empty();
@@ -444,31 +458,63 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			isMate2Empty = mate2Set.empty();
 
 			if ( isMate1Empty | isMate2Empty ) {
-				cout << "ERROR: Both of them are empty after apllying best and second best selection." << endl;
+				cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
 				exit(1);
 			}
 
+			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
 			// TODO: handle fragment length for others sequencing techs
-			int fl = ( mate1Set[0].IsReverseStrand ) 
+			int fl = ( al1.IsReverseStrand ) 
 				? 0 - ( 2 * mSettings.MedianFragmentLength ) 
 				: 2 * mSettings.MedianFragmentLength;
 			bool properPair1 = false, properPair2 = false;
-			properPair1 = mate1Set[0].SetPairFlags( mate2Set[0], fl,  !mate1Set[0].IsReverseStrand );
-			properPair2 = mate2Set[0].SetPairFlags( mate1Set[0], -fl, !mate2Set[0].IsReverseStrand );
+			properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
+			properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
 
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;
 				exit(1);
 			}
 
-			SetRequiredInfo( mate1Set[0], mate2Set[0], mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
-			SetRequiredInfo( mate2Set[0], mate1Set[0], mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
+			SetRequiredInfo( al1, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
+			SetRequiredInfo( al2, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
-			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
+
+			if (  isMate1Unique && isMate2Special  ) {
+				Alignment genomicAl = al1;
+				Alignment specialAl = mate2SpecialAl;
+
+				SetRequiredInfo( specialAl, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true );
+				
+				CZaTager zas1, zas2;
+
+				char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, true );
+				char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, false );
+				pthread_mutex_lock(&mSaveReadMutex);
+				pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
+				pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+				pthread_mutex_unlock(&mSaveReadMutex);
+			}
+
+			if (  isMate2Unique && isMate1Special  ) {
+				Alignment genomicAl = al2;
+				Alignment specialAl = mate1SpecialAl;
+				SetRequiredInfo( specialAl, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
+
+				CZaTager zas1, zas2;
+
+				char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, false );
+				char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, true );
+				pthread_mutex_lock(&mSaveReadMutex);
+				pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
+				pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+				pthread_mutex_unlock(&mSaveReadMutex);
+			}
+
+
 			CZaTager za1, za2;
-			char *zaTag1, *zaTag2;
-			zaTag1 = (char*) za1.GetZaTag( al1, al2, true );
-			zaTag2 = (char*) za2.GetZaTag( al2, al1, false );
+			const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+			const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 			pthread_mutex_lock(&mSaveReadMutex);
 			pBams->rBam.SaveAlignment( al1, zaTag1 );
 			pBams->rBam.SaveAlignment( al2, zaTag2 );
@@ -498,38 +544,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			
 			Alignment al = isFirstMate ? mate1Set[0] : mate2Set[0];
 			Alignment unmappedAl;
-			SetRequiredInfo( al, unmappedAl,
-				( isFirstMate ? mr.Mate1 : mr.Mate2 ), mr, false, false, isFirstMate, isPairedEnd, true, false );
-
-			
-			// set information for unmapped alignment
-			SetRequiredInfo( unmappedAl, al,
-				( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
-			//unmappedAl.Name  = mr.Name;
-			//unmappedAl.Query = isFirstMate ? mr.Mate2.Bases : mr.Mate1.Bases;
-			//unmappedAl.BaseQualities = isFirstMate ? mr.Mate2.Qualities : mr.Mate1.Qualities;
-			//unmappedAl.IsResolvedAsPair = true;
-			//unmappedAl.IsResolvedAsProperPair = false;
-			//unmappedAl.IsMapped = false;
-			//unmappedAl.IsMateMapped = true;
-			//unmappedAl.IsFirstMate = !isFirstMate;
-			//unmappedAl.IsPairedEnd = isPairedEnd;
-			//unmappedAl.MateReferenceBegin = al.ReferenceBegin;
-			//unmappedAl.MateReferenceIndex = al.ReferenceIndex;
-			//unmappedAl.IsMateReverseStrand = al.IsReverseStrand;
-			unmappedAl.BaseQualities.Increment(33);
-			cerr << unmappedAl.Name.CData() << endl << unmappedAl.Query.CData() << endl << unmappedAl.BaseQualities.CData() << endl;
-			unmappedAl.BaseQualities.Decrement(33);
-
-			//map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
-			//rgIte = mReadGroupsMap->find( mr.ReadGroupCode );
-			// sanity check
-			//if ( rgIte == mReadGroupsMap->end() ) {
-			//	cout << "ERROR: ReadGroup cannot be found." << endl;
-			//	exit(1);
-			//}	
-			//else
-			//	unmappedAl.ReadGroup = rgIte->second.ReadGroupID;
+			SetRequiredInfo( al, unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 ), mr, false, false, isFirstMate, isPairedEnd, true, false );
+			SetRequiredInfo( unmappedAl, al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
 			pthread_mutex_lock(&mSaveReadMutex);
 			pBams->rBam.SaveAlignment( al, 0 );
@@ -603,33 +619,36 @@ void CAlignmentThread::SetRequiredInfo (
 	else 
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
-	//if ( !isItselfMapped )
-	//	al.Query = m.Bases;
-	//else {
+	if ( !isItselfMapped )
+		al.Query = m.Bases;
+	else {
 		
-	// patch bases and base qualities
-	if ( patchStartLen > 0 ) {
-		al.Query.Prepend    ( patchBases.CData(), patchStartLen );
-		al.Reference.Prepend( softClippedIdentifier, patchStartLen );
-	}
-
-	if ( patchEndLen > 0 ) {
-		const unsigned int length = patchBases.Length();
-		const unsigned int start  = length - patchEndLen;
-		const char* startPoint    = patchBases.CData() + start;
-		// sanity check
-		if ( length > patchBases.Length() ) {
-			cout << "ERROR: The soft chip position is wrong" << endl;
-			exit(1);
+		// patch bases and base qualities
+		if ( patchStartLen > 0 ) {
+			al.Query.Prepend    ( patchBases.CData(), patchStartLen );
+			al.Reference.Prepend( softClippedIdentifier, patchStartLen );
 		}
-		al.Query.Append    ( startPoint, patchEndLen );
-		al.Reference.Append( softClippedIdentifier, patchEndLen );
+
+		if ( patchEndLen > 0 ) {
+			const unsigned int length = patchBases.Length();
+			const unsigned int start  = length - patchEndLen;
+			const char* startPoint    = patchBases.CData() + start;
+			// sanity check
+			if ( length > patchBases.Length() ) {
+				cout << "ERROR: The soft chip position is wrong" << endl;
+				exit(1);
+			}
+			al.Query.Append    ( startPoint, patchEndLen );
+			al.Reference.Append( softClippedIdentifier, patchEndLen );
+		}
 	}
-	//}
 }
 
 // handle and then delete special alignments
-void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set ) {
+void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
+	Alignment& mate1SpecialAl, Alignment& mate2SpecialAl,
+	bool& isMate1Special, bool& isMate2Special ) {
+
 	unsigned int nMobAl = 0;
 	string specialCode;
 	specialCode.resize(3);
@@ -641,8 +660,13 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 		}
 	}
 
-	if ( nMobAl == mate1Set.size() ) {
+	if ( ( nMobAl == mate1Set.size() ) && ( mate1Set.size() != 0 ) ) {
+		isMate1Special = true;
+		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+		mate1SpecialAl = *mate1Set.rbegin();
+		mate1SpecialAl.SpecialCode = specialCode;
 		mate1Set.clear();
+
 	} else if ( nMobAl > 0 ) {
 		vector<Alignment> newMate1Set;
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
@@ -650,33 +674,45 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 				ite->CanBeMappedToSpecialReference = true;
 				ite->SpecialCode = specialCode;
 				newMate1Set.push_back( *ite );
+			} else {
+				isMate1Special = true;
+				mate1SpecialAl = ( ite->Quality >= mate1SpecialAl.Quality ) ? *ite : mate1SpecialAl;
+				mate1SpecialAl.SpecialCode = specialCode;
 			}
 		}
 		mate1Set.clear();
 		mate1Set = newMate1Set;
 	}
 
-	nMobAl = 0;
-	specialCode.clear();
-	specialCode.resize(3);
+	unsigned int nMobAl2 = 0;
+	string specialCode2;
+	specialCode2.resize(3);
 
 	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
 		if ( ite->IsMappedSpecialReference ) {
-			nMobAl++;
-			specialCode = mReferenceSpecies[ ite->ReferenceIndex ];
-			specialCode[2] = 0;
+			nMobAl2++;
+			specialCode2 = mReferenceSpecies[ ite->ReferenceIndex ];
+			specialCode2[2] = 0;
 		}
 	}
 
-	if ( nMobAl == mate2Set.size() ) {
+	if ( ( nMobAl2 == mate2Set.size() ) && ( mate2Set.size() != 0 ) ) {
+		isMate2Special = true;
+		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+		mate2SpecialAl = *mate2Set.rbegin();
+		mate2SpecialAl.SpecialCode = specialCode2;
 		mate2Set.clear();
-	} else if ( nMobAl > 0 ) {
+	} else if ( nMobAl2 > 0 ) {
 		vector<Alignment> newMate2Set;
 		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
 			if ( !ite->IsMappedSpecialReference ) {
 				ite->CanBeMappedToSpecialReference = true;
-				ite->SpecialCode = specialCode;
+				ite->SpecialCode = specialCode2;
 				newMate2Set.push_back( *ite );
+			} else {
+				isMate2Special = true;
+				mate2SpecialAl = ( ite->Quality >= mate2SpecialAl.Quality ) ? *ite : mate2SpecialAl;
+				mate2SpecialAl.SpecialCode = specialCode2;
 			}
 		}
 		mate2Set.clear();

@@ -326,7 +326,8 @@ private:
 	map<unsigned int, MosaikReadFormat::ReadGroup>* mReadGroupsMap;
 	// best and second best utilities
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
-	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set );
+	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
+		Alignment& mate1SpecialAl, Alignment& mate2SpecialAl, bool& mate1Special, bool& mate2Special );
 	inline bool IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, 
 		const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength );
 	static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2);

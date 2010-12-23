@@ -93,6 +93,53 @@ struct Alignment {
 		return ReferenceIndex < al.ReferenceIndex;
 	}
 
+/*
+	Alignment& operator=( const Alignment& al ){
+		
+		MateReferenceBegin		= al.MateReferenceBegin;   // required for SAM/BAM
+		MateReferenceEnd		= al.MateReferenceEnd;     // required for SAM/BAM
+		MateReferenceIndex		= al.MateReferenceIndex;   // required for SAM/BAM
+		ReferenceBegin			= al.ReferenceBegin;
+		ReferenceEnd			= al.ReferenceEnd;
+		ReferenceIndex			= al.ReferenceIndex;
+		Owner				= al.Owner;                // the temporary file that contains the alignment
+		ReadGroupCode			= al.ReadGroupCode;        // the read group code (temp)
+		NumMapped			= al.NumMapped;            // the total number of mapped alignments
+		FragmentLength			= al.FragmentLength;                // the fragment length with its pair
+		QueryLength			= al.QueryLength;        // used during filtering (temp)
+		NumMismatches			= al.NumMismatches;      // number of mismatches
+		QueryBegin			= al.QueryBegin;
+		QueryEnd			= al.QueryEnd;
+		Quality				= al.Quality;             // alignment quality
+		NextBestQuality			= al.NextBestQuality;     // the next best alignment quality
+		CanBeMappedToSpecialReference	= al.CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
+		IsFirstMate			= al.IsFirstMate;                  // is this alignment from the first mate in a paired-end read
+		IsJunk				= al.IsJunk;                       // are the fileds in this alignment used for other propose, e.g. counting total numbers of alignments?
+		IsMateReverseStrand		= al.IsMateReverseStrand;          // read orientation for the mate
+		IsPairedEnd			= al.IsPairedEnd;                  // is the read sequenced as a paired-end read
+		IsResolvedAsPair		= al.IsResolvedAsPair;             // is the alignment part of resolved paired-end read
+		IsResolvedAsProperPair		= al.IsResolvedAsProperPair;       // is the alignment resolved as proper pair
+		IsReverseStrand			= al.IsReverseStrand;              // read orientation
+		IsMappedSpecialReference	= al.IsMappedSpecialReference;     // is this alignment mapped to the special references which is defined by "-sref"? 
+		IsMapped			= al.IsMapped;                     // is this alignment mapped?
+		IsMateMapped			= al.IsMateMapped;                 // is its mate mapped?
+		WasRescued			= al.WasRescued;                   // was the alignment rescued during local alignment search
+		ReferenceName			= al.ReferenceName;               // only filled via CAlignmentReader (temp)
+		Reference			= al.ReferenceName;
+		Query.Copy( al.Query.CData(), al.Query.Length() );
+		BaseQualities.Copy( al.BaseQualities.CData(), al.BaseQualities.Length() );
+		Name.Copy( al.Name.CData(), al.Name.Length() );                // the read name
+		Cigar				= al.Cigar;
+		ReadGroup			= al.ReadGroup;                  // the read group string
+		SpecialCode			= al.SpecialCode;                // 2 letters to indicate the sequence can be mapped to which special reference
+		Mark				= al.Mark;
+
+		return *this;
+
+	}
+*/	
+	
+	
 	bool SetPairFlags ( const Alignment& pairMate, const int& allowedFragmentLength, const bool& expectedMateStrand ) {
 		unsigned int queryPosition5Prime = ( IsReverseStrand ) ? ReferenceEnd : ReferenceBegin;
 		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;

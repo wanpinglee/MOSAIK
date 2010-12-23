@@ -1,7 +1,7 @@
 #include "CigarTager.h"
 
 CCigarTager::CCigarTager( void )
-	: bufferLen(1024)
+	: bufferLen(256)
 	, buffer(NULL)
 {
 	buffer    = new char [ bufferLen ];
