@@ -811,16 +811,16 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	unsigned int bin = CalculateMinimumBin(al.ReferenceBegin, al.ReferenceEnd);
 
 	// assign the BAM core data
-	unsigned int buffer[8];
-	buffer[0] = al.ReferenceIndex;
-	buffer[1] = al.ReferenceBegin;
+	unsigned int buffer[8] = {0};
+	buffer[0] = al.IsMapped ? al.ReferenceIndex : 0xffffffff;
+	buffer[1] = al.IsMapped ? al.ReferenceBegin : 0xffffffff;
 	buffer[2] = (bin << 16) | (al.Quality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;
 
 	if(al.IsResolvedAsPair) {
-		buffer[5] = al.MateReferenceIndex;
-		buffer[6] = al.MateReferenceBegin;
+		buffer[5] = al.IsMateMapped ? al.MateReferenceIndex : 0xffffffff;
+		buffer[6] = al.IsMateMapped ? al.MateReferenceBegin : 0xffffffff;
 		buffer[7] = insertSize;
 	} else {
 		buffer[5] = 0xffffffff;

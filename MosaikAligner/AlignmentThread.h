@@ -242,7 +242,9 @@ public:
 	static pthread_mutex_t mSaveReadMutex;
 	static pthread_mutex_t mStatisticsMutex;
 	static pthread_mutex_t mStatisticsMapsMutex;
-	static pthread_mutex_t mSaveBamMutex;
+	static pthread_mutex_t mSaveMultipleBamMutex;
+	static pthread_mutex_t mSaveUnmappedBamMutex;
+	static pthread_mutex_t mSaveSpecialBamMutex;
 	// stores the statistical counters
 	StatisticsCounters mStatisticsCounters;
 private:

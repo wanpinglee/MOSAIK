@@ -17,7 +17,9 @@ pthread_mutex_t CAlignmentThread::mReportUnalignedMate2Mutex;
 pthread_mutex_t CAlignmentThread::mSaveReadMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMapsMutex;
-pthread_mutex_t CAlignmentThread::mSaveBamMutex;
+pthread_mutex_t CAlignmentThread::mSaveMultipleBamMutex;
+pthread_mutex_t CAlignmentThread::mSaveSpecialBamMutex;
+pthread_mutex_t CAlignmentThread::mSaveUnmappedBamMutex;
 
 // define our constants
 const double CAlignmentThread::P_ERR_REF  = pow(10.0, -REFERENCE_SEQUENCE_QUALITY / 10.0);
@@ -365,69 +367,15 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			}
 		}
 
-		// update the paired-end read statistics
-		if(isPairedEnd) {
-			if(isMate1Aligned || isMate2Aligned) {
-				if(isMate1Aligned && isMate2Aligned) {
-					const bool isM1Unique = mate1Alignments.IsUnique();
-					const bool isM2Unique = mate2Alignments.IsUnique();
-					if(isM1Unique && isM2Unique) mStatisticsCounters.BothUniqueReads++;
-					else if(!isM1Unique && !isM2Unique) mStatisticsCounters.BothNonUniqueReads++;
-					else mStatisticsCounters.OneNonUniqueReads++;
-				} else mStatisticsCounters.OrphanedReads++;
-			} else mStatisticsCounters.UnalignedReads++;
-		}
-
-		// update the mate bases aligned
-		if(isMate1Aligned) mStatisticsCounters.MateBasesAligned += numMate1Bases;
-		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
-
-		pthread_mutex_lock(&mStatisticsMapsMutex);
-		pMaps->SaveRecord( mr, *mate1Alignments.GetSet(), *mate2Alignments.GetSet(), 
-			areBothMatesPresent, mSettings.SequencingTechnology );
-		pthread_mutex_unlock(&mStatisticsMapsMutex);
-		
-		
-		// =================
-		// save aligned read
-		// =================
-		
-		// save chromosomes and positions of multiple alignments in bam
-		if ( mate1Alignments.IsMultiple() ) {
-			vector<Alignment>* pMateSet = mate1Alignments.GetSet();
-			pthread_mutex_lock(&mSaveBamMutex);
-			for(vector<Alignment>::iterator alIter = pMateSet->begin(); alIter != pMateSet->end(); ++alIter) {
-				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
-			}
-			pthread_mutex_unlock(&mSaveBamMutex);
-		}
-		if ( isPairedEnd && mate2Alignments.IsMultiple() ) {
-			vector<Alignment>* pMateSet = mate2Alignments.GetSet();
-			pthread_mutex_lock(&mSaveBamMutex);
-			for(vector<Alignment>::iterator alIter = pMateSet->begin(); alIter != pMateSet->end(); ++alIter)
-				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
-			pthread_mutex_unlock(&mSaveBamMutex);
-		}
-
 		// process alignments mapped in special references and delete them in vectors
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;
 
-		//string name = mr.Name.CData();
-		//bool found = false;
-		//if ( name == "SRR023378.1495" ) {
-		//	found = true;
-		//	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite )
-		//		cerr << ite->ReferenceBegin << endl << ite->Reference << endl << ite->Query << endl;
-
-		//	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite )
-		//		cerr << ite->ReferenceBegin << endl << ite->Reference << endl << ite->Query << endl;
-		//}
-
 		if ( mSReference.found )
 			ProcessSpecialAlignment( mate1Set, mate2Set, mate1SpecialAl, mate2SpecialAl, isMate1Special, isMate2Special );
+		
 		// deleting special alignments may let mate1Alignments or mate2Alignments become empty
 		// so we have to check them again
 		isMate1Aligned = !mate1Set.empty();
@@ -441,6 +389,47 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 		bool isMate1Empty = mate1Set.empty();
 		bool isMate2Empty = mate2Set.empty();
+		
+		// update the paired-end read statistics
+		if(isPairedEnd) {
+			if(isMate1Aligned || isMate2Aligned) {
+				if(isMate1Aligned && isMate2Aligned) {
+					if(isMate1Unique && isMate2Unique) mStatisticsCounters.BothUniqueReads++;
+					else if(!isMate1Unique && !isMate2Unique) mStatisticsCounters.BothNonUniqueReads++;
+					else mStatisticsCounters.OneNonUniqueReads++;
+				} else mStatisticsCounters.OrphanedReads++;
+			} else mStatisticsCounters.UnalignedReads++;
+		}
+
+		// update the mate bases aligned
+		if(isMate1Aligned) mStatisticsCounters.MateBasesAligned += numMate1Bases;
+		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
+
+		pthread_mutex_lock(&mStatisticsMapsMutex);
+		pMaps->SaveRecord( mr, mate1Set, mate2Set, 
+			areBothMatesPresent, mSettings.SequencingTechnology );
+		pthread_mutex_unlock(&mStatisticsMapsMutex);
+		
+		
+		// save chromosomes and positions of multiple alignments in bam
+		if ( mate1Alignments.IsMultiple() ) {
+			pthread_mutex_lock(&mSaveMultipleBamMutex);
+			for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
+				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+			}
+			pthread_mutex_unlock(&mSaveMultipleBamMutex);
+		}
+		if ( isPairedEnd && mate2Alignments.IsMultiple() ) {
+			pthread_mutex_lock(&mSaveMultipleBamMutex);
+			for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
+				pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+			pthread_mutex_unlock(&mSaveMultipleBamMutex);
+		}
+
+
+		// =======================
+		// Save alignments to BAMs
+		// =======================
 		
 		// UU, UM, and MM pair
 		if ( ( isMate1Unique && isMate2Unique )
@@ -490,10 +479,10 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 				char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, true );
 				char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, false );
-				pthread_mutex_lock(&mSaveReadMutex);
+				pthread_mutex_lock(&mSaveSpecialBamMutex);
 				pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 				pBams->sBam.SaveAlignment( specialAl, zas2Tag );
-				pthread_mutex_unlock(&mSaveReadMutex);
+				pthread_mutex_unlock(&mSaveSpecialBamMutex);
 			}
 
 			if (  isMate2Unique && isMate1Special  ) {
@@ -505,10 +494,10 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 				char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, false );
 				char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, true );
-				pthread_mutex_lock(&mSaveReadMutex);
+				pthread_mutex_lock(&mSaveSpecialBamMutex);
 				pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 				pBams->sBam.SaveAlignment( specialAl, zas2Tag );
-				pthread_mutex_unlock(&mSaveReadMutex);
+				pthread_mutex_unlock(&mSaveSpecialBamMutex);
 			}
 
 
@@ -519,6 +508,8 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 			pBams->rBam.SaveAlignment( al1, zaTag1 );
 			pBams->rBam.SaveAlignment( al2, zaTag2 );
 			pthread_mutex_unlock(&mSaveReadMutex);
+
+			mStatisticsCounters.AlignedReads++;
 
 		// UO and MO pair
 		} else if ( ( isMate1Empty || isMate2Empty )
@@ -549,8 +540,12 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 			pthread_mutex_lock(&mSaveReadMutex);
 			pBams->rBam.SaveAlignment( al, 0 );
-			pBams->uBam.SaveAlignment( unmappedAl, 0, true );
 			pthread_mutex_unlock(&mSaveReadMutex);
+			pthread_mutex_lock(&mSaveUnmappedBamMutex);
+			pBams->uBam.SaveAlignment( unmappedAl, 0, true );
+			pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+
+			mStatisticsCounters.AlignedReads++;
 		
 		// OO
 		} else if ( isMate1Empty && isMate2Empty ) {
@@ -558,10 +553,10 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 
 			SetRequiredInfo( unmappedAl1, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, false, false );
 			SetRequiredInfo( unmappedAl2, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
-			pthread_mutex_lock(&mSaveReadMutex);
+			pthread_mutex_lock(&mSaveUnmappedBamMutex);
 			pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
 			pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
-			pthread_mutex_unlock(&mSaveReadMutex);
+			pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
 			cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
@@ -571,7 +566,7 @@ void CAlignmentThread::AlignReadArchive(MosaikReadFormat::CReadReader* pIn, Mosa
 	}
 }
 
-// Save alignment
+// Set the required information and flag for alignments
 void CAlignmentThread::SetRequiredInfo (
 	Alignment& al,
 	const Alignment& mate,
@@ -645,6 +640,7 @@ void CAlignmentThread::SetRequiredInfo (
 }
 
 // handle and then delete special alignments
+// also assign two special characters for the general alignments
 void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
 	Alignment& mate1SpecialAl, Alignment& mate2SpecialAl,
 	bool& isMate1Special, bool& isMate2Special ) {
@@ -655,7 +651,10 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 		if ( ite->IsMappedSpecialReference ) {
 			nMobAl++;
-			specialCode = mReferenceSpecies[ ite->ReferenceIndex ];
+			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
+			specialCode[0] = *tempCode;
+			tempCode++;
+			specialCode[1] = *tempCode;
 			specialCode[2] = 0;
 		}
 	}
@@ -691,7 +690,10 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
 		if ( ite->IsMappedSpecialReference ) {
 			nMobAl2++;
-			specialCode2 = mReferenceSpecies[ ite->ReferenceIndex ];
+			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
+			specialCode2[0] = *tempCode;
+			tempCode++;
+			specialCode2[1] = *tempCode;
 			specialCode2[2] = 0;
 		}
 	}
@@ -721,7 +723,9 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 }
 
 // compare the given proper pairs
-inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength ) {
+inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, 
+	const unsigned int competitor_fragmentLength, const Alignment& mate1, 
+	const Alignment& mate2, const unsigned int fragmentLength ) {
 
 	// rescured mate always wins
 	if ( competitor_mate1.WasRescued ) return true;
@@ -735,11 +739,16 @@ inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, 
 	double competitor = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 100.00;
 	double current    = ( mate1.Quality + mate2.Quality ) / 100.00;
 
-	unsigned int competitor_diff = ( mSettings.MedianFragmentLength > competitor_fragmentLength ) ? mSettings.MedianFragmentLength - competitor_fragmentLength : competitor_fragmentLength - mSettings.MedianFragmentLength;
-	unsigned int diff            = ( mSettings.MedianFragmentLength > fragmentLength ) ? mSettings.MedianFragmentLength - fragmentLength : fragmentLength - mSettings.MedianFragmentLength;
+	unsigned int competitor_diff = ( mSettings.MedianFragmentLength > competitor_fragmentLength ) ? 
+		mSettings.MedianFragmentLength - competitor_fragmentLength : 
+		competitor_fragmentLength - mSettings.MedianFragmentLength;
+	
+	unsigned int diff            = ( mSettings.MedianFragmentLength > fragmentLength ) ? 
+		mSettings.MedianFragmentLength - fragmentLength : 
+		fragmentLength - mSettings.MedianFragmentLength;
 
-	competitor += ( 100 - (int)competitor_diff ) / 100;
-	current    += ( 100 - (int)diff ) / 100;
+	competitor += ( 200 - (int)competitor_diff ) / 200;
+	current    += ( 200 - (int)diff ) / 200;
 
 	if ( competitor > current ) return true;
 	else return false;
@@ -775,10 +784,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 
 
 		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
-		//bool found = false;
-		//if ( mate1Set[0].ReferenceBegin == 10029605 )
-		//	found = true;
-
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
 				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin) 
@@ -809,7 +814,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 						bestMate2 = *ite2;
 						bestFl    = length;
 
-						//cerr << "best" << endl;
 					} else {
 						if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl ) ) {
 							secondBest = true;
@@ -817,8 +821,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 							secondBestMate2 = *ite2;
 							secondBestFl    = length;
 						}
-
-						//cerr << "second best" << endl;
 					}
 				}
 				
@@ -861,10 +863,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 
 		newMate1Set.begin()->NumMapped = nMate1;
 		newMate2Set.begin()->NumMapped = nMate2;
-		//junkAl.ReferenceBegin = nMate1;
-		//newMate1Set.push_back( junkAl );
-		//junkAl.ReferenceBegin = nMate2;
-		//newMate2Set.push_back( junkAl );
 		
 		mate1Set.clear();
 		mate2Set.clear();
@@ -884,8 +882,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 		newMate1Set.begin()->NextBestQuality = ite->Quality;
 		newMate1Set.begin()->NumMapped = nMate1;
 
-		//junkAl.ReferenceBegin = nMate1;
-		//newMate1Set.push_back( junkAl );
 		mate1Set.clear();
 		mate1Set = newMate1Set;
 
@@ -901,8 +897,6 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 		newMate2Set.begin()->NextBestQuality = ite->Quality;
 		newMate2Set.begin()->NumMapped = nMate2;
 
-		//junkAl.ReferenceBegin = nMate2;
-		//newMate2Set.push_back( junkAl );
 		mate2Set.clear();
 		mate2Set = newMate2Set;
 

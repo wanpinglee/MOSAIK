@@ -99,7 +99,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 	}
 
-	//string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;
+
+	// this reference vector is for regular, multiply, and unmapped bams
+	vector<ReferenceSequence> referenceSequencesWoSpecial;
+	if ( mSReference.found ) {
+		// sanity check
+		if ( mSReference.nReference > referenceSequences.size() ) {
+			cout << "ERROR: The number of detected special references are larger than the one of input references." << endl;
+			exit(1);
+		}
+		const unsigned int nReference = referenceSequences.size() - mSReference.nReference;
+		vector<ReferenceSequence>::iterator ite1 = referenceSequences.begin();
+		for ( unsigned int i = 0; i < nReference; ++i ) {
+			referenceSequencesWoSpecial.push_back( *ite1 );
+			++ite1;
+		}
+	}
+	
 
 	// ==============================
 	// set the headers of bam writers
@@ -109,19 +125,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	mBams.uHeader.SortOrder = SORTORDER_UNSORTED;
 	mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
 
-	mBams.mHeader.pReferenceSequences = &referenceSequences;
+	//mBams.mHeader.pReferenceSequences = &referenceSequences;
+	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 	mBams.sHeader.pReferenceSequences = &referenceSequences;
-	mBams.uHeader.pReferenceSequences = &referenceSequences;
-	mBams.rHeader.pReferenceSequences = &referenceSequences;
+	//mBams.uHeader.pReferenceSequences = &referenceSequences;
+	//mBams.rHeader.pReferenceSequences = &referenceSequences;
+	mBams.uHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+	mBams.rHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+	
 	mBams.mHeader.pReadGroups = &readGroups;
 	mBams.sHeader.pReadGroups = &readGroups;
 	mBams.uHeader.pReadGroups = &readGroups;
 	mBams.rHeader.pReadGroups = &readGroups;
 
 	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
-	mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.mHeader);
-	mBams.uBam.Open( mSettings.OutputReadArchiveFilename + ".unaligned.bam", mBams.mHeader);
-	mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.mHeader);
+	mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.sHeader);
+	mBams.uBam.Open( mSettings.OutputReadArchiveFilename + ".unaligned.bam", mBams.uHeader);
+	mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.rHeader);
 	
 
 	if ( !mFlags.UseLowMemory ) {
