@@ -18,6 +18,7 @@
 
 #include "ArchiveMerge.h"
 
+/*
 CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo)
 	: _inputFilenames(inputFilenames)
 	, _outputFilename(outputFilename)
@@ -46,12 +47,13 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 	}
 	
 }
+*/
 
-CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int nMaxAlignment, unsigned int *readNo)
+CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength )
 	: _inputFilenames(inputFilenames)
 	, _outputFilename(outputFilename)
-	, _nMaxAlignment (nMaxAlignment)
 	, _readNo(readNo)
+	, _expectedFragmentLength( fragmentLength )
 {
 	MosaikReadFormat::CAlignmentReader reader;
 	reader.Open( _inputFilenames[0] );
@@ -59,7 +61,14 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 	_alignmentStatus = reader.GetStatus();
 	reader.Close();
 
+	_isPairedEnd = ( _alignmentStatus && AS_PAIRED_END_READ != 0 ) ? true : false;
+
 	_refIndex.resize( _inputFilenames.size(), 0 );
+
+	for ( vector<MosaikReadFormat::ReadGroup>::iterator ite = _readGroups.begin(); ite != _readGroups.end(); ++ite ) {
+		ite->ReadGroupCode = ite->GetCode( *ite );
+		_readGroupsMap[ ite->ReadGroupCode ] = *ite ;
+	}
 
 
 	for ( unsigned int i = 0; i < _inputFilenames.size(); i++ ) {
@@ -74,6 +83,18 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 		referenceSequences.clear();
 		reader.Close();
 	}
+
+	_mHeader.SortOrder = SORTORDER_UNSORTED;
+	_uHeader.SortOrder = SORTORDER_UNSORTED;
+	_rHeader.SortOrder = SORTORDER_UNSORTED;
+
+	_mHeader.pReferenceSequences = &_referenceSequences;
+	_uHeader.pReferenceSequences = &_referenceSequences;
+	_rHeader.pReferenceSequences = &_referenceSequences;
+
+	_mHeader.pReadGroups = &_readGroups;
+	_uHeader.pReadGroups = &_readGroups;
+	_rHeader.pReadGroups = &_readGroups;
 
 }
 
@@ -187,41 +208,231 @@ void CArchiveMerge::GetStatisticsCounters ( CArchiveMerge::StatisticsCounters& c
 }
 
 void CArchiveMerge::CalculateStatisticsCounters( const Mosaik::AlignedRead& alignedRead ) {
-	// reads
-	_counters.AlignedReads++;
 	
-	if ( alignedRead.Mate1Alignments.size() > 1 && alignedRead.Mate2Alignments.size() > 1 )
+	unsigned int nMate1Alignments = 0;
+	unsigned int nMate2Alignments = 0;
+
+	if ( !alignedRead.Mate1Alignments.empty() )
+		nMate1Alignments = alignedRead.Mate1Alignments[0].NumMapped;
+	if ( !alignedRead.Mate2Alignments.empty() )
+		nMate2Alignments = alignedRead.Mate2Alignments[0].NumMapped;
+	
+	// reads
+	if ( ( nMate1Alignments > 0 ) || ( nMate2Alignments > 0 ) )
+		_counters.AlignedReads++;
+	
+	if ( nMate1Alignments > 1 && nMate2Alignments > 1 )
 		_counters.BothNonUniqueReads++;
 	
-	if ( alignedRead.Mate1Alignments.size() == 1 && alignedRead.Mate2Alignments.size() == 1 )
+	if ( nMate1Alignments == 1 && nMate2Alignments == 1 )
 		_counters.BothUniqueReads++;
 
-	if ( (alignedRead.Mate1Alignments.size() == 1 && alignedRead.Mate2Alignments.size() > 1) || (alignedRead.Mate1Alignments.size() > 1 && alignedRead.Mate2Alignments.size() == 1) )
+	if ( ( nMate1Alignments == 1 && nMate2Alignments > 1 ) || ( nMate1Alignments > 1 && nMate2Alignments == 1) )
 		_counters.OneNonUniqueReads++;
 
-	if ( (alignedRead.Mate1Alignments.size() != 0 && alignedRead.Mate2Alignments.size() == 0) || (alignedRead.Mate1Alignments.size() == 0 && alignedRead.Mate2Alignments.size() != 0) )
+	if ( ( nMate1Alignments != 0 && nMate2Alignments == 0 ) || ( nMate1Alignments == 0 && nMate2Alignments != 0 ) )
 		_counters.OrphanedReads++;
 	
 	// mates
-	if ( alignedRead.Mate1Alignments.size() == 0 )
+	if ( nMate1Alignments == 0 )
 		_counters.FilteredOutMates++;
 
-	if ( alignedRead.Mate2Alignments.size() == 0 )
+	if ( nMate2Alignments == 0 )
 		_counters.FilteredOutMates++;
 
-	if ( alignedRead.Mate1Alignments.size() > 1 )
+	if ( nMate1Alignments > 1 )
 		_counters.NonUniqueMates++;
 
-	if ( alignedRead.Mate2Alignments.size() > 1 )
+	if ( nMate2Alignments > 1 )
 		_counters.NonUniqueMates++;
 
-	if ( alignedRead.Mate1Alignments.size() == 1 )
+	if ( nMate1Alignments == 1 )
 		_counters.UniqueMates++;
 
-	if ( alignedRead.Mate2Alignments.size() == 1 )
+	if ( nMate2Alignments == 1 )
 		_counters.UniqueMates++;
 }
 
+
+void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
+
+	unsigned int nMate1Alignments = 0;
+	unsigned int nMate2Alignments = 0;
+
+	vector<Alignment> newMate1Set, newMate2Set;
+
+	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
+		nMate1Alignments += ite->NumMapped;
+		if ( ite->IsMapped ) newMate1Set.push_back( *ite );
+	}
+	
+	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
+		nMate2Alignments += ite->NumMapped;
+		if ( ite->IsMapped ) newMate2Set.push_back( *ite );
+	}
+
+	if ( nMate1Alignments > 0 ) {
+		r.Mate1Alignments.clear();
+		r.Mate1Alignments = newMate1Set;
+	}
+
+	if ( nMate2Alignments > 0 ) {
+		r.Mate2Alignments.clear();
+		r.Mate2Alignments = newMate2Set;
+	}
+		
+
+	//r.Mate1Alignments.clear();
+	//r.Mate2Alignments.clear();
+	//r.Mate1Alignments = newMate1Set;
+	//r.Mate2Alignments = newMate2Set;
+
+	const bool isMate1Unique   = ( nMate1Alignments == 1 ) ? true : false;
+	const bool isMate2Unique   = ( nMate2Alignments == 1 ) ? true : false;
+	//const bool isMate1Aligned  = ( nMate1Alignments > 0 ) ? true : false;
+	//const bool isMate2Aligned  = ( nMate2Alignments > 0 ) ? true : false;
+	const bool isMate1Multiple = ( nMate1Alignments > 1 ) ? true : false;
+	const bool isMate2Multiple = ( nMate2Alignments > 1 ) ? true : false;
+	bool isMate1Empty    = ( nMate1Alignments == 0 ) ? true : false;
+	bool isMate2Empty    = ( nMate2Alignments == 0 ) ? true : false;
+
+//cout << nMate1Alignments << "\t" << nMate2Alignments << endl;
+
+	// UU, UM, and MM pair
+	if ( ( isMate1Unique && isMate2Unique )
+		|| ( isMate1Unique && isMate2Multiple )
+		|| ( isMate1Multiple && isMate2Unique )
+		|| ( isMate1Multiple && isMate2Multiple ) ) {
+
+//cout << "case1" << endl;
+			
+		if ( ( isMate1Unique && isMate2Multiple )
+			|| ( isMate1Multiple && isMate2Unique )
+			|| ( isMate1Multiple && isMate2Multiple ) )
+				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
+
+			isMate1Empty = r.Mate1Alignments.empty();
+			isMate2Empty = r.Mate2Alignments.empty();
+			
+			// sanity check
+			if ( isMate1Empty | isMate2Empty ) {
+				cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
+				exit(1);
+			}
+
+			// patch the information for reporting
+			Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
+			
+			// TODO: handle fragment length for others sequencing techs
+			int fl = ( al1.IsReverseStrand ) 
+				? 0 - ( 2 * _expectedFragmentLength ) 
+				: 2 * _expectedFragmentLength;
+			bool properPair1 = false, properPair2 = false;
+			properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
+			properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
+
+			if ( properPair1 != properPair2 ) {
+				cout << "ERROR: An inconsistent proper pair is found." << endl;
+				exit(1);
+			}
+
+			CZaTager za1, za2;
+			const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+			const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+
+			SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
+			SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
+
+			_rBam.SaveAlignment( al1, zaTag1 );
+			_rBam.SaveAlignment( al2, zaTag2 );
+		
+	// UX and MX pair
+	} else if ( ( isMate1Empty || isMate2Empty )
+		&&  !( isMate1Empty && isMate2Empty ) ) {
+		
+//cout << "case2" << endl;
+
+		if ( isMate1Multiple || isMate2Multiple ) 
+			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
+
+		isMate1Empty = r.Mate1Alignments.empty();
+		isMate2Empty = r.Mate2Alignments.empty();
+		
+		bool isFirstMate;
+		if ( !isMate1Empty ) {
+			isFirstMate = true;
+		} else if ( !isMate2Empty ) {
+			isFirstMate = false;
+		} else {
+			cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
+			exit(1);
+		}
+	
+		// patch the information for reporting
+		Alignment al = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];;
+
+		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
+		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
+
+		_rBam.SaveAlignment( al, 0 );
+		_uBam.SaveAlignment( unmappedAl, 0, true );
+
+	
+	// XX
+	} else if ( isMate1Empty && isMate2Empty ) {
+		
+//cout << "case3" << endl;
+
+		Alignment unmappedAl1, unmappedAl2;
+		unmappedAl1 = r.Mate1Alignments[0];
+		unmappedAl2 = r.Mate2Alignments[0];
+
+		SetAlignmentFlags( unmappedAl1, unmappedAl2, false, false, true, _isPairedEnd, false, false, r );
+		SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
+
+		_uBam.SaveAlignment( unmappedAl1, 0, true );
+		_uBam.SaveAlignment( unmappedAl2, 0, true );
+	
+	} else {
+		cout << "ERROR: Unknown pairs." << endl;
+		cout << r.Mate1Alignments.size() << "\t" << r.Mate2Alignments.size() << endl;
+		exit(1);
+	}
+
+}
+
+inline void CArchiveMerge::SetAlignmentFlags( 
+	Alignment& al,
+	const Alignment& mate,
+	const bool& isPair,
+	const bool& isProperPair,
+	const bool& isFirstMate,
+	const bool& isPairTech,
+	const bool& isItselfMapped,
+	const bool& isMateMapped,
+	const Mosaik::AlignedRead& r) {
+
+	al.IsResolvedAsPair       = isPair;
+	al.IsResolvedAsProperPair = isProperPair;
+	al.IsFirstMate            = isFirstMate;
+	al.IsPairedEnd            = isPairTech;
+	al.Name                   = r.Name;
+	al.IsMateReverseStrand    = mate.IsReverseStrand;
+	al.MateReferenceIndex     = mate.ReferenceIndex;
+	al.MateReferenceBegin     = mate.ReferenceBegin;
+	al.IsMapped               = isItselfMapped;
+	al.IsMateMapped           = isMateMapped;
+
+	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
+	rgIte = _readGroupsMap.find( r.ReadGroupCode );
+	// sanity check
+	if ( rgIte == _readGroupsMap.end() ) {
+		cout << "ERROR: ReadGroup cannot be found." << endl;
+		exit(1);
+	} else
+		al.ReadGroup = rgIte->second.ReadGroupID;
+}
 
 void CArchiveMerge::Merge() {
 	
@@ -250,9 +461,14 @@ void CArchiveMerge::Merge() {
 
 	
 	// prepare MOSAIK writer
-	MosaikReadFormat::CAlignmentWriter writer;
-	writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
-	writer.AdjustPartitionSize(1000);
+	//MosaikReadFormat::CAlignmentWriter writer;
+	//writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
+	//writer.AdjustPartitionSize(1000);
+	
+	// prepare BAM writers
+	_mBam.Open( _outputFilename + ".multiple.bam", _mHeader );
+	_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
+	_rBam.Open( _outputFilename + ".bam", _rHeader );
 
 	
 	// pick the min one
@@ -278,12 +494,15 @@ void CArchiveMerge::Merge() {
 		if ( ite->read.Name > minRead.Name ) {
 
 			//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-			if ( minRead.Mate1Alignments.size() > _nMaxAlignment )
-				minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
-			if ( minRead.Mate2Alignments.size() > _nMaxAlignment )
-				minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
+			//if ( minRead.Mate1Alignments.size() > _nMaxAlignment )
+			//	minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
+			//if ( minRead.Mate2Alignments.size() > _nMaxAlignment )
+			//	minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
 			
-			writer.SaveAlignedRead(minRead);
+			//BestNSecondBestSelection::Select( minRead.Mate1Alignments, minRead.Mate2Alignments, _expectedFragmentLength );
+			WriteAlignment( minRead );
+
+			//writer.SaveAlignedRead(minRead);
 			CalculateStatisticsCounters(minRead);
 			minRead.Clear();
 			minRead = ite->read;
@@ -344,7 +563,8 @@ void CArchiveMerge::Merge() {
 				//	cout << "\t" << nRead << " have been merged." << endl;
 
 				//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-				writer.SaveAlignedRead(minRead);
+				//writer.SaveAlignedRead(minRead);
+				WriteAlignment( minRead );
 				CalculateStatisticsCounters(minRead);
 				minRead.Clear();
 				minRead = reads[i].read;
@@ -373,7 +593,8 @@ void CArchiveMerge::Merge() {
 					//	cout << "\t" << nRead << " have been merged." << endl;
 
 					//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-					writer.SaveAlignedRead(minRead);
+					//writer.SaveAlignedRead(minRead);
+					WriteAlignment( minRead );
 					CalculateStatisticsCounters(minRead);
 					minRead.Clear();
 					minRead = mr;
@@ -396,11 +617,17 @@ void CArchiveMerge::Merge() {
 
 	//UpdateReferenceIndex(minRead, owner);
 	//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-	writer.SaveAlignedRead(minRead);
+	//writer.SaveAlignedRead(minRead);
+	WriteAlignment( minRead );
 	CalculateStatisticsCounters(minRead);
 
 
-	writer.Close();
+	//writer.Close();
+	
+	// Close BAMs
+	_mBam.Close();
+	_uBam.Close();
+	_rBam.Close();
 
 	
 	// close readers

@@ -340,7 +340,13 @@ void CJumpDnaHash::GetCacheStatistics(uint64_t& cacheHits, uint64_t& cacheMisses
 }
 
 // get the distribution of # hashs aginst the chromosomes
-void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories) {
+void CJumpDnaHash::GetHashStatistics(
+	const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
+	vector<unsigned int>& nHashs, 
+	vector<unsigned int>& expectedMemories,
+	const bool&           hasSpecial,
+	const unsigned int&   specialBegin,
+	const unsigned int&   specialMaxHashPositions) {
 	
 	LoadKeys();
 
@@ -348,7 +354,7 @@ void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned in
 	char*        blockPosition;
 	uintptr_t    blockPositionPtr;
 	unsigned int nBlock = 0; // indicates how many blocks have been handled
-	blockPosition = new char[(size_t)fillBufferSize];
+	blockPosition = new char[ (size_t) fillBufferSize ];
 
 	if( !blockPosition ) {
 		cout << "ERROR: Memory allocation for the temporary jump positions failed." << endl;
@@ -384,14 +390,14 @@ void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned in
 		
 		// if the required filePosition isn't within the current block,
 		// then load the next block of positions
-		if ( filePosition >= (off_type)(nBlock+1)*fillBufferSize ) {
+		if ( filePosition >= (off_type)( nBlock + 1 ) * fillBufferSize ) {
 			LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
 			nBlock++;
 		}
 
 		// load number of hash hits
 		blockPositionPtr   = (uintptr_t)&blockPosition[0];
-		off_type posOffset = filePosition - (off_type)nBlock*fillBufferSize;
+		off_type posOffset = filePosition - (off_type) nBlock * fillBufferSize;
 		unsigned int numPositions;
 		memcpy((char*)&numPositions, (char*)(blockPositionPtr + posOffset), SIZEOF_INT);
 		
@@ -402,12 +408,14 @@ void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned in
 		for ( unsigned int i = 0; i < numPositions; i++ ) {
 			
 			filePosition += SIZEOF_INT;
-			if ( filePosition >= (off_type)(nBlock+1)*fillBufferSize ) {
+			// if the required filePosition isn't within the current block,
+			// then load the next block of positions
+			if ( filePosition >= (off_type)( nBlock + 1 ) * fillBufferSize ) {
 				LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
 				nBlock++;
 			}
 
-			posOffset = filePosition - (off_type)nBlock*fillBufferSize;
+			posOffset = filePosition - (off_type) nBlock * fillBufferSize;
 			unsigned int hashPosition;
 			memcpy((char*)&hashPosition, (char*)(blockPositionPtr + posOffset), SIZEOF_INT);
 			
@@ -436,7 +444,7 @@ void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned in
 			//if ( mLimitPositions && (positions.size() > mMaxHashPositions ) )
 			//	positions.erase( positions.begin() + mMaxHashPositions,  positions.end() );
 			//StorePositions(curFilePosition, left, positions, offset);
-			SetPositionDistribution(referenceSequences, nHashs, expectedMemories, positions);
+			SetPositionDistribution(referenceSequences, nHashs, expectedMemories, positions, hasSpecial, specialBegin, specialMaxHashPositions);
 		}
 
 		positions.clear();
@@ -456,13 +464,24 @@ void CJumpDnaHash::GetHashStatistics(const vector<pair<unsigned int, unsigned in
 }
 
 // determine the chromosome which positions locating in
-void CJumpDnaHash::SetPositionDistribution(const vector<pair<unsigned int, unsigned int> > referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, const vector<unsigned int> positions) {
+void CJumpDnaHash::SetPositionDistribution(
+	const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
+	vector<unsigned int>&       nHashs, 
+	vector<unsigned int>&       expectedMemories, 
+	const vector<unsigned int>& positions,
+	const bool&                 hasSpecial,
+	const unsigned int&         specialBegin,
+	const unsigned int&         specialMaxHashPositions) {
 
 	vector <bool> hasPositions;
 	hasPositions.resize(nHashs.size(), false);
 
 	unsigned int nPositions = 0;
-	if ( mLimitPositions && (positions.size() > mMaxHashPositions ) )
+	if ( hasSpecial ) {
+	
+	}
+
+	if ( mLimitPositions && ( positions.size() > mMaxHashPositions ) )
 		nPositions = mMaxHashPositions;
 	else
 		nPositions = positions.size();
@@ -656,7 +675,7 @@ void CJumpDnaHash::LoadPositions(void) {
 			memset((char*)(mKeyBufferPtr + offset), 0xff, KEY_LENGTH);
 		}
 		else {
-			// Note that low-memory won't go into here
+			// NOTE: that low-memory won't go into here
 			if ( _bubbleSpecialHashes ) {
 				unsigned int totalPos     = positions.size();
 				unsigned int totalSpecial = 0;
@@ -695,7 +714,7 @@ void CJumpDnaHash::LoadPositions(void) {
 						positions[ specialBegin + i ] = temp;
 					}
 
-				}else
+				} else
 					random_shuffle( positions.begin(), positions.end() );
 			} else
 				random_shuffle( positions.begin(), positions.end() );

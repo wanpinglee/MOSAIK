@@ -21,6 +21,7 @@
 #include "AlignmentWriter.h"
 #include "BandedSmithWaterman.h"
 #include "BamWriter.h"
+#include "BestNSecondBestSelection.h"
 #include "CigarTager.h"
 #include "ColorspaceUtilities.h"
 #include "MdTager.h"
@@ -117,6 +118,8 @@ public:
 		bool UseLocalAlignmentSearch;
 		bool UsePairedEndOutput;
 		bool UseLowMemory;
+		bool UseBamOutput;
+		bool UseArchiveOutput;
 
 		FlagData()
 			: EnableColorspace(false)
@@ -132,6 +135,8 @@ public:
 			, UseLocalAlignmentSearch(false)
 			, UsePairedEndOutput(false)
 			, UseLowMemory(false)
+			, UseBamOutput(false)
+			, UseArchiveOutput(false)
 		{}
 	};
 	// stores the statistical counters
@@ -198,10 +203,24 @@ public:
 		{}
 	};
 	// constructor
-	CAlignmentThread(AlignerAlgorithmType& algorithmType, FilterSettings& filters, FlagData& flags, 
-		AlignerModeType& algorithmMode, char* pReference, unsigned int referenceLen, CAbstractDnaHash* pDnaHash, 
-		AlignerSettings& settings, unsigned int* pRefBegin, unsigned int* pRefEnd, char** pRefSpecies, bool* pRefSpecial,
-		char** pBsRefSeqs, SReference& SpecialReference, map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap);
+	CAlignmentThread(
+		const AlignerAlgorithmType& algorithmType, 
+		const FilterSettings&       filters, 
+		const FlagData&             flags, 
+		const AlignerModeType&      algorithmMode, 
+		char*                       pReference, 
+		const unsigned int          referenceLen, 
+		CAbstractDnaHash*           pDnaHash, 
+		const AlignerSettings&      settings, 
+		unsigned int*               pRefBegin, 
+		unsigned int*               pRefEnd, 
+		char**                      pRefSpecies, 
+		bool*                       pRefSpecial,
+		char**                      pBsRefSeqs, 
+		const SReference&           SpecialReference,
+		map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap
+	);
+
 	// destructor
 	~CAlignmentThread(void);
 	// define our thread data structure
@@ -231,8 +250,15 @@ public:
 		map< unsigned int, MosaikReadFormat::ReadGroup >* pReadGroups;
 	};
 	// aligns the read archive
-	void AlignReadArchive(MosaikReadFormat::CReadReader* pIn, MosaikReadFormat::CAlignmentWriter* pOut, 
-		FILE* pUnalignedStream, uint64_t* pReadCounter, bool isPairedEnd, CStatisticsMaps* pMaps, BamWriters* pBams);
+	void AlignReadArchive(
+		MosaikReadFormat::CReadReader*      pIn, 
+		MosaikReadFormat::CAlignmentWriter* pOut, 
+		FILE*            pUnalignedStream,
+		uint64_t*        pReadCounter,
+		bool             isPairedEnd, 
+		CStatisticsMaps* pMaps, 
+		BamWriters*      pBams
+	);
 	// activates the current alignment thread
 	static void* StartThread(void* arg);
 	// register our thread mutexes

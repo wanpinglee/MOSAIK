@@ -79,11 +79,14 @@ namespace MosaikReadFormat {
 
 	private:
 		// load the read header from disk
-		void LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments);
+		void LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments,
+			unsigned int& numMate1OriginalAlignments, unsigned int& numMate2OriginalAlignments);
 		// deserializes each alignment and stores them in the supplied vector
-		void ReadAlignments(vector<Alignment>& alignments, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair, const unsigned int readGroupCode);
+		void ReadAlignments(vector<Alignment>& alignments, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair, const unsigned int readGroupCode,
+			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments);
 		// deserialize the alignment
-		void ReadAlignment(Alignment& al, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair);
+		void ReadAlignment(Alignment& al, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair,
+			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments);
 		// reads a new compressed partition (returns false if EOF occurs)
 		bool ReadPartition(void);
 		// reads the tag from disk

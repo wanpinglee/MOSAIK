@@ -37,11 +37,11 @@ typedef unsigned char AlignmentStatus;
 #define AF_UNKNOWN                      0   // specifies an unset alignment flag
 #define AF_IS_FIRST_MATE                1   // specifies the alignment is the first mate when sequencing the read
 #define AF_IS_MATE_REVERSE_STRAND       2   // specifies the orientation of the mate
-#define AF_IS_NOT_PRIMARY               4   // reserved, not currently used
+#define AF_IS_UNMAPPED                  4   // specifies the alignment is unmapped
 #define AF_IS_REVERSE_STRAND            8   // specifies the orientation of the current alignment
 #define AF_IS_SECOND_MATE               16  // specifies the alignment is the second mate when sequencing the read
 #define AF_WAS_RESCUED                  32  // specifies if the alignment was rescued during local alignment search
-#define AF_IS_JUNK                      64  // specifies the alignment is junk; currently it is used for indicating # of alignments
+#define AF_IS_JUNK                      64  // not used, specifies the alignment is junk; currently it is used for indicating # of alignments
 #define AF_RESERVED2                    128 // reserved, not currently used
 
 // define our alignment tags

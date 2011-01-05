@@ -69,6 +69,8 @@ namespace MosaikReadFormat {
 		void SaveAlignment(Alignment* pAl);
 		// saves the read to the alignment archive
 		void SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments);
+		void SaveRead(const Mosaik::Read& mr, const Alignment & mate1Alignments, const Alignment & mate2Alignments, 
+			const bool& isLongRead, const bool & isSaveMate1 = true, const bool & isSaveMate2 = true );
 		// adds a header tag (only works before opening the file)
 		void AddHeaderTag(const unsigned char tagID, const TagType& tagType);
 		// set reference gaps vector
@@ -93,7 +95,15 @@ namespace MosaikReadFormat {
 		// write partition to disk
 		void WritePartition(void);
 		// write the read header to disk
-		void WriteReadHeader(const CMosaikString& readName, const unsigned int readGroupCode, const unsigned char readStatus, const unsigned int numMate1Alignments, const unsigned int numMate2Alignments);
+		void WriteReadHeader(
+			const CMosaikString& readName, 
+			const unsigned int readGroupCode, 
+			const unsigned char readStatus, 
+			const unsigned int numMate1Alignments, 
+			const unsigned int numMate2Alignments,
+			const unsigned int   numMate1OriginalAlignments = 0,
+			const unsigned int   numMate2OriginalAlignments = 0);
+
 		// writes the tag to disk
 		void WriteTag(const map<unsigned char, Tag>::const_iterator& htIter);
 		// denotes the status of the output stream

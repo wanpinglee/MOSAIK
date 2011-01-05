@@ -22,14 +22,18 @@
 #include <algorithm>
 #include <limits.h>
 
+#include "AlignedRead.h"
 #include "Alignment.h"
-#include "SortNMergeUtilities.h"
-#include "FileUtilities.h"
-#include "AlignmentWriter.h"
 #include "AlignmentReader.h"
+#include "AlignmentWriter.h"
+#include "BamWriter.h"
+#include "BestNSecondBestSelection.h"
+#include "FileUtilities.h"
 #include "MosaikString.h"
 #include "ReadGroup.h"
 #include "ReadStatus.h"
+#include "SortNMergeUtilities.h"
+#include "ZaTager.h"
 
 
 /*
@@ -71,8 +75,8 @@ class CArchiveMerge
 	
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
-		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo);                             /* constructor */
-		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int nMaxAlignment, unsigned int *readNo);
+		//CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo);                             /* constructor */
+		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength = 0 );
 
 		void Merge();
 
@@ -91,20 +95,43 @@ class CArchiveMerge
 		vector < string > _inputFilenames;
 		string _outputFilename;
 
-                unsigned int               _nMaxAlignment;
+                //unsigned int               _nMaxAlignment;
 		unsigned int*              _readNo;
+		unsigned int               _expectedFragmentLength;
 		vector< unsigned int >     _refIndex;
 		vector<ReferenceSequence>           _referenceSequences;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;
 		AlignmentStatus _alignmentStatus;
+		bool _isPairedEnd;
+		map<unsigned int, MosaikReadFormat::ReadGroup> _readGroupsMap;
 
 		StatisticsCounters _counters;
+
+		BamHeader _mHeader; // multiply alignments
+		BamHeader _uHeader; // unaligned reads
+		BamHeader _rHeader; // regular bam
+
+		CBamWriter _mBam; // multiply alignments
+		CBamWriter _uBam; // unaligned reads
+		CBamWriter _rBam;
 		
 		
 		inline void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );
 		void CopyReferenceString( vector<ReferenceSequence>& refVec );
 		void PrintReferenceSequence( vector<ReferenceSequence>& refVec );
 		void CalculateStatisticsCounters( const Mosaik::AlignedRead& alignedRead );
+
+		void WriteAlignment( Mosaik::AlignedRead& r );
+		inline void SetAlignmentFlags(
+		        Alignment& al,
+		        const Alignment& mate,
+		        const bool& isPair,
+		        const bool& isProperPair,
+		        const bool& isFirstMate,
+		        const bool& isPairTech,
+		        const bool& isItselfMapped,
+		        const bool& isMateMapped,
+		        const Mosaik::AlignedRead& r);
 
 }; /* -----  end of class CArchiveMerge  ----- */
 
