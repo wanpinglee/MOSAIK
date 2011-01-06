@@ -33,6 +33,7 @@
 #include "ReadGroup.h"
 #include "ReadStatus.h"
 #include "SortNMergeUtilities.h"
+#include "StatisticsMaps.h"
 #include "ZaTager.h"
 
 
@@ -76,7 +77,7 @@ class CArchiveMerge
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
 		//CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo);                             /* constructor */
-		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength = 0 );
+		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength = 0, const bool hasSpecial = false );
 
 		void Merge();
 
@@ -100,18 +101,28 @@ class CArchiveMerge
 		unsigned int               _expectedFragmentLength;
 		vector< unsigned int >     _refIndex;
 		vector<ReferenceSequence>           _referenceSequences;
+		vector<ReferenceSequence>           _referenceSequencesWoSpecial;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;
 		AlignmentStatus _alignmentStatus;
 		bool _isPairedEnd;
+		bool _hasSpecial;
 		map<unsigned int, MosaikReadFormat::ReadGroup> _readGroupsMap;
+		
+		string _specialArchiveName;
+		string _specialCode1;
+		string _specialCode2;
+		MosaikReadFormat::CAlignmentReader _specialReader;
+		Mosaik::AlignedRead                _specialAl;
+		bool                               _specialArchiveEmpty;
+		vector<ReferenceSequence>          _specialReferenceSequences;
 
 		StatisticsCounters _counters;
 
-		BamHeader _mHeader; // multiply alignments
+		BamHeader _sHeader; // special reads
 		BamHeader _uHeader; // unaligned reads
 		BamHeader _rHeader; // regular bam
 
-		CBamWriter _mBam; // multiply alignments
+		CBamWriter _sBam; // multiply alignments
 		CBamWriter _uBam; // unaligned reads
 		CBamWriter _rBam;
 		

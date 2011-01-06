@@ -48,7 +48,13 @@ public:
 	void RandomizeAndTrimHashPositions(unsigned short numHashPositions);
 	// load hash keys and positions from the file to memory
 	void LoadKeysNPositions(void);
-	void GetHashStatistics(const vector<pair<unsigned int, unsigned int> >& referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories);
+	void GetHashStatistics(
+		const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
+		vector<unsigned int>& nHashs, 
+		vector<unsigned int>& expectedMemories,
+		const bool&           hasSpecial,
+		const unsigned int&   specialBegin,
+		const unsigned int&   specialMaxHashPositions);
 
 private:
 	// loads the keys database into memory

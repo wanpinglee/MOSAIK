@@ -49,11 +49,12 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 }
 */
 
-CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength )
-	: _inputFilenames(inputFilenames)
-	, _outputFilename(outputFilename)
-	, _readNo(readNo)
+CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength, const bool hasSpecial )
+	: _inputFilenames( inputFilenames )
+	, _outputFilename( outputFilename )
+	, _readNo( readNo )
 	, _expectedFragmentLength( fragmentLength )
+	, _hasSpecial( hasSpecial )
 {
 	MosaikReadFormat::CAlignmentReader reader;
 	reader.Open( _inputFilenames[0] );
@@ -70,29 +71,44 @@ CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFi
 		_readGroupsMap[ ite->ReadGroupCode ] = *ite ;
 	}
 
+	// the last archive is the one containing alignments located at special references
 
 	for ( unsigned int i = 0; i < _inputFilenames.size(); i++ ) {
 		reader.Open( _inputFilenames[i] );
 		
+		// grab reference info from the archive
 		vector<ReferenceSequence> referenceSequences;
 		reader.GetReferenceSequences(referenceSequences);
+
 		CopyReferenceString( referenceSequences );
+		
 		_referenceSequences.insert( _referenceSequences.end(), referenceSequences.begin(), referenceSequences.end() );
 		_refIndex[i] = ( i == 0 ) ? referenceSequences.size() : referenceSequences.size() + _refIndex[i-1];
+
+		// don't include the special references
+		if ( ( _hasSpecial ) && ( i != ( _inputFilenames.size() - 1 ) ) )
+			_referenceSequencesWoSpecial.insert( _referenceSequencesWoSpecial.end(), referenceSequences.begin(), referenceSequences.end() );
+
+		// includes the special references
+		if ( ( _hasSpecial ) && ( i == ( _inputFilenames.size() - 1 ) ) )
+			_specialReferenceSequences.insert( _specialReferenceSequences.end(), referenceSequences.begin(), referenceSequences.end() );
 
 		referenceSequences.clear();
 		reader.Close();
 	}
 
-	_mHeader.SortOrder = SORTORDER_UNSORTED;
+	if ( !_hasSpecial )
+		_referenceSequencesWoSpecial = _referenceSequences;
+
+	_sHeader.SortOrder = SORTORDER_UNSORTED;
 	_uHeader.SortOrder = SORTORDER_UNSORTED;
 	_rHeader.SortOrder = SORTORDER_UNSORTED;
 
-	_mHeader.pReferenceSequences = &_referenceSequences;
-	_uHeader.pReferenceSequences = &_referenceSequences;
-	_rHeader.pReferenceSequences = &_referenceSequences;
+	_sHeader.pReferenceSequences = &_referenceSequences;
+	_uHeader.pReferenceSequences = &_referenceSequencesWoSpecial;
+	_rHeader.pReferenceSequences = &_referenceSequencesWoSpecial;
 
-	_mHeader.pReadGroups = &_readGroups;
+	_sHeader.pReadGroups = &_readGroups;
 	_uHeader.pReadGroups = &_readGroups;
 	_rHeader.pReadGroups = &_readGroups;
 
@@ -256,6 +272,41 @@ void CArchiveMerge::CalculateStatisticsCounters( const Mosaik::AlignedRead& alig
 
 void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
+	cerr << "writing" << endl;
+
+	_specialCode1.clear();
+	_specialCode2.clear();
+
+	if ( _hasSpecial ) {
+		// compare their names
+		while ( ( _specialAl < r ) && !_specialArchiveEmpty ) {
+			_specialAl.Clear();
+			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
+		}
+
+		if ( _specialAl.Name == r.Name ) {
+			if ( r.Mate1Alignments.size() > 1 ) {
+				if ( r.Mate1Alignments[0].IsMapped ) {
+				unsigned int referenceIndex = r.Mate1Alignments[0].ReferenceIndex;
+				cerr << referenceIndex << endl;
+				//_specialCode1 = _specialReferenceSequences[ referenceIndex ].Name;
+				//_specialCode1.resize(3);
+				//_specialCode1[2] = 0;
+				}
+			}
+
+			if ( r.Mate2Alignments.size() > 1 ) {
+				if ( r.Mate2Alignments[0].IsMapped ) {
+				unsigned int referenceIndex = r.Mate2Alignments[0].ReferenceIndex;
+				cerr << referenceIndex << endl;
+				//_specialCode2 = _specialReferenceSequences[ referenceIndex ].Name;
+				//_specialCode2.resize(3);
+				//_specialCode2[2] = 0;
+				}
+			}
+		}
+	}
+
 	unsigned int nMate1Alignments = 0;
 	unsigned int nMate2Alignments = 0;
 
@@ -263,11 +314,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
 		nMate1Alignments += ite->NumMapped;
+		ite->SpecialCode = _specialCode1;
 		if ( ite->IsMapped ) newMate1Set.push_back( *ite );
 	}
 	
 	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
 		nMate2Alignments += ite->NumMapped;
+		ite->SpecialCode = _specialCode2;
 		if ( ite->IsMapped ) newMate2Set.push_back( *ite );
 	}
 
@@ -280,17 +333,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		r.Mate2Alignments.clear();
 		r.Mate2Alignments = newMate2Set;
 	}
-		
-
-	//r.Mate1Alignments.clear();
-	//r.Mate2Alignments.clear();
-	//r.Mate1Alignments = newMate1Set;
-	//r.Mate2Alignments = newMate2Set;
 
 	const bool isMate1Unique   = ( nMate1Alignments == 1 ) ? true : false;
 	const bool isMate2Unique   = ( nMate2Alignments == 1 ) ? true : false;
-	//const bool isMate1Aligned  = ( nMate1Alignments > 0 ) ? true : false;
-	//const bool isMate2Aligned  = ( nMate2Alignments > 0 ) ? true : false;
 	const bool isMate1Multiple = ( nMate1Alignments > 1 ) ? true : false;
 	const bool isMate2Multiple = ( nMate2Alignments > 1 ) ? true : false;
 	bool isMate1Empty    = ( nMate1Alignments == 0 ) ? true : false;
@@ -436,8 +481,25 @@ inline void CArchiveMerge::SetAlignmentFlags(
 
 void CArchiveMerge::Merge() {
 	
-	//unsigned int nRead = 0;
+	if ( _hasSpecial ) {
+		// the last one is special archive
+		_specialArchiveName = *_inputFilenames.rbegin();
+		vector < string >::iterator ite = _inputFilenames.end() - 1;
+		_inputFilenames.erase( ite );
+		_specialArchiveEmpty = false;
+		_specialReader.Open( _specialArchiveName );
+
+		if ( !_specialArchiveEmpty ) 
+			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
+	}
+
 	unsigned int nTemp = _inputFilenames.size();
+
+	// sanity check
+	if ( nTemp == 0 ) {
+		printf("ERROR: There is no temporary archive.\n");
+		exit(1);
+	}
 	
 	// initialize MOSAIK readers for all temp files
 	vector< MosaikReadFormat::CAlignmentReader > readers;
@@ -466,7 +528,7 @@ void CArchiveMerge::Merge() {
 	//writer.AdjustPartitionSize(1000);
 	
 	// prepare BAM writers
-	_mBam.Open( _outputFilename + ".multiple.bam", _mHeader );
+	_sBam.Open( _outputFilename + ".special.bam", _sHeader );
 	_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
 	_rBam.Open( _outputFilename + ".bam", _rHeader );
 
@@ -625,7 +687,7 @@ void CArchiveMerge::Merge() {
 	//writer.Close();
 	
 	// Close BAMs
-	_mBam.Close();
+	_sBam.Close();
 	_uBam.Close();
 	_rBam.Close();
 
@@ -633,4 +695,7 @@ void CArchiveMerge::Merge() {
 	// close readers
 	for ( unsigned int i = 0; i < readers.size(); i++ )
 		readers[i].Close();
+
+	if ( _hasSpecial )
+		_specialReader.Close();
 }

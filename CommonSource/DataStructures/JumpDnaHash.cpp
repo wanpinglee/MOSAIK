@@ -440,11 +440,42 @@ void CJumpDnaHash::GetHashStatistics(
 		
 		// has hash hits
 		if ( positions.size() != 0 ) {
-			random_shuffle( positions.begin(), positions.end() );
-			//if ( mLimitPositions && (positions.size() > mMaxHashPositions ) )
-			//	positions.erase( positions.begin() + mMaxHashPositions,  positions.end() );
-			//StorePositions(curFilePosition, left, positions, offset);
-			SetPositionDistribution(referenceSequences, nHashs, expectedMemories, positions, hasSpecial, specialBegin, specialMaxHashPositions);
+
+			// handle sepcail references
+			if ( hasSpecial ) {
+				bool found = false;
+				unsigned int nSpecial = 0;
+				for ( vector<unsigned int>::reverse_iterator rite = positions.rbegin(); rite != positions.rend(); ++rite ) {
+					
+					if ( *rite < specialBegin )
+						break;
+					
+					if ( nSpecial <= specialMaxHashPositions ) {
+						found = true;
+						// the last slot is for special reference
+						nHashs[ nHashs.size() - 1 ]++;
+					}
+
+					nSpecial++;
+				}
+				if ( found )
+					// the last slot is for special reference
+					expectedMemories[ expectedMemories.size() - 1 ]++;
+
+				// remove special positions
+				if ( nSpecial > 0 ) {
+					unsigned int eraseBegin = positions.size() - nSpecial;
+					positions.erase( positions.begin() + eraseBegin, positions.end() );
+				}
+
+			}
+			
+			// handle regular references
+			if ( positions.size() != 0 ) {
+				random_shuffle( positions.begin(), positions.end() );
+				SetPositionDistribution(referenceSequences, nHashs, expectedMemories, positions);
+			}
+			
 		}
 
 		positions.clear();
@@ -468,18 +499,16 @@ void CJumpDnaHash::SetPositionDistribution(
 	const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
 	vector<unsigned int>&       nHashs, 
 	vector<unsigned int>&       expectedMemories, 
-	const vector<unsigned int>& positions,
-	const bool&                 hasSpecial,
-	const unsigned int&         specialBegin,
-	const unsigned int&         specialMaxHashPositions) {
+	const vector<unsigned int>& positions
+	//const bool&                 hasSpecial,
+	//const unsigned int&         specialBegin,
+	//const unsigned int&         specialMaxHashPositions
+) {
 
 	vector <bool> hasPositions;
 	hasPositions.resize(nHashs.size(), false);
 
 	unsigned int nPositions = 0;
-	if ( hasSpecial ) {
-	
-	}
 
 	if ( mLimitPositions && ( positions.size() > mMaxHashPositions ) )
 		nPositions = mMaxHashPositions;
@@ -488,7 +517,9 @@ void CJumpDnaHash::SetPositionDistribution(
 	
 	for ( unsigned int i = 0; i < nPositions; i++ ) {
 		unsigned int refNo = 0;
+		// search the position belonging to which group
 		while( positions[i] > referenceSequences[refNo].second ) refNo++;
+		
 		nHashs[refNo]++;
 
 		if ( !hasPositions[refNo] ) {
