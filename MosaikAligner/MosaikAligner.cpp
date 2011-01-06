@@ -614,7 +614,11 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		rm(outputFilenames[i].c_str());
+		cerr << outputFilenames[i] << endl;
+		//rm(outputFilenames[i].c_str());
+
+	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
+		cerr << temporaryFiles[i] << endl;
 
 	CConsole::Heading();
 	cout << "Merging alignment archive:" << endl;

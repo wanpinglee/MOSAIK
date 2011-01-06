@@ -32,6 +32,8 @@ SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikSort MosaikMerge MosaikAs
 UTIL_SUBDIRS = CommonSource MosaikJump MosaikCoverage MosaikText MosaikDupSnoop
 
 all:
+	@test -d $(OBJ_DIR) || mkdir $(OBJ_DIR)
+	@test -d $(BIN_DIR) || mkdir $(BIN_DIR)
 	@echo "Building MOSAIK for the following platform: $$BLD_PLATFORM"
 	@echo "========================================================="
 	@./UpdateConfigH
@@ -42,6 +44,8 @@ all:
 	done
 
 utils:
+	@test -d $(OBJ_DIR) || mkdir $(OBJ_DIR)
+	@test -d $(BIN_DIR) || mkdir $(BIN_DIR)
 	@echo "Building MOSAIK for the following platform: $$BLD_PLATFORM"
 	@echo "========================================================="
 	@./UpdateConfigH
