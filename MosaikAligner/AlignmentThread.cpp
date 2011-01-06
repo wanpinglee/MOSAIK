@@ -432,7 +432,9 @@ void CAlignmentThread::AlignReadArchive(
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;
 
-		if ( mSReference.found )
+		// we don't remove special alignment here,
+		// the special alignments will be considered when merging archives
+		if ( mSReference.found && !mFlags.UseArchiveOutput )
 			ProcessSpecialAlignment( mate1Set, mate2Set, mate1SpecialAl, mate2SpecialAl, isMate1Special, isMate2Special );
 		
 		// deleting special alignments may let mate1Alignments or mate2Alignments become empty

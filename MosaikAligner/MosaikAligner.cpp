@@ -313,6 +313,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		uint64_t nTotalHash;
 		GetHashStatistics( nHashs, expectedMemories, nTotalHash, referenceSequences );
 		
+
 		// align reads again per chromosome group
 		for ( unsigned int i = 0; i < referenceGroups.size(); ++i ) {
 	        	unsigned int startRef = referenceGroups[i].first;
@@ -343,7 +344,9 @@ cout << "s: " << startRef << "\t" << "e: " << endRef << endl;
 			// set the hash positions threshold
 			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL)) { 
 				double ratio = nHashs[i] / (double)nTotalHash;
-				unsigned int positionThreshold = mSReference.found ? mSReference.count : ceil(ratio * (double)mSettings.HashPositionThreshold);
+				unsigned int positionThreshold = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) 
+					? mSReference.count 
+					: ceil(ratio * (double)mSettings.HashPositionThreshold);
 				//cout << positionThreshold << endl;
 				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
 cout << "p: " << positionThreshold << endl;
@@ -360,8 +363,7 @@ cout << "p: " << positionThreshold << endl;
 			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
 				pRefBegin[j]    = referenceSequences[ startRef + j ].Begin - referenceSequences[ startRef ].Begin;
 				pRefEnd[j]      = referenceSequences[ startRef + j ].End   - referenceSequences[ startRef ].Begin;
-				//pRefSpecial[j]  = referenceSequences[ startRef + j ].Special;
-				pRefSpecial[j] = false;
+				pRefSpecial[j]  = referenceSequences[ startRef + j ].Special;
 
 				if ( pRefSpecial[j] ) {
 					pRefSpecies[j]  = new char [3];

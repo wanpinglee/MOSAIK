@@ -272,8 +272,6 @@ void CArchiveMerge::CalculateStatisticsCounters( const Mosaik::AlignedRead& alig
 
 void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
-	cerr << "writing" << endl;
-
 	_specialCode1.clear();
 	_specialCode2.clear();
 
@@ -289,9 +287,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 				if ( r.Mate1Alignments[0].IsMapped ) {
 				unsigned int referenceIndex = r.Mate1Alignments[0].ReferenceIndex;
 				cerr << referenceIndex << endl;
-				//_specialCode1 = _specialReferenceSequences[ referenceIndex ].Name;
-				//_specialCode1.resize(3);
-				//_specialCode1[2] = 0;
+				_specialCode1 = _specialReferenceSequences[ referenceIndex ].Species;
+				_specialCode1.resize(3);
+				_specialCode1[2] = 0;
 				}
 			}
 
@@ -299,9 +297,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 				if ( r.Mate2Alignments[0].IsMapped ) {
 				unsigned int referenceIndex = r.Mate2Alignments[0].ReferenceIndex;
 				cerr << referenceIndex << endl;
-				//_specialCode2 = _specialReferenceSequences[ referenceIndex ].Name;
-				//_specialCode2.resize(3);
-				//_specialCode2[2] = 0;
+				_specialCode2 = _specialReferenceSequences[ referenceIndex ].Species;
+				_specialCode2.resize(3);
+				_specialCode2[2] = 0;
 				}
 			}
 		}
