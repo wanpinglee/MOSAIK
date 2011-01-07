@@ -49,7 +49,7 @@ namespace MosaikReadFormat {
 	CAlignmentWriter::~CAlignmentWriter(void) {
 		if(mIsOpen)            Close();
 		if(mBuffer)            delete [] mBuffer;
-		if(mCompressionBuffer) delete [] mCompressionBuffer;
+		if(mCompressionBuffer) delete mCompressionBuffer;
 		if(MosaikSignature)    delete [] MosaikSignature;
 	}
 
@@ -95,7 +95,7 @@ namespace MosaikReadFormat {
 
 		// copy the old data and destroy the old buffer
 		memcpy(newBuffer, mBuffer, mBufferLen);
-		delete [] mBuffer;
+		if ( mBuffer ) delete [] mBuffer;
 
 		// repoint the new buffer
 		mBuffer          = newBuffer;

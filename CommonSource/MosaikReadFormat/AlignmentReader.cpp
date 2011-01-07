@@ -48,7 +48,7 @@ namespace MosaikReadFormat {
 
 		// delete the reference sequence LUT
 		for(unsigned short i = 0; i < mNumRefSeqs; ++i) delete [] mRefSeqLUT[i];
-		delete [] mRefSeqLUT;
+		if ( mRefSeqLUT ) delete mRefSeqLUT;
 	}
 
 	// checks to see if this is truly an MOSAIK alignment archive

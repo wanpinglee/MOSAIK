@@ -117,28 +117,33 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		++ite1;
 	}
 	
+	// both of full- and low-memory MOSAIK need multiply-mapped bam in AlignmentThread.cpp
+	mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
+	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+	mBams.mHeader.pReadGroups = &readGroups;
+	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 
 	if ( !mFlags.UseLowMemory ) {
 		
 		// ==============================
 		// set the headers of bam writers
 		// ==============================
-		mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
+		//mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
 		mBams.sHeader.SortOrder = SORTORDER_UNSORTED;
 		mBams.uHeader.SortOrder = SORTORDER_UNSORTED;
 		mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
 
-		mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+		//mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 		mBams.sHeader.pReferenceSequences = &referenceSequences;
 		mBams.uHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 		mBams.rHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 	
-		mBams.mHeader.pReadGroups = &readGroups;
+		//mBams.mHeader.pReadGroups = &readGroups;
 		mBams.sHeader.pReadGroups = &readGroups;
 		mBams.uHeader.pReadGroups = &readGroups;
 		mBams.rHeader.pReadGroups = &readGroups;
 
-		mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+		//mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 		mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.sHeader);
 		mBams.uBam.Open( mSettings.OutputReadArchiveFilename + ".unaligned.bam", mBams.uHeader);
 		mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.rHeader);
@@ -220,7 +225,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		MosaikReadFormat::CAlignmentWriter out;
 		//out.Open(mSettings.OutputReadArchiveFilename.c_str(), referenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
 
-		AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs);
+		mFlags.SaveMultiplyBam = true;
+		AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs, 0);
 
 		// close open file streams
 		inn.Close();
@@ -252,7 +258,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 
 		// close mBams
-		mBams.mBam.Close();
+		//mBams.mBam.Close();
 		mBams.sBam.Close();
 		mBams.uBam.Close();
 		mBams.rBam.Close();
@@ -263,28 +269,28 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 //***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
-	temporaryFiles.push_back("tmp/haxsocei9lz3xhj8lugt5wz1oe5hnjkb.tmp");
-	temporaryFiles.push_back("tmp/usj1o5zpsdw6omq6x80xepyrqr0q4czo.tmp");
-	temporaryFiles.push_back("tmp/2i69e92h5cyj4gnywl0zn6gdhndau332.tmp");
-	temporaryFiles.push_back("tmp/ry7b8xgn4t6380vkk26kf38e2m9d44jm.tmp");
-	temporaryFiles.push_back("tmp/ph4q0d2l8hi7cop7bjkh9d61kerrhppc.tmp");
-	temporaryFiles.push_back("tmp/ttpta5salt1l7ww3lsr1aypuv21e6kb6.tmp");
-	temporaryFiles.push_back("tmp/rk4a8twq31drwiln3954wqhd5w3fpvm7.tmp");
-	temporaryFiles.push_back("tmp/2c71410ojag56a9r5an33fdu80enl7kt.tmp");
-	temporaryFiles.push_back("tmp/os9bss2adwesrlkrok9u315qm1tdnce2.tmp");
-	temporaryFiles.push_back("tmp/ledw1z6bg64kb1q3wvezxahjqqoxwwr7.tmp");
-	temporaryFiles.push_back("tmp/rvgz5mgln24p3mu9hrhnzngvstgyoj05.tmp");
-	temporaryFiles.push_back("tmp/pzzmd3g1316pvqdjcavrbj56410cmcp1.tmp");
-	temporaryFiles.push_back("tmp/ppp5r8shom7gcvn9lt3t90fag1y1hc6c.tmp");
-	temporaryFiles.push_back("tmp/6axn2klf3ai20u1llktutjdttdjvp1jl.tmp");
-	temporaryFiles.push_back("tmp/hlm75gtzjek32adtlwdxcqfqsm1qra4e.tmp");
-	temporaryFiles.push_back("tmp/oda8uvmkzb92xt0k0h6p5vwrdvqcme81.tmp");
-	temporaryFiles.push_back("tmp/payoqtjgvfg5wugidikwzjzi2a99gdzc.tmp");
-	temporaryFiles.push_back("tmp/9keuc5wwzabgzk0y2i942ylvmgmhlr0k.tmp");
+	temporaryFiles.push_back("tmp/qi0x92wxtpf5mf8ebfxohj5d2olcmgsi.tmp");
+	temporaryFiles.push_back("tmp/w3vzm84kxpssvehs9hlv3dt0sl74vgmy.tmp");
+	temporaryFiles.push_back("tmp/a91amjwnindi1tvhokfu90jkgf5c6awm.tmp");
+	temporaryFiles.push_back("tmp/693oifc1pm1k0w4xi26es5pxeab3mc7y.tmp");
+	temporaryFiles.push_back("tmp/xacio2asxlz6ierva3lfecqcoy3obr8y.tmp");
+	temporaryFiles.push_back("tmp/7o0cfk2zhasnnc06tidp6b6i80k5qoan.tmp");
+	temporaryFiles.push_back("tmp/zm68h8725ax2gxuimkhc9mk2psikwk6m.tmp");
+	temporaryFiles.push_back("tmp/ti2jdxtiee0yyuwv45uezdekz9yfb3yu.tmp");
+	temporaryFiles.push_back("tmp/yi5aud2ltya0r306dim52j8ksa0a5pn9.tmp");
+	temporaryFiles.push_back("tmp/72i77h51ohzxfexdwpaik89cz3lkojl1.tmp");
+	temporaryFiles.push_back("tmp/uoea2z26osmrbpgalzhqggwl02b0abcb.tmp");
+	temporaryFiles.push_back("tmp/ggr9alsrz1c8jktoj3iyly7rymkeo6bu.tmp");
+	temporaryFiles.push_back("tmp/kd41bg9mv5v6ocobf1iciyg9tyf5ha97.tmp");
+	temporaryFiles.push_back("tmp/ull7jo3uusae5n3e5siyhe63w61vjiuj.tmp");
+	temporaryFiles.push_back("tmp/5zy1p9cfz6jv3xfxto0gtw704ifgvp46.tmp");
+	temporaryFiles.push_back("tmp/d81n697ffksuc24pet6wqvxpfdxfafpd.tmp");
+	temporaryFiles.push_back("tmp/3xedysqoanfh1dux9mda378p28a844ux.tmp");
+	temporaryFiles.push_back("tmp/r8fv333oxvq05g20fpl3o1p45g078dpp.tmp");
         
         // calculate total # of reads
         unsigned int nReads = 0;
-        for ( unsigned int i = 0 ; i < temporaryFiles.size(); i++ ) {
+        for ( unsigned int i = 0 ; i < temporaryFiles.size() - 1; i++ ) {
 	        MosaikReadFormat::CAlignmentReader reader;
                 reader.Open( temporaryFiles[i] );
                 nReads += reader.GetNumReads();
@@ -432,8 +438,8 @@ cout << "p: " << positionThreshold << endl;
 			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
-
-			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs);
+			mFlags.SaveMultiplyBam = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) ? false : true;
+			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs, referenceGroups[i].first );
 
 			// close open file streams
 			inn.Close();
@@ -465,7 +471,7 @@ cout << "p: " << positionThreshold << endl;
 		}
 	}
 
-PrintStatistics();
+	mBams.mBam.Close();
 
 	if ( mFlags.UseLowMemory )
 		MergeArchives();
@@ -586,12 +592,15 @@ void CMosaikAligner::MergeArchives(void) {
 
         // calculate total # of reads
         unsigned int nReads = 0;
+	//unsigned int nOutputFilenames = mSReference.found ? outputFilenames.size() - 1 : outputFilenames.size() ;
         for ( unsigned int i = 0 ; i < outputFilenames.size(); i++ ) {
 	        MosaikReadFormat::CAlignmentReader reader;
                 reader.Open( outputFilenames[i] );
                 nReads += reader.GetNumReads();
                 reader.Close();
         }
+
+
 
 
 	// if nThread is too large, it'll open too many files at the same time.
@@ -614,11 +623,10 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		cerr << outputFilenames[i] << endl;
-		//rm(outputFilenames[i].c_str());
+		rm(outputFilenames[i].c_str());
 
-	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-		cerr << temporaryFiles[i] << endl;
+	//for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
+	//	cerr << temporaryFiles[i] << endl;
 
 	CConsole::Heading();
 	cout << "Merging alignment archive:" << endl;
@@ -662,9 +670,8 @@ void CMosaikAligner::AlignReadArchive(
 	unsigned int* pRefEnd, 
 	char** pRefSpecies, 
 	bool*  pRefSpecial, 
-	char** pBsRefSeqs
-	) 
-{
+	char** pBsRefSeqs,
+	const unsigned int referenceOffset) {
 
 	ReadStatus readStatus          = in.GetStatus();
 	
@@ -712,6 +719,7 @@ void CMosaikAligner::AlignReadArchive(
 	td.pBams               = &mBams;
 	td.SpecialReference    = mSReference;
 	td.pReadGroups         = &readGroupsMap;
+	td.ReferenceOffset     = referenceOffset;
 
 
 	pthread_attr_t attr;

@@ -275,31 +275,35 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	_specialCode1.clear();
 	_specialCode2.clear();
 
+	bool isMate1Special = false;
+	bool isMate2Special = false;
+
 	if ( _hasSpecial ) {
 		// compare their names
 		while ( ( _specialAl < r ) && !_specialArchiveEmpty ) {
 			_specialAl.Clear();
 			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
+			if ( !_specialArchiveEmpty ) *_readNo = *_readNo + 1;
 		}
 
 		if ( _specialAl.Name == r.Name ) {
 			if ( r.Mate1Alignments.size() > 1 ) {
-				if ( r.Mate1Alignments[0].IsMapped ) {
-				unsigned int referenceIndex = r.Mate1Alignments[0].ReferenceIndex;
-				cerr << referenceIndex << endl;
-				_specialCode1 = _specialReferenceSequences[ referenceIndex ].Species;
-				_specialCode1.resize(3);
-				_specialCode1[2] = 0;
+				if ( _specialAl.Mate1Alignments[0].IsMapped ) {
+					unsigned int referenceIndex = _specialAl.Mate1Alignments[0].ReferenceIndex;
+					_specialCode1 = _specialReferenceSequences[ referenceIndex ].Species;
+					_specialCode1.resize(3);
+					_specialCode1[2] = 0;
+					isMate1Special = true;
 				}
 			}
 
 			if ( r.Mate2Alignments.size() > 1 ) {
-				if ( r.Mate2Alignments[0].IsMapped ) {
-				unsigned int referenceIndex = r.Mate2Alignments[0].ReferenceIndex;
-				cerr << referenceIndex << endl;
-				_specialCode2 = _specialReferenceSequences[ referenceIndex ].Species;
-				_specialCode2.resize(3);
-				_specialCode2[2] = 0;
+				if ( _specialAl.Mate2Alignments[0].IsMapped ) {
+					unsigned int referenceIndex = _specialAl.Mate2Alignments[0].ReferenceIndex;
+					_specialCode2 = _specialReferenceSequences[ referenceIndex ].Species;
+					_specialCode2.resize(3);
+					_specialCode2[2] = 0;
+					isMate2Special = true;
 				}
 			}
 		}
@@ -339,7 +343,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate1Empty    = ( nMate1Alignments == 0 ) ? true : false;
 	bool isMate2Empty    = ( nMate2Alignments == 0 ) ? true : false;
 
-//cout << nMate1Alignments << "\t" << nMate2Alignments << endl;
 
 	// UU, UM, and MM pair
 	if ( ( isMate1Unique && isMate2Unique )
@@ -347,7 +350,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		|| ( isMate1Multiple && isMate2Unique )
 		|| ( isMate1Multiple && isMate2Multiple ) ) {
 
-//cout << "case1" << endl;
 			
 		if ( ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
@@ -388,12 +390,40 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 			_rBam.SaveAlignment( al1, zaTag1 );
 			_rBam.SaveAlignment( al2, zaTag2 );
-		
+
+			if ( isMate1Unique && isMate2Special ) {
+				Alignment genomicAl = al1;
+				Alignment specialAl = _specialAl.Mate2Alignments[0];
+				SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
+
+				CZaTager zas1, zas2;
+
+				const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, true );
+				const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, false );
+
+				_sBam.SaveAlignment( genomicAl, zas1Tag );
+				_sBam.SaveAlignment( specialAl, zas2Tag );
+			}
+
+			if ( isMate2Unique && isMate1Special ) {
+				Alignment genomicAl = al2;
+				Alignment specialAl = _specialAl.Mate1Alignments[0];
+				SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
+
+				CZaTager zas1, zas2;
+
+				const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, false );
+				const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, true );
+
+				_sBam.SaveAlignment( genomicAl, zas1Tag );
+				_sBam.SaveAlignment( specialAl, zas2Tag );
+			}
+
+
 	// UX and MX pair
 	} else if ( ( isMate1Empty || isMate2Empty )
 		&&  !( isMate1Empty && isMate2Empty ) ) {
 		
-//cout << "case2" << endl;
 
 		if ( isMate1Multiple || isMate2Multiple ) 
 			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
@@ -425,7 +455,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	// XX
 	} else if ( isMate1Empty && isMate2Empty ) {
 		
-//cout << "case3" << endl;
 
 		Alignment unmappedAl1, unmappedAl2;
 		unmappedAl1 = r.Mate1Alignments[0];
@@ -487,8 +516,10 @@ void CArchiveMerge::Merge() {
 		_specialArchiveEmpty = false;
 		_specialReader.Open( _specialArchiveName );
 
-		if ( !_specialArchiveEmpty ) 
+		if ( !_specialArchiveEmpty ) {
 			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
+			if ( !_specialArchiveEmpty ) *_readNo = *_readNo + 1;
+		}
 	}
 
 	unsigned int nTemp = _inputFilenames.size();

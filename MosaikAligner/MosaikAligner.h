@@ -110,6 +110,7 @@ private:
 	// temporary output files for chromosome-by-chromosome alignment
 	vector< string > outputFilenames;
 	// reference groups for low-memory algorithm
+	//            start_ref,    length
 	vector< pair <unsigned int, unsigned int> > referenceGroups;
 	// retrieve the concatenated reference sequence length
 	//vector<ReferenceSequence> referenceSequences;
@@ -129,6 +130,7 @@ private:
 		unsigned int*                       pRefEnd, 
 		char**                              pRefSpecies, 
 		bool*                               pRefSpecial, 
-		char**                              pBsRefSeqs);
+		char**                              pBsRefSeqs,
+		const unsigned int                  referenceOffset);
 };
 

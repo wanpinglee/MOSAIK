@@ -43,8 +43,8 @@ CAlignmentThread::CAlignmentThread(
 	bool*                       pRefSpecial, 
 	char**                      pBsRefSeqs, 
 	const SReference&           SpecialReference, 
-	map<unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap 
-)
+	map<unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
+	const unsigned int          referenceOffset)
 	: mAlgorithm(algorithmType)
 	, mMode(algorithmMode)
 	, mSettings(settings)
@@ -64,6 +64,7 @@ CAlignmentThread::CAlignmentThread(
 	, mReferenceSpecial(pRefSpecial)
 	, softClippedIdentifierLength(2048)
 	, mReadGroupsMap(pReadGroupsMap)
+	, mReferenceOffset( referenceOffset )
 {
 	// calculate our base quality LUT
 	for(unsigned char i = 0; i < 100; i++) mBaseQualityLUT[i] = pow(10.0, -i / 10.0);
@@ -119,7 +120,8 @@ void* CAlignmentThread::StartThread(void* arg) {
 		pTD->pRefSpecial, 
 		pTD->pBsRefSeqs, 
 		pTD->SpecialReference, 
-		pTD->pReadGroups );
+		pTD->pReadGroups,
+		pTD->ReferenceOffset);
 
 	at.AlignReadArchive(
 		pTD->pIn, 
@@ -474,21 +476,22 @@ void CAlignmentThread::AlignReadArchive(
 		
 		
 		// save chromosomes and positions of multiple alignments in bam
-		if ( !mFlags.UseArchiveOutput ) {
+		//if ( !mFlags.UseArchiveOutput ) {
+		if ( mFlags.SaveMultiplyBam )
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
-					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				}
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
 			if ( isPairedEnd && isMate2Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
-					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex, alIter->ReferenceBegin, alIter->ReferenceEnd );
+					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
-		}
+		//}
 
 
 		// ===================================

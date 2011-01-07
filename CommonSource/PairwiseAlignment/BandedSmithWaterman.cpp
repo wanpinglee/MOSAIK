@@ -53,17 +53,17 @@ CBandedSmithWaterman::CBandedSmithWaterman(float matchScore, float mismatchScore
 
 // destructor
 CBandedSmithWaterman::~CBandedSmithWaterman(void) {
-	//if(mPointers)              delete [] mPointers;
-	//if(mAnchorGapScores)       delete [] mAnchorGapScores;
-	//if(mBestScores)            delete [] mBestScores;
-	//if(mReversedAnchor)        delete [] mReversedAnchor;
-	//if(mReversedQuery)         delete [] mReversedQuery;
+	if(mPointers)              delete [] mPointers;
+	if(mAnchorGapScores)       delete [] mAnchorGapScores;
+	if(mBestScores)            delete [] mBestScores;
+	if(mReversedAnchor)        delete [] mReversedAnchor;
+	if(mReversedQuery)         delete [] mReversedQuery;
 
-	delete [] mPointers;
-	delete [] mAnchorGapScores;
-	delete [] mBestScores;
-	delete [] mReversedAnchor;
-	delete [] mReversedQuery;
+	//delete [] mPointers;
+	//delete [] mAnchorGapScores;
+	//delete [] mBestScores;
+	//delete [] mReversedAnchor;
+	//delete [] mReversedQuery;
 }
 
 // aligns the query sequence to the anchor using the Smith Waterman Gotoh algorithm
@@ -431,7 +431,7 @@ void CBandedSmithWaterman::ReinitializeMatrices(const PositionType& positionType
 	if( (numColumns * numRows) > mCurrentMatrixSize ) {
 
 		mCurrentMatrixSize = numColumns * numRows;
-		delete [] mPointers;
+		if ( mPointers ) delete [] mPointers;
 		mPointers = NULL;
 
 		try {
@@ -454,8 +454,8 @@ void CBandedSmithWaterman::ReinitializeMatrices(const PositionType& positionType
 	if( ( s1Length + s2Length ) > mCurrentAQSumSize ) {
 
 		mCurrentAQSumSize = s1Length + s2Length;
-		delete [] mReversedAnchor;
-		delete [] mReversedQuery;
+		if ( mReversedAnchor ) delete [] mReversedAnchor;
+		if ( mReversedQuery )  delete [] mReversedQuery;
 		mReversedAnchor = NULL;
 		mReversedQuery  = NULL;
 

@@ -120,6 +120,7 @@ public:
 		bool UseLowMemory;
 		bool UseBamOutput;
 		bool UseArchiveOutput;
+		bool SaveMultiplyBam;
 
 		FlagData()
 			: EnableColorspace(false)
@@ -137,6 +138,7 @@ public:
 			, UseLowMemory(false)
 			, UseBamOutput(false)
 			, UseArchiveOutput(false)
+			, SaveMultiplyBam(false)
 		{}
 	};
 	// stores the statistical counters
@@ -218,7 +220,8 @@ public:
 		bool*                       pRefSpecial,
 		char**                      pBsRefSeqs, 
 		const SReference&           SpecialReference,
-		map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap
+		map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
+		const unsigned int          referenceOffset
 	);
 
 	// destructor
@@ -248,6 +251,7 @@ public:
 		BamWriters*   pBams;
 		SReference    SpecialReference;
 		map< unsigned int, MosaikReadFormat::ReadGroup >* pReadGroups;
+		unsigned int  ReferenceOffset;
 	};
 	// aligns the read archive
 	void AlignReadArchive(
@@ -352,6 +356,8 @@ private:
 	vector<ReferenceSequence> mpBsRefSeqs;
 	// read groups map
 	map<unsigned int, MosaikReadFormat::ReadGroup>* mReadGroupsMap;
+	// reference offset used for low-memory multiply-mapped bam
+	unsigned int mReferenceOffset;
 	// best and second best utilities
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 

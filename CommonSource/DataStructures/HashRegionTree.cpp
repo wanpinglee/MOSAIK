@@ -46,7 +46,8 @@ namespace AVLTree {
 			d = n;
 
 			if(n->Parent == NULL) {
-				delete d;
+				if ( d ) delete d;
+				d = NULL;
 				break;
 
 			// Next in order will be our parent's right child's leftmost child
@@ -55,11 +56,13 @@ namespace AVLTree {
 				n = n->Parent->Right;
 				while(n->Left  != NULL) n = n->Left;
 				while(n->Right != NULL) n = n->Right;
-				delete d;
+				if ( d ) delete d;
+				d = NULL;
 			
 			} else {
 				n = n->Parent;
-				delete d;
+				if ( d ) delete d;
+				d = NULL;
 			}
 
 		} while(n != NULL);
@@ -401,7 +404,8 @@ namespace AVLTree {
 					else p->Right = NULL;
 
 				// delete the candidate node
-				delete n;
+				if ( n ) delete n;
+				n = NULL;
 
 				// decrement the count
 				mCount--;
