@@ -835,14 +835,14 @@ namespace MosaikReadFormat {
 		if((status & AF_IS_REVERSE_STRAND) != 0) al.IsReverseStrand = true;
 		if((status & AF_WAS_RESCUED)       != 0) al.WasRescued      = true;
 		if((status & AF_IS_UNMAPPED)       != 0) al.IsMapped        = false;
-		//if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
+		if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
 
 		if ( al.IsFirstMate )
 			al.NumMapped = numMate1OriginalAlignments;
 		else
 			al.NumMapped = numMate2OriginalAlignments;
 
-		//if ( !al.IsJunk ) {
+		if ( !al.IsJunk ) {
 
 		// get the number of mismatches
 		memcpy((char*)&al.NumMismatches, mBufferPtr, SIZEOF_SHORT);
@@ -912,7 +912,7 @@ namespace MosaikReadFormat {
 		const unsigned short bqLength = al.QueryEnd - al.QueryBegin + 1;
 		al.BaseQualities.Copy((const char*)mBufferPtr, bqLength);
 		mBufferPtr += bqLength;
-		//}
+		}
 
 		//al.BaseQualities.Increment(33);
 		//cout << al.Reference.CData() << endl << al.Query.CData() << endl << al.BaseQualities.CData() << endl;

@@ -121,6 +121,7 @@ public:
 		bool UseBamOutput;
 		bool UseArchiveOutput;
 		bool SaveMultiplyBam;
+		bool SaveUnmappedBasesInArchive;
 
 		FlagData()
 			: EnableColorspace(false)
@@ -139,6 +140,7 @@ public:
 			, UseBamOutput(false)
 			, UseArchiveOutput(false)
 			, SaveMultiplyBam(false)
+			, SaveUnmappedBasesInArchive(false)
 		{}
 	};
 	// stores the statistical counters

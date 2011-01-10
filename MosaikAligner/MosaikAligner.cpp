@@ -438,6 +438,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 			mFlags.SaveMultiplyBam = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) ? false : true;
+			mFlags.SaveUnmappedBasesInArchive = ( i == 1 ) ? true : false; 
 			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs, referenceGroups[i].first );
 
 			// close open file streams
@@ -472,8 +473,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	mBams.mBam.Close();
 
-	if ( mFlags.UseLowMemory )
-		MergeArchives();
+	//if ( mFlags.UseLowMemory )
+	//	MergeArchives();
 
 	PrintStatistics();
 }

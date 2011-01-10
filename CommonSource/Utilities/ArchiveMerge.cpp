@@ -472,7 +472,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		unmappedAl.NumMapped = nMate2Alignments;
 
 		_rBam.SaveAlignment( al, 0 );
-		_uBam.SaveAlignment( unmappedAl, 0, true );
+		if ( _isPairedEnd )
+			_uBam.SaveAlignment( unmappedAl, 0, true );
 
 		_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
@@ -492,7 +493,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		unmappedAl2.NumMapped = nMate2Alignments;
 		
 		_uBam.SaveAlignment( unmappedAl1, 0, true );
-		_uBam.SaveAlignment( unmappedAl2, 0, true );
+		if ( _isPairedEnd )
+			_uBam.SaveAlignment( unmappedAl2, 0, true );
 
 		_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	

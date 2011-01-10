@@ -608,6 +608,10 @@ void CAlignmentThread::AlignReadArchive(
 				isFirstMate = true;
 			} else if ( !isMate2Empty ) {
 				isFirstMate = false;
+				if ( !isPairedEnd ) {
+					cout << "ERROR: The sequence technology is single-end, but second mate is aligned." << endl;
+					exit(1);
+				}
 			} else {
 				cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
 				exit(1);
@@ -627,7 +631,7 @@ void CAlignmentThread::AlignReadArchive(
 			if ( mFlags.UseArchiveOutput ) {
 				bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
+				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
@@ -636,9 +640,11 @@ void CAlignmentThread::AlignReadArchive(
 				pBams->rBam.SaveAlignment( al, 0 );
 				pthread_mutex_unlock(&mSaveReadMutex);
 				
-				pthread_mutex_lock(&mSaveUnmappedBamMutex);
-				pBams->uBam.SaveAlignment( unmappedAl, 0, true );
-				pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				if ( isPairedEnd ) {
+					pthread_mutex_lock(&mSaveUnmappedBamMutex);
+					pBams->uBam.SaveAlignment( unmappedAl, 0, true );
+					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				}
 			}
 
 			pthread_mutex_lock(&mStatisticsMapsMutex);
@@ -658,15 +664,22 @@ void CAlignmentThread::AlignReadArchive(
 
 				const bool isLongRead = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongRead );
+				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongRead, true, isPairedEnd );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
 				
-				pthread_mutex_lock(&mSaveUnmappedBamMutex);
-				pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
-				pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
-				pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				if ( isPairedEnd ) {
+					pthread_mutex_lock(&mSaveUnmappedBamMutex);
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
+					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				} else {
+					pthread_mutex_lock(&mSaveUnmappedBamMutex);
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
+					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				}
+
 			}
 
 			pthread_mutex_lock(&mStatisticsMapsMutex);
@@ -732,8 +745,13 @@ void CAlignmentThread::SetRequiredInfo (
 
 	if ( !isItselfMapped ) {
 		al.NumMapped = 0;
-		al.Query = m.Bases;
-		al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
+		if ( mFlags.SaveUnmappedBasesInArchive ) {
+			al.Query = m.Bases;
+			al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
+			al.IsJunk = false;
+		} else {
+			al.IsJunk = true;
+		}
 	}
 	else {
 		
