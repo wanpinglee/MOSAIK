@@ -49,13 +49,21 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 }
 */
 
-CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength, const bool hasSpecial )
+CArchiveMerge::CArchiveMerge ( 
+	vector < string > inputFilenames, 
+	string outputFilename, 
+	unsigned int *readNo, 
+	const unsigned int fragmentLength, 
+	const bool hasSpecial )
+	
 	: _inputFilenames( inputFilenames )
 	, _outputFilename( outputFilename )
 	, _readNo( readNo )
 	, _expectedFragmentLength( fragmentLength )
 	, _hasSpecial( hasSpecial )
 {
+	//_statisticsMaps = mStatisticsMaps;
+	
 	MosaikReadFormat::CAlignmentReader reader;
 	reader.Open( _inputFilenames[0] );
 	reader.GetReadGroups(_readGroups);
@@ -70,6 +78,8 @@ CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFi
 		ite->ReadGroupCode = ite->GetCode( *ite );
 		_readGroupsMap[ ite->ReadGroupCode ] = *ite ;
 	}
+
+	_sequencingTechnologies = _readGroups[0].SequencingTechnology;
 
 	// the last archive is the one containing alignments located at special references
 
@@ -112,6 +122,11 @@ CArchiveMerge::CArchiveMerge ( vector < string > inputFilenames, string outputFi
 	_uHeader.pReadGroups = &_readGroups;
 	_rHeader.pReadGroups = &_readGroups;
 
+}
+
+
+void CArchiveMerge::PrintStatisticsMaps( const string filename, const string readGroupId ) {
+	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
 }
 
 
@@ -356,68 +371,73 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			|| ( isMate1Multiple && isMate2Multiple ) )
 				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
 
-			isMate1Empty = r.Mate1Alignments.empty();
-			isMate2Empty = r.Mate2Alignments.empty();
+		isMate1Empty = r.Mate1Alignments.empty();
+		isMate2Empty = r.Mate2Alignments.empty();
 			
-			// sanity check
-			if ( isMate1Empty | isMate2Empty ) {
-				cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
-				exit(1);
-			}
+		// sanity check
+		if ( isMate1Empty | isMate2Empty ) {
+			cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
+			exit(1);
+		}
 
-			// patch the information for reporting
-			Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
-			
-			// TODO: handle fragment length for others sequencing techs
-			int fl = ( al1.IsReverseStrand ) 
-				? 0 - ( 2 * _expectedFragmentLength ) 
-				: 2 * _expectedFragmentLength;
-			bool properPair1 = false, properPair2 = false;
-			properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
-			properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
+		// patch the information for reporting
+		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
+		
+		// TODO: handle fragment length for others sequencing techs
+		int fl = ( al1.IsReverseStrand ) 
+			? 0 - ( 2 * _expectedFragmentLength ) 
+			: 2 * _expectedFragmentLength;
+		bool properPair1 = false, properPair2 = false;
+		properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
+		properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
 
-			if ( properPair1 != properPair2 ) {
-				cout << "ERROR: An inconsistent proper pair is found." << endl;
-				exit(1);
-			}
+		if ( properPair1 != properPair2 ) {
+			cout << "ERROR: An inconsistent proper pair is found." << endl;
+			exit(1);
+		}
 
-			CZaTager za1, za2;
-			const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-			const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+		CZaTager za1, za2;
+		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-			SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
-			SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
+		SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
+		SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
 
-			_rBam.SaveAlignment( al1, zaTag1 );
-			_rBam.SaveAlignment( al2, zaTag2 );
+		al1.NumMapped = nMate1Alignments;
+		al2.NumMapped = nMate2Alignments;
 
-			if ( isMate1Unique && isMate2Special ) {
-				Alignment genomicAl = al1;
-				Alignment specialAl = _specialAl.Mate2Alignments[0];
-				SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
+		_rBam.SaveAlignment( al1, zaTag1 );
+		_rBam.SaveAlignment( al2, zaTag2 );
 
-				CZaTager zas1, zas2;
+		if ( isMate1Unique && isMate2Special ) {
+			Alignment genomicAl = al1;
+			Alignment specialAl = _specialAl.Mate2Alignments[0];
+			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
-				const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, true );
-				const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, false );
+			CZaTager zas1, zas2;
 
-				_sBam.SaveAlignment( genomicAl, zas1Tag );
-				_sBam.SaveAlignment( specialAl, zas2Tag );
-			}
+			const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, true );
+			const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, false );
 
-			if ( isMate2Unique && isMate1Special ) {
-				Alignment genomicAl = al2;
-				Alignment specialAl = _specialAl.Mate1Alignments[0];
-				SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
+			_sBam.SaveAlignment( genomicAl, zas1Tag );
+			_sBam.SaveAlignment( specialAl, zas2Tag );
+		}
 
-				CZaTager zas1, zas2;
+		if ( isMate2Unique && isMate1Special ) {
+			Alignment genomicAl = al2;
+			Alignment specialAl = _specialAl.Mate1Alignments[0];
+			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
 
-				const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, false );
-				const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, true );
+			CZaTager zas1, zas2;
 
-				_sBam.SaveAlignment( genomicAl, zas1Tag );
-				_sBam.SaveAlignment( specialAl, zas2Tag );
-			}
+			const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, false );
+			const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, true );
+
+			_sBam.SaveAlignment( genomicAl, zas1Tag );
+			_sBam.SaveAlignment( specialAl, zas2Tag );
+		}
+
+		_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
 
 	// UX and MX pair
@@ -448,8 +468,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
 
+		al.NumMapped = nMate1Alignments;
+		unmappedAl.NumMapped = nMate2Alignments;
+
 		_rBam.SaveAlignment( al, 0 );
 		_uBam.SaveAlignment( unmappedAl, 0, true );
+
+		_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
 	
 	// XX
@@ -463,8 +488,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		SetAlignmentFlags( unmappedAl1, unmappedAl2, false, false, true, _isPairedEnd, false, false, r );
 		SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
 
+		unmappedAl1.NumMapped = nMate1Alignments;
+		unmappedAl2.NumMapped = nMate2Alignments;
+		
 		_uBam.SaveAlignment( unmappedAl1, 0, true );
 		_uBam.SaveAlignment( unmappedAl2, 0, true );
+
+		_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	
 	} else {
 		cout << "ERROR: Unknown pairs." << endl;

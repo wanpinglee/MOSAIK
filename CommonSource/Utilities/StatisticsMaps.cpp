@@ -29,11 +29,11 @@ CStatisticsMaps::CStatisticsMaps( void )
 	mappingQualities = new uint64_t [ nMappingQuality ];
 	mismatches       = new uint64_t [ nMismatch ];
 	
-	memset ( fragments, 0, nFragment );
-	memset ( readLengths, 0, nReadLength );
-	memset ( multiplicities, 0, nMultiplicity );
-	memset ( mappingQualities, 0, nMappingQuality );
-	memset ( mismatches, 0, nMismatch );
+	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
+	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
+	memset ( multiplicities, 0, nMultiplicity * sizeof(uint64_t) );
+	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
+	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
 }
 
 CStatisticsMaps::~CStatisticsMaps( void ) {
@@ -44,7 +44,7 @@ CStatisticsMaps::~CStatisticsMaps( void ) {
 	if ( mismatches )       delete [] mismatches;
 }
 
-void CStatisticsMaps::Clear( void ) {
+void CStatisticsMaps::Reset( void ) {
 	
 	nFrangmentOver       = 0;
 	nFrangmentUnder      = 0;
@@ -62,37 +62,37 @@ void CStatisticsMaps::Clear( void ) {
 	unique_multiple      = 0;
 	multiple_multiple    = 0;
 
-	memset ( fragments, 0, nFragment );
-	memset ( readLengths, 0, nReadLength );
-	memset ( multiplicities, 0, nMultiplicity );
-	memset ( mappingQualities, 0, nMappingQuality );
-	memset ( mismatches, 0, nMismatch );
+	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
+	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
+	memset ( multiplicities, 0, nMultiplicity * sizeof(uint64_t) );
+	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
+	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
 
 }
 
-inline void CStatisticsMaps::SaveFragment( const vector<Alignment>& als1, const vector<Alignment>& als2, const SequencingTechnologies& tech ) {
+inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech ) {
 	// true: +; false: -.
-	bool strand1 = !als1[0].IsReverseStrand;
-	bool strand2 = !als2[0].IsReverseStrand;
+	bool strand1 = !al1.IsReverseStrand;
+	bool strand2 = !al2.IsReverseStrand;
 	bool okay    = false;
 	int64_t length = 0;
 	switch( tech ) {
 		case ST_454:
 			if ( strand1 == strand2 ) {
 				okay = true;
-				length = strand1 ? als1[0].ReferenceEnd - als2[0].ReferenceBegin + 1 : als2[0].ReferenceEnd - als1[0].ReferenceBegin + 1;
+				length = strand1 ? al1.ReferenceEnd - al2.ReferenceBegin + 1 : al2.ReferenceEnd - al1.ReferenceBegin + 1;
 			}
 			break;
 		case ST_SOLID:
 			if ( strand1 == strand2 ) {
 				okay = true;
-				length = strand1 ? als2[0].ReferenceEnd - als1[0].ReferenceBegin + 1 : als1[0].ReferenceEnd - als2[0].ReferenceBegin + 1;
+				length = strand1 ? al2.ReferenceEnd - al1.ReferenceBegin + 1 : al1.ReferenceEnd - al2.ReferenceBegin + 1;
 			}
 			break;
 		default:
 			if ( strand1 != strand2 ) {
 				okay = true;
-				length = strand1 ? als2[0].ReferenceEnd - als1[0].ReferenceBegin + 1 : als1[0].ReferenceEnd - als2[0].ReferenceBegin + 1;
+				length = strand1 ? al2.ReferenceEnd - al1.ReferenceBegin + 1 : al1.ReferenceEnd - al2.ReferenceBegin + 1;
 			}
 	}
 
@@ -106,9 +106,8 @@ inline void CStatisticsMaps::SaveFragment( const vector<Alignment>& als1, const 
 	}
 }
 
-inline void CStatisticsMaps::SaveReadLength( const Mosaik::Mate& m ) {
+inline void CStatisticsMaps::SaveReadLength( const unsigned int length ) {
 	
-	unsigned int length = m.Bases.Length();
 	if ( length > nReadLength ) {
 		nReadLengthOver++;
 	} else {
@@ -116,9 +115,8 @@ inline void CStatisticsMaps::SaveReadLength( const Mosaik::Mate& m ) {
 	}
 }
 
-inline void CStatisticsMaps::SaveMultiplicity( vector<Alignment>& als ) {
+inline void CStatisticsMaps::SaveMultiplicity( const unsigned int nAlignment ) {
 	
-	unsigned int nAlignment = als.size();
 	if ( nAlignment > nMultiplicity ) {
 		nMappingQualityOver++;
 	} else {
@@ -126,32 +124,39 @@ inline void CStatisticsMaps::SaveMultiplicity( vector<Alignment>& als ) {
 	}
 }
 
-inline void CStatisticsMaps::SaveMappingQuality( vector<Alignment>& als ) {
+inline void CStatisticsMaps::SaveMappingQuality( const unsigned char mq ) {
 	
-	for ( vector<Alignment>::iterator ite = als.begin(); ite !=als.end(); ++ite ) {
-		unsigned char mq = ite->Quality;
+	//for ( vector<Alignment>::iterator ite = als.begin(); ite !=als.end(); ++ite ) {
+		//unsigned char mq = ite->Quality;
 		// mq shouldn't larger than nMappingQuality = 100
 		if ( mq > nMappingQuality ) {
 			nMappingQualityOver++;
 		} else {
 			mappingQualities[ mq ]++;
 		}
-	}
+	//}
 }
 
-inline void CStatisticsMaps::SaveMismatch( vector<Alignment>& als ) {
+inline void CStatisticsMaps::SaveMismatch( const unsigned short mm ) {
 	
-	for ( vector<Alignment>::iterator ite = als.begin(); ite !=als.end(); ++ite ) {
-		unsigned short mm = ite->NumMismatches;
+	//for ( vector<Alignment>::iterator ite = als.begin(); ite !=als.end(); ++ite ) {
+		//unsigned short mm = ite->NumMismatches;
 		if ( mm > nMismatch ) {
 			nMismatchOver++;
 		} else {
 			mismatches[ mm ]++;
 		}
-	}
+	//}
 }
 
-inline void CStatisticsMaps::PrintMap( FILE *const fOut, const char* title, const uint64_t& size, const uint64_t& over, const uint64_t& under, const uint64_t *const array, const int64_t& start  ) {
+inline void CStatisticsMaps::PrintMap( 
+	FILE *const fOut, 
+	const char* title,
+	const uint64_t& size, 
+	const uint64_t& over, 
+	const uint64_t& under, 
+	const uint64_t *const array, 
+	const int64_t& start  ) {
 	
 	fprintf( fOut, "\n%s\n", title );
 
@@ -179,9 +184,13 @@ inline void CStatisticsMaps::PrintMap( FILE *const fOut, const char* title, cons
 	}
 }
 
-void CStatisticsMaps::PrintMaps( const char* filename ) {
+void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId ) {
 	FILE* fOut;
 	fOut = fopen( filename, "w" );
+
+	// print read group ID
+	fprintf( fOut, "RG:%s\n", readGroupId );
+	
 	if ( fOut != NULL ) {
 		PrintMap( fOut, "LF fragment mapping length",   nFragment,       nFrangmentOver,      nFrangmentUnder,      fragments,        minFragment );
 		PrintMap( fOut, "LR read length",               nReadLength,     nReadLengthOver,     nReadLengthUnder,     readLengths,      0 );
@@ -207,7 +216,11 @@ void CStatisticsMaps::PrintMaps( const char* filename ) {
 	}
 }
 
-void CStatisticsMaps::SaveRecord( const Mosaik::Read& r, vector<Alignment>& als1, vector<Alignment>& als2, const bool isPairedEnd, const SequencingTechnologies& tech ) {
+void CStatisticsMaps::SaveRecord( 
+	const Alignment& al1, 
+	const Alignment& al2, 
+	const bool isPairedEnd, 
+	const SequencingTechnologies& tech ) {
 	
 	//bool isUU = isPairedEnd && ( als1.size() == 1 ) && ( als2.size() == 1 );
 
@@ -215,33 +228,39 @@ void CStatisticsMaps::SaveRecord( const Mosaik::Read& r, vector<Alignment>& als1
 	//if ( isUU ) {
 	//	
 	//}
-	
-	SaveReadLength( r.Mate1 );
-	SaveMultiplicity( als1 );
-	SaveMappingQuality( als1 );
-	SaveMismatch( als1 );
+
+	SaveReadLength( al1.BaseQualities.Length() );
+	if ( al1.IsMapped ) {
+		//SaveReadLength( al1.BaseQualities.Length() );
+		SaveMultiplicity( al1.NumMapped );
+		SaveMappingQuality( al1.Quality );
+		SaveMismatch( al1.NumMismatches );
+	}
 
 	if ( isPairedEnd ) {
-		SaveReadLength( r.Mate2 );
-		SaveMultiplicity( als2 );
-		SaveMappingQuality( als2 );
-		SaveMismatch( als2 );
-
-		if ( ( ( als1.size() == 0 ) && ( als2.size() == 1 ) ) || ( ( als1.size() == 1 ) && ( als2.size() == 0 ) ) )
-			non_unique++;
-
-		if ( ( ( als1.size() == 0 ) && ( als2.size() > 1 ) ) || ( ( als1.size() > 1 ) && ( als2.size() == 0 ) ) )
-			non_multiple++;
-
-		if ( ( als1.size() == 1 ) && ( als2.size() == 1 ) ) {
-			unique_unique++;
-			SaveFragment( als1, als2, tech );
+		SaveReadLength( al2.BaseQualities.Length() );
+		if ( al2.IsMapped ) {
+			//SaveReadLength( al2.BaseQualities.Length() );
+			SaveMultiplicity( al2.NumMapped );
+			SaveMappingQuality( al2.Quality );
+			SaveMismatch( al2.NumMismatches );
 		}
 
-		if ( ( ( als1.size() == 1 ) && ( als2.size() > 1 ) ) || ( ( als1.size() > 1 ) && ( als2.size() == 1 ) ) )
+		if ( ( ( al1.NumMapped == 0 ) && ( al2.NumMapped == 1 ) ) || ( ( al1.NumMapped == 1 ) && ( al2.NumMapped == 0 ) ) )
+			non_unique++;
+
+		if ( ( ( al1.NumMapped == 0 ) && ( al2.NumMapped > 1 ) ) || ( ( al1.NumMapped > 1 ) && ( al2.NumMapped == 0 ) ) )
+			non_multiple++;
+
+		if ( ( al1.NumMapped == 1 ) && ( al2.NumMapped == 1 ) ) {
+			unique_unique++;
+			SaveFragment( al1, al2, tech );
+		}
+
+		if ( ( ( al1.NumMapped == 1 ) && ( al2.NumMapped > 1 ) ) || ( ( al1.NumMapped > 1 ) && ( al2.NumMapped == 1 ) ) )
 			unique_multiple++;
 
-		if ( ( als1.size() > 0 ) && ( als2.size() > 1 ) )
+		if ( ( al1.NumMapped > 0 ) && ( al2.NumMapped > 1 ) )
 			multiple_multiple++;
 	}
 }

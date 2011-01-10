@@ -77,11 +77,17 @@ class CArchiveMerge
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
 		//CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo);                             /* constructor */
-		CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo, const unsigned int fragmentLength = 0, const bool hasSpecial = false );
+		CArchiveMerge (
+			vector < string > inputFilenames, 
+			string outputFilename, 
+			unsigned int *readNo, 
+			const unsigned int fragmentLength = 0, 
+			const bool hasSpecial = false );
 
 		void Merge();
 
 		void GetStatisticsCounters ( StatisticsCounters& counter );
+		void PrintStatisticsMaps( const string filename, const string readGroupId );
 		/* ====================  ACCESSORS     ======================================= */
 
 		/* ====================  MUTATORS      ======================================= */
@@ -106,6 +112,7 @@ class CArchiveMerge
 		AlignmentStatus _alignmentStatus;
 		bool _isPairedEnd;
 		bool _hasSpecial;
+		SequencingTechnologies _sequencingTechnologies;
 		map<unsigned int, MosaikReadFormat::ReadGroup> _readGroupsMap;
 		
 		string _specialArchiveName;
@@ -117,6 +124,7 @@ class CArchiveMerge
 		vector<ReferenceSequence>          _specialReferenceSequences;
 
 		StatisticsCounters _counters;
+		CStatisticsMaps    _statisticsMaps;
 
 		BamHeader _sHeader; // special reads
 		BamHeader _uHeader; // unaligned reads

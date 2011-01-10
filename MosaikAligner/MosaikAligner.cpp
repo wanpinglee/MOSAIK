@@ -324,7 +324,6 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		for ( unsigned int i = 0; i < referenceGroups.size(); ++i ) {
 	        	unsigned int startRef = referenceGroups[i].first;
 			unsigned int endRef   = referenceGroups[i].first + referenceGroups[i].second - 1;
-cout << "s: " << startRef << "\t" << "e: " << endRef << endl;
 
 			CConsole::Heading();
 		        if ( referenceGroups[i].second > 1 )
@@ -355,7 +354,7 @@ cout << "s: " << startRef << "\t" << "e: " << endRef << endl;
 					: ceil(ratio * (double)mSettings.HashPositionThreshold);
 				//cout << positionThreshold << endl;
 				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
-cout << "p: " << positionThreshold << endl;
+//cout << "p: " << positionThreshold << endl;
 			}
 
 			// load jump data
@@ -625,14 +624,12 @@ void CMosaikAligner::MergeArchives(void) {
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
 		rm(outputFilenames[i].c_str());
 
-	//for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-	//	cerr << temporaryFiles[i] << endl;
 
 	CConsole::Heading();
 	cout << "Merging alignment archive:" << endl;
 	CConsole::Reset();
 
-	mStatisticsMaps.Clear();
+	//mStatisticsMaps.Reset();
 
         unsigned int readNo        = 0;
 	//unsigned int nMaxAlignment = 1000;
@@ -648,6 +645,9 @@ void CMosaikAligner::MergeArchives(void) {
 		rm(temporaryFiles[i].c_str());
 
 	// get statistics information
+	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
+	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID );
+
 	CArchiveMerge::StatisticsCounters mergeCounters;
 	merger.GetStatisticsCounters( mergeCounters );
 
@@ -781,8 +781,11 @@ void CMosaikAligner::AlignReadArchive(
 // print our statistics
 void CMosaikAligner::PrintStatistics () {
 
-	string mapFile = mSettings.OutputReadArchiveFilename + ".map";
-	mStatisticsMaps.PrintMaps( mapFile.c_str() );
+	// for low-memory version, the map is printed when merging archive.
+	if ( !mFlags.UseLowMemory ) {
+		string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
+		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups[0].ReadGroupID.c_str() );
+	}
 	
 	MosaikReadFormat::CReadReader in;
         string inputReadArchiveFilename  = mSettings.InputReadArchiveFilename;

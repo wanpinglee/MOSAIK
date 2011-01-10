@@ -18,18 +18,25 @@ class CStatisticsMaps {
 		CStatisticsMaps( void );
 		~CStatisticsMaps( void );
 		
-		void SaveRecord( const Mosaik::Read& m, vector<Alignment>& als1, vector<Alignment>& als2, const bool isPairedEnd, const SequencingTechnologies& tech );
-		void PrintMaps( const char* filename );
-		void Clear( void );
+		void SaveRecord( const Alignment& al1, const Alignment& al2, const bool isPairedEnd, const SequencingTechnologies& tech );
+		void PrintMaps( const char* filename, const char* readGroupId );
+		void Reset( void );
 
 	private:
 
-		inline void SaveFragment( const vector<Alignment>& als1, const vector<Alignment>& als2, const SequencingTechnologies& tech );
-		inline void SaveReadLength( const Mosaik::Mate& r );
-		inline void SaveMultiplicity( vector<Alignment>& als );
-		inline void SaveMappingQuality( vector<Alignment>& als );
-		inline void SaveMismatch( vector<Alignment>& als );
-		inline void PrintMap( FILE *const fOut, const char* title, const uint64_t& size, const uint64_t& over, const uint64_t& under, const uint64_t *const array, const int64_t& start  );
+		inline void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
+		inline void SaveReadLength( const unsigned int length );
+		inline void SaveMultiplicity( const unsigned int nAlignment );
+		inline void SaveMappingQuality( const unsigned char mq );
+		inline void SaveMismatch( const unsigned short mm );
+		inline void PrintMap( 
+			FILE *const fOut, 
+			const char* title, 
+			const uint64_t& size, 
+			const uint64_t& over, 
+			const uint64_t& under, 
+			const uint64_t *const array, 
+			const int64_t& start  );
 
 
 		// fragment length map

@@ -469,10 +469,10 @@ void CAlignmentThread::AlignReadArchive(
 		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
 
 
-		pthread_mutex_lock(&mStatisticsMapsMutex);
-		pMaps->SaveRecord( mr, mate1Set, mate2Set, 
-			areBothMatesPresent, mSettings.SequencingTechnology );
-		pthread_mutex_unlock(&mStatisticsMapsMutex);
+		//pthread_mutex_lock(&mStatisticsMapsMutex);
+		//pMaps->SaveRecord( mr, mate1Set, mate2Set, 
+		//	areBothMatesPresent, mSettings.SequencingTechnology );
+		//pthread_mutex_unlock(&mStatisticsMapsMutex);
 		
 		
 		// save chromosomes and positions of multiple alignments in bam
@@ -587,6 +587,10 @@ void CAlignmentThread::AlignReadArchive(
 				pthread_mutex_unlock(&mSaveReadMutex);
 			}
 
+			pthread_mutex_lock(&mStatisticsMapsMutex);
+			pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
+			pthread_mutex_unlock(&mStatisticsMapsMutex);
+	
 			mStatisticsCounters.AlignedReads++;
 
 		// UX and MX pair
@@ -637,6 +641,10 @@ void CAlignmentThread::AlignReadArchive(
 				pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 			}
 
+			pthread_mutex_lock(&mStatisticsMapsMutex);
+			pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
+			pthread_mutex_unlock(&mStatisticsMapsMutex);
+			
 			mStatisticsCounters.AlignedReads++;
 		
 		// XX
@@ -660,6 +668,10 @@ void CAlignmentThread::AlignReadArchive(
 				pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
 				pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 			}
+
+			pthread_mutex_lock(&mStatisticsMapsMutex);
+			pMaps->SaveRecord( unmappedAl1, unmappedAl2, isPairedEnd, mSettings.SequencingTechnology );
+			pthread_mutex_unlock(&mStatisticsMapsMutex);
 		
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
