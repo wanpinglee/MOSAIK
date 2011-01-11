@@ -110,7 +110,13 @@ namespace SortNMergeUtilities {
 		if ( !reader.LoadNextRead(mr) ) 
         	        return false;
 	        else{
-        	        mrp.read         = mr;
+			for ( vector<Alignment>::iterator ite = mr.Mate1Alignments.begin(); ite != mr.Mate1Alignments.end(); ++ite ) 
+				ite->Owner = readerNo;
+			
+			for ( vector<Alignment>::iterator ite = mr.Mate2Alignments.begin(); ite != mr.Mate2Alignments.end(); ++ite ) 
+				ite->Owner = readerNo;
+			
+			mrp.read         = mr;
 	               	mrp.owner        = readerNo;
 	                reads[readerNo]  = mrp;
         	        return true;

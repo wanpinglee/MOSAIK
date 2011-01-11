@@ -26,6 +26,12 @@ const double CAlignmentThread::P_ERR_REF  = pow(10.0, -REFERENCE_SEQUENCE_QUALIT
 const double CAlignmentThread::P_CORR_REF = 1.0 - CAlignmentThread::P_ERR_REF;
 const double CAlignmentThread::ONE_THIRD  = 1.0 / 3.0;
 const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
+const double CAlignmentThread::UU_COEFFICIENT = 0.486796848;
+const double CAlignmentThread::UU_INTERCEPT   = 35.45967112;
+const double CAlignmentThread::UM_COEFFICIENT = 0.426395518;
+const double CAlignmentThread::UM_INTERCEPT   = 19.29236958;
+const double CAlignmentThread::MM_COEFFICIENT = 0.327358673;
+const double CAlignmentThread::MM_INTERCEPT   = 4.350331532;
 
 // constructor
 CAlignmentThread::CAlignmentThread(
@@ -552,10 +558,10 @@ void CAlignmentThread::AlignReadArchive(
 
 					SetRequiredInfo( specialAl, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true );
 				
-					CZaTager zas1, zas2;
+					//CZaTager zas1, zas2;
 
-					char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, true );
-					char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, false );
+					char *zas1Tag = ( char* ) za1.GetZaTag( genomicAl, specialAl, true );
+					char *zas2Tag = ( char* ) za2.GetZaTag( specialAl, genomicAl, false );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
@@ -567,10 +573,10 @@ void CAlignmentThread::AlignReadArchive(
 					Alignment specialAl = mate1SpecialAl;
 					SetRequiredInfo( specialAl, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
 	
-					CZaTager zas1, zas2;
+					//CZaTager zas1, zas2;
 
-					char *zas1Tag = ( char* ) zas1.GetZaTag( genomicAl, specialAl, false );
-					char *zas2Tag = ( char* ) zas2.GetZaTag( specialAl, genomicAl, true );
+					char *zas1Tag = ( char* ) za1.GetZaTag( genomicAl, specialAl, false );
+					char *zas2Tag = ( char* ) za2.GetZaTag( specialAl, genomicAl, true );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
@@ -578,7 +584,7 @@ void CAlignmentThread::AlignReadArchive(
 				}
 
 
-				CZaTager za1, za2;
+				//CZaTager za1, za2;
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 				pthread_mutex_lock(&mSaveReadMutex);
@@ -721,6 +727,22 @@ void CAlignmentThread::SetRequiredInfo (
 		patchEndLen = temp;
 	}
 	
+	// GetFragmentAlignmentQuality
+	// For archive output, we recalculate MQ when merging archives
+	
+	if ( isProperPair && !mFlags.UseArchiveOutput ) {
+		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
+		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
+		
+		int aq = al.Quality;
+		if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
+		else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+		else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
+
+		if(aq < 0)       al.Quality = 0;
+		else if(aq > 99) al.Quality = 99;
+		else             al.Quality = aq;
+	}
 	
 	al.IsResolvedAsPair       = isPair;
 	al.IsResolvedAsProperPair = isProperPair;
@@ -745,7 +767,7 @@ void CAlignmentThread::SetRequiredInfo (
 
 	if ( !isItselfMapped ) {
 		al.NumMapped = 0;
-		if ( mFlags.SaveUnmappedBasesInArchive ) {
+		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
 			al.Query = m.Bases;
 			al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
 			al.IsJunk = false;

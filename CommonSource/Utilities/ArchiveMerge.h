@@ -133,6 +133,9 @@ class CArchiveMerge
 		CBamWriter _sBam; // multiply alignments
 		CBamWriter _uBam; // unaligned reads
 		CBamWriter _rBam;
+
+		// ZA tagers
+		CZaTager za1, za2;
 		
 		
 		inline void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );

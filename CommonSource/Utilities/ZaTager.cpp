@@ -17,7 +17,7 @@ void CZaTager::ExtendBuffer( const unsigned int& length ) {
 	if ( buffer ) delete [] buffer;
 
 	bufferLen = length + 10;
-	buffer = new char [ length + 10 ];
+	buffer = new char [ bufferLen ];
 	memset(buffer, 0, bufferLen);
 }
 
@@ -83,7 +83,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	char* zaPtr = buffer;
 	unsigned int len = 0;
 
-	CCigarTager cigarTager;
+	//CCigarTager cigarTager;
 
 	Alignment al1, al2;
 	if ( isFirstMate ) {

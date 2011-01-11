@@ -269,28 +269,28 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 //***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
-	temporaryFiles.push_back("tmp/qi0x92wxtpf5mf8ebfxohj5d2olcmgsi.tmp");
-	temporaryFiles.push_back("tmp/w3vzm84kxpssvehs9hlv3dt0sl74vgmy.tmp");
-	temporaryFiles.push_back("tmp/a91amjwnindi1tvhokfu90jkgf5c6awm.tmp");
-	temporaryFiles.push_back("tmp/693oifc1pm1k0w4xi26es5pxeab3mc7y.tmp");
-	temporaryFiles.push_back("tmp/xacio2asxlz6ierva3lfecqcoy3obr8y.tmp");
-	temporaryFiles.push_back("tmp/7o0cfk2zhasnnc06tidp6b6i80k5qoan.tmp");
-	temporaryFiles.push_back("tmp/zm68h8725ax2gxuimkhc9mk2psikwk6m.tmp");
-	temporaryFiles.push_back("tmp/ti2jdxtiee0yyuwv45uezdekz9yfb3yu.tmp");
-	temporaryFiles.push_back("tmp/yi5aud2ltya0r306dim52j8ksa0a5pn9.tmp");
-	temporaryFiles.push_back("tmp/72i77h51ohzxfexdwpaik89cz3lkojl1.tmp");
-	temporaryFiles.push_back("tmp/uoea2z26osmrbpgalzhqggwl02b0abcb.tmp");
-	temporaryFiles.push_back("tmp/ggr9alsrz1c8jktoj3iyly7rymkeo6bu.tmp");
-	temporaryFiles.push_back("tmp/kd41bg9mv5v6ocobf1iciyg9tyf5ha97.tmp");
-	temporaryFiles.push_back("tmp/ull7jo3uusae5n3e5siyhe63w61vjiuj.tmp");
-	temporaryFiles.push_back("tmp/5zy1p9cfz6jv3xfxto0gtw704ifgvp46.tmp");
-	temporaryFiles.push_back("tmp/d81n697ffksuc24pet6wqvxpfdxfafpd.tmp");
-	temporaryFiles.push_back("tmp/3xedysqoanfh1dux9mda378p28a844ux.tmp");
-	temporaryFiles.push_back("tmp/r8fv333oxvq05g20fpl3o1p45g078dpp.tmp");
+	temporaryFiles.push_back("tmp/ao504h7jbxfxr3hfmzspx6jug5ljcs5s.tmp");
+	temporaryFiles.push_back("tmp/iuhqvma8ejonntt5ogpqsg7onkr91yc9.tmp");
+	temporaryFiles.push_back("tmp/2vhgjba0ptm42bh8vbrev76ujy0s3oub.tmp");
+	temporaryFiles.push_back("tmp/dofn2ecxd5oaizadu9bxnktheg35xib1.tmp");
+	temporaryFiles.push_back("tmp/vrxf86h014fd9ky232etxbsk86b0qt4s.tmp");
+	temporaryFiles.push_back("tmp/edccaeyanitd1x40qcsmu6j3r7bm8q5c.tmp");
+	temporaryFiles.push_back("tmp/q1151muwpjti0scghwm9jvooypy49pd5.tmp");
+	temporaryFiles.push_back("tmp/eh243s5v89r0mpz4oo9ef1n720uiz393.tmp");
+	temporaryFiles.push_back("tmp/djdip5c7xkj72u33hpxsi96m7zm7pja9.tmp");
+	temporaryFiles.push_back("tmp/0qzaje4lo4kg1z8hfsgwc8fgzur8tfmj.tmp");
+	temporaryFiles.push_back("tmp/f6jz0n7o310ccernuc7cct55g3ecu90z.tmp");
+	temporaryFiles.push_back("tmp/jwir9ysea08s978mc3tt2dgt4yp1sfth.tmp");
+	temporaryFiles.push_back("tmp/3khy8mq7pplkja45gorpqw7iozajys07.tmp");
+	temporaryFiles.push_back("tmp/qzstdph28dneek3yaqnvya18ek8ivter.tmp");
+	temporaryFiles.push_back("tmp/f4vbvstfzladceyi8s3pjibnnl1wxk43.tmp");
+	temporaryFiles.push_back("tmp/fbi2wpf71z4937b094ibwjpdeek2hwj2.tmp");
+	temporaryFiles.push_back("tmp/3emt1cfob2wcmqrw595w6y20qeg5fu2o.tmp");
+	temporaryFiles.push_back("tmp/jg7spl5m1uwky36vwrv5s63iwxf6ii47.tmp");
         
         // calculate total # of reads
         unsigned int nReads = 0;
-        for ( unsigned int i = 0 ; i < temporaryFiles.size() - 1; i++ ) {
+        for ( unsigned int i = 0 ; i < temporaryFiles.size(); i++ ) {
 	        MosaikReadFormat::CAlignmentReader reader;
                 reader.Open( temporaryFiles[i] );
                 nReads += reader.GetNumReads();
@@ -438,7 +438,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			out.AdjustPartitionSize(20000/referenceGroups.size());
 
 			mFlags.SaveMultiplyBam = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) ? false : true;
-			mFlags.SaveUnmappedBasesInArchive = ( i == 1 ) ? true : false; 
+			mFlags.SaveUnmappedBasesInArchive = ( i == 0 ) ? true : false; 
 			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs, referenceGroups[i].first );
 
 			// close open file streams
@@ -473,8 +473,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	mBams.mBam.Close();
 
-	//if ( mFlags.UseLowMemory )
-	//	MergeArchives();
+	if ( mFlags.UseLowMemory )
+		MergeArchives();
 
 	PrintStatistics();
 }
@@ -639,8 +639,6 @@ void CMosaikAligner::MergeArchives(void) {
         merger.Merge();
         CProgressBar<unsigned int>::WaitThread();
 
-	//for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-	//	rm(outputFilenames[i].c_str());
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
 		rm(temporaryFiles[i].c_str());

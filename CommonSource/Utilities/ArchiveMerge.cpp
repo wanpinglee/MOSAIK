@@ -293,6 +293,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate1Special = false;
 	bool isMate2Special = false;
 
+	// grab special tag
 	if ( _hasSpecial ) {
 		// compare their names
 		while ( ( _specialAl < r ) && !_specialArchiveEmpty ) {
@@ -328,17 +329,30 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	unsigned int nMate2Alignments = 0;
 
 	vector<Alignment> newMate1Set, newMate2Set;
+	Mosaik::Read read;
 
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
 		nMate1Alignments += ite->NumMapped;
 		ite->SpecialCode = _specialCode1;
 		if ( ite->IsMapped ) newMate1Set.push_back( *ite );
+		// the record is in the first archive, and contains complete bases and base qualities.
+		if ( ite->Owner == 0 ) {
+			read.Mate1.Bases     = ite->Query;
+			read.Mate1.Qualities = ite->BaseQualities;
+			read.Mate1.Bases.Remove('-');
+		}
 	}
 	
 	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
 		nMate2Alignments += ite->NumMapped;
 		ite->SpecialCode = _specialCode2;
 		if ( ite->IsMapped ) newMate2Set.push_back( *ite );
+		// the record is in the first archive, and contains complete bases and base qualities.
+		if ( ite->Owner == 0 ) {
+			read.Mate2.Bases     = ite->Query;
+			read.Mate2.Qualities = ite->BaseQualities;
+			read.Mate2.Bases.Remove('-');
+		}
 	}
 
 	if ( nMate1Alignments > 0 ) {
@@ -396,7 +410,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			exit(1);
 		}
 
-		CZaTager za1, za2;
+		//CZaTager za1, za2;
 		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
@@ -414,10 +428,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			Alignment specialAl = _specialAl.Mate2Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
-			CZaTager zas1, zas2;
+			//CZaTager zas1, zas2;
 
-			const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, true );
-			const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, false );
+			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
+			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 
 			_sBam.SaveAlignment( genomicAl, zas1Tag );
 			_sBam.SaveAlignment( specialAl, zas2Tag );
@@ -428,10 +442,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
 
-			CZaTager zas1, zas2;
+			//CZaTager zas1, zas2;
 
-			const char* zas1Tag = zas1.GetZaTag( genomicAl, specialAl, false );
-			const char* zas2Tag = zas2.GetZaTag( specialAl, genomicAl, true );
+			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
+			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 
 			_sBam.SaveAlignment( genomicAl, zas1Tag );
 			_sBam.SaveAlignment( specialAl, zas2Tag );
@@ -463,17 +477,20 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	
 		// patch the information for reporting
 		Alignment al = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];;
+		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
 
-		al.NumMapped = nMate1Alignments;
-		unmappedAl.NumMapped = nMate2Alignments;
+		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+		unmappedAl.NumMapped = 0;
 
 		_rBam.SaveAlignment( al, 0 );
-		if ( _isPairedEnd )
+		if ( _isPairedEnd ) {
+			unmappedAl.Query         = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
+			unmappedAl.BaseQualities = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
 			_uBam.SaveAlignment( unmappedAl, 0, true );
+		}
 
 		_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
@@ -492,9 +509,14 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		unmappedAl1.NumMapped = nMate1Alignments;
 		unmappedAl2.NumMapped = nMate2Alignments;
 		
+		unmappedAl1.Query         = read.Mate1.Bases;
+		unmappedAl1.BaseQualities = read.Mate1.Qualities;
 		_uBam.SaveAlignment( unmappedAl1, 0, true );
-		if ( _isPairedEnd )
+		if ( _isPairedEnd ) {
+			unmappedAl2.Query         = read.Mate2.Bases;
+			unmappedAl2.BaseQualities = read.Mate2.Qualities;
 			_uBam.SaveAlignment( unmappedAl2, 0, true );
+		}
 
 		_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	
@@ -687,6 +709,7 @@ void CArchiveMerge::Merge() {
 
 				//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 				//writer.SaveAlignedRead(minRead);
+				minRead.Owner = owner;
 				WriteAlignment( minRead );
 				CalculateStatisticsCounters(minRead);
 				minRead.Clear();
@@ -717,6 +740,7 @@ void CArchiveMerge::Merge() {
 
 					//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 					//writer.SaveAlignedRead(minRead);
+					minRead.Owner = owner;
 					WriteAlignment( minRead );
 					CalculateStatisticsCounters(minRead);
 					minRead.Clear();
@@ -741,6 +765,7 @@ void CArchiveMerge::Merge() {
 	//UpdateReferenceIndex(minRead, owner);
 	//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 	//writer.SaveAlignedRead(minRead);
+	minRead.Owner = owner;
 	WriteAlignment( minRead );
 	CalculateStatisticsCounters(minRead);
 
