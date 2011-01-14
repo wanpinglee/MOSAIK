@@ -39,8 +39,6 @@ namespace MosaikReadFormat {
 		CAlignmentReader(void);
 		// destructor
 		~CAlignmentReader(void);
-		// copy constructor
-		CAlignmentReader ( CAlignmentReader const & copy );
 		// checks to see if this is truly a MOSAIK alignment archive
 		static bool CheckFile(const string& filename, SequencingTechnologies& st, AlignmentStatus& as, const bool showError);
 		// closes the alignment archive
@@ -80,6 +78,10 @@ namespace MosaikReadFormat {
 		void Rewind(void);
 
 	private:
+		// copy constructor
+		CAlignmentReader ( CAlignmentReader const & copy );
+		// assing operator
+		CAlignmentReader& operator= ( CAlignmentReader const & copy );
 		// load the read header from disk
 		void LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments,
 			unsigned int& numMate1OriginalAlignments, unsigned int& numMate2OriginalAlignments);
@@ -119,7 +121,7 @@ namespace MosaikReadFormat {
 		unsigned short mPartitionSize;
 		unsigned short mPartitionMembers;
 		// our reference sequence LUT
-		char** mRefSeqLUT;
+		vector < string > mRefSeqLUT;
 		unsigned int mNumRefSeqs;
 		// our reference sequences
 		vector<ReferenceSequence> mReferenceSequences;

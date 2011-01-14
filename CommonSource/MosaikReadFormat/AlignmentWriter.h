@@ -82,6 +82,10 @@ namespace MosaikReadFormat {
 		void AdjustPartitionSize(unsigned short size);
 
 	private:
+		// copy constructor
+		CAlignmentWriter ( CAlignmentWriter const & copy );
+		// assign operator
+		CAlignmentWriter& operator= ( CAlignmentWriter const & copy );
 		// specifies our index entry
 		struct IndexEntry {
 			off_type Offset;

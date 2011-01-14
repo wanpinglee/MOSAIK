@@ -604,13 +604,13 @@ void CArchiveMerge::Merge() {
 	}
 	
 	// initialize MOSAIK readers for all temp files
-	//vector< MosaikReadFormat::CAlignmentReader* > readers;
-	//SortNMergeUtilities::OpenMosaikReader( readers, _inputFilenames );
-	MosaikReadFormat::CAlignmentReader* readers;
-	readers = new MosaikReadFormat::CAlignmentReader [ _inputFilenames.size() ];
-	for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
-		readers[i].Open( _inputFilenames[i] );
-	}
+	vector< MosaikReadFormat::CAlignmentReader* > readers;
+	SortNMergeUtilities::OpenMosaikReader( readers, _inputFilenames );
+	//MosaikReadFormat::CAlignmentReader* readers;
+	//readers = new MosaikReadFormat::CAlignmentReader [ _inputFilenames.size() ];
+	//for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
+	//	readers[i].Open( _inputFilenames[i] );
+	//}
 
 	
 	Mosaik::AlignedRead mr;
@@ -754,7 +754,7 @@ void CArchiveMerge::Merge() {
 
 			while ( true ) {
 				mr.Clear();
-				if ( !readers[i].LoadNextRead(mr) ) 
+				if ( !readers[i]->LoadNextRead(mr) ) 
 					break;
 				else {
 					UpdateReferenceIndex( mr, owner );
@@ -811,14 +811,7 @@ void CArchiveMerge::Merge() {
 
 	
 	// close readers
-	//for ( unsigned int i = 0; i < readers.size(); i++ )
-	//	readers[i]->Close();
-	for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
-		cerr << i << ": " << _inputFilenames[i] << endl;
-		readers[i].Close();
-		//delete readers[i];
-	}
-	delete readers;
+	SortNMergeUtilities::CloseMosaikReader( readers );
 
 	if ( _hasSpecial )
 		_specialReader.Close();

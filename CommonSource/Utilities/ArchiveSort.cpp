@@ -69,7 +69,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 	unsigned int nRead = 0;
 
 	// initialize MOSAIK readers for all temp files
-	vector< MosaikReadFormat::CAlignmentReader > readers;
+	vector< MosaikReadFormat::CAlignmentReader* > readers;
 	SortNMergeUtilities::OpenMosaikReader( readers, tempFiles );
 
 	Mosaik::AlignedRead mr;
@@ -136,7 +136,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 
 			while ( true ) {
 				mr.Clear();
-				if ( !readers[i].LoadNextRead(mr) ) 
+				if ( !readers[i]->LoadNextRead(mr) ) 
 					break;
 				
 				writer.SaveAlignedRead(mr);
@@ -154,9 +154,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 	writer.Close();
 	
 	// close readers
-	for ( unsigned int i = 0; i < readers.size(); i++ ) {
-		readers[i].Close();
-	}
+	SortNMergeUtilities::CloseMosaikReader( readers );
 }
 
 /*  

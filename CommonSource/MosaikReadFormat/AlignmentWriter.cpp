@@ -48,9 +48,9 @@ namespace MosaikReadFormat {
 	// destructor
 	CAlignmentWriter::~CAlignmentWriter(void) {
 		if(mIsOpen)            Close();
-		if(mBuffer)            delete [] mBuffer;
-		if(mCompressionBuffer) delete mCompressionBuffer;
-		if(MosaikSignature)    delete [] MosaikSignature;
+		//if(mBuffer)            delete [] mBuffer;
+		//if(mCompressionBuffer) delete mCompressionBuffer;
+		//if(MosaikSignature)    delete [] MosaikSignature;
 
 		mBuffer            = NULL;
 		mCompressionBuffer = NULL;
@@ -252,6 +252,13 @@ namespace MosaikReadFormat {
 
 			// write the reference sequence gaps
 			fio.Write((char*)mBuffer, bufferOffset, mOutStream);
+
+			// clear all vectors
+			mOutputFilename.clear();
+			mReferenceSequences.clear();
+			mIndex.clear();
+			mHeaderTags.clear();
+			if ( MosaikSignature ) delete [] MosaikSignature;
 		}
 
 		// ==============

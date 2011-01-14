@@ -79,31 +79,29 @@ namespace SortNMergeUtilities {
 
 
 	// given a vector of filenames, open them as AlignmentReader
-	inline void OpenMosaikReader ( vector<MosaikReadFormat::CAlignmentReader>& readers, const vector<string>& files ) {
+	inline void OpenMosaikReader ( vector<MosaikReadFormat::CAlignmentReader*>& readers, const vector<string>& files ) {
         
 		MosaikReadFormat::CAlignmentReader *reader;
 		readers.reserve(files.size());
 		for ( unsigned int i = 0; i < files.size(); i++ ) {
 			reader = new MosaikReadFormat::CAlignmentReader;
-			readers.push_back(*reader);
-			readers[i].Open( files[i] );
+			readers.push_back(reader);
+			readers[i]->Open( files[i] );
 		}
 		
-		/*
-		MosaikReadFormat::CAlignmentReader *reader;
-	        readers.reserve(files.size());
+	}
 
-	        for ( unsigned int i = 0; i < files.size(); i++ ) {
-	                reader = new MosaikReadFormat::CAlignmentReader;
-	                reader->Open( files[i] );
-	                readers.push_back(*reader);
-	        }
-		*/
+	// close readers
+	inline void CloseMosaikReader ( vector<MosaikReadFormat::CAlignmentReader*>& readers ) {
+		for ( unsigned int i = 0; i < readers.size(); ++i  ) {
+			readers[i]->Close();
+			delete readers[i];
+		}
 	}
 
 
 
-	inline bool LoadNextReadPair ( MosaikReadFormat::CAlignmentReader& reader, unsigned int readerNo, vector<AlignedReadPair>& reads ) {
+	inline bool LoadNextReadPair ( MosaikReadFormat::CAlignmentReader* reader, unsigned int readerNo, vector<AlignedReadPair>& reads ) {
 
 
 		if ( readerNo > reads.size() - 1 ) {
@@ -117,7 +115,7 @@ namespace SortNMergeUtilities {
         	mr.Clear();
 	        reads[readerNo].Clear();
 		
-		if ( !reader.LoadNextRead(mr) ) 
+		if ( !reader->LoadNextRead(mr) ) 
         	        return false;
 	        else{
 			for ( vector<Alignment>::iterator ite = mr.Mate1Alignments.begin(); ite != mr.Mate1Alignments.end(); ++ite ) 
