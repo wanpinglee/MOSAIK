@@ -643,19 +643,16 @@ void CMosaikAligner::MergeArchives(void) {
 
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-		cerr << temporaryFiles[i] << endl;
-		//rm(temporaryFiles[i].c_str());
+		rm(temporaryFiles[i].c_str());
 
 	// get statistics information
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
 	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID );
 
-cout << ".stat is done" << endl;
 
 	CArchiveMerge::StatisticsCounters mergeCounters;
 	merger.GetStatisticsCounters( mergeCounters );
 
-cout << "Get counter" << endl;
 
 	mStatisticsCounters.AlignedReads       = mergeCounters.AlignedReads;
 	mStatisticsCounters.BothNonUniqueReads = mergeCounters.BothNonUniqueReads;
@@ -665,7 +662,6 @@ cout << "Get counter" << endl;
 	mStatisticsCounters.FilteredOutMates   = mergeCounters.FilteredOutMates;
 	mStatisticsCounters.NonUniqueMates     = mergeCounters.NonUniqueMates;
 	mStatisticsCounters.UniqueMates        = mergeCounters.UniqueMates;
-cout << "assign counter done" << endl;
 
 }
 
