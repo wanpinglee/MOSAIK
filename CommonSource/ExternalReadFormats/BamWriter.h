@@ -86,6 +86,38 @@ struct BGZF {
 		if(CompressedBlock)   delete [] CompressedBlock;
 		if(UncompressedBlock) delete [] UncompressedBlock;
 	}
+
+	// copy constructor
+	BGZF ( const BGZF & copy ) {
+		CompressedBlockSize   = copy.CompressedBlockSize;
+		UncompressedBlockSize = copy.UncompressedBlockSize;
+		CompressedBlock   = new char[ CompressedBlockSize ];
+		UncompressedBlock = new char[ UncompressedBlockSize ];
+		memcpy( CompressedBlock, copy.CompressedBlock, CompressedBlockSize );
+		memcpy( UncompressedBlock, copy.UncompressedBlock, UncompressedBlockSize );
+
+	}
+
+	// assign operator
+	BGZF& operator=( const BGZF & copy ) {
+		CompressedBlockSize    = copy.CompressedBlockSize;
+		UncompressedBlockSize  = copy.UncompressedBlockSize;
+		char* temp_CompressedBlock   = new char[ CompressedBlockSize ];
+		char* temp_UncompressedBlock = new char[ UncompressedBlockSize ];
+		memcpy( temp_CompressedBlock, copy.CompressedBlock, CompressedBlockSize );
+		memcpy( temp_UncompressedBlock, copy.UncompressedBlock, UncompressedBlockSize );
+		delete [] CompressedBlock;
+		delete [] UncompressedBlock;
+		CompressedBlock   = temp_CompressedBlock;
+		UncompressedBlock = temp_UncompressedBlock;
+
+		// unsafe
+		Stream = copy.Stream;
+
+		return *this;
+
+	}
+
 };
 
 class CBamWriter {

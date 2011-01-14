@@ -84,6 +84,8 @@ class CArchiveMerge
 			const unsigned int fragmentLength = 0, 
 			const bool hasSpecial = false );
 
+		~CArchiveMerge(void);
+
 		void Merge();
 
 		void GetStatisticsCounters ( StatisticsCounters& counter );
@@ -136,8 +138,7 @@ class CArchiveMerge
 
 		// ZA tagers
 		CZaTager za1, za2;
-		
-		
+
 		inline void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );
 		void CopyReferenceString( vector<ReferenceSequence>& refVec );
 		void PrintReferenceSequence( vector<ReferenceSequence>& refVec );

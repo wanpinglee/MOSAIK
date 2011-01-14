@@ -24,7 +24,8 @@ namespace BestNSecondBestSelection {
 		const unsigned int fragmentLength,
 		const unsigned int expectedFragmentLength );
 
-	void Select ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const unsigned int expectedFragmentLength );
+	void Select ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const unsigned int expectedFragmentLength,
+		const bool& considerMate1 = true, const bool& considerMate2 = true );
 }
 
 #endif

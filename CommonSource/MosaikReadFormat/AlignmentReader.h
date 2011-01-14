@@ -39,6 +39,8 @@ namespace MosaikReadFormat {
 		CAlignmentReader(void);
 		// destructor
 		~CAlignmentReader(void);
+		// copy constructor
+		CAlignmentReader ( CAlignmentReader const & copy );
 		// checks to see if this is truly a MOSAIK alignment archive
 		static bool CheckFile(const string& filename, SequencingTechnologies& st, AlignmentStatus& as, const bool showError);
 		// closes the alignment archive

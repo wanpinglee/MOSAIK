@@ -11,6 +11,32 @@ class CMdTager {
 		CMdTager();
 		~CMdTager();
 		const char* GetMdTag( const char* reference, const char* query, const unsigned int& referenceLen );
+
+		// copy constructor
+		CMdTager ( const CMdTager & copy ) {
+			bufferLen = copy.bufferLen;
+			buffer    = new char [ bufferLen ];
+			memcpy( buffer, copy.buffer, bufferLen );
+
+			numBases       = copy.numBases;
+			currentPos     = copy.currentPos;
+			numBufferBytes = copy.numBufferBytes;
+			zeroChar       = '0';
+		};
+		// assign operator
+		CMdTager& operator=( CMdTager const & copy ) {
+			char * temp = new char [ copy.bufferLen ];
+			delete [] buffer;
+			bufferLen = copy.bufferLen;
+			buffer    = temp;
+			memcpy( buffer, copy.buffer, bufferLen );
+
+			numBases       = copy.numBases;
+			currentPos     = copy.currentPos;
+			numBufferBytes = copy.numBufferBytes;
+			zeroChar       = '0';
+			return *this;
+		};
 	private:
 		// our MD tag buffer
 		unsigned int bufferLen;

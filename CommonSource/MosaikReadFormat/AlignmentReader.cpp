@@ -42,13 +42,58 @@ namespace MosaikReadFormat {
 	// destructor
 	CAlignmentReader::~CAlignmentReader(void) {
 		if(mIsOpen)            Close();
-		if(mBuffer)            delete [] mBuffer;
-		if(mCompressionBuffer) delete [] mCompressionBuffer;
+		if(mBuffer)            delete mBuffer;
+		if(mCompressionBuffer) delete mCompressionBuffer;
 		if(MosaikSignature)    delete [] MosaikSignature;
 
 		// delete the reference sequence LUT
+		// Mark this will cause memory leakage; however, it causes segmentation fault
 		for(unsigned short i = 0; i < mNumRefSeqs; ++i) delete [] mRefSeqLUT[i];
 		if ( mRefSeqLUT ) delete mRefSeqLUT;
+
+		mBuffer            = NULL;
+		mCompressionBuffer = NULL;
+		MosaikSignature    = NULL;
+		mRefSeqLUT         = NULL;
+	}
+
+	// copy constructor
+	CAlignmentReader::CAlignmentReader( CAlignmentReader const & copy ) {
+		mIsOpen      = copy.mIsOpen;
+		mNumReads    = copy.mNumReads;
+		mNumBases    = copy.mNumBases;
+		mCurrentRead = copy.mCurrentRead;
+
+		mReadsOffset        = copy.mReadsOffset;
+		mReferenceGapOffset = copy.mReferenceGapOffset;
+		mIndexOffset        = copy.mIndexOffset;
+
+		mCompressionBuffer    = copy.mCompressionBuffer;
+		mCompressionBufferLen = copy.mCompressionBufferLen;
+
+		mInputFilename    = copy.mInputFilename;
+		mPartitionSize    = copy.mPartitionSize;
+		mPartitionMembers = copy.mPartitionMembers;
+
+		mNumRefSeqs = copy.mNumRefSeqs;
+
+		mReferenceSequences = copy.mReferenceSequences;
+		mRefSeqGaps = copy.mRefSeqGaps;
+		mReadGroups = copy.mReadGroups;
+
+		mStatus  = copy.mStatus;
+		mSeqTech = copy.mSeqTech;
+
+		mHeaderTags   = copy.mHeaderTags;
+		mReadGroupLUT = copy.mReadGroupLUT;
+
+
+		// pointers
+		mInStream  = copy.mInStream;
+		mBuffer    = NULL;
+		mBufferPtr = NULL;
+		mRefSeqLUT = NULL;
+		
 	}
 
 	// checks to see if this is truly an MOSAIK alignment archive

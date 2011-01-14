@@ -20,12 +20,12 @@
 // MOSAIK version
 // ==============
 
-#define MOSAIK_VERSION_DATE "2011-01-11"
+#define MOSAIK_VERSION_DATE "2011-01-13"
 
 // adopt a major.minor.build version number [1].[1].[3]
 const unsigned char  MOSAIK_MAJOR_VERSION = 1;
 const unsigned char  MOSAIK_MINOR_VERSION = 1;
-const unsigned short MOSAIK_BUILD_VERSION = 56;
+const unsigned short MOSAIK_BUILD_VERSION = 57;
 
 // ================================
 // Platform specific variable sizes
@@ -93,5 +93,16 @@ const unsigned char SIGNATURE_LENGTH = 6;
 const char ALIGNER_SIGNATURE[ ]  = "MSKAA\4";
 const char ALIGNER_SIGNATURE5[ ]  = "MSKAA\5";
 const char SORT_SIGNATURE[ ]     = "MSKSA\1";
+
+// ===========================
+// Mapping Qualities constants
+// ===========================
+const double UU_COEFFICIENT = 0.486796848;
+const double UU_INTERCEPT   = 35.45967112;
+const double UM_COEFFICIENT = 0.426395518;
+const double UM_INTERCEPT   = 19.29236958;
+const double MM_COEFFICIENT = 0.327358673;
+const double MM_INTERCEPT   = 4.350331532;
+
 
 #endif

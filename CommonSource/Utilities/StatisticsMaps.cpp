@@ -42,6 +42,12 @@ CStatisticsMaps::~CStatisticsMaps( void ) {
 	if ( multiplicities )   delete [] multiplicities;
 	if ( mappingQualities ) delete [] mappingQualities;
 	if ( mismatches )       delete [] mismatches;
+
+	fragments        = NULL;
+	readLengths      = NULL;
+	multiplicities   = NULL;
+	mappingQualities = NULL;
+	mismatches       = NULL;
 }
 
 void CStatisticsMaps::Reset( void ) {

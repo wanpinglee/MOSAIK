@@ -125,6 +125,10 @@ CArchiveMerge::CArchiveMerge (
 }
 
 
+CArchiveMerge::~CArchiveMerge( void ) {
+	cout << "Merger deconstrctor" << endl;
+}
+
 void CArchiveMerge::PrintStatisticsMaps( const string filename, const string readGroupId ) {
 	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
 }
@@ -460,10 +464,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 
 		if ( isMate1Multiple || isMate2Multiple ) 
-			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
+			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
 
-		isMate1Empty = r.Mate1Alignments.empty();
-		isMate2Empty = r.Mate2Alignments.empty();
+		//isMate1Empty = r.Mate1Alignments.empty();
+		//isMate2Empty = r.Mate2Alignments.empty();
 		
 		bool isFirstMate;
 		if ( !isMate1Empty ) {
@@ -550,6 +554,21 @@ inline void CArchiveMerge::SetAlignmentFlags(
 	al.IsMapped               = isItselfMapped;
 	al.IsMateMapped           = isMateMapped;
 
+	// GetFragmentAlignmentQuality
+	if ( isProperPair ) {
+		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
+		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
+
+		int aq = al.Quality;
+		if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
+                else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+                else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
+
+                if(aq < 0)       al.Quality = 0;
+                else if(aq > 99) al.Quality = 99;
+                else             al.Quality = aq;
+	}
+
 	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
 	rgIte = _readGroupsMap.find( r.ReadGroupCode );
 	// sanity check
@@ -585,8 +604,13 @@ void CArchiveMerge::Merge() {
 	}
 	
 	// initialize MOSAIK readers for all temp files
-	vector< MosaikReadFormat::CAlignmentReader > readers;
-	SortNMergeUtilities::OpenMosaikReader( readers, _inputFilenames );
+	//vector< MosaikReadFormat::CAlignmentReader* > readers;
+	//SortNMergeUtilities::OpenMosaikReader( readers, _inputFilenames );
+	MosaikReadFormat::CAlignmentReader* readers;
+	readers = new MosaikReadFormat::CAlignmentReader [ _inputFilenames.size() ];
+	for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
+		readers[i].Open( _inputFilenames[i] );
+	}
 
 	
 	Mosaik::AlignedRead mr;
@@ -702,6 +726,11 @@ void CArchiveMerge::Merge() {
 		if ( !done[i] ) {
 
 			owner = reads[i].owner;
+			for ( vector<Alignment>::iterator ite = reads[i].read.Mate1Alignments.begin(); ite != reads[i].read.Mate1Alignments.end(); ++ite )
+				ite->Owner = owner;
+
+			for ( vector<Alignment>::iterator ite = reads[i].read.Mate2Alignments.begin(); ite != reads[i].read.Mate2Alignments.end(); ++ite )
+				ite->Owner = owner;
 
 			if ( reads[i].read.Name > minRead.Name ) {
 				//if ( ++nRead % 100000 == 0 )
@@ -709,7 +738,6 @@ void CArchiveMerge::Merge() {
 
 				//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 				//writer.SaveAlignedRead(minRead);
-				minRead.Owner = owner;
 				WriteAlignment( minRead );
 				CalculateStatisticsCounters(minRead);
 				minRead.Clear();
@@ -721,7 +749,7 @@ void CArchiveMerge::Merge() {
 					minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), reads[i].read.Mate2Alignments.begin(), reads[i].read.Mate2Alignments.end() );
 				
 				// accordant flag
-				minRead.IsLongRead |= ite->read.IsLongRead;
+				minRead.IsLongRead |= reads[i].read.IsLongRead;
 			}
 
 			while ( true ) {
@@ -731,6 +759,12 @@ void CArchiveMerge::Merge() {
 				else {
 					UpdateReferenceIndex( mr, owner );
 					*_readNo = *_readNo + 1;
+
+					for ( vector<Alignment>::iterator ite = mr.Mate1Alignments.begin(); ite != mr.Mate1Alignments.end(); ++ite )
+						ite->Owner = owner;
+
+					for ( vector<Alignment>::iterator ite = mr.Mate2Alignments.begin(); ite != mr.Mate2Alignments.end(); ++ite )
+						ite->Owner = owner;
 				}
 				
 				if ( mr.Name > minRead.Name ) {
@@ -740,7 +774,6 @@ void CArchiveMerge::Merge() {
 
 					//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 					//writer.SaveAlignedRead(minRead);
-					minRead.Owner = owner;
 					WriteAlignment( minRead );
 					CalculateStatisticsCounters(minRead);
 					minRead.Clear();
@@ -753,7 +786,7 @@ void CArchiveMerge::Merge() {
 						minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), mr.Mate2Alignments.begin(), mr.Mate2Alignments.end() );
 					
 					// accordant flag
-					minRead.IsLongRead |= ite->read.IsLongRead;
+					minRead.IsLongRead |= reads[i].read.IsLongRead;
 				}
 
 			}
@@ -765,7 +798,6 @@ void CArchiveMerge::Merge() {
 	//UpdateReferenceIndex(minRead, owner);
 	//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
 	//writer.SaveAlignedRead(minRead);
-	minRead.Owner = owner;
 	WriteAlignment( minRead );
 	CalculateStatisticsCounters(minRead);
 
@@ -779,8 +811,14 @@ void CArchiveMerge::Merge() {
 
 	
 	// close readers
-	for ( unsigned int i = 0; i < readers.size(); i++ )
+	//for ( unsigned int i = 0; i < readers.size(); i++ )
+	//	readers[i]->Close();
+	for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
+		cerr << i << ": " << _inputFilenames[i] << endl;
 		readers[i].Close();
+		//delete readers[i];
+	}
+	delete readers;
 
 	if ( _hasSpecial )
 		_specialReader.Close();

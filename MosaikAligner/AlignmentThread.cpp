@@ -26,12 +26,12 @@ const double CAlignmentThread::P_ERR_REF  = pow(10.0, -REFERENCE_SEQUENCE_QUALIT
 const double CAlignmentThread::P_CORR_REF = 1.0 - CAlignmentThread::P_ERR_REF;
 const double CAlignmentThread::ONE_THIRD  = 1.0 / 3.0;
 const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
-const double CAlignmentThread::UU_COEFFICIENT = 0.486796848;
-const double CAlignmentThread::UU_INTERCEPT   = 35.45967112;
-const double CAlignmentThread::UM_COEFFICIENT = 0.426395518;
-const double CAlignmentThread::UM_INTERCEPT   = 19.29236958;
-const double CAlignmentThread::MM_COEFFICIENT = 0.327358673;
-const double CAlignmentThread::MM_INTERCEPT   = 4.350331532;
+//const double CAlignmentThread::UU_COEFFICIENT = 0.486796848;
+//const double CAlignmentThread::UU_INTERCEPT   = 35.45967112;
+//const double CAlignmentThread::UM_COEFFICIENT = 0.426395518;
+//const double CAlignmentThread::UM_INTERCEPT   = 19.29236958;
+//const double CAlignmentThread::MM_COEFFICIENT = 0.327358673;
+//const double CAlignmentThread::MM_INTERCEPT   = 4.350331532;
 
 // constructor
 CAlignmentThread::CAlignmentThread(
@@ -434,6 +434,7 @@ void CAlignmentThread::AlignReadArchive(
 		}
 
 
+
 		// process alignments mapped in special references and delete them in vectors
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
@@ -475,14 +476,8 @@ void CAlignmentThread::AlignReadArchive(
 		if(isMate2Aligned) mStatisticsCounters.MateBasesAligned += numMate2Bases;
 
 
-		//pthread_mutex_lock(&mStatisticsMapsMutex);
-		//pMaps->SaveRecord( mr, mate1Set, mate2Set, 
-		//	areBothMatesPresent, mSettings.SequencingTechnology );
-		//pthread_mutex_unlock(&mStatisticsMapsMutex);
-		
-		
 		// save chromosomes and positions of multiple alignments in bam
-		//if ( !mFlags.UseArchiveOutput ) {
+
 		if ( mFlags.SaveMultiplyBam )
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
@@ -497,7 +492,6 @@ void CAlignmentThread::AlignReadArchive(
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
-		//}
 
 
 		// ===================================
@@ -729,7 +723,6 @@ void CAlignmentThread::SetRequiredInfo (
 	
 	// GetFragmentAlignmentQuality
 	// For archive output, we recalculate MQ when merging archives
-	
 	if ( isProperPair && !mFlags.UseArchiveOutput ) {
 		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
 		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
@@ -1216,7 +1209,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 			// create a new alignment data structure
 			Alignment al;
 			al.IsReverseStrand = isFastHashRegionReverseStrand;
-
+			al.BaseQualities.Copy(qualities, queryLength);
+			if ( al.IsReverseStrand ) al.BaseQualities.Reverse();
+	
 			// perform a Smith-Waterman alignment
 			AlignRegion(fastHashRegion, al, fastHashRead, queryLength, numExtensionBases);
 
@@ -1249,6 +1244,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				// add the alignment to the alignments vector
 				if(ApplyReadFilters(al, query, qualities, queryLength)) {
 					
+					al.BaseQualities.Copy(qualities, queryLength);
 					//if ( al.QueryBegin > 0 ) {
 					//	al.Query.Prepend    ( query, al.QueryBegin );
 					//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
@@ -1304,6 +1300,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// add the alignment to the alignments vector
 					if(ApplyReadFilters(al, query, qualities, queryLength)) {
 					
+						al.BaseQualities.Copy( qualities, queryLength);
+						al.BaseQualities.Reverse();
+
 						//if ( al.QueryBegin > 0 ) {
 						//	al.Query.Prepend    ( query, al.QueryBegin );
 						//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );

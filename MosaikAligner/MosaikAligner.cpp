@@ -266,27 +266,27 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	else {
 
-//***************** DEBUG ********************************
+// ***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
 	temporaryFiles.push_back("tmp/ao504h7jbxfxr3hfmzspx6jug5ljcs5s.tmp");
-	temporaryFiles.push_back("tmp/iuhqvma8ejonntt5ogpqsg7onkr91yc9.tmp");
-	temporaryFiles.push_back("tmp/2vhgjba0ptm42bh8vbrev76ujy0s3oub.tmp");
-	temporaryFiles.push_back("tmp/dofn2ecxd5oaizadu9bxnktheg35xib1.tmp");
-	temporaryFiles.push_back("tmp/vrxf86h014fd9ky232etxbsk86b0qt4s.tmp");
-	temporaryFiles.push_back("tmp/edccaeyanitd1x40qcsmu6j3r7bm8q5c.tmp");
-	temporaryFiles.push_back("tmp/q1151muwpjti0scghwm9jvooypy49pd5.tmp");
-	temporaryFiles.push_back("tmp/eh243s5v89r0mpz4oo9ef1n720uiz393.tmp");
-	temporaryFiles.push_back("tmp/djdip5c7xkj72u33hpxsi96m7zm7pja9.tmp");
 	temporaryFiles.push_back("tmp/0qzaje4lo4kg1z8hfsgwc8fgzur8tfmj.tmp");
-	temporaryFiles.push_back("tmp/f6jz0n7o310ccernuc7cct55g3ecu90z.tmp");
-	temporaryFiles.push_back("tmp/jwir9ysea08s978mc3tt2dgt4yp1sfth.tmp");
-	temporaryFiles.push_back("tmp/3khy8mq7pplkja45gorpqw7iozajys07.tmp");
-	temporaryFiles.push_back("tmp/qzstdph28dneek3yaqnvya18ek8ivter.tmp");
-	temporaryFiles.push_back("tmp/f4vbvstfzladceyi8s3pjibnnl1wxk43.tmp");
-	temporaryFiles.push_back("tmp/fbi2wpf71z4937b094ibwjpdeek2hwj2.tmp");
+	temporaryFiles.push_back("tmp/2vhgjba0ptm42bh8vbrev76ujy0s3oub.tmp");
 	temporaryFiles.push_back("tmp/3emt1cfob2wcmqrw595w6y20qeg5fu2o.tmp");
+	temporaryFiles.push_back("tmp/3khy8mq7pplkja45gorpqw7iozajys07.tmp");
+	temporaryFiles.push_back("tmp/djdip5c7xkj72u33hpxsi96m7zm7pja9.tmp");
+	temporaryFiles.push_back("tmp/dofn2ecxd5oaizadu9bxnktheg35xib1.tmp");
+	temporaryFiles.push_back("tmp/edccaeyanitd1x40qcsmu6j3r7bm8q5c.tmp");
+	temporaryFiles.push_back("tmp/eh243s5v89r0mpz4oo9ef1n720uiz393.tmp");
+	temporaryFiles.push_back("tmp/f4vbvstfzladceyi8s3pjibnnl1wxk43.tmp");
+	temporaryFiles.push_back("tmp/f6jz0n7o310ccernuc7cct55g3ecu90z.tmp");
+	temporaryFiles.push_back("tmp/fbi2wpf71z4937b094ibwjpdeek2hwj2.tmp");
+	temporaryFiles.push_back("tmp/iuhqvma8ejonntt5ogpqsg7onkr91yc9.tmp");
 	temporaryFiles.push_back("tmp/jg7spl5m1uwky36vwrv5s63iwxf6ii47.tmp");
+	temporaryFiles.push_back("tmp/jwir9ysea08s978mc3tt2dgt4yp1sfth.tmp");
+	temporaryFiles.push_back("tmp/q1151muwpjti0scghwm9jvooypy49pd5.tmp");
+	temporaryFiles.push_back("tmp/qzstdph28dneek3yaqnvya18ek8ivter.tmp");
+	temporaryFiles.push_back("tmp/vrxf86h014fd9ky232etxbsk86b0qt4s.tmp");
         
         // calculate total # of reads
         unsigned int nReads = 0;
@@ -308,7 +308,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
         CProgressBar<unsigned int>::WaitThread();
 	exit(1);
 */
-//********************************************************
+// ********************************************************
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -476,6 +476,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	if ( mFlags.UseLowMemory )
 		MergeArchives();
 
+	cout << endl << "merge done" << endl;
+
 	PrintStatistics();
 }
 
@@ -641,14 +643,19 @@ void CMosaikAligner::MergeArchives(void) {
 
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-		rm(temporaryFiles[i].c_str());
+		cerr << temporaryFiles[i] << endl;
+		//rm(temporaryFiles[i].c_str());
 
 	// get statistics information
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
 	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID );
 
+cout << ".stat is done" << endl;
+
 	CArchiveMerge::StatisticsCounters mergeCounters;
 	merger.GetStatisticsCounters( mergeCounters );
+
+cout << "Get counter" << endl;
 
 	mStatisticsCounters.AlignedReads       = mergeCounters.AlignedReads;
 	mStatisticsCounters.BothNonUniqueReads = mergeCounters.BothNonUniqueReads;
@@ -658,6 +665,7 @@ void CMosaikAligner::MergeArchives(void) {
 	mStatisticsCounters.FilteredOutMates   = mergeCounters.FilteredOutMates;
 	mStatisticsCounters.NonUniqueMates     = mergeCounters.NonUniqueMates;
 	mStatisticsCounters.UniqueMates        = mergeCounters.UniqueMates;
+cout << "assign counter done" << endl;
 
 }
 
@@ -882,6 +890,8 @@ void CMosaikAligner::PrintStatistics () {
 		printf("cache hits:   %10llu (%5.1f %%)\n", (unsigned long long)cacheHits, cacheHitsPercent);
 		printf("cache misses: %10llu\n", (unsigned long long)cacheMisses);
 	}
+
+	fflush(stdout);
 
 	//if ( !mFlags.UseLowMemory ) {
 	//	printf("\n");

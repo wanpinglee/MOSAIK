@@ -30,6 +30,9 @@ CMosaikString::~CMosaikString(void) {
 	if( mAllocatedLength > 1 ) delete [] mData;
 	else if ( mAllocatedLength == 1 ) delete mData;
 	mData = NULL;
+
+	//delete [] FOUR_BIT_PACKING;
+	//delete [] FOUR_BIT_UNPACKING;
 }
 
 // copy constructor

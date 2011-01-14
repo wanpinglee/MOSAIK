@@ -31,7 +31,7 @@ CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsign
 
 }
 
-CArchiveSort::~CArchiveSort (){
+//CArchiveSort::~CArchiveSort (){
 	/*     
 	for ( unsigned int i = 0; i < _tempFiles.size(); i++ ){
 		for ( unsigned int j = 0; j < _tempFiles[i].size(); j++ )
@@ -40,7 +40,7 @@ CArchiveSort::~CArchiveSort (){
 	*/
 
 	
-}
+//}
 
 void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::AlignedRead>& _alignedReadCache ) {
 	

@@ -363,12 +363,12 @@ private:
 	// ZA tagers
 	CZaTager za1, za2;
 	// MQ recalculation
-	static const double UU_COEFFICIENT;
-	static const double UU_INTERCEPT;
-	static const double UM_COEFFICIENT;
-	static const double UM_INTERCEPT;
-	static const double MM_COEFFICIENT;
-	static const double MM_INTERCEPT;
+	//static const double UU_COEFFICIENT;
+	//static const double UU_INTERCEPT;
+	//static const double UM_COEFFICIENT;
+	//static const double UM_INTERCEPT;
+	//static const double MM_COEFFICIENT;
+	//static const double MM_INTERCEPT;
 	// best and second best utilities
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 

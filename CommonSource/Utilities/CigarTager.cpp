@@ -1,7 +1,7 @@
 #include "CigarTager.h"
 
 CCigarTager::CCigarTager( void )
-	: bufferLen(256)
+	: bufferLen(512)
 	, buffer(NULL)
 {
 	buffer    = new char [ bufferLen ];
@@ -11,6 +11,7 @@ CCigarTager::CCigarTager( void )
 
 CCigarTager::~CCigarTager( void ) {
 	if ( buffer )     delete [] buffer;
+	buffer = NULL;
 	//if ( packBuffer ) delete [] packBuffer;
 }
 
@@ -155,11 +156,6 @@ const char* CCigarTager::GetCigarTag(
 			pCigar += numWritten;
 		}
 	}
-
-	//if ( getPackCigar )
-	//	*pPackCigar = 0;
-	//else
-	//	*pCigar = 0;
 
 	return buffer;
 }

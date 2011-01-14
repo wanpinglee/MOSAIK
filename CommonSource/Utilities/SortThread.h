@@ -110,6 +110,8 @@ class SortThread {
 			pthread_attr_destroy (&_td._attr);
 			pthread_mutex_destroy(&_td._mutex);
 			pthread_mutex_destroy(&_td._readCounterMutex);
+
+			cout << "sort thread constructor" << endl;
 		}
 
 		void Start();

@@ -16,6 +16,9 @@ CMdTager::CMdTager( void )
 CMdTager::~CMdTager( void ) {
 	if ( buffer )    delete [] buffer;
 	if ( tempBases ) delete [] tempBases;
+
+	buffer    = NULL;
+	tempBases = NULL;
 }
 
 void CMdTager::ExtendBuffer( const unsigned int& length ) {

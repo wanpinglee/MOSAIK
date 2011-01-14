@@ -1,26 +1,30 @@
 #include "ZaTager.h"
 
 CZaTager::CZaTager( void )
-	: bufferLen(256)
+	: bufferLen(512)
 	, buffer(NULL)
 {
 	buffer = new char [ bufferLen ];
 	memset(buffer, 0, bufferLen);
+	//buffer.resize(512);
 }
 
 CZaTager::~CZaTager( void ) {
 	if ( buffer ) delete [] buffer;
+	buffer = NULL;
 }
 
 void CZaTager::ExtendBuffer( const unsigned int& length ) {
 
-	if ( buffer ) delete [] buffer;
-
-	bufferLen = length + 10;
-	buffer = new char [ bufferLen ];
-	memset(buffer, 0, bufferLen);
+	char* newBuffer = new char [ length ];
+	memcpy( newBuffer, buffer, bufferLen );
+	delete [] buffer;
+	buffer = newBuffer;
+	
+	bufferLen = length;
 }
 
+/*
 const char* CZaTager::GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 ) {
 	
 	char* zaPtr = buffer;
@@ -76,14 +80,14 @@ const char* CZaTager::GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 )
 
 	return buffer;
 }
-
+*/
 
 const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate ) {
 	
 	char* zaPtr = buffer;
 	unsigned int len = 0;
 
-	//CCigarTager cigarTager;
+	CCigarTager cigarTager;
 
 	Alignment al1, al2;
 	if ( isFirstMate ) {

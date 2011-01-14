@@ -53,7 +53,7 @@ class CArchiveSort {
 		/* ====================  LIFECYCLE     ======================================= */
 		/*  constructor */ 
 		CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength );
-		~CArchiveSort ();
+		//~CArchiveSort ();
 		void Sort();
 
 		/* ====================  ACCESSORS     ======================================= */

@@ -82,6 +82,15 @@ namespace SortNMergeUtilities {
 	inline void OpenMosaikReader ( vector<MosaikReadFormat::CAlignmentReader>& readers, const vector<string>& files ) {
         
 		MosaikReadFormat::CAlignmentReader *reader;
+		readers.reserve(files.size());
+		for ( unsigned int i = 0; i < files.size(); i++ ) {
+			reader = new MosaikReadFormat::CAlignmentReader;
+			readers.push_back(*reader);
+			readers[i].Open( files[i] );
+		}
+		
+		/*
+		MosaikReadFormat::CAlignmentReader *reader;
 	        readers.reserve(files.size());
 
 	        for ( unsigned int i = 0; i < files.size(); i++ ) {
@@ -89,6 +98,7 @@ namespace SortNMergeUtilities {
 	                reader->Open( files[i] );
 	                readers.push_back(*reader);
 	        }
+		*/
 	}
 
 

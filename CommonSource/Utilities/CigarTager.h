@@ -18,6 +18,31 @@ class CCigarTager {
 			const unsigned int& leadingClip = 0,
 			const unsigned int& laggingClip = 0,
 			const bool packCigar = false);
+		// copy constructor
+		CCigarTager ( const CCigarTager & copy ) {
+			bufferLen = copy.bufferLen;
+			buffer    = new char [ bufferLen ];
+			memcpy( buffer, copy.buffer, bufferLen );
+
+			numBases       = copy.numBases;
+			currentPos     = copy.currentPos;
+			numBufferBytes = copy.numBufferBytes;
+
+		};
+		// assign operator
+		CCigarTager& operator=( const CCigarTager & copy ) {
+			char * temp = new char [ copy.bufferLen ];
+			delete [] buffer;
+			bufferLen = copy.bufferLen;
+			buffer    = temp;
+			memcpy( buffer, copy.buffer, bufferLen );
+
+			numBases       = copy.numBases;
+			currentPos     = copy.currentPos;
+			numBufferBytes = copy.numBufferBytes;
+			return *this;
+		};
+
 
 	private:
 		// our cigar buffer

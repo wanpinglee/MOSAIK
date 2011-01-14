@@ -44,21 +44,24 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 }
 
 // Select and only keep best and 2nd best
-void BestNSecondBestSelection::Select ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const unsigned int expectedFragmentLength ) {
+void BestNSecondBestSelection::Select ( 
+	vector<Alignment>& mate1Set, 
+	vector<Alignment>& mate2Set, 
+	const unsigned int expectedFragmentLength,
+	const bool& considerMate1,
+	const bool& considerMate2) {
 	
 	vector<Alignment> newMate1Set;
 	vector<Alignment> newMate2Set;
 	// store the number of alignments
-	Alignment junkAl;
-	junkAl.IsJunk = true;
 	unsigned int nMate1 = 0;
 	unsigned int nMate2 = 0;
 
 	Alignment bestMate1, bestMate2; 
 	Alignment secondBestMate1, secondBestMate2;
 
-	bool isMate1Aligned = !mate1Set.empty();
-	bool isMate2Aligned = !mate2Set.empty();
+	bool isMate1Aligned = !mate1Set.empty() && considerMate1;
+	bool isMate2Aligned = !mate2Set.empty() && considerMate2;
 	bool best           = false;
 	bool secondBest     = false;
 

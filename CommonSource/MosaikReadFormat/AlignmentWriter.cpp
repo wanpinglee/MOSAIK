@@ -51,6 +51,10 @@ namespace MosaikReadFormat {
 		if(mBuffer)            delete [] mBuffer;
 		if(mCompressionBuffer) delete mCompressionBuffer;
 		if(MosaikSignature)    delete [] MosaikSignature;
+
+		mBuffer            = NULL;
+		mCompressionBuffer = NULL;
+		MosaikSignature    = NULL;
 	}
 
 	// adds a header tag
