@@ -29,8 +29,8 @@ export BLD_PLATFORM ?= linux
 include includes/$(BLD_PLATFORM).inc
 
 # define our source subdirectories
-SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikSort MosaikMerge MosaikAssembler
-UTIL_SUBDIRS = CommonSource MosaikJump MosaikCoverage MosaikText MosaikDupSnoop
+SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikJump
+#UTIL_SUBDIRS = MosaikJump
 
 all:
 	@test -d $(OBJ_DIR) || mkdir $(OBJ_DIR)
@@ -39,18 +39,6 @@ all:
 	@echo "========================================================="
 	@./UpdateConfigH
 	@for dir in $(SUBDIRS); do \
-		echo "- Building in $$dir"; \
-		$(MAKE) --no-print-directory -C $$dir; \
-		echo ""; \
-	done
-
-utils:
-	@test -d $(OBJ_DIR) || mkdir $(OBJ_DIR)
-	@test -d $(BIN_DIR) || mkdir $(BIN_DIR)
-	@echo "Building MOSAIK for the following platform: $$BLD_PLATFORM"
-	@echo "========================================================="
-	@./UpdateConfigH
-	@for dir in $(UTIL_SUBDIRS); do \
 		echo "- Building in $$dir"; \
 		$(MAKE) --no-print-directory -C $$dir; \
 		echo ""; \

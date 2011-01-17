@@ -77,7 +77,7 @@ class CArchiveSort {
 		unsigned int _medianFragmentLength;
 		unsigned int _extendedFragmentLength;
 
-		vector<ReferenceSequence>*          _referenceSequences;
+		vector<ReferenceSequence>           _referenceSequences;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;
 		AlignmentStatus _alignmentStatus;
 

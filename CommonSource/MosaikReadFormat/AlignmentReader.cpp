@@ -143,7 +143,8 @@ namespace MosaikReadFormat {
 		mReadGroups.clear();
 		mHeaderTags.clear();
 		mReadGroupLUT.clear();
-		delete [] MosaikSignature;
+		if ( MosaikSignature ) delete [] MosaikSignature;
+		MosaikSignature = NULL;
 		fclose(mInStream);
 	}
 
@@ -215,9 +216,9 @@ namespace MosaikReadFormat {
 	}
 
 	// retrieves the reference sequence data
-	vector<ReferenceSequence>* CAlignmentReader::GetReferenceSequences(void) {
-		return &mReferenceSequences;
-	}
+	//vector<ReferenceSequence>* CAlignmentReader::GetReferenceSequences(void) {
+	//	return &mReferenceSequences;
+	//}
 
 	// retrieves the reference sequence data
 	void CAlignmentReader::GetReferenceSequences( vector<ReferenceSequence>& refVec) {

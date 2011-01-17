@@ -252,13 +252,6 @@ namespace MosaikReadFormat {
 
 			// write the reference sequence gaps
 			fio.Write((char*)mBuffer, bufferOffset, mOutStream);
-
-			// clear all vectors
-			mOutputFilename.clear();
-			mReferenceSequences.clear();
-			mIndex.clear();
-			mHeaderTags.clear();
-			if ( MosaikSignature ) delete [] MosaikSignature;
 		}
 
 		// ==============
@@ -330,6 +323,15 @@ namespace MosaikReadFormat {
 
 		// close the file stream
 		fclose(mOutStream);
+
+		// clear vectors
+		mOutputFilename.clear();
+		mReferenceSequences.clear();
+		mIndex.clear();
+		mHeaderTags.clear();
+		if ( MosaikSignature ) delete [] MosaikSignature;
+		MosaikSignature = NULL;
+
 	}
 
 	// retrieves the number of bases written
@@ -347,6 +349,11 @@ namespace MosaikReadFormat {
 
 		if(mIsOpen) {
 			cout << "ERROR: An attempt was made to open an already open alignment archive." << endl;
+			exit(1);
+		}
+
+		if ( referenceSequences.empty() ) {
+			cout << "ERROR: The reference sequences in the archive are empty." << endl;
 			exit(1);
 		}
 

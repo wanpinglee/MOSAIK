@@ -26,6 +26,14 @@ using namespace std;
 
 #define KEY_LENGTH 5
 
+class CRandomGenerator {
+	public:
+		ptrdiff_t operator() ( ptrdiff_t max ) {
+			double temp = 1;
+			return static_cast<ptrdiff_t> (temp);
+		}
+};
+
 class CJumpDnaHash : public CAbstractDnaHash {
 public:
 	// constructor
@@ -110,4 +118,6 @@ private:
 	bool _bubbleSpecialHashes;
 	uint64_t _specialBegin;
 	unsigned int  _nSpecialHash;
+
+	CRandomGenerator randomGenerator;
 };

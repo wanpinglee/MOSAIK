@@ -472,7 +472,7 @@ void CJumpDnaHash::GetHashStatistics(
 			
 			// handle regular references
 			if ( positions.size() != 0 ) {
-				random_shuffle( positions.begin(), positions.end() );
+				random_shuffle( positions.begin(), positions.end(), randomGenerator );
 				SetPositionDistribution(referenceSequences, nHashs, expectedMemories, positions);
 			}
 			
@@ -736,8 +736,8 @@ void CJumpDnaHash::LoadPositions(void) {
 				if ( ( totalSpecial != totalPos ) && ( movedSpecial > 0 ) ) {
 					unsigned int specialBegin = totalPos - totalSpecial;
 					unsigned int normalEnd    = totalPos - totalSpecial - 1;
-					random_shuffle( positions.begin(), positions.begin() + normalEnd);
-					random_shuffle( positions.begin() + specialBegin, positions.end() );
+					random_shuffle( positions.begin(), positions.begin() + normalEnd, randomGenerator );
+					random_shuffle( positions.begin() + specialBegin, positions.end(), randomGenerator );
 					unsigned int temp;
 					for ( unsigned int i = 0; i < totalSpecial; ++i ) {
 						temp = positions[i];
@@ -746,9 +746,9 @@ void CJumpDnaHash::LoadPositions(void) {
 					}
 
 				} else
-					random_shuffle( positions.begin(), positions.end() );
+					random_shuffle( positions.begin(), positions.end(), randomGenerator );
 			} else
-				random_shuffle( positions.begin(), positions.end() );
+				random_shuffle( positions.begin(), positions.end(), randomGenerator );
 			StorePositions(curFilePosition, left, positions, offset);
 		}
 

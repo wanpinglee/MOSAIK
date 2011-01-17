@@ -52,7 +52,7 @@ void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::Alig
 	tempFiles.push_back(tempFilename);
 
 	MosaikReadFormat::CAlignmentWriter writer;
-	writer.Open(tempFilename, *_referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
+	writer.Open(tempFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
 	writer.AdjustPartitionSize(1000);
 
 	for ( list<Mosaik::AlignedRead>::iterator ite = _alignedReadCache.begin(); ite != _alignedReadCache.end(); ite++ ) 
@@ -87,7 +87,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 
 	// prepare writer
 	MosaikReadFormat::CAlignmentWriter writer;
-	writer.Open(_outputFilename, *_referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
+	writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
 	// TODO: Consider what is the perfect number.
 	writer.AdjustPartitionSize(1000);
 
@@ -233,7 +233,8 @@ void CArchiveSort::Sort(){
 
 		
 	// set up archive header
-	_referenceSequences = reader.GetReferenceSequences();
+	//_referenceSequences = reader.GetReferenceSequences();
+	reader.GetReferenceSequences( _referenceSequences );
 	reader.GetReadGroups(_readGroups);
 	_alignmentStatus    = reader.GetStatus();
 	
