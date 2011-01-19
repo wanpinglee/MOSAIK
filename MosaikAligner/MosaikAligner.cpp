@@ -620,9 +620,9 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		cerr << outputFilenames[i] << endl;
-		//rm(outputFilenames[i].c_str());
-	cerr << endl;
+		//cerr << outputFilenames[i] << endl;
+		rm(outputFilenames[i].c_str());
+	//cerr << endl;
 
 
 	CConsole::Heading();
@@ -640,8 +640,8 @@ void CMosaikAligner::MergeArchives(void) {
 
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-		cerr << temporaryFiles[i] << endl;
-		//rm(temporaryFiles[i].c_str());
+		//cerr << temporaryFiles[i] << endl;
+		rm(temporaryFiles[i].c_str());
 
 	// get statistics information
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
