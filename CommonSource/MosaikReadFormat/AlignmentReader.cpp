@@ -856,7 +856,7 @@ namespace MosaikReadFormat {
 		if((status & AF_IS_UNMAPPED)       != 0) al.IsMapped        = false;
 		if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
 
-		if ( al.IsFirstMate )
+		if ( ( isPairedInSequencing && al.IsFirstMate ) || !isPairedInSequencing )
 			al.NumMapped = numMate1OriginalAlignments;
 		else
 			al.NumMapped = numMate2OriginalAlignments;

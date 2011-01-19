@@ -84,7 +84,6 @@ class CArchiveMerge
 			const unsigned int fragmentLength = 0, 
 			const bool hasSpecial = false );
 
-		~CArchiveMerge(void);
 
 		void Merge();
 

@@ -17,8 +17,8 @@ export PAIRWISE_DIR = CommonSource/PairwiseAlignment
 export UTILITIES_DIR = CommonSource/Utilities
 
 # define some default flags
-export CFLAGS ?= -Wall -O3 -Wno-char-subscripts
-#export CFLAGS ?= -Wall -g -O2
+#export CFLAGS ?= -Wall -O3 -Wno-char-subscripts
+export CFLAGS ?= -Wall -g -O2
 export CXXFLAGS ?= $(CFLAGS)
 #export LDFLAGS ?= -Wl,-s
 export LDFLAGS = -Wl
@@ -29,7 +29,7 @@ export BLD_PLATFORM ?= linux
 include includes/$(BLD_PLATFORM).inc
 
 # define our source subdirectories
-SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikJump
+SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikJump MosaikText
 #UTIL_SUBDIRS = MosaikJump
 
 all:

@@ -269,24 +269,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 // ***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
-	temporaryFiles.push_back("tmp/ao504h7jbxfxr3hfmzspx6jug5ljcs5s.tmp");
-	temporaryFiles.push_back("tmp/0qzaje4lo4kg1z8hfsgwc8fgzur8tfmj.tmp");
-	temporaryFiles.push_back("tmp/2vhgjba0ptm42bh8vbrev76ujy0s3oub.tmp");
-	temporaryFiles.push_back("tmp/3emt1cfob2wcmqrw595w6y20qeg5fu2o.tmp");
-	temporaryFiles.push_back("tmp/3khy8mq7pplkja45gorpqw7iozajys07.tmp");
-	temporaryFiles.push_back("tmp/djdip5c7xkj72u33hpxsi96m7zm7pja9.tmp");
-	temporaryFiles.push_back("tmp/dofn2ecxd5oaizadu9bxnktheg35xib1.tmp");
-	temporaryFiles.push_back("tmp/edccaeyanitd1x40qcsmu6j3r7bm8q5c.tmp");
-	temporaryFiles.push_back("tmp/eh243s5v89r0mpz4oo9ef1n720uiz393.tmp");
-	temporaryFiles.push_back("tmp/f4vbvstfzladceyi8s3pjibnnl1wxk43.tmp");
-	temporaryFiles.push_back("tmp/f6jz0n7o310ccernuc7cct55g3ecu90z.tmp");
-	temporaryFiles.push_back("tmp/fbi2wpf71z4937b094ibwjpdeek2hwj2.tmp");
-	temporaryFiles.push_back("tmp/iuhqvma8ejonntt5ogpqsg7onkr91yc9.tmp");
-	temporaryFiles.push_back("tmp/jg7spl5m1uwky36vwrv5s63iwxf6ii47.tmp");
-	temporaryFiles.push_back("tmp/jwir9ysea08s978mc3tt2dgt4yp1sfth.tmp");
-	temporaryFiles.push_back("tmp/q1151muwpjti0scghwm9jvooypy49pd5.tmp");
-	temporaryFiles.push_back("tmp/qzstdph28dneek3yaqnvya18ek8ivter.tmp");
-	temporaryFiles.push_back("tmp/vrxf86h014fd9ky232etxbsk86b0qt4s.tmp");
+	temporaryFiles.push_back("tmp/8o6alatupker9gjfdq1rhedsjmotu6k8.tmp");
+	temporaryFiles.push_back("tmp/0irp1o7i6mf3lobzn9g7zu704107yvvp.tmp");
+	temporaryFiles.push_back("tmp/0is4wz3iym8z9pymvtooo1aw6x0oa8p1.tmp");
+	temporaryFiles.push_back("tmp/5mmtiidwccg2w3n8xqi8ub31fmmpukl5.tmp");
+	temporaryFiles.push_back("tmp/5ycfibyqc2w5u3pexwus6y77ggvywevr.tmp");
+	temporaryFiles.push_back("tmp/6aapikdzhzzu2ufgklbio6qit5d3kp0g.tmp");
+	temporaryFiles.push_back("tmp/6kh36jet3u6oi7no244te9fyo63f3ttz.tmp");
+	temporaryFiles.push_back("tmp/88m60ulflju501cs1r10mq3z1qk9jbdx.tmp");
+	temporaryFiles.push_back("tmp/9d2m0nq2nlcwi6506yg09obr6ytm8rkn.tmp");
+	temporaryFiles.push_back("tmp/mpdxuj9cqdlkyqoj8w9vyqu8h37i19et.tmp");
+	temporaryFiles.push_back("tmp/mtwwtcb6kk4usapw0jzscq1lel0hdrt5.tmp");
+	temporaryFiles.push_back("tmp/o3lgmk35jzd8ihx273bxkzh0qyf1g1ea.tmp");
+	temporaryFiles.push_back("tmp/rl7eqwrkv7usu0eu97o8espziyisv53s.tmp");
+	temporaryFiles.push_back("tmp/tesg83el0xtsddevbvnjz4ffc8nt5s64.tmp");
+	temporaryFiles.push_back("tmp/vl5fca8vnck1mzgv6rkhnr6szuo3g1c1.tmp");
+	temporaryFiles.push_back("tmp/ydkjuh9vg3qpjsdck9s1lxpw7zap2ewq.tmp");
+	//temporaryFiles.push_back("tmp/");
         
         // calculate total # of reads
         unsigned int nReads = 0;
@@ -352,9 +351,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				unsigned int positionThreshold = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) 
 					? mSReference.count 
 					: ceil(ratio * (double)mSettings.HashPositionThreshold);
-				//cout << positionThreshold << endl;
 				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
-//cout << "p: " << positionThreshold << endl;
 			}
 
 			// load jump data
@@ -475,8 +472,6 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 	if ( mFlags.UseLowMemory )
 		MergeArchives();
-
-	cout << endl << "merge done" << endl;
 
 	PrintStatistics();
 }
@@ -625,7 +620,9 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		rm(outputFilenames[i].c_str());
+		cerr << outputFilenames[i] << endl;
+		//rm(outputFilenames[i].c_str());
+	cerr << endl;
 
 
 	CConsole::Heading();
@@ -643,7 +640,8 @@ void CMosaikAligner::MergeArchives(void) {
 
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )
-		rm(temporaryFiles[i].c_str());
+		cerr << temporaryFiles[i] << endl;
+		//rm(temporaryFiles[i].c_str());
 
 	// get statistics information
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";

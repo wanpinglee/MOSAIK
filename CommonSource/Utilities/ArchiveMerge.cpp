@@ -70,7 +70,7 @@ CArchiveMerge::CArchiveMerge (
 	_alignmentStatus = reader.GetStatus();
 	reader.Close();
 
-	_isPairedEnd = ( _alignmentStatus && AS_PAIRED_END_READ != 0 ) ? true : false;
+	_isPairedEnd = ( ( _alignmentStatus & AS_PAIRED_END_READ ) != 0 ) ? true : false;
 
 	_refIndex.resize( _inputFilenames.size(), 0 );
 
@@ -124,10 +124,6 @@ CArchiveMerge::CArchiveMerge (
 
 }
 
-
-CArchiveMerge::~CArchiveMerge( void ) {
-	cout << "Merger deconstrctor" << endl;
-}
 
 void CArchiveMerge::PrintStatisticsMaps( const string filename, const string readGroupId ) {
 	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
@@ -360,6 +356,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	}
 
 	if ( nMate1Alignments > 0 ) {
+		if ( newMate1Set.empty() ) {
+			cout << "ERROR: The vector is empty." << endl;
+			exit(1);
+		}
 		r.Mate1Alignments.clear();
 		r.Mate1Alignments = newMate1Set;
 	}
@@ -481,16 +481,18 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	
 		// patch the information for reporting
 		Alignment al = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		Alignment unmappedAl;
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
-		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
 
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
-		unmappedAl.NumMapped = 0;
 
 		_rBam.SaveAlignment( al, 0 );
 		if ( _isPairedEnd ) {
+			unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+			SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
+			unmappedAl.NumMapped = 0;
+			
 			unmappedAl.Query         = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
 			unmappedAl.BaseQualities = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
 			_uBam.SaveAlignment( unmappedAl, 0, true );
@@ -504,19 +506,20 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 
 		Alignment unmappedAl1, unmappedAl2;
+
 		unmappedAl1 = r.Mate1Alignments[0];
-		unmappedAl2 = r.Mate2Alignments[0];
-
 		SetAlignmentFlags( unmappedAl1, unmappedAl2, false, false, true, _isPairedEnd, false, false, r );
-		SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
-
 		unmappedAl1.NumMapped = nMate1Alignments;
-		unmappedAl2.NumMapped = nMate2Alignments;
 		
 		unmappedAl1.Query         = read.Mate1.Bases;
 		unmappedAl1.BaseQualities = read.Mate1.Qualities;
 		_uBam.SaveAlignment( unmappedAl1, 0, true );
+		
 		if ( _isPairedEnd ) {
+			unmappedAl2 = r.Mate2Alignments[0];
+			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
+			unmappedAl2.NumMapped = nMate2Alignments;
+			
 			unmappedAl2.Query         = read.Mate2.Bases;
 			unmappedAl2.BaseQualities = read.Mate2.Qualities;
 			_uBam.SaveAlignment( unmappedAl2, 0, true );

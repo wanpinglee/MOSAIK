@@ -58,7 +58,7 @@ namespace MosaikReadFormat {
 		// if the reference name is found, the referenceIndex will be set and the function will return true
 		bool GetReferenceSequenceIndex(const string& referenceName, unsigned int& referenceIndex) const;
 		// retrieves the reference sequence data
-		vector<ReferenceSequence>* GetReferenceSequences(void);
+		//vector<ReferenceSequence>* GetReferenceSequences(void);
 		void GetReferenceSequences( vector<ReferenceSequence>& refVec);
 		// gets the alignment archive sequencing technology
 		SequencingTechnologies GetSequencingTechnology(void) const;

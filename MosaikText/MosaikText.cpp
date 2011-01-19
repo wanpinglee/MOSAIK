@@ -101,8 +101,10 @@ void CMosaikText::EnableReferenceFilter(const string& referenceName, const strin
 	unsigned int currentReferenceIndex = 0;
 	uint64_t numAlignments             = 0;
 
-	vector<ReferenceSequence>* pRefSeqs = reader.GetReferenceSequences();
-	for(vector<ReferenceSequence>::const_iterator rsIter = pRefSeqs->begin(); rsIter != pRefSeqs->end(); ++rsIter, ++currentReferenceIndex) {
+	//vector<ReferenceSequence>* pRefSeqs = reader.GetReferenceSequences();
+	vector<ReferenceSequence> pRefSeqs;
+	reader.GetReferenceSequences( pRefSeqs );
+	for(vector<ReferenceSequence>::const_iterator rsIter = pRefSeqs.begin(); rsIter != pRefSeqs.end(); ++rsIter, ++currentReferenceIndex) {
 		if(rsIter->Name == referenceName) {
 			foundReferenceIndex = true;
 			numAlignments = rsIter->NumAligned;
@@ -843,9 +845,9 @@ void CMosaikText::ParseMosaikAlignmentFile ( const string& alignmentFilename ) {
 				// prepare ZA tag
 				if ( numMate2Alignments > 0 ) {
 					bool hasLessPosition = ( ar.Mate1Alignments[0].ReferenceBegin < ar.Mate2Alignments[0].ReferenceBegin ) ? true : false;
-					if ( hasLessPosition && isNewSorted ) 
-						zaString = (char*) zaTager.GetZaTag( ar.Mate1Alignments, ar.Mate2Alignments );
-					else 
+					//if ( hasLessPosition && isNewSorted ) 
+					//	zaString = (char*) zaTager.GetZaTag( ar.Mate1Alignments, ar.Mate2Alignments );
+					//else 
 						zaString = 0;
 				}
 
