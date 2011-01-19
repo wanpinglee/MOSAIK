@@ -438,6 +438,10 @@ void CAlignmentThread::AlignReadArchive(
 		// process alignments mapped in special references and delete them in vectors
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
+		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+		mate1Alignments.Clear();
+		mate2Alignments.Clear();
+
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;
 
@@ -539,7 +543,7 @@ void CAlignmentThread::AlignReadArchive(
 			
 
 			if ( mFlags.UseArchiveOutput ) {
-				bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				pthread_mutex_lock(&mSaveReadMutex);
 				pOut->SaveRead( mr, al1, al2, isLongRead );
 				pthread_mutex_unlock(&mSaveReadMutex);
@@ -554,8 +558,8 @@ void CAlignmentThread::AlignReadArchive(
 				
 					//CZaTager zas1, zas2;
 
-					char *zas1Tag = ( char* ) za1.GetZaTag( genomicAl, specialAl, true );
-					char *zas2Tag = ( char* ) za2.GetZaTag( specialAl, genomicAl, false );
+					const char *zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
+					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
@@ -569,8 +573,8 @@ void CAlignmentThread::AlignReadArchive(
 	
 					//CZaTager zas1, zas2;
 
-					char *zas1Tag = ( char* ) za1.GetZaTag( genomicAl, specialAl, false );
-					char *zas2Tag = ( char* ) za2.GetZaTag( specialAl, genomicAl, true );
+					const char *zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
+					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
 					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
@@ -629,15 +633,17 @@ void CAlignmentThread::AlignReadArchive(
 				al.Quality = 0;
 
 			if ( mFlags.UseArchiveOutput ) {
-				bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				pthread_mutex_lock(&mSaveReadMutex);
 				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
 			
+				const char* zaTag = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
+
 				pthread_mutex_lock(&mSaveReadMutex);
-				pBams->rBam.SaveAlignment( al, 0 );
+				pBams->rBam.SaveAlignment( al, zaTag );
 				pthread_mutex_unlock(&mSaveReadMutex);
 				
 				if ( isPairedEnd ) {
@@ -688,7 +694,7 @@ void CAlignmentThread::AlignReadArchive(
 		
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
-			cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
+			//cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
 			exit(1);
 		}
 

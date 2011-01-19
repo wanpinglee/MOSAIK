@@ -82,12 +82,10 @@ const char* CZaTager::GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 )
 }
 */
 
-const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate ) {
+const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton ) {
 	
 	char* zaPtr = buffer;
 	unsigned int len = 0;
-
-	CCigarTager cigarTager;
 
 	Alignment al1, al2;
 	if ( isFirstMate ) {
@@ -98,6 +96,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 		al2 = query;
 	}
 
+	if ( !isSingleton || ( isSingleton && isFirstMate ) ) {
 	// read 1
 	len = sprintf( zaPtr, "<");
 	zaPtr += len;
@@ -113,12 +112,20 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	else
 		len = sprintf( zaPtr, ";%u;", al1.NumMapped );
 	zaPtr += len;
-	if ( isFirstMate )
-		len = sprintf( zaPtr, ">" );
-	else 
-		len = sprintf( zaPtr, "%s>", cigarTager.GetCigarTag( al1.Reference.CData(), al1.Query.CData(), al1.Reference.Length() ) );
-	zaPtr += len;
+	if ( isFirstMate ) {
+		len = sprintf( zaPtr, ";>" );
+		zaPtr += len;
+	}
+	else { 
+		len = sprintf( zaPtr, "%s;", cigarTager.GetCigarTag( al1.Reference.CData(), al1.Query.CData(), al1.Reference.Length() ) );
+		zaPtr += len;
+		len = sprintf( zaPtr, "%s>", mdTager.GetMdTag( al1.Reference.CData(), al1.Query.CData(), al1.Reference.Length() ) );
+		zaPtr += len;
+	}
+	}
+	
 
+	if ( !isSingleton || ( isSingleton && !isFirstMate ) ) {
 	// read 2
 	len = sprintf( zaPtr, "<");
 	zaPtr += len;
@@ -134,11 +141,17 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	else
 		len = sprintf( zaPtr, ";%u;", al2.NumMapped );
 	zaPtr += len;
-	if ( !isFirstMate )
-		len = sprintf( zaPtr, ">" );
-	else 
-		len = sprintf( zaPtr, "%s>", cigarTager.GetCigarTag( al2.Reference.CData(), al2.Query.CData(), al2.Reference.Length() ) );
-	zaPtr += len;
+	if ( !isFirstMate ) {
+		len = sprintf( zaPtr, ";>" );
+		zaPtr += len;
+	}
+	else { 
+		len = sprintf( zaPtr, "%s;", cigarTager.GetCigarTag( al2.Reference.CData(), al2.Query.CData(), al2.Reference.Length() ) );
+		zaPtr += len;
+		len = sprintf( zaPtr, "%s>", mdTager.GetMdTag( al2.Reference.CData(), al2.Query.CData(), al2.Reference.Length() ) );
+		zaPtr += len;
+	}
+	}
 	
 	*zaPtr = 0;
 

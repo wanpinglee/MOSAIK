@@ -484,10 +484,11 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		Alignment unmappedAl;
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
-
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
-
-		_rBam.SaveAlignment( al, 0 );
+		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
+		_rBam.SaveAlignment( al, zaTag1 );
+		
+		
 		if ( _isPairedEnd ) {
 			unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
 			SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );

@@ -18,11 +18,11 @@ CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina)
 {}
 
 // destructor
-CNaiveAlignmentSet::~CNaiveAlignmentSet() {
-	mAlignments.clear();
-	mFwdMhpOccupancyList.clear();
-	mRevMhpOccupancyList.clear();
-}
+//CNaiveAlignmentSet::~CNaiveAlignmentSet() {
+//	mAlignments.clear();
+//	mFwdMhpOccupancyList.clear();
+//	mRevMhpOccupancyList.clear();
+//}
 
 // adds an alignment to the set
 bool CNaiveAlignmentSet::Add(Alignment& al) {

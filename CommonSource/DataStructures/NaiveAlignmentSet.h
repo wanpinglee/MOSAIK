@@ -54,7 +54,7 @@ public:
 	// constructor
 	CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina);
 	// destructor
-	~CNaiveAlignmentSet(void);
+	//~CNaiveAlignmentSet(void);
 	// adds an alignment to the set
 	bool Add(Alignment& al);
 	// calculates the alignment qualities for each alignment in the set

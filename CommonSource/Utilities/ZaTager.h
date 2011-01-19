@@ -4,6 +4,7 @@
 #include "AlignedRead.h"
 #include "Alignment.h"
 #include "CigarTager.h"
+#include "MdTager.h"
 #include "vector"
 
 using namespace std;
@@ -13,7 +14,7 @@ class CZaTager {
 		CZaTager();
 		~CZaTager();
 		//const char* GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 );
-		const char* GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate );
+		const char* GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton = false );
 		// copy constructor
 		CZaTager( CZaTager const & copy ) {
 			bufferLen = copy.bufferLen;
@@ -42,6 +43,9 @@ class CZaTager {
 
 		// cigar tag
 		CCigarTager cigarTager;
+
+		// md tag
+		CMdTager mdTager;
 };
 
 #endif
