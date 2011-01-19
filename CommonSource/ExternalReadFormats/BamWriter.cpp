@@ -467,11 +467,11 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 	// retrieve our bin
 	unsigned int bin = CalculateMinimumBin(refBegin, refEnd);
 	const unsigned int quality = 0;
-	const unsigned int nameLen = 2;
+	const unsigned int nameLen = 0;
 	const unsigned int numCigarOperations = 0;
-	const unsigned int packedCigarLen = 2;
-	const unsigned int queryLen = 2;
-	const unsigned int encodedQueryLen = 2;
+	const unsigned int packedCigarLen = 0;
+	const unsigned int queryLen = 0;
+	const unsigned int encodedQueryLen = 0;
 
 	// assign the BAM core data
 	unsigned int buffer[8];
@@ -484,7 +484,7 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 	buffer[6] = 0xffffffff;  // mate_pos
 	buffer[7] = 0;           // ins_size
 
-	const char* startChar = "*\0";
+	const char* startChar = '\0';
 	
 	// write the block size
 	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen;

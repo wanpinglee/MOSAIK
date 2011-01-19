@@ -73,6 +73,7 @@ void BestNSecondBestSelection::Select (
 		nMate1 = mate1Set.size();
 		nMate2 = mate2Set.size();
 
+		// sort by positions
 		sort( mate1Set.begin(), mate1Set.end() );
 		sort( mate2Set.begin(), mate2Set.end() );
 
@@ -136,8 +137,8 @@ void BestNSecondBestSelection::Select (
 
 		
 		if ( secondBest ) {
-			newMate1Set.begin()->NextBestQuality = secondBestMate1.Quality;
-			newMate2Set.begin()->NextBestQuality = secondBestMate2.Quality;
+			newMate1Set.begin()->NextBestQuality = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.Quality;
+			newMate2Set.begin()->NextBestQuality = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.Quality;
 		} else {
 			if ( best ) {
 				sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );

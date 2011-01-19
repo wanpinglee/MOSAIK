@@ -87,6 +87,20 @@ struct Alignment {
 		, Mark(false)
 	{}
 
+	bool operator==( const Alignment& al) const {
+		if ( ReferenceBegin  != al.ReferenceBegin )  return false;
+		if ( ReferenceEnd    != al.ReferenceEnd )    return false;
+		if ( ReferenceIndex  != al.ReferenceIndex )  return false;
+		if ( ReadGroupCode   != al.ReadGroupCode )   return false;
+		if ( QueryBegin      != al.QueryBegin )      return false;
+		if ( QueryEnd        != al.QueryEnd )        return false;
+		if ( Quality         != al.Quality )         return false;
+		if ( IsFirstMate     != al.IsFirstMate )     return false;
+		if ( IsReverseStrand != al.IsReverseStrand ) return false;
+
+		return true;
+	}
+
 	// our less-than operator
 	bool operator<(const Alignment& al) const {
 		if(ReferenceIndex == al.ReferenceIndex) return ReferenceBegin < al.ReferenceBegin;
