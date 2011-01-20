@@ -129,7 +129,6 @@ void CArchiveMerge::PrintStatisticsMaps( const string filename, const string rea
 	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
 }
 
-
 void CArchiveMerge::PrintReferenceSequence( vector<ReferenceSequence>& refVec ){
 
 	for ( unsigned int i = 0; i < refVec.size(); i++ ) {

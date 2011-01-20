@@ -107,6 +107,7 @@ public:
 	struct FlagData {
 		bool EnableColorspace;
 		bool IsAligningAllReads;
+		bool IsQuietMode;
 		bool IsReportingUnalignedReads;
 		bool IsUsingAlignmentCandidateThreshold;
 		bool IsUsingHashPositionThreshold;
@@ -126,6 +127,7 @@ public:
 		FlagData()
 			: EnableColorspace(false)
 			, IsAligningAllReads(false)
+			, IsQuietMode(false)
 			, IsReportingUnalignedReads(false)
 			, IsUsingAlignmentCandidateThreshold(false)
 			, IsUsingHashPositionThreshold(false)

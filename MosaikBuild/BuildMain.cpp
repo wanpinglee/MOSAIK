@@ -57,6 +57,7 @@ struct ConfigurationSettings {
 	bool SetNumNBasesAllowed;
 	bool SplitBustardReads;
 	bool UseAssignedBQ;
+	bool IsQuietMode;
 
 	// filenames
 	string BaseQualityFasta2Filename;
@@ -129,6 +130,7 @@ struct ConfigurationSettings {
 		, SetNumNBasesAllowed(false)
 		, SplitBustardReads(false)
 		, UseAssignedBQ(false)
+		, IsQuietMode(false)
 		, NumNBasesAllowed(4)
 	{}
 };
@@ -211,6 +213,11 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
 	COptions::AddValueOption("-tpr", "# of characters",      "trims the first characters from the name", "", settings.HasTrimPrefixName,      settings.NumTrimPrefixName,   pReadArchiveOpts);
 	COptions::AddValueOption("-tsr", "# of characters",      "trims the last characters from the name",  "", settings.HasTrimSuffixName,      settings.NumTrimSuffixName,   pReadArchiveOpts);
+
+	// add the interface options
+	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
+	COptions::AddOption("-quiet",  "enable progress bars and counters", settings.IsQuietMode, pInterface);
+
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -455,6 +462,10 @@ int main(int argc, char* argv[]) {
 	// time to create a new library
 	CMosaikBuild mb(rg);
 
+	// sets quiet mode
+	if ( settings.IsQuietMode )
+		mb.SetQuietMode();
+	
 	// output the metadata information
 	if(!settings.HasOutputReferenceFilename) {
 		if(settings.HasCenterName)               cout << "- setting center name to: " << rg.CenterName << endl;

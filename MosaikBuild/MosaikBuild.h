@@ -106,8 +106,21 @@ public:
 	void SetSpecies(const string& name);
 	// Sets the uniform resource identifier
 	void SetURI(const string& uri);
+	// Sets quiet mode
+	void SetQuietMode( void );
 
 private:
+	// Stores flags pertinent to the building process
+	struct BuildFlags {
+		bool DisableTrimmer;
+		bool IsQuietMode;
+
+
+		BuildFlags ( void )
+			: DisableTrimmer(false)
+			, IsQuietMode (false)
+		{}
+	} mFlags;
 	// Stores settings pertinent to the building process
 	struct BuildSettings {
 		string BaseQualityFastaFilename;
@@ -119,14 +132,6 @@ private:
 		string UniformResourceIdentifier;
 		unsigned char AssignedBaseQuality;
 	} mSettings;
-	// store flags
-	struct BuildFlags {
-		bool DisableTrimmer;
-
-		BuildFlags( void )
-			: DisableTrimmer(false)
-		{}
-	} mFlags;
 	// stores the colorspace triplet
 	struct ColorspaceName {
 		unsigned short first;

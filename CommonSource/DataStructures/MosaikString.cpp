@@ -322,13 +322,15 @@ size_t CMosaikString::GetHash(void) const {
 }
 
 // checks values of qualities which shouldn't be larger than 60
-void CMosaikString::CheckQuality( void ) {
+bool CMosaikString::CheckQuality( void ) {
 	for(unsigned int i = 0; i < mLength; i++) {
-		if ( mData[i] > 60 ) {
-			printf("ERROR: The base quality is larger than 60.\n");
-			exit(1);
+		if ( mData[i] > 93 ) {
+			printf("ERROR: The base quality(%u) is larger than 93.\n", mData[i]);
+			return false;
 		}
 	}
+
+	return true;
 }
 
 // increments each character in the string by the specified amount

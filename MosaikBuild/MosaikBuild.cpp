@@ -125,7 +125,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		// initialize our counter
 		unsigned int numRefSeqsParsed = 0;
 		bool isRunning = true;
-		CProgressCounter<unsigned int>::StartThread(&numRefSeqsParsed, &isRunning, "ref seqs");
+		if ( !mFlags.IsQuietMode )
+			CProgressCounter<unsigned int>::StartThread(&numRefSeqsParsed, &isRunning, "ref seqs");
 
 		// open the FASTA file
 		CFasta fasta;
@@ -183,7 +184,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 		// stop the progress counter
 		isRunning = false;
-		CProgressCounter<unsigned int>::WaitThread();
+		if ( !mFlags.IsQuietMode )
+			CProgressCounter<unsigned int>::WaitThread();
 
 		// stop processing the reference sequences if we found a duplicate reference sequence
 		if(foundDuplicateReferenceName) {
@@ -289,7 +291,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	CConsole::Heading(); printf("\n- writing reference sequences:\n"); CConsole::Reset();
 
 	unsigned int currentRefSeq = 0;
-	CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
 
 	// write the reference sequences
 	vector<ReferenceSequence>::iterator rsIter;
@@ -300,7 +303,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		currentRefSeq++;
 	}
 
-	CProgressBar<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::WaitThread();
 
 	// =========================
 	// calculating MD5 checksums
@@ -311,7 +315,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 		unsigned char MD5[16];
 		currentRefSeq = 0;
-		CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
+		if ( !mFlags.IsQuietMode )
+			CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
 		for(rsIter = references.begin(); rsIter != references.end(); rsIter++) {
 
 			// generate the MD5 checksum
@@ -331,8 +336,9 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 			currentRefSeq++;
 		}
-
-		CProgressBar<unsigned int>::WaitThread();
+		
+		if ( !mFlags.IsQuietMode )
+			CProgressBar<unsigned int>::WaitThread();
 	}
 
 	// ==================================
@@ -345,7 +351,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	CConsole::Heading(); printf("\n- writing reference sequence index:\n"); CConsole::Reset();
 
 	currentRefSeq = 0;
-	CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
 
 	// write the index
 	for(rsIter = references.begin(); rsIter != references.end(); rsIter++) {
@@ -441,8 +448,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 		currentRefSeq++;
 	}
-
-	CProgressBar<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::WaitThread();
 
 	// ========================================
 	// creating concatenated reference sequence
@@ -460,7 +467,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	CConsole::Heading(); printf("\n- creating concatenated reference sequence:\n"); CConsole::Reset();
 
 	currentRefSeq = 0;
-	CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::StartThread(&currentRefSeq, 0, numReferenceSequences, "ref seqs");
 
 	// build the concatenated reference sequence
 	char* pBuffer = concatenatedReference;
@@ -479,7 +487,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		currentRefSeq++;
 	}
 
-	CProgressBar<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressBar<unsigned int>::WaitThread();
 
 	// =======================================
 	// writing concatenated reference sequence
@@ -817,7 +826,8 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 
 	bool isRunning = true;
 	unsigned int numReadsParsed = 0;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	for(unsigned int currentFile = 0; currentFile < numBustardFiles; currentFile++) {
 
@@ -937,7 +947,8 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close files
 	writer.Close();
@@ -973,7 +984,8 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 	// initialize our counter
 	unsigned int numReadsParsed = 0;
 	bool isRunning = true;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	CColorspaceUtilities csu;
 
@@ -999,7 +1011,8 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close the input and output files
 	reader.Close();
@@ -1050,7 +1063,8 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 	// initialize our counter
 	unsigned int numReadsParsed = 0;
 	bool isRunning = true;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	if(mEnableColorspace) {
 		removedMateSuffix = true;
@@ -1168,7 +1182,8 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close the input and output files
 	reader.Close();
@@ -1201,7 +1216,8 @@ void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFi
 
 	bool isRunning = true;
 	unsigned int numReadsParsed = 0;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	// process each FASTQ file
 	const unsigned int numFastqFiles = (unsigned int)fastqFiles.size();
@@ -1239,7 +1255,8 @@ void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFi
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close files
 	writer.Close();
@@ -1283,7 +1300,8 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 
 	bool isRunning = true;
 	unsigned int numReadsParsed = 0;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	// process each FASTQ file
 	for(unsigned int currentFile = 0; currentFile < numMate1Files; currentFile++) {
@@ -1366,7 +1384,8 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close files
 	writer.Close();
@@ -1437,7 +1456,8 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 
 	bool isRunning = true;
 	unsigned int numReadsParsed = 0;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	// process each FASTQ file
 	for(unsigned int currentFile = 0; currentFile < numGeraldFiles; currentFile++) {
@@ -1465,7 +1485,8 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close files
 	writer.Close();
@@ -1491,7 +1512,8 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 
 	bool isRunning = true;
 	unsigned int numReadsParsed = 0;
-	CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::StartThread(&numReadsParsed, &isRunning, "reads");
 
 	// process each SRF file
 	unsigned int numSrfFiles = (unsigned int)srfFiles.size();
@@ -1522,7 +1544,8 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 
 	// stop the progress counter
 	isRunning = false;
-	CProgressCounter<unsigned int>::WaitThread();
+	if ( !mFlags.IsQuietMode )
+		CProgressCounter<unsigned int>::WaitThread();
 
 	// close files
 	writer.Close();
@@ -1814,6 +1837,11 @@ void CMosaikBuild::SetURI(const string& uri) {
 void CMosaikBuild::DisableTrimmer( void ) {
 	mFlags.DisableTrimmer = true;
 	mTrimReads = false;
+}
+
+// Sets quiet mode
+void CMosaikBuild::SetQuietMode( void ) {
+	mFlags.IsQuietMode = true;
 }
 
 // shows the conversion statistics
