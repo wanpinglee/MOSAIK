@@ -413,18 +413,17 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			exit(1);
 		}
 
-		//CZaTager za1, za2;
-		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
 		SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
 		SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
 
+
+		//CZaTager za1, za2;
+		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+
 		al1.NumMapped = nMate1Alignments;
 		al2.NumMapped = nMate2Alignments;
-
-		_rBam.SaveAlignment( al1, zaTag1 );
-		_rBam.SaveAlignment( al2, zaTag2 );
 
 		if ( isMate1Unique && isMate2Special ) {
 			Alignment genomicAl = al1;
@@ -453,6 +452,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_sBam.SaveAlignment( genomicAl, zas1Tag );
 			_sBam.SaveAlignment( specialAl, zas2Tag );
 		}
+
+		if ( isMate1Multiple ) al1.Quality = 0;
+		if ( isMate2Multiple ) al2.Quality = 0;
+
+		_rBam.SaveAlignment( al1, zaTag1 );
+		_rBam.SaveAlignment( al2, zaTag2 );
+
 
 		_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
@@ -487,7 +493,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
-		if ( isFirstMate && isMate1Empty )
+		if ( isFirstMate && isMate1Multiple )
 			al.Quality = 0;
 		else if ( !isFirstMate && isMate2Multiple )
 			al.Quality = 0;
@@ -565,6 +571,7 @@ inline void CArchiveMerge::SetAlignmentFlags(
 	al.IsMateMapped           = isMateMapped;
 
 	// GetFragmentAlignmentQuality
+	/*
 	if ( isProperPair ) {
 		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
 		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
@@ -578,6 +585,7 @@ inline void CArchiveMerge::SetAlignmentFlags(
                 else if(aq > 99) al.Quality = 99;
                 else             al.Quality = aq;
 	}
+	*/
 
 	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
 	rgIte = _readGroupsMap.find( r.ReadGroupCode );
