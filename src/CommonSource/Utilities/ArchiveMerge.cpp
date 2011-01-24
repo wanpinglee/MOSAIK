@@ -53,13 +53,15 @@ CArchiveMerge::CArchiveMerge (
 	vector < string > inputFilenames, 
 	string outputFilename, 
 	unsigned int *readNo, 
-	const unsigned int fragmentLength, 
+	const unsigned int fragmentLength,
+	const unsigned int localAlignmentSearchRadius,
 	const bool hasSpecial )
 	
 	: _inputFilenames( inputFilenames )
 	, _outputFilename( outputFilename )
 	, _readNo( readNo )
 	, _expectedFragmentLength( fragmentLength )
+	, _localAlignmentSearchRadius( localAlignmentSearchRadius )
 	, _hasSpecial( hasSpecial )
 {
 	//_statisticsMaps = mStatisticsMaps;
@@ -401,12 +403,11 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
 		
 		// TODO: handle fragment length for others sequencing techs
-		int fl = ( al1.IsReverseStrand ) 
-			? 0 - ( 2 * _expectedFragmentLength ) 
-			: 2 * _expectedFragmentLength;
+		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
+		int maxFl = _expectedFragmentLength + _localAlignmentSearchRadius;
 		bool properPair1 = false, properPair2 = false;
-		properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
-		properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
+		properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, !al1.IsReverseStrand );
+		properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, !al2.IsReverseStrand );
 
 		if ( properPair1 != properPair2 ) {
 			cout << "ERROR: An inconsistent proper pair is found." << endl;

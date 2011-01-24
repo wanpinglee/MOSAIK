@@ -547,12 +547,11 @@ void CAlignmentThread::AlignReadArchive(
 			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
 			
 			// TODO: handle fragment length for others sequencing techs
-			int fl = ( al1.IsReverseStrand ) 
-				? 0 - ( 2 * mSettings.MedianFragmentLength ) 
-				: 2 * mSettings.MedianFragmentLength;
+			int minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
+			int maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 			bool properPair1 = false, properPair2 = false;
-			properPair1 = al1.SetPairFlags( al2, fl,  !al1.IsReverseStrand );
-			properPair2 = al2.SetPairFlags( al1, -fl, !al2.IsReverseStrand );
+			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, !al1.IsReverseStrand );
+			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, !al2.IsReverseStrand );
 
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;

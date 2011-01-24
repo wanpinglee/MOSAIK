@@ -81,7 +81,8 @@ class CArchiveMerge
 			vector < string > inputFilenames, 
 			string outputFilename, 
 			unsigned int *readNo, 
-			const unsigned int fragmentLength = 0, 
+			const unsigned int fragmentLength = 0,
+			const unsigned int localAlignmentSearchRadius = 0,
 			const bool hasSpecial = false );
 
 
@@ -106,6 +107,7 @@ class CArchiveMerge
                 //unsigned int               _nMaxAlignment;
 		unsigned int*              _readNo;
 		unsigned int               _expectedFragmentLength;
+		unsigned int               _localAlignmentSearchRadius;
 		vector< unsigned int >     _refIndex;
 		vector<ReferenceSequence>           _referenceSequences;
 		vector<ReferenceSequence>           _referenceSequencesWoSpecial;

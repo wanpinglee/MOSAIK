@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <string>
 
 #include "MosaikString.h"
@@ -108,7 +109,7 @@ struct Alignment {
 	}
 
 	
-	bool SetPairFlags ( const Alignment& pairMate, const int& allowedFragmentLength, const bool& expectedMateStrand ) {
+	bool SetPairFlagsAndFragmentLength ( const Alignment& pairMate, const int& minFragmentLength, const int& maxFragmentLength, const bool& expectedMateStrand ) {
 		unsigned int queryPosition5Prime = ( IsReverseStrand ) ? ReferenceEnd : ReferenceBegin;
 		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;
 		FragmentLength = ( ReferenceIndex != pairMate.ReferenceIndex ) ? 0 : matePosition5Prime - queryPosition5Prime;
@@ -118,9 +119,8 @@ struct Alignment {
 		else if ( ReferenceIndex != pairMate.ReferenceIndex )
 			IsResolvedAsProperPair = false;
 		else {
-			if ( ( allowedFragmentLength >= 0 ) && ( FragmentLength <= allowedFragmentLength ) )
-				IsResolvedAsProperPair = true;
-			else if ( ( allowedFragmentLength < 0 ) && ( FragmentLength >= allowedFragmentLength ) )
+			int absFl = abs( FragmentLength );
+			if ( ( minFragmentLength < absFl ) && ( absFl < maxFragmentLength ) )
 				IsResolvedAsProperPair = true;
 			else
 				IsResolvedAsProperPair = false;
