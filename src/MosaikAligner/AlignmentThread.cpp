@@ -559,6 +559,11 @@ void CAlignmentThread::AlignReadArchive(
 				exit(1);
 			}
 
+			const bool isUU = isMate1Unique && isMate2Unique;
+			const bool isMM = isMate1Multiple && isMate2Multiple;
+			al1.Quality = AdjustMappingQuality( al1.Quality, isUU, isMM );
+			al2.Quality = AdjustMappingQuality( al2.Quality, isUU, isMM );
+
 			SetRequiredInfo( al1, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 			
@@ -606,6 +611,8 @@ void CAlignmentThread::AlignReadArchive(
 				//CZaTager za1, za2;
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				if ( isMate1Multiple ) al1.Quality = 0;
+				if ( isMate2Multiple ) al2.Quality = 0;
 				pthread_mutex_lock(&mSaveReadMutex);
 				pBams->rBam.SaveAlignment( al1, zaTag1 );
 				pBams->rBam.SaveAlignment( al2, zaTag2 );
@@ -723,6 +730,21 @@ void CAlignmentThread::AlignReadArchive(
 	}
 }
 
+// adjust alignment quality
+inline int CAlignmentThread::AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM ) {
+	int aq = mq;
+
+	if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
+	else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+	else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
+
+	if(aq < 0)       aq = 0;
+	else if(aq > 99) aq = 99;
+	
+
+	return aq;
+}
+
 // Set the required information and flag for alignments
 void CAlignmentThread::SetRequiredInfo (
 	Alignment& al,
@@ -751,6 +773,7 @@ void CAlignmentThread::SetRequiredInfo (
 	
 	// GetFragmentAlignmentQuality
 	// For archive output, we recalculate MQ when merging archives
+	/*
 	if ( isProperPair && !mFlags.UseArchiveOutput ) {
 		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
 		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
@@ -764,6 +787,7 @@ void CAlignmentThread::SetRequiredInfo (
 		else if(aq > 99) al.Quality = 99;
 		else             al.Quality = aq;
 	}
+	*/
 	
 	al.IsResolvedAsPair       = isPair;
 	al.IsResolvedAsProperPair = isProperPair;
