@@ -648,10 +648,6 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( al, unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 ), mr, false, false, isFirstMate, isPairedEnd, true, false );
 			SetRequiredInfo( unmappedAl, al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
-			if ( isFirstMate && isMate1Multiple )
-				al.Quality = 0;
-			else if ( !isFirstMate && isMate2Multiple )
-				al.Quality = 0;
 
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
@@ -661,7 +657,12 @@ void CAlignmentThread::AlignReadArchive(
 
 			} else {
 			
+				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 				const char* zaTag = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
+				if ( isFirstMate && isMate1Multiple )
+					al.Quality = 0;
+				else if ( !isFirstMate && isMate2Multiple )
+					al.Quality = 0;
 
 				pthread_mutex_lock(&mSaveReadMutex);
 				pBams->rBam.SaveAlignment( al, zaTag );

@@ -484,7 +484,14 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+		
+		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
+		if ( isFirstMate && isMate1Empty )
+			al.Quality = 0;
+		else if ( !isFirstMate && isMate2Multiple )
+			al.Quality = 0;
+		
 		_rBam.SaveAlignment( al, zaTag1 );
 		
 		
