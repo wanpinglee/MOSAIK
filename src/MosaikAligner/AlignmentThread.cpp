@@ -214,6 +214,27 @@ void CAlignmentThread::AlignReadArchive(
 		// specify if this is a paired-end read
 		const unsigned short numMate1Bases = (unsigned short)mr.Mate1.Bases.Length();
 		const unsigned short numMate2Bases = (unsigned short)mr.Mate2.Bases.Length();
+
+		// specify the percent of N's in the read
+		unsigned short numMate1NBases = 0;
+		char* basePtr = mr.Mate1.Bases.Data();
+		for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
+			if ( *basePtr == 'N' )
+				numMate1NBases++;
+			++basePtr;
+		}
+
+		unsigned short numMate2NBases = 0;
+		basePtr = mr.Mate2.Bases.Data();
+		for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
+			if ( *basePtr == 'N' )
+				numMate2NBases++;
+			++basePtr;
+		}
+
+		const bool isTooManyNMate1 = ( ( numMate1NBases / (double) numMate1Bases ) > 0.7 ) ? true : false;
+		const bool isTooManyNMate2 = ( ( numMate2NBases / (double) numMate2Bases ) > 0.7 ) ? true : false;
+
 		const bool areBothMatesPresent = (((numMate1Bases != 0) && (numMate2Bases != 0)) ? true : false);
 
 		// ====================
@@ -222,7 +243,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		bool isMate1Aligned = false;
 		mate1Alignments.Clear();
-		if(numMate1Bases != 0) {
+		if(numMate1Bases != 0 && !isTooManyNMate1 ) {
 
 			// align the read
 			if(AlignRead(mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status)) {
@@ -260,7 +281,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		bool isMate2Aligned = false;
 		mate2Alignments.Clear();
-		if(numMate2Bases != 0) {
+		if(numMate2Bases != 0 && isTooManyNMate2 ) {
 
 			// align the read
 			if(AlignRead(mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status)) {
@@ -302,7 +323,7 @@ void CAlignmentThread::AlignReadArchive(
 		if(areBothMatesPresent) {
 
 			// perform local alignment search WHEN MATE1 IS UNIQUE
-			if(mFlags.UseLocalAlignmentSearch && isMate1Unique) {
+			if(mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate1 ) {
 
 				// extract the unique begin and end coordinates
 				AlignmentSet::const_iterator uniqueIter = mate1Alignments.GetSet()->begin();
@@ -345,7 +366,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			// perform local alignment search WHEN MATE2 IS UNIQUE
-			if(mFlags.UseLocalAlignmentSearch && isMate2Unique) {
+			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate2 ) {
 
 				// extract the unique begin and end coordinates
 				AlignmentSet::const_iterator uniqueIter = mate2Alignments.GetSet()->begin();
