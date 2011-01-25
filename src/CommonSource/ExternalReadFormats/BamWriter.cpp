@@ -678,7 +678,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm ) {
+void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos ) {
 
 	// =================
 	// set the BAM flags
@@ -812,8 +812,8 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 
 	// assign the BAM core data
 	unsigned int buffer[8] = {0};
-	buffer[0] = al.IsMapped ? al.ReferenceIndex : 0xffffffff;
-	buffer[1] = al.IsMapped ? al.ReferenceBegin : 0xffffffff;
+	buffer[0] = notShowRnamePos ? 0xffffffff : al.ReferenceIndex;
+	buffer[1] = notShowRnamePos ? 0xffffffff : al.ReferenceBegin;
 	buffer[2] = (bin << 16) | (al.Quality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;

@@ -664,20 +664,33 @@ void CAlignmentThread::AlignReadArchive(
 			} else {
 			
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				const char* zaTag = za1.GetZaTag( al, unmappedAl, isFirstMate, true );
+				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+
 				if ( isFirstMate && isMate1Multiple )
 					al.Quality = 0;
 				else if ( !isFirstMate && isMate2Multiple )
 					al.Quality = 0;
 
-				pthread_mutex_lock(&mSaveReadMutex);
-				pBams->rBam.SaveAlignment( al, zaTag );
-				pthread_mutex_unlock(&mSaveReadMutex);
-				
+
 				if ( isPairedEnd ) {
+					unmappedAl.ReferenceBegin = al.ReferenceBegin;
+					unmappedAl.ReferenceIndex = al.ReferenceIndex;
+
+					pthread_mutex_lock(&mSaveReadMutex);
+					pBams->rBam.SaveAlignment( al, zaTag1 );
+					pBams->rBam.SaveAlignment( unmappedAl, zaTag2, true );  // noCigarMdNm
+					pthread_mutex_unlock(&mSaveReadMutex);
+
+					
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
 					pBams->uBam.SaveAlignment( unmappedAl, 0, true );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
+				}
+				else {
+					pthread_mutex_lock(&mSaveReadMutex);
+					pBams->rBam.SaveAlignment( al, zaTag1 );
+					pthread_mutex_unlock(&mSaveReadMutex);
 				}
 			}
 

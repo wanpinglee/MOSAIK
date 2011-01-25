@@ -82,7 +82,7 @@ const char* CZaTager::GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 )
 }
 */
 
-const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton ) {
+const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton, const bool& isMateUnmapped ) {
 	
 	char* zaPtr = buffer;
 	unsigned int len = 0;
@@ -107,12 +107,12 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	zaPtr += len;
 	len = sprintf( zaPtr, "%u;%u;", al1.Quality, al1.NextBestQuality );
 	zaPtr += len;
-	if ( al1.SpecialCode.size() != 0 )
+	if ( !al1.SpecialCode.empty() )
 		len = sprintf( zaPtr, "%s;%u;", al1.SpecialCode.c_str(), al1.NumMapped );
 	else
 		len = sprintf( zaPtr, ";%u;", al1.NumMapped );
 	zaPtr += len;
-	if ( isFirstMate ) {
+	if ( isFirstMate || isMateUnmapped ) {
 		len = sprintf( zaPtr, ";>" );
 		zaPtr += len;
 	}
@@ -125,8 +125,8 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	}
 	
 
-	if ( !isSingleton || ( isSingleton && !isFirstMate ) ) {
 	// read 2
+	if ( !isSingleton || ( isSingleton && !isFirstMate ) ) {
 	len = sprintf( zaPtr, "<");
 	zaPtr += len;
 	if ( !isFirstMate )
@@ -136,12 +136,12 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	zaPtr += len;
 	len = sprintf( zaPtr, "%u;%u;", al2.Quality, al2.NextBestQuality );
 	zaPtr += len;
-	if ( al2.SpecialCode.size() != 0 )
+	if ( !al2.SpecialCode.empty() )
 		len = sprintf( zaPtr, "%s;%u;", al2.SpecialCode.c_str(), al2.NumMapped );
 	else
 		len = sprintf( zaPtr, ";%u;", al2.NumMapped );
 	zaPtr += len;
-	if ( !isFirstMate ) {
+	if ( !isFirstMate || isMateUnmapped ) {
 		len = sprintf( zaPtr, ";>" );
 		zaPtr += len;
 	}
