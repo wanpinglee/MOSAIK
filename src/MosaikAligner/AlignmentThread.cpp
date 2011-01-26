@@ -281,7 +281,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		bool isMate2Aligned = false;
 		mate2Alignments.Clear();
-		if(numMate2Bases != 0 && isTooManyNMate2 ) {
+		if(numMate2Bases != 0 && !isTooManyNMate2 ) {
 
 			// align the read
 			if(AlignRead(mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status)) {
