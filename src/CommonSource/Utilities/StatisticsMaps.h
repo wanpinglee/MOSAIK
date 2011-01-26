@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <cmath>
 #include <vector>
@@ -20,9 +21,14 @@ class CStatisticsMaps {
 		
 		void SaveRecord( const Alignment& al1, const Alignment& al2, const bool isPairedEnd, const SequencingTechnologies& tech );
 		void PrintMaps( const char* filename, const char* readGroupId );
+		void SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch );
 		void Reset( void );
 
 	private:
+		// copy constructor
+		CStatisticsMaps( const CStatisticsMaps& copy );
+		// assing operator
+		CStatisticsMaps& operator= ( const CStatisticsMaps& copy );
 
 		inline void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
 		inline void SaveReadLength( const unsigned int length );
@@ -38,12 +44,18 @@ class CStatisticsMaps {
 			const uint64_t *const array, 
 			const int64_t& start  );
 
+		// original setting
+		uint32_t _fragmentLength;
+		uint32_t _localSearchRadius;
+		float   _allowedMismatch;
+		bool    _setExpectedStatistics;
+
 
 		// fragment length map
 		const uint64_t nFragment;
 		uint64_t nFrangmentOver;
 		uint64_t nFrangmentUnder;
-		short    minFragment;
+		int64_t  minFragment;
 		uint64_t* fragments;
 		// read length map
 		const uint64_t nReadLength;

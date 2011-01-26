@@ -127,7 +127,14 @@ CArchiveMerge::CArchiveMerge (
 }
 
 
-void CArchiveMerge::PrintStatisticsMaps( const string filename, const string readGroupId ) {
+void CArchiveMerge::PrintStatisticsMaps( 
+	const string filename, 
+	const string readGroupId, 
+	const uint8_t fragmentLength, 
+	const uint8_t localSearchRadius, 
+	const float allowedMismatch ) {
+	
+	_statisticsMaps.SetExpectedStatistics( fragmentLength, localSearchRadius, allowedMismatch );
 	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
 }
 

@@ -616,12 +616,13 @@ void CAlignmentThread::AlignReadArchive(
 				pBams->rBam.SaveAlignment( al1, zaTag1 );
 				pBams->rBam.SaveAlignment( al2, zaTag2 );
 				pthread_mutex_unlock(&mSaveReadMutex);
+
+				pthread_mutex_lock(&mStatisticsMapsMutex);
+				pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
+				pthread_mutex_unlock(&mStatisticsMapsMutex);
+
 			}
 
-			pthread_mutex_lock(&mStatisticsMapsMutex);
-			pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
-			pthread_mutex_unlock(&mStatisticsMapsMutex);
-	
 			mStatisticsCounters.AlignedReads++;
 
 		// UX and MX pair
@@ -692,11 +693,11 @@ void CAlignmentThread::AlignReadArchive(
 					pBams->rBam.SaveAlignment( al, zaTag1 );
 					pthread_mutex_unlock(&mSaveReadMutex);
 				}
-			}
 
-			pthread_mutex_lock(&mStatisticsMapsMutex);
-			pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
-			pthread_mutex_unlock(&mStatisticsMapsMutex);
+				pthread_mutex_lock(&mStatisticsMapsMutex);
+				pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
+				pthread_mutex_unlock(&mStatisticsMapsMutex);
+			}
 			
 			mStatisticsCounters.AlignedReads++;
 		
@@ -727,12 +728,12 @@ void CAlignmentThread::AlignReadArchive(
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 
+				pthread_mutex_lock(&mStatisticsMapsMutex);
+				pMaps->SaveRecord( unmappedAl1, unmappedAl2, isPairedEnd, mSettings.SequencingTechnology );
+				pthread_mutex_unlock(&mStatisticsMapsMutex);
+
 			}
 
-			pthread_mutex_lock(&mStatisticsMapsMutex);
-			pMaps->SaveRecord( unmappedAl1, unmappedAl2, isPairedEnd, mSettings.SequencingTechnology );
-			pthread_mutex_unlock(&mStatisticsMapsMutex);
-		
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
 			//cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;

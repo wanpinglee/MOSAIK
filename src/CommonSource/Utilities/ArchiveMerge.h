@@ -89,7 +89,7 @@ class CArchiveMerge
 		void Merge();
 
 		void GetStatisticsCounters ( StatisticsCounters& counter );
-		void PrintStatisticsMaps( const string filename, const string readGroupId );
+		void PrintStatisticsMaps( const string filename, const string readGroupId, const uint8_t fragmentLength, const uint8_t localSearchRadius, const float allowedMismatch );
 		/* ====================  ACCESSORS     ======================================= */
 
 		/* ====================  MUTATORS      ======================================= */

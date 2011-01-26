@@ -1,7 +1,11 @@
 #include "StatisticsMaps.h"
 
 CStatisticsMaps::CStatisticsMaps( void )
-	: nFragment(10000)
+	: _fragmentLength(0)
+	, _localSearchRadius(0)
+	, _allowedMismatch(0)
+	, _setExpectedStatistics(false)
+	, nFragment(10000)
 	, nFrangmentOver(0)
 	, nFrangmentUnder(0)
 	, minFragment(-99)
@@ -48,6 +52,13 @@ CStatisticsMaps::~CStatisticsMaps( void ) {
 	multiplicities   = NULL;
 	mappingQualities = NULL;
 	mismatches       = NULL;
+}
+
+void CStatisticsMaps::SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch ) {
+	_fragmentLength        = fragmentLength;
+	_localSearchRadius     = localSearchRadius;
+	_allowedMismatch       = allowedMismatch;
+	_setExpectedStatistics = true;
 }
 
 void CStatisticsMaps::Reset( void ) {
@@ -175,9 +186,18 @@ inline void CStatisticsMaps::PrintMap(
 	}
 
 	double mean = sum / (double) count;
-	double std = sqrt( (( pow(sum,2.0)) -(( 1.0/count) * (pow(sum,2.0))))/ (count -1.0));
+	long double std = 0;
+	for ( uint64_t i = 0; i < size; ++i ) {
+		double temp1 = ( start + i ) - mean;
+		double temp2 = pow( temp1, 2.0 );
+		double temp3 = temp2 * array[i];
+
+		std += temp3;
+	}
+	//double std = sqrt( (( pow(sum,2.0)) -(( 1.0/count) * (pow(sum,2.0))))/ (count -1.0));
+	std = sqrt( ( std/count ) );
 	fprintf( fOut, "\tTOT\tMEAN\tSTD\tIN\tOVER\tUNDER\n" );
-	fprintf( fOut, "\t%lu\t%10.3f\t%10.3f\t%lu\t%lu\t%lu\n", count + over + under, mean, std, count, over, under);
+	fprintf( fOut, "\t%lu\t%10.3f\t%10.3Lf\t%lu\t%lu\t%lu\n", count + over + under, mean, std, count, over, under);
 	fprintf( fOut, "\tbin\tx\tn\tcum\n");
 
 	uint64_t cum = under;
@@ -198,11 +218,22 @@ void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId )
 	fprintf( fOut, "RG:%s\n", readGroupId );
 	
 	if ( fOut != NULL ) {
-		PrintMap( fOut, "LF fragment mapping length",   nFragment,       nFrangmentOver,      nFrangmentUnder,      fragments,        minFragment );
+		char buffer[1024];
+		uint8_t n = sprintf( buffer, "LF fragment mapping length (-mfl: %u; -ls: %u)", _fragmentLength, _localSearchRadius);
+		if ( n > 1024 ) {
+			printf("ERROR: The buffer for LF title is insufficient.\n");
+			exit(1);
+		}
+		PrintMap( fOut, buffer,                nFragment,       nFrangmentOver,      nFrangmentUnder,      fragments,        minFragment );
 		PrintMap( fOut, "LR read length",               nReadLength,     nReadLengthOver,     nReadLengthUnder,     readLengths,      0 );
 		PrintMap( fOut, "NA read mapping multiplicity", nMultiplicity,   nMultiplicityOver,   nMultiplicityUnder,   multiplicities,   0 );
 		PrintMap( fOut, "RQ read map quality",          nMappingQuality, nMappingQualityOver, nMappingQualityUnder, mappingQualities, 0 );
-		PrintMap( fOut, "MM read map mismatch",         nMismatch,       nMismatchOver,       nMismatchUnder,       mismatches,       0 );
+		n = sprintf( buffer, "MM read map mismatch (-mm/-mmp: %4.2f)", _allowedMismatch );
+		if ( n > 1024 ) {
+			printf("ERROR: The buffer for MM title is insufficient.\n");
+			exit(1);
+		}
+		PrintMap( fOut, buffer,                nMismatch,       nMismatchOver,       nMismatchUnder,       mismatches,       0 );
 
 		// print pair combinations
 		uint64_t total = non_unique + non_multiple + unique_unique + unique_multiple + multiple_multiple;
@@ -235,18 +266,42 @@ void CStatisticsMaps::SaveRecord(
 	//	
 	//}
 
-	SaveReadLength( al1.BaseQualities.Length() );
+	char* qPtr;
+	char* rPtr;
+	//SaveReadLength( al1.BaseQualities.Length() );
 	if ( al1.IsMapped ) {
-		//SaveReadLength( al1.BaseQualities.Length() );
+		qPtr = (char*)al1.Query.CData();
+		rPtr = (char*)al1.Reference.CData();
+		uint32_t mappedLength = 0;
+		for ( uint32_t i = 0; i < al1.Query.Length(); ++i ) {
+			if ( ( *qPtr != '-' ) && ( *rPtr != 'Z' ) )
+				mappedLength++;
+
+			++qPtr;
+			++rPtr;
+		}
+
+		SaveReadLength( mappedLength );
 		SaveMultiplicity( al1.NumMapped );
 		SaveMappingQuality( al1.Quality );
 		SaveMismatch( al1.NumMismatches );
 	}
 
 	if ( isPairedEnd ) {
-		SaveReadLength( al2.BaseQualities.Length() );
+		//SaveReadLength( al2.BaseQualities.Length() );
 		if ( al2.IsMapped ) {
-			//SaveReadLength( al2.BaseQualities.Length() );
+			qPtr = (char*)al2.Query.CData();
+			rPtr = (char*)al2.Reference.CData();
+			uint32_t mappedLength = 0;
+			for ( uint32_t i = 0; i < al2.Query.Length(); ++i ) {
+				if ( ( *qPtr != '-' ) && ( *rPtr != 'Z' ) )
+					mappedLength++;
+
+				++qPtr;
+				++rPtr;
+			}
+
+			SaveReadLength( mappedLength );
 			SaveMultiplicity( al2.NumMapped );
 			SaveMappingQuality( al2.Quality );
 			SaveMismatch( al2.NumMismatches );

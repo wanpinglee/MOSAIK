@@ -650,8 +650,9 @@ void CMosaikAligner::MergeArchives(void) {
 		rm(temporaryFiles[i].c_str());
 
 	// get statistics information
+	float allowedMm = mFilters.UseMismatchFilter ? (float)mFilters.MaxNumMismatches :  mFilters.MaxMismatchPercent;
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
-	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID );
+	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm  );
 
 
 	CArchiveMerge::StatisticsCounters mergeCounters;
@@ -792,6 +793,8 @@ void CMosaikAligner::PrintStatistics () {
 
 	// for low-memory version, the map is printed when merging archive.
 	if ( !mFlags.UseLowMemory ) {
+		float allowedMm = mFilters.UseMismatchFilter ? (float)mFilters.MaxNumMismatches : mFilters.MaxMismatchPercent;
+		mStatisticsMaps.SetExpectedStatistics( mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm );
 		string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
 		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups[0].ReadGroupID.c_str() );
 	}
