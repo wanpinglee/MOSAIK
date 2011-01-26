@@ -487,13 +487,21 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	
 		// patch the information for reporting
 		Alignment al = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		Alignment unmappedAl;
+		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		unmappedAl.Query         = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
+		unmappedAl.BaseQualities = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;	
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+
+		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
+		unmappedAl.NumMapped = 0;
+
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, _isPairedEnd, true );
+		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
+		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
+
 		if ( isFirstMate && isMate1Multiple )
 			al.Quality = 0;
 		else if ( !isFirstMate && isMate2Multiple )
@@ -503,18 +511,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 		
 		if ( _isPairedEnd ) {
-			unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-			SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
-			unmappedAl.NumMapped = 0;
-			
-			unmappedAl.Query         = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
-			unmappedAl.BaseQualities = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
-
-			const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, _isPairedEnd, false );
-
 			_rBam.SaveAlignment( unmappedAl, zaTag2, true );
 			_uBam.SaveAlignment( unmappedAl, 0, true );
 		}
+			
 
 		_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
