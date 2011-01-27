@@ -493,10 +493,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 	
 		// patch the information for reporting
-		Alignment al = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		Alignment al         = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
 		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		unmappedAl.Query         = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
-		unmappedAl.BaseQualities = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;	
+		unmappedAl.Query          = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
+		unmappedAl.BaseQualities  = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
+		unmappedAl.ReferenceIndex = al.ReferenceIndex;
+		unmappedAl.ReferenceBegin = al.ReferenceBegin;
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
