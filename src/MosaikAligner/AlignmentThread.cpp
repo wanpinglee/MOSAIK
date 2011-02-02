@@ -503,7 +503,9 @@ void CAlignmentThread::AlignReadArchive(
 
 		// save chromosomes and positions of multiple alignments in bam
 
-		if ( mFlags.SaveMultiplyBam )
+		
+		
+		if ( mFlags.SaveMultiplyBam ) {
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
@@ -517,6 +519,8 @@ void CAlignmentThread::AlignReadArchive(
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
+		}
+		
 
 
 		// ===================================
@@ -560,8 +564,10 @@ void CAlignmentThread::AlignReadArchive(
 
 			const bool isUU = isMate1Unique && isMate2Unique;
 			const bool isMM = isMate1Multiple && isMate2Multiple;
+
 			al1.Quality = AdjustMappingQuality( al1.Quality, isUU, isMM );
 			al2.Quality = AdjustMappingQuality( al2.Quality, isUU, isMM );
+
 
 			SetRequiredInfo( al1, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
