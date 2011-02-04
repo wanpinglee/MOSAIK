@@ -599,7 +599,8 @@ void CColorspaceUtilities::ConvertReadColorspaceToPseudoColorspace(CMosaikString
 			case '.':
 				// here we pick an arbitrary colorspace transition, this will have at
 				// least 25 % of being correct as opposed to specifying an 'N'.
-				*pBases = 'A';
+				//*pBases = 'A';
+				*pBases = 'N';
 				break;
 			default:
 				printf("ERROR: Unrecognized nucleotide (%c) when converting read to pseudo-colorspace.\n", pBases[i]);

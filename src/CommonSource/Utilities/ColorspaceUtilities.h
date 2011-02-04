@@ -119,6 +119,10 @@ public:
 	void SetNumAllowedMismatch(unsigned int allowedMismatch);
 
 private:
+	// copy constructor 
+	CColorspaceUtilities( const CColorspaceUtilities& copy );
+	// assing operator
+	CColorspaceUtilities& operator=( const CColorspaceUtilities& copy );
 	// converts a colorspace sequence with provided seed base into basespace
 	void ConvertColorspaceToBasespace(char seed, const string& colorspaceSeq, string& basespaceSeq);
 	// records regions of contiguous identity in the alignment
