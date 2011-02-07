@@ -103,7 +103,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	if ( isFirstMate )
 		len = sprintf( zaPtr, "@;");
 	else
-		len = sprintf( zaPtr, "=;");
+		len = sprintf( zaPtr, "&;");
 	zaPtr += len;
 	len = sprintf( zaPtr, "%u;%u;", al1.Quality, al1.NextBestQuality );
 	zaPtr += len;
@@ -132,7 +132,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	if ( !isFirstMate )
 		len = sprintf( zaPtr, "@;");
 	else
-		len = sprintf( zaPtr, "=;");
+		len = sprintf( zaPtr, "&;");
 	zaPtr += len;
 	len = sprintf( zaPtr, "%u;%u;", al2.Quality, al2.NextBestQuality );
 	zaPtr += len;
