@@ -29,7 +29,7 @@ export BLD_PLATFORM ?= linux
 include includes/$(BLD_PLATFORM).inc
 
 # define our source subdirectories
-SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikJump
+SUBDIRS = CommonSource MosaikBuild MosaikAligner MosaikJump MosaikText
 #UTIL_SUBDIRS = MosaikJump
 
 all:

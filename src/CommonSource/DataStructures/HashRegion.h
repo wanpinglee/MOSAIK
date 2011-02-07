@@ -28,9 +28,9 @@ struct HashRegion {
 
 	bool operator<(const HashRegion& r) const {
 		if(Begin      != r.Begin)      return Begin      < r.Begin;
-		//if(End        != r.End)        return End        < r.End;
-		if(QueryBegin != r.QueryBegin) return QueryBegin < r.QueryBegin;		
 		if(End        != r.End)        return End        < r.End;
+		if(QueryBegin != r.QueryBegin) return QueryBegin < r.QueryBegin;		
+		//if(End        != r.End)        return End        < r.End;
 		if(QueryEnd   != r.QueryEnd)   return QueryEnd   < r.QueryEnd;
 		return false;
 	}

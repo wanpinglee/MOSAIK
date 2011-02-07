@@ -455,13 +455,24 @@ void CAlignmentThread::AlignReadArchive(
 		}
 
 
-
 		// process alignments mapped in special references and delete them in vectors
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 		mate1Alignments.Clear();
 		mate2Alignments.Clear();
+
+/*
+if ( mr.Name == "ERR022466.2297382" ) {
+	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) 
+		cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->NumMismatches << endl;
+
+	cerr << endl;
+	
+	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) 
+		cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->NumMismatches << endl;
+}
+*/
 
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;

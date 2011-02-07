@@ -19,14 +19,17 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	// rescured mate always wins
 	if ( competitor_mate1.WasRescued ) return true;
 	if ( competitor_mate2.WasRescued ) return true;
+	if ( mate1.WasRescued ) return false;
+	if ( mate2.WasRescued ) return false;
+
 	// proper pair always wins improper pair
 	bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
 	bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;
 	if ( competitor_model && !current_model ) return true;
 	if ( !competitor_model && current_model ) return false;
 
-	double competitor = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 100.00;
-	double current    = ( mate1.Quality + mate2.Quality ) / 100.00;
+	//double competitor = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 100.00;
+	//double current    = ( mate1.Quality + mate2.Quality ) / 100.00;
 
 	unsigned int competitor_diff = ( expectedFragmentLength > competitor_fragmentLength ) ? 
 		expectedFragmentLength - competitor_fragmentLength : 
@@ -36,10 +39,13 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		expectedFragmentLength - fragmentLength : 
 		fragmentLength - expectedFragmentLength;
 
-	competitor += ( 200 - (int)competitor_diff ) / 200;
-	current    += ( 200 - (int)diff ) / 200;
-
-	if ( competitor > current ) return true;
+	//competitor += ( 200 - (int)competitor_diff ) / 200;
+	//current    += ( 200 - (int)diff ) / 200;
+	
+	//if ( competitor > current ) return true;
+	//else return false;
+	
+	if ( competitor_diff < diff ) return true;
 	else return false;
 }
 
@@ -81,44 +87,54 @@ void BestNSecondBestSelection::Select (
 		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
-				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin) 
+				// fragment length
+				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin )
 					? ite->ReferenceEnd - ite2->ReferenceBegin 
 					: ite2->ReferenceEnd - ite->ReferenceBegin;
 				
-				if ( ( ite->ReferenceIndex == ite2->ReferenceIndex ) 
-					&& ( length > ( 2 * expectedFragmentLength ) ) ) {
-					if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
-						lastMinM2 = ( ite->ReferenceBegin > ite2->ReferenceBegin) ? ite2 : lastMinM2;
+				if ( ite->ReferenceIndex == ite2->ReferenceIndex ) {
+					if ( length > ( 2 * expectedFragmentLength ) ) {
+						if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
+							lastMinM2 = ite2;
+							continue;
+						} else {
+							break;
+						}
+					
+				// in the fragment length threshold
+					} else {
+						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength ) ) {
+							// store the current best as second best
+							if ( best ) {
+								secondBest = true;
+								secondBestMate1 = bestMate1;
+								secondBestMate2 = bestMate2;
+								secondBestFl    = bestFl;
+							}
+							best = true;
+							bestMate1 = *ite;
+							bestMate2 = *ite2;
+							bestFl    = length;
+	
+						} else {
+							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength ) ) {
+								secondBest = true;
+								secondBestMate1 = *ite;
+								secondBestMate2 = *ite2;
+								secondBestFl    = length;
+							}
+						}
+					}
+
+				// located at different chromosomes
+				} else {
+					if ( ite->ReferenceIndex > ite2->ReferenceIndex ) {
+						lastMinM2 = ite2;
 						continue;
 					} else {
 						break;
 					}
-					
-				// in the fragment length threshold
-				} else {
-					if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength ) ) {
-						// store the current best as second best
-						if ( best ) {
-							secondBest = true;
-							secondBestMate1 = bestMate1;
-							secondBestMate2 = bestMate2;
-							secondBestFl    = bestFl;
-						}
-						best = true;
-						bestMate1 = *ite;
-						bestMate2 = *ite2;
-						bestFl    = length;
-
-					} else {
-						if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength ) ) {
-							secondBest = true;
-							secondBestMate1 = *ite;
-							secondBestMate2 = *ite2;
-							secondBestFl    = length;
-						}
-					}
 				}
-				
 			}
 		}
 

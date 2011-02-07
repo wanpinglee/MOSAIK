@@ -78,7 +78,7 @@ void CNaiveAlignmentSet::CalculateAlignmentQualities(const bool calculateCorrect
 				(setIter->IsReverseStrand ? mRevMhpOccupancyList : mFwdMhpOccupancyList), minSpanLength);
 
 			// modify the alignment quality if the correction coefficient kicks in
-			if(correctionCoefficient < 1.0) {
+			if( !setIter->CanBeMappedToSpecialReference && ( correctionCoefficient < 1.0 ) ) {
 				const double Pcorrect = 1.0 - pow(10.0, -setIter->Quality / 10.0);
 				setIter->Quality = (unsigned char)(-10.0 * log10(1.0 - correctionCoefficient * Pcorrect) + 0.5);
 			}
