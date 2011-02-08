@@ -12,9 +12,10 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	const Alignment& competitor_mate2, 
 	const unsigned int competitor_fragmentLength, 
 	const Alignment& mate1, 
-	const Alignment& mate2, 
+	const Alignment& mate2,
 	const unsigned int fragmentLength,
-	const unsigned int expectedFragmentLength) {
+	const unsigned int expectedFragmentLength,
+	const SequencingTechnologies& tech) {
 
 	// rescured mate always wins
 	if ( competitor_mate1.WasRescued ) return true;
@@ -23,8 +24,22 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	if ( mate2.WasRescued ) return false;
 
 	// proper pair always wins improper pair
-	bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
-	bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;
+	//bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
+	//bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;
+	bool competitor_model = isProperOrientation ( 
+		competitor_mate1.IsReverseStrand, 
+		competitor_mate2.IsReverseStrand, 
+		competitor_mate1.ReferenceBegin, 
+		competitor_mate2.ReferenceBegin, 
+		tech);
+	
+	bool current_model    = isProperOrientation (
+		mate1.IsReverseStrand,
+		mate2.IsReverseStrand,
+		mate1.ReferenceBegin,
+		mate2.ReferenceBegin,
+		tech);
+	
 	if ( competitor_model && !current_model ) return true;
 	if ( !competitor_model && current_model ) return false;
 
@@ -54,6 +69,7 @@ void BestNSecondBestSelection::Select (
 	vector<Alignment>& mate1Set, 
 	vector<Alignment>& mate2Set, 
 	const unsigned int expectedFragmentLength,
+	const SequencingTechnologies& tech,
 	const bool& considerMate1,
 	const bool& considerMate2) {
 	
@@ -103,7 +119,7 @@ void BestNSecondBestSelection::Select (
 					
 				// in the fragment length threshold
 					} else {
-						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength ) ) {
+						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech ) ) {
 							// store the current best as second best
 							if ( best ) {
 								secondBest = true;
@@ -117,7 +133,7 @@ void BestNSecondBestSelection::Select (
 							bestFl    = length;
 	
 						} else {
-							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength ) ) {
+							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech ) ) {
 								secondBest = true;
 								secondBestMate1 = *ite;
 								secondBestMate2 = *ite2;

@@ -395,7 +395,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) )
-				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength );
+				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, _sequencingTechnologies );
 
 		isMate1Empty = r.Mate1Alignments.empty();
 		isMate2Empty = r.Mate2Alignments.empty();
@@ -413,8 +413,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
 		int maxFl = _expectedFragmentLength + _localAlignmentSearchRadius;
 		bool properPair1 = false, properPair2 = false;
-		properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, !al1.IsReverseStrand );
-		properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, !al2.IsReverseStrand );
+		properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, _sequencingTechnologies );
+		properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, _sequencingTechnologies );
 
 		if ( properPair1 != properPair2 ) {
 			cout << "ERROR: An inconsistent proper pair is found." << endl;

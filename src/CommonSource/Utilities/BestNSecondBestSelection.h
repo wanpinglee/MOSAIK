@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "Alignment.h"
+#include "SequencingTechnologies.h"
 
 
 using namespace std;
@@ -22,10 +23,11 @@ namespace BestNSecondBestSelection {
 		const Alignment& mate1,
 		const Alignment& mate2, 
 		const unsigned int fragmentLength,
-		const unsigned int expectedFragmentLength );
+		const unsigned int expectedFragmentLength,
+		const SequencingTechnologies& tech);
 
 	void Select ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const unsigned int expectedFragmentLength,
-		const bool& considerMate1 = true, const bool& considerMate2 = true );
+		const SequencingTechnologies& tech, const bool& considerMate1 = true, const bool& considerMate2 = true );
 }
 
 #endif

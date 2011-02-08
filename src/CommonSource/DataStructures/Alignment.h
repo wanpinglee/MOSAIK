@@ -8,12 +8,15 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef _ALIGNMENT_H_
+#define _ALIGNMENT_H_
 
 #include <cmath>
 #include <string>
 
 #include "MosaikString.h"
+#include "SequencingTechnologies.h"
+#include "StrandChecker.h"
 
 using namespace std;
 
@@ -109,12 +112,13 @@ struct Alignment {
 	}
 
 	
-	bool SetPairFlagsAndFragmentLength ( const Alignment& pairMate, const int& minFragmentLength, const int& maxFragmentLength, const bool& expectedMateStrand ) {
+	// return true when they are a proper pair; otherwise return false
+	bool SetPairFlagsAndFragmentLength ( const Alignment& pairMate, const int& minFragmentLength, const int& maxFragmentLength, const SequencingTechnologies& tech ) {
 		unsigned int queryPosition5Prime = ( IsReverseStrand ) ? ReferenceEnd : ReferenceBegin;
 		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;
 		FragmentLength = ( ReferenceIndex != pairMate.ReferenceIndex ) ? 0 : matePosition5Prime - queryPosition5Prime;
 		
-		if ( expectedMateStrand != pairMate.IsReverseStrand )
+		if ( isProperOrientation( IsReverseStrand, pairMate.IsReverseStrand, ReferenceBegin, pairMate.ReferenceBegin, tech ) )
 			IsResolvedAsProperPair = false;
 		else if ( ReferenceIndex != pairMate.ReferenceIndex )
 			IsResolvedAsProperPair = false;
@@ -126,10 +130,9 @@ struct Alignment {
 				IsResolvedAsProperPair = false;
 		}
 
-		//IsMateReverseStrand = pairMate.IsReverseStrand;
-		//MateReferenceIndex = pairMate.ReferenceIndex;
-		//MateReferenceBegin = pairMate.ReferenceBegin;
-
 		return IsResolvedAsProperPair;
 	}
 };
+
+
+#endif

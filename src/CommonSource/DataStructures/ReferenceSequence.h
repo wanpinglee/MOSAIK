@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef _REFERENCESEQUENCE_H_
+#define _REFERENCESEQUENCE_H_
 
 #include <string>
 #include "Mosaik.h"
@@ -40,3 +41,6 @@ struct ReferenceSequence {
 		, Special(false)
 	{}
 };
+
+
+#endif

@@ -547,7 +547,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
 				|| ( isMate1Multiple && isMate2Multiple ) )
-				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength );
+				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology );
 
 			isMate1Empty = mate1Set.empty();
 			isMate2Empty = mate2Set.empty();
@@ -565,8 +565,8 @@ if ( mr.Name == "ERR022466.2297382" ) {
 			int minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
 			int maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 			bool properPair1 = false, properPair2 = false;
-			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, !al1.IsReverseStrand );
-			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, !al2.IsReverseStrand );
+			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
+			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
 
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;
@@ -647,7 +647,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 			&&  !( isMate1Empty && isMate2Empty ) ) {
 			
 			if ( isMate1Multiple || isMate2Multiple ) 
-				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength );
+				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology );
 
 			isMate1Empty = mate1Set.empty();
 			isMate2Empty = mate2Set.empty();
