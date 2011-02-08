@@ -886,26 +886,33 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	string specialCode;
 	specialCode.resize(3);
 	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+
 		if ( ite->IsMappedSpecialReference ) {
+			
 			nMobAl++;
 			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
 			specialCode[0] = *tempCode;
 			tempCode++;
 			specialCode[1] = *tempCode;
 			specialCode[2] = 0;
+
 		}
+
 	}
 
 	if ( ( nMobAl == mate1Set.size() ) && ( mate1Set.size() != 0 ) ) {
+
 		isMate1Special = true;
 		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
 		mate1SpecialAl = *mate1Set.rbegin();
 		mate1SpecialAl.SpecialCode = specialCode;
+		mate1SpecialAl.NumMapped   = nMobAl;
 		mate1Set.clear();
 
 	} else if ( nMobAl > 0 ) {
 		vector<Alignment> newMate1Set;
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+
 			if ( !ite->IsMappedSpecialReference ) {
 				ite->CanBeMappedToSpecialReference = true;
 				ite->SpecialCode = specialCode;
@@ -914,7 +921,9 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 				isMate1Special = true;
 				mate1SpecialAl = ( ite->Quality >= mate1SpecialAl.Quality ) ? *ite : mate1SpecialAl;
 				mate1SpecialAl.SpecialCode = specialCode;
+				mate1SpecialAl.NumMapped   = nMobAl;
 			}
+		
 		}
 		mate1Set.clear();
 		mate1Set = newMate1Set;
@@ -925,25 +934,32 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	specialCode2.resize(3);
 
 	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
+		
 		if ( ite->IsMappedSpecialReference ) {
+			
 			nMobAl2++;
 			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
 			specialCode2[0] = *tempCode;
 			tempCode++;
 			specialCode2[1] = *tempCode;
 			specialCode2[2] = 0;
+
 		}
 	}
 
 	if ( ( nMobAl2 == mate2Set.size() ) && ( mate2Set.size() != 0 ) ) {
+
 		isMate2Special = true;
 		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
 		mate2SpecialAl = *mate2Set.rbegin();
 		mate2SpecialAl.SpecialCode = specialCode2;
+		mate2SpecialAl.NumMapped   = nMobAl2;
 		mate2Set.clear();
+	
 	} else if ( nMobAl2 > 0 ) {
 		vector<Alignment> newMate2Set;
 		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
+			
 			if ( !ite->IsMappedSpecialReference ) {
 				ite->CanBeMappedToSpecialReference = true;
 				ite->SpecialCode = specialCode2;
@@ -952,7 +968,9 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 				isMate2Special = true;
 				mate2SpecialAl = ( ite->Quality >= mate2SpecialAl.Quality ) ? *ite : mate2SpecialAl;
 				mate2SpecialAl.SpecialCode = specialCode2;
+				mate2SpecialAl.NumMapped   = nMobAl2;
 			}
+
 		}
 		mate2Set.clear();
 		mate2Set = newMate2Set;
