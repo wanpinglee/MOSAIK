@@ -118,7 +118,7 @@ struct Alignment {
 		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;
 		FragmentLength = ( ReferenceIndex != pairMate.ReferenceIndex ) ? 0 : matePosition5Prime - queryPosition5Prime;
 		
-		if ( isProperOrientation( IsReverseStrand, pairMate.IsReverseStrand, ReferenceBegin, pairMate.ReferenceBegin, tech ) )
+		if ( !isProperOrientation( IsReverseStrand, pairMate.IsReverseStrand, ReferenceBegin, pairMate.ReferenceBegin, tech ) )
 			IsResolvedAsProperPair = false;
 		else if ( ReferenceIndex != pairMate.ReferenceIndex )
 			IsResolvedAsProperPair = false;

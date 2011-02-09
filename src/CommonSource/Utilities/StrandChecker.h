@@ -2,6 +2,7 @@
 #ifndef _STRANDCHECKER_H_
 #define _STRANDCHECKER_H_
 
+#include "stdio.h"
 #include "Alignment.h"
 #include "SequencingTechnologies.h"
 
@@ -11,7 +12,9 @@ inline bool isProperOrientation (
 	const unsigned int& referenceBeginMate1,
 	const unsigned int& referenceBeginMate2,
 	const SequencingTechnologies& tech) {
-	
+
+	//bool proper = true;
+
 	switch ( tech ) {
 		
 		case 1: // 454
@@ -39,6 +42,12 @@ inline bool isProperOrientation (
 			return true;
 		break;
 	}
+
+
+	//fprintf(stderr, "%u; %u; %u; %s; %s; %s;\n", tech, referenceBeginMate1, referenceBeginMate2, (reverseStrandMate1?"true":"false"), (reverseStrandMate2?"true":"false"), (proper?"true":"false") );
+
+	//return proper;
+
 }
 
 #endif
