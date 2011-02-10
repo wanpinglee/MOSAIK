@@ -96,28 +96,32 @@ inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment
 	switch( tech ) {
 		case ST_454:
 			if ( strand1 == strand2 ) {
-				okay = true;
-				length = strand1 ? al1.ReferenceEnd - al2.ReferenceBegin + 1 : al2.ReferenceEnd - al1.ReferenceBegin + 1;
+				if ( al1.ReferenceIndex != al2.ReferenceIndex )
+					okay = false;
+				else {
+					okay = true;
+					length = strand1 ? al1.ReferenceEnd - al2.ReferenceBegin + 1 : al2.ReferenceEnd - al1.ReferenceBegin + 1;
+				}
 			}
 			break;
 		case ST_SOLID:
 			if ( strand1 == strand2 ) {
-				okay = true;
-				length = strand1 ? al2.ReferenceEnd - al1.ReferenceBegin + 1 : al1.ReferenceEnd - al2.ReferenceBegin + 1;
+				if ( al1.ReferenceIndex != al2.ReferenceIndex )
+					okay = false;
+				else {
+					okay = true;
+					length = strand1 ? al2.ReferenceEnd - al1.ReferenceBegin + 1 : al1.ReferenceEnd - al2.ReferenceBegin + 1;
+				}
 			}
 			break;
 		default:
 			if ( strand1 != strand2 ) {
-				okay = true;
-
-				if ( strand1 && (al2.ReferenceEnd < al1.ReferenceBegin) )
-					fprintf(stderr, "%s\n", al1.Query.CData());
-					//cerr << al1.Query.CData() << endl;
-				else if ( !strand1 && (al1.ReferenceEnd < al2.ReferenceBegin) )
-					fprintf(stderr, "%s\n", al1.Query.CData());
-					//cerr << al1.Query.CData() << endl;
-
-				length = strand1 ? (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1 : (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1;
+				if ( al1.ReferenceIndex != al2.ReferenceIndex )
+					okay = false;
+				else {
+					okay = true;
+					length = strand1 ? (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1 : (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1;
+				}
 			}
 	}
 
