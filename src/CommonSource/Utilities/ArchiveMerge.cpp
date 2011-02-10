@@ -413,6 +413,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
 		int maxFl = _expectedFragmentLength + _localAlignmentSearchRadius;
 		bool properPair1 = false, properPair2 = false;
+		al1.IsFirstMate = true;
+		al2.IsFirstMate = false;
 		properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, _sequencingTechnologies );
 		properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, _sequencingTechnologies );
 

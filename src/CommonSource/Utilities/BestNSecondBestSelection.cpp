@@ -30,7 +30,8 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		competitor_mate1.IsReverseStrand, 
 		competitor_mate2.IsReverseStrand, 
 		competitor_mate1.ReferenceBegin, 
-		competitor_mate2.ReferenceBegin, 
+		competitor_mate2.ReferenceBegin,
+		true,
 		tech);
 	
 	bool current_model    = isProperOrientation (
@@ -38,6 +39,7 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		mate2.IsReverseStrand,
 		mate1.ReferenceBegin,
 		mate2.ReferenceBegin,
+		true,
 		tech);
 	
 	if ( competitor_model && !current_model ) return true;
