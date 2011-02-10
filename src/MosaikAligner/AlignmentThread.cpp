@@ -602,7 +602,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 				
 					//CZaTager zas1, zas2;
 
-					const char *zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
+					const char *zas1Tag = za1.GetZaTag( genomicAl, al2, true );
 					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
@@ -617,7 +617,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 	
 					//CZaTager zas1, zas2;
 
-					const char *zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
+					const char *zas1Tag = za1.GetZaTag( genomicAl, al1, false );
 					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
 					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );

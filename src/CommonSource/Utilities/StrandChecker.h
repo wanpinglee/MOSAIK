@@ -20,7 +20,7 @@ inline bool isProperOrientation (
 
 	switch ( tech ) {
 		
-		case 1: // 454
+		case ST_454: // 454
 			if ( reverseStrandQuery != reverseStrandMate ) return false;
 			if ( isQueryFirstMate ) {
 				if ( reverseStrandQuery && ( referenceBeginQuery < referenceBeginMate) ) return true;
@@ -34,7 +34,7 @@ inline bool isProperOrientation (
 		break;
 
 
-		case 16: // SOLiD
+		case ST_SOLID: // SOLiD
 			if ( reverseStrandQuery != reverseStrandMate ) return false;
 			if ( isQueryFirstMate ) {
 				if ( reverseStrandQuery && ( referenceBeginQuery > referenceBeginMate) ) return true;
