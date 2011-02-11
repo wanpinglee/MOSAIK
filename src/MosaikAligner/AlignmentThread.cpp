@@ -343,8 +343,18 @@ void CAlignmentThread::AlignReadArchive(
 					// NB: we caught other technologies during initialization
 				}
 
+				bool settleLocalSearchWindow = false, isAlExisting = false;
+				unsigned int localSearchBegin, localSearchEnd;
+				settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
+				
+				if ( settleLocalSearchWindow )
+					// check if there are alignments already sitting in the region
+					isAlExisting = mate2Alignments.CheckExistence( refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex] );
+				
+				if ( !isAlExisting ) {
+
 				Alignment al;
-				if(RescueMate(lam, mr.Mate2.Bases, uniqueBegin, uniqueEnd, refIndex, al)) {
+				if(RescueMate(lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
 
 					const char* pQualities = mr.Mate2.Qualities.CData();
 					const char* pBases = mr.Mate2.Bases.CData();
@@ -362,6 +372,8 @@ void CAlignmentThread::AlignReadArchive(
 
 					// increment our candidates counter
 					mStatisticsCounters.AlignmentCandidates++;
+				}
+
 				}
 			}
 
@@ -389,8 +401,18 @@ void CAlignmentThread::AlignReadArchive(
 					// NB: we caught other technologies during initialization
 				}
 
+				bool settleLocalSearchWindow = false, isAlExisting = false;
+				unsigned int localSearchBegin, localSearchEnd;
+				settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
+
+				if ( settleLocalSearchWindow )
+					// check if there are alignments already sitting in the region
+					isAlExisting = mate1Alignments.CheckExistence( refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex]);
+
+				if ( !isAlExisting ) {
+
 				Alignment al;
-				if(RescueMate(lam, mr.Mate1.Bases, uniqueBegin, uniqueEnd, refIndex, al)) {
+				if(RescueMate(lam, mr.Mate1.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
 
 					const char* pQualities = mr.Mate1.Qualities.CData();
 					const char* pBases = mr.Mate1.Bases.Data();
@@ -408,6 +430,8 @@ void CAlignmentThread::AlignReadArchive(
 
 					// increment our candidates counter
 					mStatisticsCounters.AlignmentCandidates++;
+				}
+
 				}
 			}
 		}
@@ -1706,9 +1730,68 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	if(!mFlags.IsAligningAllReads) sort(regions.begin(), regions.end(), SortHashRegionByLength());
 }
 
-// attempts to rescue the mate paired with a unique mate
-bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al) {
+// settles the local Smith-Waterman window
+bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int refIndex, const unsigned int uniqueBegin, const unsigned int uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd ) {
 
+	// calculate the target regions using the local alignment models
+	const unsigned int refBegin = mReferenceBegin[refIndex];
+	const unsigned int refEnd   = mReferenceEnd[refIndex];
+	unsigned int begin = uniqueBegin;
+	unsigned int end   = uniqueEnd;
+
+	if(lam.IsTargetBeforeUniqueMate) {
+
+		if(begin >= mSettings.MedianFragmentLength)       begin -= mSettings.MedianFragmentLength;
+		else begin = 0;
+
+		if(begin >= mSettings.LocalAlignmentSearchRadius) begin -= mSettings.LocalAlignmentSearchRadius;
+		else begin = 0;
+
+		if(end   >= mSettings.MedianFragmentLength)       end   -= mSettings.MedianFragmentLength;
+		else end = 0;
+
+		end += mSettings.LocalAlignmentSearchRadius;
+
+	} else {
+
+		begin += mSettings.MedianFragmentLength;
+
+		if(begin >= mSettings.LocalAlignmentSearchRadius) begin -= mSettings.LocalAlignmentSearchRadius;
+		else begin = 0;
+
+		end  += mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
+	}
+
+	// make sure the endpoints are within the reference sequence
+	if(begin < refBegin) begin = refBegin;
+	if(end   < refBegin) end   = refBegin;
+	if(begin > refEnd)   begin = refEnd;
+	if(end   > refEnd)   end   = refEnd;
+
+	// adjust the start position if the reference starts with a J nucleotide
+	while(mReference[begin] == 'X') begin++;
+
+	// adjust the stop position if the reference ends with a J nucleotide
+	while(mReference[end] == 'X')   end--;
+
+
+	// quit if we don't have a region to align against
+	if(begin == end) {
+		localSearchBegin = 0;
+		localSearchEnd   = 0;
+		return false;
+	} else {
+		localSearchBegin = begin;
+		localSearchEnd   = end;
+		return true;
+	}
+
+}
+
+// attempts to rescue the mate paired with a unique mate
+bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int begin, const unsigned int end, const unsigned int refIndex, Alignment& al) {
+
+/*
 	// calculate the target regions using the local alignment models
 	const unsigned int refBegin = mReferenceBegin[refIndex];
 	const unsigned int refEnd   = mReferenceEnd[refIndex];
@@ -1752,7 +1835,7 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikS
 
 	// quit if we don't have a region to align against
 	if(begin == end) return false;
-
+*/
 	// prepare for alignment (borrow the forward read buffer)
 	const char* query              = bases.CData();
 	const unsigned int queryLength = bases.Length();
@@ -1772,8 +1855,8 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikS
 
 	// adjust the reference start positions
 	al.ReferenceIndex = refIndex;
-	al.ReferenceBegin += begin - refBegin;
-	al.ReferenceEnd   += begin - refBegin;
+	al.ReferenceBegin += begin - mReferenceBegin[refIndex];
+	al.ReferenceEnd   += begin - mReferenceBegin[refIndex];
 
 	// an alignment was performed
 	return true;

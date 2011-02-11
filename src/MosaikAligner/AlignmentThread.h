@@ -310,9 +310,12 @@ private:
 	void GetFastReadCandidate(HashRegion& region, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList);
 	// consolidates hash hits into read candidates
 	void GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList);
+	// settles the local Smith-Waterman window
+	bool SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int refIndex, 
+		const unsigned int uniqueBegin, const unsigned int uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd );
 	// attempts to rescue the mate paired with a unique mate
-	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int uniqueBegin, 
-		const unsigned int uniqueEnd, const unsigned int refIndex, Alignment& al);
+	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int begin, 
+		const unsigned int end, const unsigned int refIndex, Alignment& al);
 	// Prepare bam required info
 	void SetRequiredInfo ( Alignment& al, const Alignment& mate, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
 		const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech, const bool& isItselfMapped, const bool& isMateMapped);

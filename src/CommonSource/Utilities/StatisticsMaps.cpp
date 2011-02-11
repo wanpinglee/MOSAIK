@@ -26,6 +26,14 @@ CStatisticsMaps::CStatisticsMaps( void )
 	, unique_unique(0)
 	, unique_multiple(0)
 	, multiple_multiple(0)
+	, f1_f2(0)
+	, f1_r2(0)
+	, r1_f2(0)
+	, r1_r2(0)
+	, f2_f1(0)
+	, f2_r1(0)
+	, r2_f1(0)
+	, r2_r1(0)
 {
 	fragments        = new uint64_t [ nFragment ];
 	readLengths      = new uint64_t [ nReadLength ];
@@ -78,6 +86,14 @@ void CStatisticsMaps::Reset( void ) {
 	unique_unique        = 0;
 	unique_multiple      = 0;
 	multiple_multiple    = 0;
+	f1_f2                = 0;
+	f1_r2                = 0;
+	r1_f2                = 0;
+	r1_r2                = 0;
+	f2_f1                = 0;
+	f2_r1                = 0;
+	r2_f1                = 0;
+	r2_r1                = 0;
 
 	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
 	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
@@ -85,6 +101,36 @@ void CStatisticsMaps::Reset( void ) {
 	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
 	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
 
+}
+
+inline void CStatisticsMaps::SaveModel( const Alignment& al1, const Alignment& al2 ) {
+
+	if ( al1.ReferenceIndex != al2.ReferenceIndex )
+		return;
+
+	if ( !al1.IsReverseStrand && !al2.IsReverseStrand && ( al1.ReferenceBegin <= al2.ReferenceBegin ) )
+		f1_f2++;
+	
+	if ( !al1.IsReverseStrand && al2.IsReverseStrand  && ( al1.ReferenceBegin <= al2.ReferenceBegin ) )
+		f1_r2++;
+
+	if ( al1.IsReverseStrand  && !al2.IsReverseStrand && ( al1.ReferenceBegin <= al2.ReferenceBegin ) )
+		r1_f2++;
+	
+	if ( al1.IsReverseStrand  && al2.IsReverseStrand  && ( al1.ReferenceBegin <= al2.ReferenceBegin ) )
+		r1_r2++;
+	
+	if ( !al1.IsReverseStrand && !al2.IsReverseStrand && ( al1.ReferenceBegin > al2.ReferenceBegin ) )
+		f2_f1++;
+
+	if ( al1.IsReverseStrand  && !al2.IsReverseStrand && ( al1.ReferenceBegin > al2.ReferenceBegin ) )
+		f2_r1++;
+
+	if ( !al1.IsReverseStrand && al2.IsReverseStrand  && ( al1.ReferenceBegin > al2.ReferenceBegin ) )
+		r2_f1++;
+
+	if ( al1.IsReverseStrand  && al2.IsReverseStrand  && ( al1.ReferenceBegin > al2.ReferenceBegin ) )
+		r2_r1++;
 }
 
 inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech ) {
@@ -258,6 +304,21 @@ void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId )
 		fprintf( fOut, "\t4\t4\t%lu\t%lu\t1-1\n", unique_unique,     non_unique + non_multiple + non_multiple );
 		fprintf( fOut, "\t5\t5\t%lu\t%lu\t1-N\n", unique_multiple,   non_unique + non_multiple + non_multiple + unique_multiple );
 		fprintf( fOut, "\t8\t8\t%lu\t%lu\tN-N\n", multiple_multiple, total );
+
+		// print model
+		total = f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 + f2_r1 + r2_f1 + r2_r1;
+		fprintf( fOut, "\n OC orientation combinations\n");
+		fprintf( fOut, "\tTOT\tMEAN\tSTD\tIN\tOVER\tUNDER\n" );
+		fprintf( fOut, "\t%lu\t0\t0\t%lu\t0\t0\n", total, total );
+		fprintf( fOut, "\tbin\tcombo\tn\tcum\tlabel\n");
+		fprintf( fOut, "\t1\t1\t%lu\t%lu\tf1-f2\n", f1_f2, f1_f2 );
+		fprintf( fOut, "\t2\t2\t%lu\t%lu\tf1-r2\n", f1_r2, f1_f2 + f1_r2 );
+		fprintf( fOut, "\t3\t3\t%lu\t%lu\tr1-f2\n", r1_f2, f1_f2 + f1_r2 + r1_f2 );
+		fprintf( fOut, "\t4\t4\t%lu\t%lu\tr1-r2\n", r1_r2, f1_f2 + f1_r2 + r1_f2 + r1_r2 );
+		fprintf( fOut, "\t5\t5\t%lu\t%lu\tf2-f1\n", f2_f1, f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 );
+		fprintf( fOut, "\t6\t6\t%lu\t%lu\tf2-r1\n", f2_r1, f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 + f2_r1 );
+		fprintf( fOut, "\t7\t7\t%lu\t%lu\tr2-f1\n", r2_f1, f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 + f2_r1 + r2_f1 );
+		fprintf( fOut, "\t8\t8\t%lu\t%lu\tr2-r1\n", r2_r1, f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 + f2_r1 + r2_f1 + r2_r1 );
 		fclose( fOut );
 	} else {
 		printf("ERROR: The statistics maps cannot be printed out.\n");
@@ -328,6 +389,7 @@ void CStatisticsMaps::SaveRecord(
 		if ( ( al1.NumMapped == 1 ) && ( al2.NumMapped == 1 ) ) {
 			unique_unique++;
 			SaveFragment( al1, al2, tech );
+			SaveModel( al1, al2 );
 		}
 
 		if ( ( ( al1.NumMapped == 1 ) && ( al2.NumMapped > 1 ) ) || ( ( al1.NumMapped > 1 ) && ( al2.NumMapped == 1 ) ) )

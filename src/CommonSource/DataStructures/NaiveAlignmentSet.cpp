@@ -24,6 +24,29 @@ CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina)
 //	mRevMhpOccupancyList.clear();
 //}
 
+// check if there are any alignments sitting in the given region
+bool CNaiveAlignmentSet::CheckExistence ( const unsigned int& refIndex, const unsigned int& begin, const unsigned int& end ) {
+	
+	sort( mAlignments.begin(), mAlignments.end() );
+	
+	for( AlignmentSet::iterator setIter = mAlignments.begin(); setIter != mAlignments.end(); setIter++ ) {
+		if ( setIter->ReferenceIndex < refIndex )
+			continue;
+		if ( setIter->ReferenceIndex > refIndex )
+			return false;
+
+		// setIter.ReferenceIndex == refIndex
+		if ( ( setIter->ReferenceBegin < begin ) && ( setIter->ReferenceEnd < begin ) )
+			continue;
+		else if ( ( setIter->ReferenceBegin > end ) && ( setIter->ReferenceEnd > end ) ) 
+			return false;
+		else
+			return true;
+	}
+
+	return false;
+}
+
 // adds an alignment to the set
 bool CNaiveAlignmentSet::Add(Alignment& al) {
 

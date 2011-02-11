@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <list>
 #include <vector>
@@ -55,6 +56,8 @@ public:
 	CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina);
 	// destructor
 	//~CNaiveAlignmentSet(void);
+	// check if there are any alignments sitting in the given region
+	bool CheckExistence ( const unsigned int& refIndex, const unsigned int& begin, const unsigned int& end );
 	// adds an alignment to the set
 	bool Add(Alignment& al);
 	// calculates the alignment qualities for each alignment in the set

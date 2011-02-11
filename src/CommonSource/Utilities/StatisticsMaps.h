@@ -30,6 +30,7 @@ class CStatisticsMaps {
 		// assing operator
 		CStatisticsMaps& operator= ( const CStatisticsMaps& copy );
 
+		inline void SaveModel( const Alignment& al1, const Alignment& al2 );
 		inline void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
 		inline void SaveReadLength( const unsigned int length );
 		inline void SaveMultiplicity( const unsigned int nAlignment );
@@ -83,6 +84,15 @@ class CStatisticsMaps {
 		uint64_t unique_unique;
 		uint64_t unique_multiple;
 		uint64_t multiple_multiple;
+		// model map
+		uint64_t f1_f2;
+		uint64_t f1_r2;
+		uint64_t r1_f2;
+		uint64_t r1_r2;
+		uint64_t f2_f1;
+		uint64_t f2_r1;
+		uint64_t r2_f1;
+		uint64_t r2_r1;
 
 };
 
