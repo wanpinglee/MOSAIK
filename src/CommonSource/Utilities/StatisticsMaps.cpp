@@ -146,7 +146,7 @@ inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment
 					okay = false;
 				else {
 					okay = true;
-					length = strand1 ? al1.ReferenceEnd - al2.ReferenceBegin + 1 : al2.ReferenceEnd - al1.ReferenceBegin + 1;
+					length = strand1 ? (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1 : (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1;
 				}
 			}
 			break;
@@ -156,7 +156,7 @@ inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment
 					okay = false;
 				else {
 					okay = true;
-					length = strand1 ? al2.ReferenceEnd - al1.ReferenceBegin + 1 : al1.ReferenceEnd - al2.ReferenceBegin + 1;
+					length = strand1 ? (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1 : (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1;
 				}
 			}
 			break;

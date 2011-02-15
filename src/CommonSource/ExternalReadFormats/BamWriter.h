@@ -32,12 +32,20 @@ const SortOrderType SORTORDER_UNSORTED = 0;
 const SortOrderType SORTORDER_READNAME = 10;
 const SortOrderType SORTORDER_POSITION = 20;
 
+// program group in header
+struct ProgramGroup {
+	string ID;  // program name
+	string VN;  // program version
+	string CL;  // command line
+};
+
 // define our BAM header structure
 struct BamHeader {
 	SortOrderType SortOrder;
 	string Version;
 	vector<MosaikReadFormat::ReadGroup>* pReadGroups;
 	vector<ReferenceSequence>* pReferenceSequences;
+	ProgramGroup pg;
 
 	// constructor
 	BamHeader(void)

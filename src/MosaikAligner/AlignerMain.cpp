@@ -156,6 +156,10 @@ int main(int argc, char* argv[]) {
 
 	CConsole::Initialize();
 	ConfigurationSettings settings;
+	
+	string commandLine;
+	for ( int i = 0; i < argc; ++i )
+		commandLine += argv[i];
 
 	printf("------------------------------------------------------------------------------\n");
 	printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
@@ -502,7 +506,7 @@ int main(int argc, char* argv[]) {
 	bench.Start();
 
 	// create our aligner
-	CMosaikAligner ma(settings.HashSize, algorithmType, modeType, settings.NumThreads);
+	CMosaikAligner ma(settings.HashSize, algorithmType, modeType, settings.NumThreads, commandLine );
 
 	// ===============
 	// enable features

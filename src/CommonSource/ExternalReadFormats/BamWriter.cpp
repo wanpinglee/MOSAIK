@@ -414,6 +414,15 @@ void CBamWriter::Open(const string& filename, const BamHeader& header) {
 		}
 	}
 
+	if ( !header.pg.ID.empty() ) {
+		sb << "@PG\tID:" << header.pg.ID;
+		if ( !header.pg.VN.empty() )
+			sb << "\tVN:" << header.pg.VN;
+		if ( !header.pg.CL.empty() )
+			sb << "\tCL:" << header.pg.CL;
+		sb << endl;
+	}
+
 	// distill the header text
 	string samHeader = sb.str();
 	sb.str("");

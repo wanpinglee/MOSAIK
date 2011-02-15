@@ -45,7 +45,7 @@ class CMosaikAligner {
 public:
 	// constructor
 	CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, 
-		CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads);
+		CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads, const string inputCommandLine );
 	// destructor
 	~CMosaikAligner(void);
 	// aligns the read archive chromosome by chromosome
@@ -80,6 +80,10 @@ public:
 	void SetQuietMode( void );
 
 private:
+	// copy constructor
+	CMosaikAligner( const CMosaikAligner& copy );
+	// assign operator
+	CMosaikAligner& operator=( const CMosaikAligner& copy );
 	// denotes the active alignment algorithm
 	CAlignmentThread::AlignerAlgorithmType mAlgorithm;
 	// denotes the active alignment mode
@@ -115,8 +119,8 @@ private:
 	// reference groups for low-memory algorithm
 	//            start_ref,    length
 	vector< pair <unsigned int, unsigned int> > referenceGroups;
-	// retrieve the concatenated reference sequence length
-	//vector<ReferenceSequence> referenceSequences;
+	// command line
+	string commandLine;
 	// read groups
 	vector<MosaikReadFormat::ReadGroup> readGroups;
 	map< unsigned int, MosaikReadFormat::ReadGroup > readGroupsMap;

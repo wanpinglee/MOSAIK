@@ -13,12 +13,13 @@
 
 
 // constructor
-CMosaikAligner::CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads)
+CMosaikAligner::CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads, const string inputCommandLine )
 	: mAlgorithm(algorithmType)
 	, mMode(algorithmMode)
 	, mReference(NULL)
 	, mReferenceLength(0)
 	, mpDNAHash(NULL)
+	, commandLine( inputCommandLine )
 {
 	// initialization
 	mSettings.HashSize            = hashSize;
@@ -142,6 +143,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		mBams.sHeader.pReadGroups = &readGroups;
 		mBams.uHeader.pReadGroups = &readGroups;
 		mBams.rHeader.pReadGroups = &readGroups;
+
+		ProgramGroup pg;
+		pg.ID = "MosaikAligner";
+		stringstream ss;
+		ss << (int)MOSAIK_MAJOR_VERSION << "." << (int)MOSAIK_MINOR_VERSION << "." << (int)MOSAIK_BUILD_VERSION;
+		pg.VN = ss.str();
+		pg.CL = commandLine;
+
+		mBams.sHeader.pg.ID = "MosaikAligner";
+		mBams.uHeader.pg.ID = "MosaikAligner";
+		mBams.rHeader.pg.ID = "MosaikAligner";
+		mBams.sHeader.pg.VN = ss.str();
+		mBams.uHeader.pg.VN = ss.str();
+		mBams.rHeader.pg.VN = ss.str();
+		mBams.sHeader.pg.CL = commandLine;
+		mBams.uHeader.pg.CL = commandLine;
+		mBams.rHeader.pg.CL = commandLine;
 
 		//mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 		mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.sHeader);
