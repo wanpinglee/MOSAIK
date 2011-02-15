@@ -14,11 +14,11 @@ INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(EXTERNAL_DIR)
 # ----------------------------------
 SOURCES= BuildMain.cpp MosaikBuild.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS= Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o Fasta.o Fastq.o FastLZIO.o fastlz.o FileUtilities.o MD5.o MemoryUtilities.o MosaikString.o Options.o ReadWriter.o RegexUtilities.o SequenceUtilities.o SRF.o TimeSupport.o
+_EXT_OBJECTS= Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o Fasta.o Fastq.o FastLZIO.o fastlz.o FileUtilities.o MemoryUtilities.o MosaikString.o Options.o ReadWriter.o RegexUtilities.o SequenceUtilities.o SRF.o TimeSupport.o md5.o
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikBuild
-LIBS=$(PLATFORM_LIBS) -lz -lpthread
+LIBS=$(PLATFORM_LIBS) -lz -lpthread 
 
 all: $(PROGRAM)
 

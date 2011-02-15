@@ -313,6 +313,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	{
 		CConsole::Heading(); printf("\n- calculating MD5 checksums:\n"); CConsole::Reset();
 
+		//MD5 md5;
+		//unsigned char MD5result[16];
 		unsigned char MD5[16];
 		currentRefSeq = 0;
 		if ( !mFlags.IsQuietMode )
@@ -321,16 +323,20 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 			// generate the MD5 checksum
 			memset(MD5, 0, 16);
+			//struct MD5Context context;
 			MD5_CTX context;
 			MD5Init(&context); 
 			MD5Update(&context, (unsigned char*)rsIter->Bases.data(), rsIter->NumBases);
 			MD5Final(MD5, &context);
 
+			//cerr << strlen( rsIter->Bases.data() ) << endl;
+			//cerr << md5.digestString( rsIter->Bases.data() ) << endl;
+
 			// copy the checksum
 			rsIter->MD5.resize(32);
 			char* pMD5String = (char*)rsIter->MD5.data();
 			for(unsigned int i = 0; i < 16; i++) {
-				sprintf(pMD5String, "%02X", MD5[i]);
+				sprintf(pMD5String, "%02x", MD5[i]);
 				pMD5String += 2;
 			}
 

@@ -27,7 +27,7 @@ using namespace std::tr1;
 #include "ConversionUtilities.h"
 #include "Fasta.h"
 #include "Fastq.h"
-#include "MD5.h"
+//#include "MD5.h"
 #include "MosaikString.h"
 #include "ReadWriter.h"
 #include "ProgressBar.h"
@@ -40,6 +40,8 @@ using namespace std::tr1;
 #include "SequencingTechnologies.h"
 #include "SHA1.h"
 #include "SRF.h"
+
+#include "md5.h"
 
 using namespace std;
 
