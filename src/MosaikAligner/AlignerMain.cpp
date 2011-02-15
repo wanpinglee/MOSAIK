@@ -31,7 +31,7 @@ unsigned char DEFAULT_HASH_SIZE      = 15;
 unsigned char DEFAULT_NUM_MISMATCHES = 4;
 unsigned int DEFAULT_BANDWIDTH       = 9;
 unsigned int DEFAULT_NUM_THREADS     = 1;
-unsigned int DEFAULT_SPECIAL_HASHES  = 5;
+unsigned int DEFAULT_SPECIAL_HASHES  = 20;
 
 #define MIN_HASH_SIZE     4
 #define MAX_HASH_SIZE     32
