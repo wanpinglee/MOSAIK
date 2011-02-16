@@ -47,6 +47,15 @@ inline bool isProperOrientation (
 			return false;
 		break;
 
+		case ST_ILLUNIMA_LONG: //illumina long
+			if ( reverseStrandQuery == reverseStrandMate ) return false;
+			if ( reverseStrandQuery && ( referenceBeginQuery < referenceBeginMate) ) return true;
+			if ( !reverseStrandQuery && ( referenceBeginQuery > referenceBeginMate) ) return true;
+
+			return false;
+
+		break;
+
 		default:
 			if ( reverseStrandQuery == reverseStrandMate ) return false;
 			//if ( isQueryFirstMate ) {
