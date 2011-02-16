@@ -257,7 +257,7 @@ inline void CStatisticsMaps::PrintMap(
 	double mean = sum / (double) count;
 	long double std = 0;
 	for ( uint64_t i = 0; i < size; ++i ) {
-		double temp1 = ( start + i ) - mean;
+		double temp1 = ( start + (int64_t)i ) - mean;
 		double temp2 = pow( temp1, 2.0 );
 		double temp3 = temp2 * array[i];
 
