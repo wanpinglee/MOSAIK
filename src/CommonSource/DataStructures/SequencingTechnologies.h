@@ -13,7 +13,7 @@
 
 typedef unsigned short SequencingTechnologies;
 
-// we have space for 10 additional sequencing technologies
+// we have space for 9 additional sequencing technologies
 #define ST_UNKNOWN               0
 #define ST_454                   1
 #define ST_HELICOS               2
@@ -21,3 +21,4 @@ typedef unsigned short SequencingTechnologies;
 #define ST_PACIFIC_BIOSCIENCES   8
 #define ST_SOLID                16
 #define ST_SANGER               32
+#define ST_ILLUMINA_LONG        64

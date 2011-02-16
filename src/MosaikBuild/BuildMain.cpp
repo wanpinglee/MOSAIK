@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-mfl", "median fragment length", "median fragment length. e.g. 150",                                                  "", settings.HasMedianFragmentLength, settings.MedianFragmentLength,     pMetadataOpts);
 	COptions::AddValueOption("-pu", "run name & lane",         "the platform unit. e.g. IL12_490_5",                                                "", settings.HasPlatformUnit,         settings.PlatformUnit,             pMetadataOpts);
 	COptions::AddValueOption("-sam", "sample name",            "sample name. e.g. NA12878",                                                         "", settings.HasSampleName,           settings.SampleName,               pMetadataOpts);
-	COptions::AddValueOption("-st", "sequencing technology",   "sets the sequencing technology: '454', 'helicos', 'illumina', 'sanger' or 'solid'", "", settings.HasSequenceTechnology,   settings.SequenceTechnologyString, pMetadataOpts);
+	COptions::AddValueOption("-st", "sequencing technology",   "sets the sequencing technology: '454', 'helicos', 'illumina', 'illumina_long', 'sanger' or 'solid'", "", settings.HasSequenceTechnology,   settings.SequenceTechnologyString, pMetadataOpts);
 
 	// add the read archive options
 	OptionGroup* pReadArchiveOpts = COptions::CreateOptionGroup("Read Archive Options");
@@ -287,6 +287,8 @@ int main(int argc, char* argv[]) {
 			seqTech = ST_HELICOS;
 		} else if(settings.SequenceTechnologyString == "illumina") {
 			seqTech = ST_ILLUMINA;
+		} else if(settings.SequenceTechnologyString == "illumina_long") {
+			seqTech = ST_ILLUMINA_LONG;
 		} else if(settings.SequenceTechnologyString == "sanger") {
 			seqTech = ST_SANGER;
 		} else if(settings.SequenceTechnologyString == "solid") {

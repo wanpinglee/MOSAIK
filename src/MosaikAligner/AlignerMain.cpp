@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
 	
 	string commandLine;
 	for ( int i = 0; i < argc; ++i )
-		commandLine += argv[i];
+		commandLine = commandLine + argv[i] + " ";
 
 	printf("------------------------------------------------------------------------------\n");
 	printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
