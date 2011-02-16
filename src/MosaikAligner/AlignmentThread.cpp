@@ -174,12 +174,13 @@ void CAlignmentThread::AlignReadArchive(
 	BamWriters*      pBams) {
 
 	// create our local alignment models
-	const bool isUsing454      = (mSettings.SequencingTechnology == ST_454      ? true : false);
-	const bool isUsingIllumina = (mSettings.SequencingTechnology == ST_ILLUMINA ? true : false);
-	const bool isUsingSOLiD    = (mSettings.SequencingTechnology == ST_SOLID    ? true : false);
+	const bool isUsing454          = (mSettings.SequencingTechnology == ST_454      ? true : false);
+	const bool isUsingIllumina     = (mSettings.SequencingTechnology == ST_ILLUMINA ? true : false);
+	const bool isUsingSOLiD        = (mSettings.SequencingTechnology == ST_SOLID    ? true : false);
+	const bool isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
 
 	// catch unsupported local alignment search sequencing technologies
-	if(mFlags.UseLocalAlignmentSearch && (!isUsing454 && !isUsingIllumina)) {
+	if(mFlags.UseLocalAlignmentSearch && (!isUsing454 && !isUsingIllumina && !isUsingIlluminaLong)) {
 		cout << "ERROR: This sequencing technology is not currently supported for local alignment search." << endl;
 		exit(1);
 	}
@@ -197,7 +198,7 @@ void CAlignmentThread::AlignReadArchive(
 
 	// keep reading until no reads remain
 	Mosaik::Read mr;
-	CNaiveAlignmentSet mate1Alignments(mReferenceLength, (isUsingIllumina || isUsingSOLiD)), mate2Alignments(mReferenceLength, (isUsingIllumina || isUsingSOLiD));
+	CNaiveAlignmentSet mate1Alignments(mReferenceLength, (isUsingIllumina || isUsingSOLiD || isUsingIlluminaLong)), mate2Alignments(mReferenceLength, (isUsingIllumina || isUsingSOLiD || isUsingIlluminaLong));
 
 	while(true) {
 
@@ -334,12 +335,20 @@ void CAlignmentThread::AlignReadArchive(
 				// create the appropriate local alignment search model
 				LocalAlignmentModel lam;
 				if(uniqueIter->IsReverseStrand) {
-					if(isUsingIllumina) lam.IsTargetBeforeUniqueMate = true;
-					else if(isUsing454) lam.IsTargetReverseStrand    = true;
+					if( isUsingIllumina ) 
+						lam.IsTargetBeforeUniqueMate = true;
+					else if( isUsing454 ) 
+						lam.IsTargetReverseStrand    = true;
 					// NB: we caught other technologies during initialization
 				} else {
-					if(isUsingIllumina) lam.IsTargetReverseStrand    = true;
-					else if(isUsing454) lam.IsTargetBeforeUniqueMate = true;
+					if( isUsingIllumina ) 
+						lam.IsTargetReverseStrand    = true;
+					else if( isUsing454 ) 
+						lam.IsTargetBeforeUniqueMate = true;
+					else if ( isUsingIlluminaLong ) {
+						lam.IsTargetReverseStrand    = true;
+						lam.IsTargetBeforeUniqueMate = true;
+					}
 					// NB: we caught other technologies during initialization
 				}
 

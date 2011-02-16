@@ -307,7 +307,7 @@ void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId )
 
 		// print model
 		total = f1_f2 + f1_r2 + r1_f2 + r1_r2 + f2_f1 + f2_r1 + r2_f1 + r2_r1;
-		fprintf( fOut, "\n OC orientation combinations\n");
+		fprintf( fOut, "\nOC orientation combinations\n");
 		fprintf( fOut, "\tTOT\tMEAN\tSTD\tIN\tOVER\tUNDER\n" );
 		fprintf( fOut, "\t%lu\t0\t0\t%lu\t0\t0\n", total, total );
 		fprintf( fOut, "\tbin\tcombo\tn\tcum\tlabel\n");

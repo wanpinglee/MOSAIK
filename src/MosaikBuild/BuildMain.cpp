@@ -295,7 +295,7 @@ int main(int argc, char* argv[]) {
 			seqTech = ST_SOLID;
 			settings.EnableColorspace = true;
 		} else {
-			errorBuilder << ERROR_SPACER << "Unknown sequencing technology. Please choose between '454', 'helicos', 'illumina', 'sanger', or 'solid'." << endl;
+			errorBuilder << ERROR_SPACER << "Unknown sequencing technology. Please choose between '454', 'helicos', 'illumina', 'illumina_long', 'sanger', or 'solid'." << endl;
 			foundError = true;
 		}
 	}
