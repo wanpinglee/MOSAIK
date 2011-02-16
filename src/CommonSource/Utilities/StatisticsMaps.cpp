@@ -160,6 +160,17 @@ inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment
 				}
 			}
 			break;
+
+		case ST_ILLUMINA_LONG:
+			if ( strand1 != strand2 ) {
+				if ( al1.ReferenceIndex != al2.ReferenceIndex )
+					okay = false;
+				else {
+					okay = true;
+					length = strand1 ? (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1 : (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1;
+				}
+			}
+		break;
 		default:
 			if ( strand1 != strand2 ) {
 				if ( al1.ReferenceIndex != al2.ReferenceIndex )
@@ -264,7 +275,7 @@ inline void CStatisticsMaps::PrintMap(
 			continue;
 
 		cum += array[i];
-		fprintf( fOut, "\t%lu\t%lu\t%lu\t%lu\n", i, i + start, array[i], cum );
+		fprintf( fOut, "\t%lu\t%ld\t%lu\t%lu\n", i, i + start, array[i], cum );
 	}
 }
 
