@@ -48,6 +48,55 @@ CStatisticsMaps::CStatisticsMaps( void )
 	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
 }
 
+
+CStatisticsMaps::CStatisticsMaps( int64_t mfl )
+	: _fragmentLength(0)
+	, _localSearchRadius(0)
+	, _allowedMismatch(0)
+	, _setExpectedStatistics(false)
+	, nFragment(10000)
+	, nFrangmentOver(0)
+	, nFrangmentUnder(0)
+	, minFragment(-mfl)
+	, nReadLength(1000)
+	, nReadLengthOver(0)
+	, nReadLengthUnder(0)
+	, nMultiplicity(1000)
+	, nMultiplicityOver(0)
+	, nMultiplicityUnder(0)
+	, nMappingQuality(100)
+	, nMappingQualityOver(0)
+	, nMappingQualityUnder(0)
+	, nMismatch(100)
+	, nMismatchOver(0)
+	, nMismatchUnder(0)
+	, non_unique(0)
+	, non_multiple(0)
+	, unique_unique(0)
+	, unique_multiple(0)
+	, multiple_multiple(0)
+	, f1_f2(0)
+	, f1_r2(0)
+	, r1_f2(0)
+	, r1_r2(0)
+	, f2_f1(0)
+	, f2_r1(0)
+	, r2_f1(0)
+	, r2_r1(0)
+{
+	fragments        = new uint64_t [ nFragment ];
+	readLengths      = new uint64_t [ nReadLength ];
+	multiplicities   = new uint64_t [ nMultiplicity ];
+	mappingQualities = new uint64_t [ nMappingQuality ];
+	mismatches       = new uint64_t [ nMismatch ];
+	
+	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
+	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
+	memset ( multiplicities, 0, nMultiplicity * sizeof(uint64_t) );
+	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
+	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
+}
+
 CStatisticsMaps::~CStatisticsMaps( void ) {
 	if ( fragments )        delete [] fragments;
 	if ( readLengths )      delete [] readLengths;
@@ -60,6 +109,11 @@ CStatisticsMaps::~CStatisticsMaps( void ) {
 	multiplicities   = NULL;
 	mappingQualities = NULL;
 	mismatches       = NULL;
+}
+
+// Note: once starting to calculate the map, don't use this function to change minFragment
+void CStatisticsMaps::SetlfMin( int64_t flMin ) {
+	minFragment = flMin;
 }
 
 void CStatisticsMaps::SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch ) {

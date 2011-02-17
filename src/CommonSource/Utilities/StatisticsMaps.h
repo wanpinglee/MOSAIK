@@ -17,12 +17,14 @@ using namespace std;
 class CStatisticsMaps {
 	public:
 		CStatisticsMaps( void );
+		CStatisticsMaps( int64_t mfl );
 		~CStatisticsMaps( void );
 		
 		void SaveRecord( const Alignment& al1, const Alignment& al2, const bool isPairedEnd, const SequencingTechnologies& tech );
 		void PrintMaps( const char* filename, const char* readGroupId );
 		void SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch );
 		void Reset( void );
+		void SetlfMin( int64_t flMin );
 
 	private:
 		// copy constructor

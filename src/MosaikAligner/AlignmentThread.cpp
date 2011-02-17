@@ -553,6 +553,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
+					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				}
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -560,6 +561,7 @@ if ( mr.Name == "ERR022466.2297382" ) {
 			if ( isPairedEnd && isMate2Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
+					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
