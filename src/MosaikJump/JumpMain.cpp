@@ -57,6 +57,8 @@ struct ConfigurationSettings {
 		, HasSortingMemory(false)
 		, KeepKeysOnDisk(false)
 		, LimitHashPositions(false)
+		, HashPositionThreshold(0)
+		, HashSize(0)
 		, SortingMemory(DEFAULT_SORTING_MEMORY)
 	{}
 };
