@@ -27,11 +27,12 @@ using namespace std;
 string DEFAULT_ALGORITHM = "all";
 string DEFAULT_MODE      = "all";
 
-unsigned char DEFAULT_HASH_SIZE      = 15;
-unsigned char DEFAULT_NUM_MISMATCHES = 4;
-unsigned int DEFAULT_BANDWIDTH       = 9;
-unsigned int DEFAULT_NUM_THREADS     = 1;
-unsigned int DEFAULT_SPECIAL_HASHES  = 20;
+unsigned char DEFAULT_HASH_SIZE             = 15;
+//unsigned char DEFAULT_NUM_MISMATCHES        = 4;
+double        DEFAULT_PERCENTAGE_MISMATCHES = 0.15;
+unsigned int DEFAULT_BANDWIDTH              = 9;
+unsigned int DEFAULT_NUM_THREADS            = 1;
+unsigned int DEFAULT_SPECIAL_HASHES         = 20;
 
 #define MIN_HASH_SIZE     4
 #define MAX_HASH_SIZE     32
@@ -142,11 +143,12 @@ struct ConfigurationSettings {
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
+		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
 		, JumpCacheMemory(0)
-		, NumMismatches(DEFAULT_NUM_MISMATCHES)
+//		, NumMismatches(DEFAULT_NUM_MISMATCHES)
 		, NumThreads(DEFAULT_NUM_THREADS)
 		, SpecialHashCount(DEFAULT_SPECIAL_HASHES)
 	{}
@@ -269,7 +271,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	if(!settings.CheckNumMismatches && !settings.CheckMismatchPercent && !settings.CheckAlignmentQuality) {
-		settings.CheckNumMismatches = true;
+		//settings.CheckNumMismatches = true;
+		settings.CheckMismatchPercent = true;
 	}
 
 	// figure out which algorithm to use
