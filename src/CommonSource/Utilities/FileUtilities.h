@@ -12,11 +12,15 @@
 
 #ifdef WIN32
 #include <windows.h>
+#include <winsock2.h>
+#include <process.h>
+#include <io.h>
 #else
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <fcntl.h>
 #endif
 
 #include <vector>
@@ -26,11 +30,13 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+#include <errno.h>
 #include "Mosaik.h"
 #include "LargeFileSupport.h"
 
 #define COPY_BUFFER_SIZE     409600
 #define TEMP_FILENAME_LENGTH 32
+#define MAX_TMP_TRYING_TIME 50000
 
 #ifdef WIN32
 #define rm(a) _unlink(a)
@@ -44,8 +50,10 @@ class CFileUtilities {
 public:
 	// checks if a file exists, exits otherwise
 	static bool CheckFile(const char* filename, bool showError);
+	// delete the directory
+	static bool DeleteDir( string directory );
 	// checks if a directory exists, exits otherwise
-	static void CheckDirectory(const string& directory);
+	//static void CheckDirectory(const string& directory);
 	// checks if a directory exists, creates it otherwise
 	static void CreateDir(const char* directory);
 	// calculates the file size for the given filename
@@ -64,4 +72,6 @@ public:
 	static off_type GetFileSize(const char* filename);
 	// returns true if a directory exists, false otherwise
 	static bool DirExists(const char* directory);
+	static bool CheckTempFile( const char* filename, bool showError );
+
 };

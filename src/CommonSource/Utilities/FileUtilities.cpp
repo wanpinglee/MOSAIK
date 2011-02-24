@@ -18,38 +18,117 @@
 // checks if a file exists, exits otherwise
 bool CFileUtilities::CheckFile(const char* filename, bool showError) {
 
-	bool fileExists = false;
+	bool fileExists = true;
 
+#ifdef WIN32
 	// open the file
-	ifstream in(filename);
+        int fd = _open(filename, O_RDONLY);
+#else
+	int fd = open(filename, O_RDONLY);
+#endif
 
-	if(in.fail()) {
-		if(showError) {
-			cout << "ERROR: Could not open " << filename << " for reading." << endl;
-			exit(1);
-		}
-	} else fileExists = true;
+	if (fd < 0)
+        {
+            if(showError) 
+            {
+                cout << "ERROR: Could not open " << filename << " for reading." << endl;
+                exit(1);
+            }
+	} 
+        else 
+            fileExists = false;
 
 	// close the file
-	in.close();
+        close(fd);
+
+	return fileExists;
+}
+
+// checks if a file exists, exits otherwise
+bool CFileUtilities::CheckTempFile(const char* filename, bool showError) {
+
+	bool fileExists = true;
+
+	// open the file
+#ifdef WIN32
+        int fd = _open(filename, O_RDWR|O_CREAT|O_EXCL, 0600);
+#else
+	int fd = open(filename, O_RDWR|O_CREAT|O_EXCL, 0600);
+#endif
+	if (fd < 0)
+        {
+            if(showError) 
+            {
+                cout << "ERROR: Could not open " << filename << " for reading." << endl;
+                exit(1);
+            }
+	} 
+        else 
+            fileExists = false;
+
+	// close the file
+        close(fd);
 
 	return fileExists;
 }
 
 // checks if a directory exists, exits otherwise
-void CFileUtilities::CheckDirectory(const string& directory) {
+//void CFileUtilities::CheckDirectory(const string& directory) {
+//
+//	if( !DirExists( directory.c_str() ) ) {
+//		cout << "ERROR: Could not find directory: " << directory << endl;
+//		exit(1);
+//	}
+//}
 
-	if(!DirExists(directory.c_str())) {
-		cout << "ERROR: Could not find directory: " << directory << endl;
-		exit(1);
+// delete the directory
+bool CFileUtilities::DeleteDir ( string directory ) {
+	
+	if( !DirExists( directory.c_str() ) ) return false;
+	uint64_t directoryLen = directory.size();
+
+#ifdef WIN32
+	if ( directory[ directoryLen - 1 ] != '\\' )
+		directory += '\\';
+#else
+	if ( directory[ directoryLen - 1 ] != OS_DIRECTORY_SEPARATOR )
+		directory += OS_DIRECTORY_SEPARATOR;
+#endif
+
+	// first off, we need to create a pointer to a directory
+	DIR *pdir = NULL; // remember, it's good practice to initialise a pointer to NULL!
+	pdir = opendir ( directory.c_str() );
+	if (pdir == NULL) // if pdir wasn't initialised correctly
+		return false;
+
+	string file;
+	int counter = 1; // use this to skip the first TWO which cause an infinite loop (and eventually, stack overflow)
+	struct dirent *pent = NULL;
+	while ( ( pent = readdir ( pdir ) ) != NULL ) { // while there is still something in the directory to list
+		if ( counter > 2 ) {
+			
+			if ( pent == NULL ) // if pent has not been initialised correctly
+				return false; // we couldn't do it
+			
+			file = directory + pent->d_name; // concatenate the strings to get the complete path
+			remove( file.c_str() );
+		}
+
+		counter++;
 	}
+
+	// finally, let's clean up
+	closedir ( pdir ); // close the directory
+	if (!rmdir( directory.c_str() ) ) return false; // delete the directory
+
+	return true;
 }
 
 // checks if a directory exists, creates it otherwise
 void CFileUtilities::CreateDir(const char* directory) {
 
 	// return if the directory already exists
-	if(DirExists(directory)) return;
+	if( DirExists( directory ) ) return;
 
 #ifdef WIN32
 
@@ -100,9 +179,14 @@ bool CFileUtilities::DirExists(const char* directory) {
 	delete [] wDirectory;
 
 #else
+	struct stat st;
 
-	DIR *pDirectory = opendir(directory);
-	if(pDirectory != NULL) foundDirectory = true;
+	if ( stat( directory, &st ) == 0 )
+		foundDirectory = true;
+	
+	
+	//DIR *pDirectory = opendir(directory);
+	//if ( pDirectory != NULL ) foundDirectory = true;
 
 #endif
 
@@ -253,6 +337,11 @@ void CFileUtilities::CopyFile(const char* filename, const char* directory) {
 void CFileUtilities::GetTempDirectory(string& tempDirectory) {
 
 	const char* MOSAIK_TMP = "MOSAIK_TMP";
+	// get hostname
+	char hostname[256];
+	uint32_t isHostname;
+	isHostname = gethostname( hostname, sizeof(hostname) );
+
 
 #ifdef WIN32
 
@@ -278,64 +367,117 @@ void CFileUtilities::GetTempDirectory(string& tempDirectory) {
 	tempDirectory = tmpDir;
 	tempDirectory += '\\';
 
+	if ( isHostname == 0 ) {
+		tempDirectory += hostname;
+		tempDirectory += '.';
+	}
+
+	char pidChar[ 16 ];
+	memset( pidChar, 0, sizeof(char) * 16 );
+	sprintf( pidChar, "%u", getpid() );
+	tempDirectory += pidChar;
+	tempDirectory += '\\';
+
+	// checks if a directory exists, creates it otherwise
+	CreateDir( tempDirectory.c_str() );
+
+
 	// clean up
 	delete [] tmpDir;
 #else
-	char* tmpDir = getenv(MOSAIK_TMP);
-	if(tmpDir) {
+	char* tmpDir = getenv( MOSAIK_TMP );
+	if( tmpDir ) {
 		tempDirectory = tmpDir;
-		if(tempDirectory[tempDirectory.size() - 1] != OS_DIRECTORY_SEPARATOR)
+		if( tempDirectory[ tempDirectory.size() - 1 ] != OS_DIRECTORY_SEPARATOR)
 			tempDirectory += OS_DIRECTORY_SEPARATOR;
-	} else tempDirectory = "/tmp/";
+	} else {
+		tempDirectory = "/tmp/";
+	}
+
+	if ( isHostname == 0 ) {
+		tempDirectory += hostname;
+		tempDirectory += '.';
+	}
+
+	char pidChar[ 16 ];
+	memset( pidChar, 0, sizeof(char) * 16 );
+	sprintf( pidChar, "%u", getpid() );
+	tempDirectory += pidChar;
+	tempDirectory += OS_DIRECTORY_SEPARATOR;
+
+	// checks if a directory exists, creates it otherwise
+	CreateDir( tempDirectory.c_str() );
+
 #endif
 }
 
 // generates a random filename in the temp directory
 void CFileUtilities::GetTempFilename(string& tempFilename) {
 
-	unsigned int seed;
+        uint64_t value = 0;
+        //char hostname[256];
 
 #ifdef WIN32
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
-	seed = ft.dwLowDateTime;
+        value += _getpid();
 #else
 	timeval ft;
 	gettimeofday(&ft, NULL);
-	seed = (unsigned int)ft.tv_usec;
+        value += ((uint64_t) ft.tv_usec << 16) ^ ft.tv_sec ^ getpid();
 #endif
 
 	// seed the random number generator with supplied seed and time
-	srand(seed);
-
 	// define our set of random characters
-	string randomChars = "abcdefghijklmnopqrstuvwxyz0123456789";
-	unsigned int numRandomChars = (unsigned int)randomChars.size();
+        static const char letters[]= "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	//static const char letters[]= "abcdefghijklmnopqrstuvwxyz0123456789";
 
 	// get our temporary directory
 	string tempDirectory;
-	GetTempDirectory(tempDirectory);
+	GetTempDirectory( tempDirectory );
 
-	// define a stringbuilder
-	ostringstream sb;
+        // get host name
+        //int ghnVal = gethostname( hostname, sizeof(hostname) );
+        //if (ghnVal == 0)
+        //{
+        //    tempFilename = tempDirectory + hostname + "XXXXXX";
+        //}
+        //else
+        //{
+        //    tempFilename = tempDirectory + "XXXXXX";
+        //}
+	tempFilename = tempDirectory + "XXXXXX";
 
 	bool filenameExists = true;
-	while(filenameExists) {
+        unsigned int count  = 0;
+        unsigned int length = tempFilename.size();
+	while(count++ < MAX_TMP_TRYING_TIME) 
+        {
+            uint64_t tempValue = value;
 
-		sb << tempDirectory;
+            // build our random filename
+            for(unsigned int i = 0; i != 6; ++i)
+            {
+                tempFilename[length - 6 + i] = letters[tempValue % 62];
+                tempValue /= 62;
+            }
 
-		// build our random filename
-		for(unsigned int i = 0; i < TEMP_FILENAME_LENGTH; i++)
-			sb << randomChars[rand() % numRandomChars];
+            // check if the file exists
+            filenameExists = CheckTempFile(tempFilename.c_str(), false);
 
-		// add our file extension
-		sb << ".tmp";
-		tempFilename = sb.str();
-		sb.str("");
-
-		// check if the file exists
-		filenameExists = CheckFile(tempFilename.c_str(), false);
+            if (filenameExists) {
+#ifdef WIN32
+		value += 7777;
+#else
+		gettimeofday(&ft, NULL);
+		value += ((uint64_t) ft.tv_usec << 16) ^ ft.tv_sec ^ getpid();
+#endif
+            }else 
+                return;
 	}
+
+        // exceed the maximum trying time
+        // report an error
+        cout << "Can not create a temporary file: " << tempFilename << endl;
+        exit(1);
 }
 
 // returns the file size for the specified filename

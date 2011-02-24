@@ -286,7 +286,28 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-
+/*
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Cv2mO");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edufRXZN6");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Bo8HY");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edudHlwk5");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu7bPZFH");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduMLRPfp");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduzklS4g");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduM4tV5Z");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduyGTdXA");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduk0IzMn");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduv9PGwi");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduFKaufG");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edubsrRqT");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edudcbwou");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduqQFeSM");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduaJXgUb");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduOFjjrz");
+            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edunz8kOR");
+            MergeArchives();
+            exit(1);
+*/
 // ***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
@@ -494,6 +515,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	if ( mFlags.UseLowMemory )
 		MergeArchives();
 
+	// clean up temp files
+	string tempDir;
+	CFileUtilities::GetTempDirectory( tempDir );
+	if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
+	        cout << endl << "- cleaning up temp files...";
+		CFileUtilities::DeleteDir( tempDir );
+		cout << "finished." << endl;
+	}
+
 	PrintStatistics();
 }
 
@@ -596,7 +626,7 @@ void CMosaikAligner::GroupReferences( const vector<ReferenceSequence>& reference
 
 
 void CMosaikAligner::MergeArchives(void) {
-	
+
 	// set active threads
 	unsigned int nThread = ( mSettings.NumThreads < outputFilenames.size() ) ? mSettings.NumThreads : outputFilenames.size();
 	
@@ -606,6 +636,8 @@ void CMosaikAligner::MergeArchives(void) {
 		string tempFilename;
 		CFileUtilities::GetTempFilename(tempFilename);
 		temporaryFiles[i] = tempFilename;
+
+cerr << outputFilenames[i] << endl;
 	}
 
         // calculate total # of reads
@@ -644,7 +676,7 @@ void CMosaikAligner::MergeArchives(void) {
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
 		//cerr << outputFilenames[i] << endl;
-		rm(outputFilenames[i].c_str());
+		//rm(outputFilenames[i].c_str());
 	//cerr << endl;
 
 

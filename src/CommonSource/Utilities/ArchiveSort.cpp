@@ -26,8 +26,12 @@ CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsign
 	,_readCounterMutex(readCounterMutex)
 	,_medianFragmentLength(medianFragmentLength)
 {
-	_alignedReadCacheSize = 100000;
+	_alignedReadCacheSize = 700000;
 	_extendedFragmentLength = 3;
+
+
+	//string filename = outputFilename + ".log";
+	//tempfile.open( filename.c_str() );
 
 }
 
@@ -50,6 +54,8 @@ void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::Alig
 	string tempFilename;
 	CFileUtilities::GetTempFilename(tempFilename);
 	tempFiles.push_back(tempFilename);
+
+	//tempfile << tempFilename << endl;
 
 	MosaikReadFormat::CAlignmentWriter writer;
 	writer.Open(tempFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);

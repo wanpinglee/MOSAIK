@@ -143,6 +143,12 @@ namespace MosaikReadFormat {
 		mReadGroups.clear();
 		mHeaderTags.clear();
 		mReadGroupLUT.clear();
+
+		if(mBuffer)            delete mBuffer;
+		if(mCompressionBuffer) delete mCompressionBuffer;
+
+		mBuffer            = NULL;
+
 		if ( MosaikSignature ) delete [] MosaikSignature;
 		MosaikSignature = NULL;
 		fclose(mInStream);
@@ -460,6 +466,7 @@ namespace MosaikReadFormat {
 
 		mInputFilename = filename;
 
+		mInStream = NULL;
 		if(fopen_s(&mInStream, filename.c_str(), "rb") != 0) {
 			cout << "ERROR: Could not open the compressed alignment archive (" << mInputFilename << ") for reading." << endl;
 			exit(1);

@@ -16,6 +16,9 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 
 typedef int errno_t;
 #define EINVAL 22
@@ -45,7 +48,9 @@ inline errno_t memmove_s(void *dest, size_t numberOfElements, const void *src, s
 
 inline errno_t fopen_s(FILE** pFile, const char *filename, const char *mode) {
 	*pFile = fopen(filename, mode);
-	if(*pFile) return 0;
+	if( *pFile != NULL ) return 0;
+
+	fprintf (stderr, "Failed to open the file; the reason *may* have been \"%s\".\n", strerror(errno));
 	return EINVAL;
 }
 

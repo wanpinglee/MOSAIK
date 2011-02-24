@@ -329,6 +329,8 @@ namespace MosaikReadFormat {
 		mReferenceSequences.clear();
 		mIndex.clear();
 		mHeaderTags.clear();
+               	if(mBuffer)            delete [] mBuffer;
+		if(mCompressionBuffer) delete mCompressionBuffer;
 		if ( MosaikSignature ) delete [] MosaikSignature;
 		MosaikSignature = NULL;
 

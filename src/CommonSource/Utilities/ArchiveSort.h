@@ -22,6 +22,8 @@
 #include <list>
 #include <algorithm>
 #include <limits.h>
+#include <iostream>
+#include <fstream>
 
 #include "Alignment.h"
 #include "SortNMergeUtilities.h"
@@ -83,6 +85,9 @@ class CArchiveSort {
 
 		void SortNStoreCache( vector< string >& tempFiles, list<Mosaik::AlignedRead>& _alignedReadCache );
 		void SortNStoreTemp ( vector< string >& tempFiles );
+
+
+		//ofstream tempfile;
 
 
 
