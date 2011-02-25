@@ -16,7 +16,7 @@ SOURCES= AlignmentQuality.cpp ArchiveMerge.cpp ArchiveSort.cpp Benchmark.cpp Bes
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 
-CSOURCES = fastlz.c md5.c sqlite3.c
+CSOURCES = fastlz.c md5.c
 COBJECTS= $(CSOURCES:.c=.o)
 CBUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(COBJECTS))
 
