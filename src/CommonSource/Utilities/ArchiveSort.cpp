@@ -26,8 +26,8 @@ CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsign
 	,_readCounterMutex(readCounterMutex)
 	,_medianFragmentLength(medianFragmentLength)
 {
-	_alignedReadCacheSize = 700000;
-	_extendedFragmentLength = 3;
+	_alignedReadCacheSize = 500000;
+	//_extendedFragmentLength = 3;
 
 
 	//string filename = outputFilename + ".log";
@@ -269,12 +269,12 @@ void CArchiveSort::Sort(){
 			break;
 
 		// sort alignments by their positions
-		bool isMm = ( mr.Mate1Alignments.size() > 1 ) && ( mr.Mate2Alignments.size() > 1 );
+		//bool isMm = ( mr.Mate1Alignments.size() > 1 ) && ( mr.Mate2Alignments.size() > 1 );
 		//bool isUm = (( mr.Mate1Alignments.size() == 1 ) && ( mr.Mate2Alignments.size() > 1 )) || (( mr.Mate1Alignments.size() > 1 ) && ( mr.Mate2Alignments.size() == 1 ));
 		//if ( isMm || isUm ) 
 		// TODO: should calculate the fragment length before sorting
-		if ( isMm )
-			SortNMergeUtilities::KeepProperPair(mr, _medianFragmentLength * _extendedFragmentLength );
+		//if ( isMm )
+		//	SortNMergeUtilities::KeepProperPair(mr, _medianFragmentLength * _extendedFragmentLength );
 
 		if ( count == _alignedReadCacheSize ) {
 			// sort and store alignment

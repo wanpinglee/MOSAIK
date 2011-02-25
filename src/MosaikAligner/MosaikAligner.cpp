@@ -286,7 +286,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-/*
+
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Cv2mO");
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edufRXZN6");
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Bo8HY");
@@ -316,7 +316,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
             exit(1);
-*/
+
 // ***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
@@ -662,8 +662,8 @@ void CMosaikAligner::MergeArchives(void) {
 
 	// if nThread is too large, it'll open too many files at the same time.
 	// Then, we'll get an error since system doesn't allow us to open any file.
-	if ( nThread > 7 )
-		nThread = 7;
+	if ( nThread > 10 )
+		nThread = 10;
 
 	// prepare reference offset vector for SOLiD
 	//vector<unsigned int> refOffsets;

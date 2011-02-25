@@ -77,7 +77,7 @@ class CArchiveSort {
 		unsigned int *_readCounter;
 		pthread_mutex_t *_readCounterMutex;
 		unsigned int _medianFragmentLength;
-		unsigned int _extendedFragmentLength;
+		//unsigned int _extendedFragmentLength;
 
 		vector<ReferenceSequence>           _referenceSequences;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;
