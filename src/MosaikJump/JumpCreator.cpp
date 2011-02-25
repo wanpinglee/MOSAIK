@@ -96,9 +96,10 @@ CJumpCreator::~CJumpCreator(void) {
 	fclose(mPositions);
 	//if(mLogHashPositions) gzclose(mHashPositionLog);
 
+
 	// delete our temporary files
-	for(unsigned int i = 0; i < mSerializedPositionsFilenames.size(); i++)
-		rm(mSerializedPositionsFilenames[i].c_str());
+	//for(unsigned int i = 0; i < mSerializedPositionsFilenames.size(); i++)
+	//	rm(mSerializedPositionsFilenames[i].c_str());
 }
 
 // builds the jump database

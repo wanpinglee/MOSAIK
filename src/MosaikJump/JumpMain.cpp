@@ -158,6 +158,15 @@ int main(int argc, char* argv[]) {
 	// build the jump database
 	jc.BuildJumpDatabase();
 
+	// clean up temp files
+	string tempDir;
+	CFileUtilities::GetTempDirectory( tempDir );
+	if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
+		cout << endl << "- cleaning up temp files...";
+		CFileUtilities::DeleteDir( tempDir );
+		cout << "finished." << endl;
+	}
+
 	// ==================
 	// Show total runtime
 	// ==================

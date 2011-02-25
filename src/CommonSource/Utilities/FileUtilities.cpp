@@ -102,19 +102,13 @@ bool CFileUtilities::DeleteDir ( string directory ) {
 		return false;
 
 	string file;
-	int counter = 1; // use this to skip the first TWO which cause an infinite loop (and eventually, stack overflow)
 	struct dirent *pent = NULL;
 	while ( ( pent = readdir ( pdir ) ) != NULL ) { // while there is still something in the directory to list
-		if ( counter > 2 ) {
+		if ( pent == NULL ) // if pent has not been initialised correctly
+			return false; // we couldn't do it
 			
-			if ( pent == NULL ) // if pent has not been initialised correctly
-				return false; // we couldn't do it
-			
-			file = directory + pent->d_name; // concatenate the strings to get the complete path
-			remove( file.c_str() );
-		}
-
-		counter++;
+		file = directory + pent->d_name; // concatenate the strings to get the complete path
+		remove( file.c_str() );
 	}
 
 	// finally, let's clean up

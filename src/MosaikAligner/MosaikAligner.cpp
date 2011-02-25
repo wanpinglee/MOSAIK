@@ -306,6 +306,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduOFjjrz");
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edunz8kOR");
             MergeArchives();
+
+	string tempDir1;
+	CFileUtilities::GetTempDirectory( tempDir1 );
+	if ( CFileUtilities::DirExists( tempDir1.c_str() ) ) {
+	        cout << endl << "- cleaning up temp files...";
+		CFileUtilities::DeleteDir( tempDir1 );
+		cout << "finished." << endl;
+	}
+
             exit(1);
 */
 // ***************** DEBUG ********************************
@@ -636,8 +645,6 @@ void CMosaikAligner::MergeArchives(void) {
 		string tempFilename;
 		CFileUtilities::GetTempFilename(tempFilename);
 		temporaryFiles[i] = tempFilename;
-
-cerr << outputFilenames[i] << endl;
 	}
 
         // calculate total # of reads
