@@ -3,7 +3,7 @@
 CStatisticsMaps::CStatisticsMaps( void )
 	: _fragmentLength(0)
 	, _localSearchRadius(0)
-	, _allowedMismatch(0)
+	, _allowedMismatch(0.0)
 	, _setExpectedStatistics(false)
 	, nFragment(10000)
 	, nFrangmentOver(0)
@@ -12,7 +12,7 @@ CStatisticsMaps::CStatisticsMaps( void )
 	, nReadLength(1000)
 	, nReadLengthOver(0)
 	, nReadLengthUnder(0)
-	, nMultiplicity(1000)
+	, nMultiplicity(5000)
 	, nMultiplicityOver(0)
 	, nMultiplicityUnder(0)
 	, nMappingQuality(100)
@@ -52,7 +52,7 @@ CStatisticsMaps::CStatisticsMaps( void )
 CStatisticsMaps::CStatisticsMaps( int64_t mfl )
 	: _fragmentLength(0)
 	, _localSearchRadius(0)
-	, _allowedMismatch(0)
+	, _allowedMismatch(0.0)
 	, _setExpectedStatistics(false)
 	, nFragment(10000)
 	, nFrangmentOver(0)
@@ -61,7 +61,7 @@ CStatisticsMaps::CStatisticsMaps( int64_t mfl )
 	, nReadLength(1000)
 	, nReadLengthOver(0)
 	, nReadLengthUnder(0)
-	, nMultiplicity(1000)
+	, nMultiplicity(5000)
 	, nMultiplicityOver(0)
 	, nMultiplicityUnder(0)
 	, nMappingQuality(100)
@@ -348,7 +348,7 @@ void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId )
 			exit(1);
 		}
 		PrintMap( fOut, buffer,                nFragment,       nFrangmentOver,      nFrangmentUnder,      fragments,        minFragment );
-		PrintMap( fOut, "LR read length",               nReadLength,     nReadLengthOver,     nReadLengthUnder,     readLengths,      0 );
+		PrintMap( fOut, "LR read mapping length",               nReadLength,     nReadLengthOver,     nReadLengthUnder,     readLengths,      0 );
 		PrintMap( fOut, "NA read mapping multiplicity", nMultiplicity,   nMultiplicityOver,   nMultiplicityUnder,   multiplicities,   0 );
 		PrintMap( fOut, "RQ read map quality",          nMappingQuality, nMappingQualityOver, nMappingQualityUnder, mappingQualities, 0 );
 		n = sprintf( buffer, "MM read map mismatch (-mm/-mmp: %4.2f)", _allowedMismatch );
