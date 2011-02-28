@@ -96,7 +96,7 @@ struct ConfigurationSettings {
 
 	// constructor
 	ConfigurationSettings()
-		: DisableTrimmer(false)
+		: DisableTrimmer(true)
 		, EnableColorspace(false)
 		, HasBaseQualityFasta2Filename(false)
 		, HasBaseQualityFastaFilename(false)
@@ -205,14 +205,14 @@ int main(int argc, char* argv[]) {
 	// add the read archive options
 	OptionGroup* pReadArchiveOpts = COptions::CreateOptionGroup("Read Archive Options");
 	COptions::AddValueOption("-out", "MOSAIK read filename", "the output read file",                     "", settings.HasOutputReadsFilename, settings.OutputReadsFilename, pReadArchiveOpts);
-	COptions::AddValueOption("-p",   "read name prefix",     "adds the prefix to each read name",        "", settings.HasReadNamePrefix,      settings.ReadNamePrefix,      pReadArchiveOpts);
-	COptions::AddValueOption("-rl",  "# of reads",           "limits the # of reads processed",          "", settings.HasReadLimit,           settings.ReadLimit,           pReadArchiveOpts);
-	COptions::AddOption("-nt",  "don't trim any bases", settings.DisableTrimmer, pReadArchiveOpts);
-	COptions::AddValueOption("-tn",  "# of characters",      "sets the max # of internal Ns allowed",    "", settings.SetNumNBasesAllowed,    settings.NumNBasesAllowed,    pReadArchiveOpts);
-	COptions::AddValueOption("-tp",  "# of beginning bases", "trims the first # of bases",               "", settings.HasTrimPrefixBases,     settings.NumTrimPrefixBases,  pReadArchiveOpts);
-	COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
-	COptions::AddValueOption("-tpr", "# of characters",      "trims the first characters from the name", "", settings.HasTrimPrefixName,      settings.NumTrimPrefixName,   pReadArchiveOpts);
-	COptions::AddValueOption("-tsr", "# of characters",      "trims the last characters from the name",  "", settings.HasTrimSuffixName,      settings.NumTrimSuffixName,   pReadArchiveOpts);
+	//COptions::AddValueOption("-p",   "read name prefix",     "adds the prefix to each read name",        "", settings.HasReadNamePrefix,      settings.ReadNamePrefix,      pReadArchiveOpts);
+	//COptions::AddValueOption("-rl",  "# of reads",           "limits the # of reads processed",          "", settings.HasReadLimit,           settings.ReadLimit,           pReadArchiveOpts);
+	//COptions::AddOption("-nt",  "don't trim any bases", settings.DisableTrimmer, pReadArchiveOpts);
+	//COptions::AddValueOption("-tn",  "# of characters",      "sets the max # of internal Ns allowed",    "", settings.SetNumNBasesAllowed,    settings.NumNBasesAllowed,    pReadArchiveOpts);
+	//COptions::AddValueOption("-tp",  "# of beginning bases", "trims the first # of bases",               "", settings.HasTrimPrefixBases,     settings.NumTrimPrefixBases,  pReadArchiveOpts);
+	//COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
+	//COptions::AddValueOption("-tpr", "# of characters",      "trims the first characters from the name", "", settings.HasTrimPrefixName,      settings.NumTrimPrefixName,   pReadArchiveOpts);
+	//COptions::AddValueOption("-tsr", "# of characters",      "trims the last characters from the name",  "", settings.HasTrimSuffixName,      settings.NumTrimSuffixName,   pReadArchiveOpts);
 
 	// add the interface options
 	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
@@ -424,6 +424,8 @@ int main(int argc, char* argv[]) {
 						mate2Files.push_back(dirFiles[i]);
 
 			} else mate2Files.push_back(settings.Fastq2Filename);
+
+			cout << mate2Files[0] << endl;
 		}
 
 	} else if(settings.HasSrfFilename) {
@@ -494,7 +496,7 @@ int main(int argc, char* argv[]) {
 			cout << "- trimming leading and lagging N's. ";
 			if(settings.NumNBasesAllowed == 0) cout << "Mates with interior N's will not be deleted." << endl;	
 			else cout << "Mates with >" << settings.NumNBasesAllowed << " interior N's will be deleted." << endl;
-			if(settings.SetNumNBasesAllowed) mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
+			//if(settings.SetNumNBasesAllowed) mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
 		}
 	} else {
 
@@ -568,6 +570,7 @@ int main(int argc, char* argv[]) {
 
 	} else if(settings.HasFastqFilename) {
 
+		//cout << mate2Files[0] << endl;
 		// parse the FASTQ file
 		if(!mate2Files.empty()) {
 			mb.ParsePEFastq(mate1Files, mate2Files, settings.OutputReadsFilename);

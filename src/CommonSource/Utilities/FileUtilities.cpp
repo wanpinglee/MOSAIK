@@ -102,6 +102,7 @@ bool CFileUtilities::DeleteDir ( string directory ) {
 		return false;
 
 	string file;
+	//int counter = 1; // use this to skip the first TWO which cause an infinite loop (and eventually, stack overflow)
 	struct dirent *pent = NULL;
 	while ( ( pent = readdir ( pdir ) ) != NULL ) { // while there is still something in the directory to list
 		if ( pent == NULL ) // if pent has not been initialised correctly
@@ -175,8 +176,10 @@ bool CFileUtilities::DirExists(const char* directory) {
 #else
 	struct stat st;
 
-	if ( stat( directory, &st ) == 0 )
-		foundDirectory = true;
+	if ( stat( directory, &st ) == 0 ) {
+		DIR *pDirectory = opendir(directory);
+		if ( pDirectory != NULL ) foundDirectory = true;
+	}
 	
 	
 	//DIR *pDirectory = opendir(directory);

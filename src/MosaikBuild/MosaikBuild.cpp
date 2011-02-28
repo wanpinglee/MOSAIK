@@ -20,11 +20,11 @@ CMosaikBuild::CMosaikBuild(const MosaikReadFormat::ReadGroup& md)
 , mTrimReads(false)
 , mTrimReadNames(false)
 , mRemoveInstrumentInfo(false)
-, mNumNBasesAllowed(NUM_N_BASES_ALLOWED)
-, mNumLeadingNsTrimmed(0)
-, mNumLaggingNsTrimmed(0)
-, mNumMatesDeleted(0)
-, mMinimumReadLength(MIN_READ_LENGTH)
+//, mNumNBasesAllowed(NUM_N_BASES_ALLOWED)
+//, mNumLeadingNsTrimmed(0)
+//, mNumLaggingNsTrimmed(0)
+//, mNumMatesDeleted(0)
+//, mMinimumReadLength(MIN_READ_LENGTH)
 , mBuffer(NULL)
 , mBufferLen(256)
 , mReadPrefixTrim(0)
@@ -924,17 +924,17 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 				mr.Mate1.Qualities.TrimEnd(readLength);
 
 				// save both mates
-				ProcessReadName(mr.Name);
-				ProcessMate(mr.Mate1);
-				ProcessMate(mr.Mate2);
+				//ProcessReadName(mr.Name);
+				//ProcessMate(mr.Mate1);
+				//ProcessMate(mr.Mate2);
 				writer.SaveRead(mr);
 				numReadsParsed++;
 
 			} else {
 
 				// save our read
-				ProcessReadName(mr.Name);
-				ProcessMate(mr.Mate1);
+				//ProcessReadName(mr.Name);
+				//ProcessMate(mr.Mate1);
 				writer.SaveRead(mr);
 				numReadsParsed++;
 			}
@@ -1008,8 +1008,8 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 		}
 
 		r.Name = ft.Name;
-		ProcessReadName(r.Name);
-		ProcessMate(r.Mate1);
+		//ProcessReadName(r.Name);
+		//ProcessMate(r.Mate1);
 		writer.SaveRead(r);
 		numReadsParsed++;
 		if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1178,9 +1178,9 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 		numMate2Written++;
 
 		r.Name = ftags1.Name;
-		ProcessReadName(r.Name);
-		ProcessMate(r.Mate1);
-		ProcessMate(r.Mate2);
+		//ProcessReadName(r.Name);
+		//ProcessMate(r.Mate1);
+		//ProcessMate(r.Mate2);
 		writer.SaveRead(r);
 		numReadsParsed++;
 		if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1244,8 +1244,8 @@ void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFi
 				csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 			}
 
-			ProcessReadName(r.Name);
-			ProcessMate(r.Mate1);
+			//ProcessReadName(r.Name);
+			//ProcessMate(r.Mate1);
 			writer.SaveRead(r);
 			numReadsParsed++;
 
@@ -1372,9 +1372,9 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 				csu.ConvertReadColorspaceToPseudoColorspace(r.Mate2.Bases);
 			}
 
-			ProcessReadName(r.Name);
-			ProcessMate(r.Mate1);
-			ProcessMate(r.Mate2);
+			//ProcessReadName(r.Name);
+			//ProcessMate(r.Mate1);
+			//ProcessMate(r.Mate2);
 			writer.SaveRead(r);
 			numReadsParsed++;
 			if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1475,8 +1475,8 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 
 		Mosaik::Read r;
 		while(reader.LoadNextMate(r.Name, r.Mate1)) {
-			ProcessReadName(r.Name);
-			ProcessMate(r.Mate1);
+			//ProcessReadName(r.Name);
+			//ProcessMate(r.Mate1);
 			writer.SaveRead(r);
 			numReadsParsed++;
 			if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1532,8 +1532,8 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 		Mosaik::Read mr;
 		while(reader.GetRead(mr)) {
 			mr.Mate1.Bases.Uppercase();
-			ProcessReadName(mr.Name);
-			ProcessMate(mr.Mate1);
+			//ProcessReadName(mr.Name);
+			//ProcessMate(mr.Mate1);
 			writer.SaveRead(mr);
 			numReadsParsed++;
 
@@ -1567,77 +1567,77 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 // trims the mate
 void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
 
-	if(mTrimReads) {
-
-		if(mReadSuffixTrim > 0) {
-			mate.Bases.TrimEnd(mReadSuffixTrim);
-			mate.Qualities.TrimEnd(mReadSuffixTrim);
-		}
-
-		if(mReadPrefixTrim > 0) {
-			mate.Bases.TrimBegin(mReadPrefixTrim);
-			mate.Qualities.TrimBegin(mReadPrefixTrim);
-		}
-	}
+	//if(mTrimReads) {
+	//
+	//	if(mReadSuffixTrim > 0) {
+	//		mate.Bases.TrimEnd(mReadSuffixTrim);
+	//		mate.Qualities.TrimEnd(mReadSuffixTrim);
+	//	}
+	//
+	//	if(mReadPrefixTrim > 0) {
+	//		mate.Bases.TrimBegin(mReadPrefixTrim);
+	//		mate.Qualities.TrimBegin(mReadPrefixTrim);
+	//	}
+	//}
 
 	// trim the leading and lagging N's
-	unsigned short numLeadingNs = 0;
-	unsigned short numLaggingNs = 0;
-	if ( !mFlags.DisableTrimmer ) {
-		const char* pBases = mate.Bases.CData();
-		int pos = 0;
-
-		while((pBases[pos] == 'N') && (pos < (int)mate.Bases.Length())) {
-			numLeadingNs++;
-			pos++;
-		}
-
-		mate.Bases.TrimBegin(numLeadingNs);
-		mate.Qualities.TrimBegin(numLeadingNs);
-	}
+	//unsigned short numLeadingNs = 0;
+	//unsigned short numLaggingNs = 0;
+	//if ( !mFlags.DisableTrimmer ) {
+	//	const char* pBases = mate.Bases.CData();
+	//	int pos = 0;
+	//
+	//	while((pBases[pos] == 'N') && (pos < (int)mate.Bases.Length())) {
+	//		numLeadingNs++;
+	//		pos++;
+	//	}
+	//
+	//	mate.Bases.TrimBegin(numLeadingNs);
+	//	mate.Qualities.TrimBegin(numLeadingNs);
+	//}
 	
 
-	if ( !mFlags.DisableTrimmer ) {
-		const char* pBases = mate.Bases.CData();
-		int pos = mate.Bases.Length() - 1;
-
-		while((pBases[pos] == 'N') && (pos >= 0)) {
-			numLaggingNs++;
-			pos--;
-		}
-
-		mate.Bases.TrimEnd(numLaggingNs);
-		mate.Qualities.TrimEnd(numLaggingNs);
-	}
+	//if ( !mFlags.DisableTrimmer ) {
+	//	const char* pBases = mate.Bases.CData();
+	//	int pos = mate.Bases.Length() - 1;
+	//
+	//	while((pBases[pos] == 'N') && (pos >= 0)) {
+	//		numLaggingNs++;
+	//		pos--;
+	//	}
+	//
+	//	mate.Bases.TrimEnd(numLaggingNs);
+	//	mate.Qualities.TrimEnd(numLaggingNs);
+	//}
 
 	// determine if the read has too many remaining N's
-	bool deleteMate = false;
-	if ( !mFlags.DisableTrimmer ) {
-		unsigned short numRemainingNs = 0;
-		const unsigned int mateLength = mate.Bases.Length();
-		const char* pBases = mate.Bases.CData();
-		for(unsigned short i = 0; i < mateLength; i++) if(pBases[i] == 'N') numRemainingNs++;
-
-		if((mNumNBasesAllowed != 0) && (numRemainingNs > mNumNBasesAllowed)) deleteMate = true;
-		if(mateLength < mMinimumReadLength)                                  deleteMate = true;
-	}
+	//bool deleteMate = false;
+	//if ( !mFlags.DisableTrimmer ) {
+	//	unsigned short numRemainingNs = 0;
+	//	const unsigned int mateLength = mate.Bases.Length();
+	//	const char* pBases = mate.Bases.CData();
+	//	for(unsigned short i = 0; i < mateLength; i++) if(pBases[i] == 'N') numRemainingNs++;
+	//
+	//	if((mNumNBasesAllowed != 0) && (numRemainingNs > mNumNBasesAllowed)) deleteMate = true;
+	//	if(mateLength < mMinimumReadLength)                                  deleteMate = true;
+	//}
 
 	// delete the mate
-	if(deleteMate) {
-		mate.Bases.SetLength(0);
-		mate.Qualities.SetLength(0);
-		mNumMatesDeleted++;
-	} else {
-		mNumLeadingNsTrimmed += numLeadingNs;
-		mNumLaggingNsTrimmed += numLaggingNs;
-	}
+	//if(deleteMate) {
+	//	mate.Bases.SetLength(0);
+	//	mate.Qualities.SetLength(0);
+	//	mNumMatesDeleted++;
+	//} else {
+	//	mNumLeadingNsTrimmed += numLeadingNs;
+	//	mNumLaggingNsTrimmed += numLaggingNs;
+	//}
 }
 
 // trims the read name and adds a read name prefix
 void CMosaikBuild::ProcessReadName(CMosaikString& readName) {
-	if(mTrimReadNames && (mReadNamePrefixTrim > 0)) readName.TrimBegin(mReadNamePrefixTrim);
-	if(mHasReadNamePrefix)                          readName.Prepend(mReadNamePrefix);
-	if(mTrimReadNames && (mReadNameSuffixTrim > 0)) readName.TrimEnd(mReadNameSuffixTrim);
+	//if(mTrimReadNames && (mReadNamePrefixTrim > 0)) readName.TrimBegin(mReadNamePrefixTrim);
+	//if(mHasReadNamePrefix)                          readName.Prepend(mReadNamePrefix);
+	//if(mTrimReadNames && (mReadNameSuffixTrim > 0)) readName.TrimEnd(mReadNameSuffixTrim);
 }
 
 // returns true if a swap had to performed to guarantee that filename1 is the F3 read (filename2 = R3)
@@ -1825,9 +1825,9 @@ void CMosaikBuild::SetGenomeAssemblyID(const string& id) {
 }
 
 // Sets the maximum number of N's allowed
-void CMosaikBuild::SetNumNBasesAllowed(const unsigned char numNBasesAllowed) {
-	mNumNBasesAllowed = numNBasesAllowed;
-}
+//void CMosaikBuild::SetNumNBasesAllowed(const unsigned char numNBasesAllowed) {
+	//mNumNBasesAllowed = numNBasesAllowed;
+//}
 
 // Sets the species name [used when creating reference archives]
 void CMosaikBuild::SetSpecies(const string& name) {
@@ -1858,16 +1858,16 @@ void CMosaikBuild::ShowStatistics(const Statistics& s) {
 	cout << "============================================" << endl;
 
 	// show trimming statistics
-	if(mNumMatesDeleted > 0)
-		cout << "# " << (s.IsPairedEnd ? "mates" : "reads") << " deleted:       " << setw(11) << mNumMatesDeleted << " (" << setw(5) << fixed << setprecision(1) << (mNumMatesDeleted / (double)s.NumTotalMates) * 100.0 << " %)" << endl;
+	//if(mNumMatesDeleted > 0)
+	//	cout << "# " << (s.IsPairedEnd ? "mates" : "reads") << " deleted:       " << setw(11) << mNumMatesDeleted << " (" << setw(5) << fixed << setprecision(1) << (mNumMatesDeleted / (double)s.NumTotalMates) * 100.0 << " %)" << endl;
 
-	if(mNumLeadingNsTrimmed > 0)
-		cout << "# leading N's trimmed: " << setw(11) << mNumLeadingNsTrimmed << endl;
+	//if(mNumLeadingNsTrimmed > 0)
+	//	cout << "# leading N's trimmed: " << setw(11) << mNumLeadingNsTrimmed << endl;
 
-	if(mNumLaggingNsTrimmed > 0)
-		cout << "# lagging N's trimmed: " << setw(11) << mNumLaggingNsTrimmed << endl;
+	//if(mNumLaggingNsTrimmed > 0)
+	//	cout << "# lagging N's trimmed: " << setw(11) << mNumLaggingNsTrimmed << endl;
 
-	if((mNumMatesDeleted > 0) || (mNumLeadingNsTrimmed > 0) || (mNumLaggingNsTrimmed > 0)) cout << "--------------------------------------------" << endl;
+	//if((mNumMatesDeleted > 0) || (mNumLeadingNsTrimmed > 0) || (mNumLaggingNsTrimmed > 0)) cout << "--------------------------------------------" << endl;
 
 	// show orphan statistics
 	if(s.NumMate1Orphaned > 0)

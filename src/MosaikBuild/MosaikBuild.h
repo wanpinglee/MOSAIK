@@ -27,7 +27,6 @@ using namespace std::tr1;
 #include "ConversionUtilities.h"
 #include "Fasta.h"
 #include "Fastq.h"
-//#include "MD5.h"
 #include "MosaikString.h"
 #include "ReadWriter.h"
 #include "ProgressBar.h"
@@ -45,8 +44,8 @@ using namespace std::tr1;
 
 using namespace std;
 
-#define NUM_N_BASES_ALLOWED  4
-#define MIN_READ_LENGTH      8
+//#define NUM_N_BASES_ALLOWED  4
+//#define MIN_READ_LENGTH      8
 
 #define NORMAL_FASTQ_OFFSET 33
 #define SOLEXA_FASTQ_OFFSET 64
@@ -205,11 +204,11 @@ private:
 	// toggles the removal of instrument info
 	bool mRemoveInstrumentInfo;
 	// toggles the trimming of reads with N's
-	unsigned char mNumNBasesAllowed;
-	unsigned int mNumLeadingNsTrimmed;
-	unsigned int mNumLaggingNsTrimmed;
-	unsigned int mNumMatesDeleted;
-	unsigned short mMinimumReadLength;
+	//unsigned char mNumNBasesAllowed;
+	//unsigned int mNumLeadingNsTrimmed;
+	//unsigned int mNumLaggingNsTrimmed;
+	//unsigned int mNumMatesDeleted;
+	//unsigned short mMinimumReadLength;
 	// our output buffer
 	unsigned char* mBuffer;
 	// the output buffer size
