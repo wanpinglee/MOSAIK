@@ -52,17 +52,19 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 CArchiveMerge::CArchiveMerge ( 
 	vector < string > inputFilenames, 
 	string outputFilename, 
-	unsigned int *readNo, 
-	const unsigned int fragmentLength,
-	const unsigned int localAlignmentSearchRadius,
-	const bool hasSpecial )
+	unsigned int        *readNo, 
+	const unsigned int  fragmentLength,
+	const unsigned int  localAlignmentSearchRadius,
+	const bool          hasSpecial,
+	const unsigned char statMappingQuality)
 	
 	: _inputFilenames( inputFilenames )
 	, _outputFilename( outputFilename )
-	, _readNo( readNo )
-	, _expectedFragmentLength( fragmentLength )
+	, _readNo                    ( readNo )
+	, _expectedFragmentLength    ( fragmentLength )
 	, _localAlignmentSearchRadius( localAlignmentSearchRadius )
-	, _hasSpecial( hasSpecial )
+	, _hasSpecial                ( hasSpecial )
+	, _statMappingQuality        ( statMappingQuality )
 {
 	//_statisticsMaps = mStatisticsMaps;
 	
@@ -469,8 +471,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		_rBam.SaveAlignment( al1, zaTag1 );
 		_rBam.SaveAlignment( al2, zaTag2 );
 
-
-		_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
+		if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
+			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
 
 	// UX and MX pair
@@ -526,8 +528,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_uBam.SaveAlignment( unmappedAl, 0, true );
 		}
 			
-
-		_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
+		if ( _statMappingQuality <= al.Quality ) 
+			_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
 	
 	// XX

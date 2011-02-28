@@ -286,7 +286,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-
+/*
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Cv2mO");
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edufRXZN6");
             outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Bo8HY");
@@ -316,7 +316,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
             exit(1);
-
+*/
 // ***************** DEBUG ********************************
 /*
 	vector< string > temporaryFiles;
@@ -698,7 +698,10 @@ void CMosaikAligner::MergeArchives(void) {
 	if ( !mFlags.IsQuietMode )
         	CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
 
-        CArchiveMerge merger( temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, mSReference.found );
+        CArchiveMerge merger( 
+		temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, 
+		mSReference.found, mStatisticsCounters.StatMappingQuality );
+
 	merger.Merge();
 
 	if ( !mFlags.IsQuietMode )
@@ -746,13 +749,13 @@ void CMosaikAligner::AlignReadArchive(
 	const bool isPairedEnd = (readStatus == RS_PAIRED_END_READ ? true : false);
 
 	// open the unaligned read report file
-	FILE* unalignedStream = NULL;
-	if(mFlags.IsReportingUnalignedReads) {
-		if(fopen_s(&unalignedStream, mSettings.UnalignedReadReportFilename.c_str(), "wb") != 0) {
-			cout << "ERROR: Unable to open the unaligned read FASTQ file for output." << endl;
-			exit(1);
-		}
-	}
+	//FILE* unalignedStream = NULL;
+	//if(mFlags.IsReportingUnalignedReads) {
+	//	if(fopen_s(&unalignedStream, mSettings.UnalignedReadReportFilename.c_str(), "wb") != 0) {
+	//		cout << "ERROR: Unable to open the unaligned read FASTQ file for output." << endl;
+	//		exit(1);
+	//	}
+	//}
 	
 
 
@@ -775,7 +778,7 @@ void CMosaikAligner::AlignReadArchive(
 	td.pDnaHash            = mpDNAHash;
 	td.pIn                 = &in;
 	td.pOut                = &out;
-	td.pUnalignedStream    = unalignedStream;
+	//td.pUnalignedStream    = unalignedStream;
 	td.pRefBegin           = pRefBegin;
 	td.pRefEnd             = pRefEnd;
 	td.pRefSpecies         = pRefSpecies;
@@ -795,10 +798,15 @@ void CMosaikAligner::AlignReadArchive(
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	pthread_mutex_init(&CAlignmentThread::mGetReadMutex,              NULL);
-	pthread_mutex_init(&CAlignmentThread::mReportUnalignedMate1Mutex, NULL);
-	pthread_mutex_init(&CAlignmentThread::mReportUnalignedMate2Mutex, NULL);
+	//pthread_mutex_init(&CAlignmentThread::mReportUnalignedMate1Mutex, NULL);
+	//pthread_mutex_init(&CAlignmentThread::mReportUnalignedMate2Mutex, NULL);
 	pthread_mutex_init(&CAlignmentThread::mSaveReadMutex,             NULL);
 	pthread_mutex_init(&CAlignmentThread::mStatisticsMutex,           NULL);
+	pthread_mutex_init(&CAlignmentThread::mStatisticsMapsMutex,       NULL);
+	pthread_mutex_init(&CAlignmentThread::mSaveMultipleBamMutex,      NULL);
+	pthread_mutex_init(&CAlignmentThread::mSaveSpecialBamMutex,       NULL);
+	pthread_mutex_init(&CAlignmentThread::mSaveUnmappedBamMutex,      NULL);
+
 	pthread_mutex_init(&CAbstractDnaHash::mJumpCacheMutex,            NULL);
 	pthread_mutex_init(&CAbstractDnaHash::mJumpKeyMutex,              NULL);
 	pthread_mutex_init(&CAbstractDnaHash::mJumpPositionMutex,         NULL);
@@ -844,7 +852,7 @@ void CMosaikAligner::AlignReadArchive(
 	delete [] activeThreads;
 	activeThreads = NULL;
 
-	if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
+	//if(mFlags.IsReportingUnalignedReads) fclose(unalignedStream);
 	
 }
 
@@ -1069,11 +1077,16 @@ void CMosaikAligner::EnablePairedEndOutput(void) {
 	mFlags.UsePairedEndOutput = true;
 }
 
-// enables reporting of unaligned reads
-void CMosaikAligner::EnableUnalignedReadReporting(const string& unalignedReadReportFilename) {
-	mSettings.UnalignedReadReportFilename = unalignedReadReportFilename;
-	mFlags.IsReportingUnalignedReads = true;
+// sets mapping quality threshold for stat map
+void CMosaikAligner::SetStatMappingQuality( const unsigned char mq ) {
+	mStatisticsCounters.StatMappingQuality = mq;
 }
+
+// enables reporting of unaligned reads
+//void CMosaikAligner::EnableUnalignedReadReporting(const string& unalignedReadReportFilename) {
+//	mSettings.UnalignedReadReportFilename = unalignedReadReportFilename;
+//	mFlags.IsReportingUnalignedReads = true;
+//}
 
 // hashes the reference sequence
 void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceReader& refseq) {

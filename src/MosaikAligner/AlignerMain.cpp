@@ -28,6 +28,7 @@ string DEFAULT_ALGORITHM = "all";
 string DEFAULT_MODE      = "all";
 
 unsigned char DEFAULT_HASH_SIZE             = 15;
+unsigned char DEFAULT_STAT_MAPPING_QUALITY  = 20;
 //unsigned char DEFAULT_NUM_MISMATCHES        = 4;
 double        DEFAULT_PERCENTAGE_MISMATCHES = 0.15;
 unsigned int DEFAULT_BANDWIDTH              = 9;
@@ -67,10 +68,11 @@ struct ConfigurationSettings {
 	bool HasReferencesFilename;
 	bool HasSpecialHashCount;
 	bool HasSpecialReferencePrefix;
+	bool HasStatMappingQuality;
 	bool KeepJumpKeysOnDisk;
 	bool KeepJumpPositionsOnDisk;
 	bool LimitHashPositions;
-	bool RecordUnalignedReads;
+	//bool RecordUnalignedReads;
 	bool UseAlignedLengthForMismatches;
 	bool UseJumpDB;
 	bool UseLowMemory;
@@ -82,7 +84,7 @@ struct ConfigurationSettings {
 	string JumpFilenameStub;
 	string ReadsFilename;
 	string ReferencesFilename;
-	string UnalignedReadsFilename;
+	//string UnalignedReadsFilename;
 
 	// parameters
 	double MinimumAlignmentPercentage;
@@ -98,6 +100,7 @@ struct ConfigurationSettings {
 	unsigned char AlignmentCandidateThreshold;
 	unsigned char AlignmentQualityThreshold;
 	unsigned char HashSize;
+	unsigned char StatMappingQuality;
 	unsigned int Bandwidth;
 	unsigned int HashPositionThreshold;
 	unsigned int JumpCacheMemory;
@@ -135,10 +138,11 @@ struct ConfigurationSettings {
 		, HasReferencesFilename(false)
 		, HasSpecialHashCount(false)
 		, HasSpecialReferencePrefix(false)
+		, HasStatMappingQuality(false)
 		, KeepJumpKeysOnDisk(false)
 		, KeepJumpPositionsOnDisk(false)
 		, LimitHashPositions(false)
-		, RecordUnalignedReads(false)
+		//, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
 		, UseLowMemory(false)
@@ -147,6 +151,7 @@ struct ConfigurationSettings {
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
+		, StatMappingQuality(DEFAULT_STAT_MAPPING_QUALITY)
 		, JumpCacheMemory(0)
 //		, NumMismatches(DEFAULT_NUM_MISMATCHES)
 		, NumThreads(DEFAULT_NUM_THREADS)
@@ -217,12 +222,13 @@ int main(int argc, char* argv[]) {
 	//COptions::AddValueOption("-jc", "# of hashes",   "caches the most recently used hashes", "", settings.HasJumpCacheMemory,        settings.JumpCacheMemory,  pJumpOpts);
 	COptions::AddOption("-kd",                       "keeps the keys file on disk",              settings.KeepJumpKeysOnDisk,                                 pJumpOpts);
 	COptions::AddOption("-pd",                       "keeps the positions file on disk",         settings.KeepJumpPositionsOnDisk,                            pJumpOpts);
-	COptions::AddValueOption("-sref", "reference prefixes", "specifies the prefixes of special references", "", settings.HasSpecialReferencePrefix, settings.SpecialReferencePrefix, pJumpOpts);
-	COptions::AddValueOption("-srefp", "percent", "the maximum special hashes percentage [0.0 - 1.0]", "", settings.HasSpecialHashCount, settings.SpecialHashCount, pJumpOpts);
+	COptions::AddValueOption("-sref",  "reference prefixes", "specifies the prefixes of special references", "", settings.HasSpecialReferencePrefix, settings.SpecialReferencePrefix, pJumpOpts);
+	COptions::AddValueOption("-srefn", "hashes", "the maximum special hashes", "", settings.HasSpecialHashCount, settings.SpecialHashCount, pJumpOpts);
 	
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
-	COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
+	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
+	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
 	// add the pairwise alignment scoring options
 	OptionGroup* pPairwiseOpts = COptions::CreateOptionGroup("Pairwise Alignment Scores");
@@ -525,7 +531,7 @@ int main(int argc, char* argv[]) {
 	if(settings.EnableAlignmentCandidateThreshold) ma.EnableAlignmentCandidateThreshold(settings.AlignmentCandidateThreshold);
 
 	// enable unaligned read reporting if specified
-	if(settings.RecordUnalignedReads) ma.EnableUnalignedReadReporting(settings.UnalignedReadsFilename);
+	//if(settings.RecordUnalignedReads) ma.EnableUnalignedReadReporting(settings.UnalignedReadsFilename);
 
 	// enable colorspace (SOLiD)
 	if(settings.EnableColorspace) ma.EnableColorspace(settings.BasespaceReferencesFilename);
@@ -556,6 +562,11 @@ int main(int argc, char* argv[]) {
 		else
 			ma.SetSpecialHashCount(DEFAULT_SPECIAL_HASHES);
 	}
+
+	// set the mapping quality threshold for stat map
+	if ( settings.HasStatMappingQuality ) ma.SetStatMappingQuality( settings.StatMappingQuality );
+
+
 
 	// =============
 	// set filenames
@@ -631,8 +642,8 @@ int main(int argc, char* argv[]) {
 		cout << endl;
 	}
 
-	if(settings.RecordUnalignedReads)
-		cout << "- Reporting all unaligned reads to " << settings.UnalignedReadsFilename << "." << endl;
+	//if(settings.RecordUnalignedReads)
+	//	cout << "- Reporting all unaligned reads to " << settings.UnalignedReadsFilename << "." << endl;
 
 	if(settings.HasHomoPolymerGapOpenPenalty) 
 		cout << "- Using a homo-polymer gap open penalty of " << CPairwiseUtilities::HomoPolymerGapOpenPenalty << endl;

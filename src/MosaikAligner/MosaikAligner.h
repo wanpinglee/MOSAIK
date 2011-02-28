@@ -66,8 +66,10 @@ public:
 	void EnableLocalAlignmentSearch(const unsigned int radius);
 	// enables paired-end read output
 	void EnablePairedEndOutput(void);
+	// sets mapping quality threshold for stat map
+	void SetStatMappingQuality( const unsigned char mq );
 	// enables reporting of unaligned reads
-	void EnableUnalignedReadReporting(const string& unalignedReadReportFilename);
+	//void EnableUnalignedReadReporting(const string& unalignedReadReportFilename);
 	// enables special references checker
 	void EnableSpecialReference ( const string referencePrefix );
 	// sets special hashes percentage

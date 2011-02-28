@@ -12,8 +12,8 @@
 
 // register our thread mutexes
 pthread_mutex_t CAlignmentThread::mGetReadMutex;
-pthread_mutex_t CAlignmentThread::mReportUnalignedMate1Mutex;
-pthread_mutex_t CAlignmentThread::mReportUnalignedMate2Mutex;
+//pthread_mutex_t CAlignmentThread::mReportUnalignedMate1Mutex;
+//pthread_mutex_t CAlignmentThread::mReportUnalignedMate2Mutex;
 pthread_mutex_t CAlignmentThread::mSaveReadMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMapsMutex;
@@ -132,7 +132,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 	at.AlignReadArchive(
 		pTD->pIn, 
 		pTD->pOut,
-		pTD->pUnalignedStream, 
+		//pTD->pUnalignedStream, 
 		pTD->pReadCounter, 
 		pTD->IsPairedEnd, 
 		pTD->pMaps, 
@@ -167,7 +167,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 void CAlignmentThread::AlignReadArchive(
 	MosaikReadFormat::CReadReader* pIn, 
 	MosaikReadFormat::CAlignmentWriter* pOut, 
-	FILE*     pUnalignedStream, 
+	//FILE*     pUnalignedStream, 
 	uint64_t* pReadCounter, 
 	bool      isPairedEnd, 
 	CStatisticsMaps* pMaps, 
@@ -253,27 +253,28 @@ void CAlignmentThread::AlignReadArchive(
 				mate1Alignments.CalculateAlignmentQualities(calculateCorrectionCoefficient, minSpanLength);
 				isMate1Aligned = true;
 
-			} else {
+			} 
+			//else {
 
 				// TODO: the informtion is not correct
 				// write the unaligned read if specified
-				if(mFlags.IsReportingUnalignedReads) {
-					pthread_mutex_lock(&mReportUnalignedMate1Mutex);
-					mr.Mate1.Qualities.Increment(33);
-
-					if(isUsingSOLiD) {
-						mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate1.Bases);
-						mr.Mate1.Bases.Prepend(mr.Mate1.SolidPrefixTransition, 2);
-						mr.Mate1.Qualities.Prepend("!?", 2);
-					}
-
-					fprintf(pUnalignedStream, "@%s (mate 1, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
-						(isUsingSOLiD ? numMate1Bases + 1 : numMate1Bases), mr.Mate1.Bases.CData(), 
-						mr.Mate1.Qualities.CData());
-
-					pthread_mutex_unlock(&mReportUnalignedMate1Mutex);
-				}
-			}
+			//	if(mFlags.IsReportingUnalignedReads) {
+			//		pthread_mutex_lock(&mReportUnalignedMate1Mutex);
+			//		mr.Mate1.Qualities.Increment(33);
+			//
+			//		if(isUsingSOLiD) {
+			//			mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate1.Bases);
+			//			mr.Mate1.Bases.Prepend(mr.Mate1.SolidPrefixTransition, 2);
+			//			mr.Mate1.Qualities.Prepend("!?", 2);
+			//		}
+			//
+			//		fprintf(pUnalignedStream, "@%s (mate 1, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
+			//			(isUsingSOLiD ? numMate1Bases + 1 : numMate1Bases), mr.Mate1.Bases.CData(), 
+			//			mr.Mate1.Qualities.CData());
+			//
+			//		pthread_mutex_unlock(&mReportUnalignedMate1Mutex);
+			//	}
+			//}
 		}
 
 		// =====================
@@ -291,26 +292,27 @@ void CAlignmentThread::AlignReadArchive(
 				mate2Alignments.CalculateAlignmentQualities(calculateCorrectionCoefficient, minSpanLength);
 				isMate2Aligned = true;
 
-			} else {
-
+			} 
+			//else {
+			//
 				// write the unaligned read if specified
-				if(mFlags.IsReportingUnalignedReads) {
-					pthread_mutex_lock(&mReportUnalignedMate2Mutex);
-					mr.Mate2.Qualities.Increment(33);
-
-					if(isUsingSOLiD) {
-						mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate2.Bases);
-						mr.Mate2.Bases.Prepend(mr.Mate2.SolidPrefixTransition, 2);
-						mr.Mate2.Qualities.Prepend("!?", 2);
-					}
-
-					fprintf(pUnalignedStream, "@%s (mate 2, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
-						(isUsingSOLiD ? numMate2Bases + 1 : numMate2Bases), mr.Mate2.Bases.CData(), 
-						mr.Mate2.Qualities.CData());
-
-					pthread_mutex_unlock(&mReportUnalignedMate2Mutex);
-				}
-			}
+			//	if(mFlags.IsReportingUnalignedReads) {
+			//		pthread_mutex_lock(&mReportUnalignedMate2Mutex);
+			//		mr.Mate2.Qualities.Increment(33);
+			//
+			//		if(isUsingSOLiD) {
+			//			mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate2.Bases);
+			//			mr.Mate2.Bases.Prepend(mr.Mate2.SolidPrefixTransition, 2);
+			//			mr.Mate2.Qualities.Prepend("!?", 2);
+			//		}
+			//
+			//		fprintf(pUnalignedStream, "@%s (mate 2, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
+			//			(isUsingSOLiD ? numMate2Bases + 1 : numMate2Bases), mr.Mate2.Bases.CData(), 
+			//			mr.Mate2.Qualities.CData());
+			//
+			//		pthread_mutex_unlock(&mReportUnalignedMate2Mutex);
+			//	}
+			//}
 		}
 
 		// ======================
@@ -657,9 +659,11 @@ void CAlignmentThread::AlignReadArchive(
 				pBams->rBam.SaveAlignment( al2, zaTag2 );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
-				pthread_mutex_lock(&mStatisticsMapsMutex);
-				pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
-				pthread_mutex_unlock(&mStatisticsMapsMutex);
+				if ( ( mStatisticsCounters.StatMappingQuality <= al1.Quality ) && ( mStatisticsCounters.StatMappingQuality <= al2.Quality ) ) {
+					pthread_mutex_lock(&mStatisticsMapsMutex);
+					pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
+					pthread_mutex_unlock(&mStatisticsMapsMutex);
+				}
 
 			}
 
@@ -733,10 +737,12 @@ void CAlignmentThread::AlignReadArchive(
 					pBams->rBam.SaveAlignment( al, zaTag1 );
 					pthread_mutex_unlock(&mSaveReadMutex);
 				}
-
-				pthread_mutex_lock(&mStatisticsMapsMutex);
-				pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
-				pthread_mutex_unlock(&mStatisticsMapsMutex);
+				
+				if ( mStatisticsCounters.StatMappingQuality <= al.Quality ) {
+					pthread_mutex_lock(&mStatisticsMapsMutex);
+					pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
+					pthread_mutex_unlock(&mStatisticsMapsMutex);
+				}
 			}
 			
 			mStatisticsCounters.AlignedReads++;

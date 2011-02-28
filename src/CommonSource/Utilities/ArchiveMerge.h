@@ -83,7 +83,8 @@ class CArchiveMerge
 			unsigned int *readNo, 
 			const unsigned int fragmentLength = 0,
 			const unsigned int localAlignmentSearchRadius = 0,
-			const bool hasSpecial = false );
+			const bool hasSpecial = false,
+			const unsigned char statMappingQuality = 20 );
 
 
 		void Merge();
@@ -115,6 +116,7 @@ class CArchiveMerge
 		AlignmentStatus _alignmentStatus;
 		bool _isPairedEnd;
 		bool _hasSpecial;
+		unsigned char _statMappingQuality;
 		SequencingTechnologies _sequencingTechnologies;
 		map<unsigned int, MosaikReadFormat::ReadGroup> _readGroupsMap;
 		

@@ -68,7 +68,7 @@ public:
 		string JumpFilenameStub;
 		string OutputReadArchiveFilename;
 		string ReferenceFilename;
-		string UnalignedReadReportFilename;
+		//string UnalignedReadReportFilename;
 		unsigned int AllocatedReadLength;
 		unsigned int Bandwidth;
 		unsigned int LocalAlignmentSearchRadius;
@@ -108,7 +108,7 @@ public:
 		bool EnableColorspace;
 		bool IsAligningAllReads;
 		bool IsQuietMode;
-		bool IsReportingUnalignedReads;
+		//bool IsReportingUnalignedReads;
 		bool IsUsingAlignmentCandidateThreshold;
 		bool IsUsingHashPositionThreshold;
 		bool IsUsingJumpDB;
@@ -128,7 +128,7 @@ public:
 			: EnableColorspace(false)
 			, IsAligningAllReads(false)
 			, IsQuietMode(false)
-			, IsReportingUnalignedReads(false)
+			//, IsReportingUnalignedReads(false)
 			, IsUsingAlignmentCandidateThreshold(false)
 			, IsUsingHashPositionThreshold(false)
 			, IsUsingJumpDB(false)
@@ -161,6 +161,7 @@ public:
 		uint64_t ShortMates;
 		uint64_t UnalignedReads;
 		uint64_t UniqueMates;
+		unsigned char StatMappingQuality;
 
 		StatisticsCounters() 
 			: AdditionalLocalMates(0)
@@ -177,6 +178,7 @@ public:
 			, ShortMates(0)
 			, UnalignedReads(0)
 			, UniqueMates(0)
+			, StatMappingQuality(20)
 		{}
 	};
 	// bam writers
@@ -242,7 +244,7 @@ public:
 		CAbstractDnaHash*    pDnaHash;
 		MosaikReadFormat::CReadReader*      pIn;
 		MosaikReadFormat::CAlignmentWriter* pOut;
-		FILE*         pUnalignedStream;
+		//FILE*         pUnalignedStream;
 		unsigned int  ReferenceLen;
 		char*         pReference;
 		unsigned int* pRefBegin;
@@ -261,7 +263,7 @@ public:
 	void AlignReadArchive(
 		MosaikReadFormat::CReadReader*      pIn, 
 		MosaikReadFormat::CAlignmentWriter* pOut, 
-		FILE*            pUnalignedStream,
+		//FILE*            pUnalignedStream,
 		uint64_t*        pReadCounter,
 		bool             isPairedEnd, 
 		CStatisticsMaps* pMaps, 
@@ -271,8 +273,8 @@ public:
 	static void* StartThread(void* arg);
 	// register our thread mutexes
 	static pthread_mutex_t mGetReadMutex;
-	static pthread_mutex_t mReportUnalignedMate1Mutex;
-	static pthread_mutex_t mReportUnalignedMate2Mutex;
+	//static pthread_mutex_t mReportUnalignedMate1Mutex;
+	//static pthread_mutex_t mReportUnalignedMate2Mutex;
 	static pthread_mutex_t mSaveReadMutex;
 	static pthread_mutex_t mStatisticsMutex;
 	static pthread_mutex_t mStatisticsMapsMutex;
