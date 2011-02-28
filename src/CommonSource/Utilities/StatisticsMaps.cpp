@@ -15,9 +15,10 @@ CStatisticsMaps::CStatisticsMaps( void )
 	, nMultiplicity(5000)
 	, nMultiplicityOver(0)
 	, nMultiplicityUnder(0)
-	, nMappingQuality(100)
+	, nMappingQuality(256)
 	, nMappingQualityOver(0)
 	, nMappingQualityUnder(0)
+	, minMappingQuality(0)
 	, nMismatch(100)
 	, nMismatchOver(0)
 	, nMismatchUnder(0)
@@ -64,9 +65,10 @@ CStatisticsMaps::CStatisticsMaps( int64_t mfl )
 	, nMultiplicity(5000)
 	, nMultiplicityOver(0)
 	, nMultiplicityUnder(0)
-	, nMappingQuality(100)
+	, nMappingQuality(256)
 	, nMappingQualityOver(0)
 	, nMappingQualityUnder(0)
+	, minMappingQuality(0)
 	, nMismatch(100)
 	, nMismatchOver(0)
 	, nMismatchUnder(0)
@@ -112,8 +114,12 @@ CStatisticsMaps::~CStatisticsMaps( void ) {
 }
 
 // Note: once starting to calculate the map, don't use this function to change minFragment
-void CStatisticsMaps::SetlfMin( int64_t flMin ) {
+void CStatisticsMaps::SetLfMin( int64_t flMin ) {
 	minFragment = flMin;
+}
+
+void CStatisticsMaps::SetMqMin( uint8_t mqMin ) {
+	minMappingQuality = mqMin;
 }
 
 void CStatisticsMaps::SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch ) {
@@ -258,7 +264,7 @@ inline void CStatisticsMaps::SaveReadLength( const unsigned int length ) {
 inline void CStatisticsMaps::SaveMultiplicity( const unsigned int nAlignment ) {
 	
 	if ( nAlignment > nMultiplicity ) {
-		nMappingQualityOver++;
+		nMultiplicityOver++;
 	} else {
 		multiplicities[ nAlignment ]++;
 	}
@@ -268,7 +274,7 @@ inline void CStatisticsMaps::SaveMappingQuality( const unsigned char mq ) {
 	
 	//for ( vector<Alignment>::iterator ite = als.begin(); ite !=als.end(); ++ite ) {
 		//unsigned char mq = ite->Quality;
-		// mq shouldn't larger than nMappingQuality = 100
+		// mq shouldn't larger than nMappingQuality = 256
 		if ( mq > nMappingQuality ) {
 			nMappingQualityOver++;
 		} else {

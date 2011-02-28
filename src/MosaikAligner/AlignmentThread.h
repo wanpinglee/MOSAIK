@@ -267,7 +267,8 @@ public:
 		uint64_t*        pReadCounter,
 		bool             isPairedEnd, 
 		CStatisticsMaps* pMaps, 
-		BamWriters*      pBams
+		BamWriters*      pBams,
+		unsigned char    statMappingQuality
 	);
 	// activates the current alignment thread
 	static void* StartThread(void* arg);

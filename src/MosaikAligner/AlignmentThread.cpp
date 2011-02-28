@@ -136,7 +136,8 @@ void* CAlignmentThread::StartThread(void* arg) {
 		pTD->pReadCounter, 
 		pTD->IsPairedEnd, 
 		pTD->pMaps, 
-		pTD->pBams );
+		pTD->pBams,
+		pTD->pCounters->StatMappingQuality);
 
 	vector<ReferenceSequence>::iterator refIter;
 
@@ -171,7 +172,8 @@ void CAlignmentThread::AlignReadArchive(
 	uint64_t* pReadCounter, 
 	bool      isPairedEnd, 
 	CStatisticsMaps* pMaps, 
-	BamWriters*      pBams) {
+	BamWriters*      pBams,
+	unsigned char statMappingQuality) {
 
 	// create our local alignment models
 	const bool isUsing454          = (mSettings.SequencingTechnology == ST_454      ? true : false);
@@ -659,7 +661,7 @@ void CAlignmentThread::AlignReadArchive(
 				pBams->rBam.SaveAlignment( al2, zaTag2 );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
-				if ( ( mStatisticsCounters.StatMappingQuality <= al1.Quality ) && ( mStatisticsCounters.StatMappingQuality <= al2.Quality ) ) {
+				if ( ( statMappingQuality <= al1.Quality ) && ( statMappingQuality <= al2.Quality ) ) {
 					pthread_mutex_lock(&mStatisticsMapsMutex);
 					pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
 					pthread_mutex_unlock(&mStatisticsMapsMutex);
@@ -738,7 +740,7 @@ void CAlignmentThread::AlignReadArchive(
 					pthread_mutex_unlock(&mSaveReadMutex);
 				}
 				
-				if ( mStatisticsCounters.StatMappingQuality <= al.Quality ) {
+				if ( statMappingQuality <= al.Quality ) {
 					pthread_mutex_lock(&mStatisticsMapsMutex);
 					pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
 					pthread_mutex_unlock(&mStatisticsMapsMutex);

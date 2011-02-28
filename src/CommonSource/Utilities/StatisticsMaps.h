@@ -24,7 +24,9 @@ class CStatisticsMaps {
 		void PrintMaps( const char* filename, const char* readGroupId, const unsigned char statMappingQuality );
 		void SetExpectedStatistics( const uint32_t fragmentLength, const uint32_t localSearchRadius, const float allowedMismatch );
 		void Reset( void );
-		void SetlfMin( int64_t flMin );
+
+		void SetLfMin( int64_t flMin );
+		void SetMqMin( uint8_t mqMin );
 
 	private:
 		// copy constructor
@@ -71,9 +73,10 @@ class CStatisticsMaps {
 		uint64_t nMultiplicityUnder;
 		uint64_t* multiplicities;
 		// mapping quality map
-		const uint64_t nMappingQuality;
+		const uint16_t nMappingQuality;
 		uint64_t nMappingQualityOver;
 		uint64_t nMappingQualityUnder;
+		uint8_t  minMappingQuality;
 		uint64_t* mappingQualities;
 		// mismatch map
 		const uint64_t nMismatch;

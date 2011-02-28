@@ -72,8 +72,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	const unsigned int numRefSeqs = refseq.GetNumReferenceSequences();
 	refseq.Close();
 
-	// set the bottom line of LF in stat map
-	mStatisticsMaps.SetlfMin( 0 - (int)mSettings.MedianFragmentLength );
+	// set the bottom lines of LF and MQ in stat map
+	mStatisticsMaps.SetLfMin( 0 - (int)mSettings.MedianFragmentLength );
+	//mStatisticsMaps.SetMqMin( mStatisticsCounters.StatMappingQuality );
 
 	// retrieve the basespace reference filenames
 	if(mFlags.EnableColorspace) {
