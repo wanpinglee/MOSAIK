@@ -495,17 +495,6 @@ void CAlignmentThread::AlignReadArchive(
 		mate1Alignments.Clear();
 		mate2Alignments.Clear();
 
-/*
-if ( mr.Name == "ERR022466.2297382" ) {
-	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) 
-		cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->NumMismatches << endl;
-
-	cerr << endl;
-	
-	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) 
-		cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->NumMismatches << endl;
-}
-*/
 
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;
@@ -546,9 +535,6 @@ if ( mr.Name == "ERR022466.2297382" ) {
 
 
 		// save chromosomes and positions of multiple alignments in bam
-
-		
-		
 		if ( mFlags.SaveMultiplyBam ) {
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
@@ -782,9 +768,9 @@ if ( mr.Name == "ERR022466.2297382" ) {
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 
-				pthread_mutex_lock(&mStatisticsMapsMutex);
-				pMaps->SaveRecord( unmappedAl1, unmappedAl2, isPairedEnd, mSettings.SequencingTechnology );
-				pthread_mutex_unlock(&mStatisticsMapsMutex);
+				//pthread_mutex_lock(&mStatisticsMapsMutex);
+				//pMaps->SaveRecord( unmappedAl1, unmappedAl2, isPairedEnd, mSettings.SequencingTechnology );
+				//pthread_mutex_unlock(&mStatisticsMapsMutex);
 
 			}
 

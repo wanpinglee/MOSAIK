@@ -554,7 +554,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_uBam.SaveAlignment( unmappedAl2, 0, true );
 		}
 
-		_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
+		//_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	
 	} else {
 		cout << "ERROR: Unknown pairs." << endl;
