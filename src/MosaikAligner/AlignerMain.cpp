@@ -161,6 +161,9 @@ struct ConfigurationSettings {
 
 int main(int argc, char* argv[]) {
 
+	// set srand
+	srand(1);
+	
 	CConsole::Initialize();
 	ConfigurationSettings settings;
 	
