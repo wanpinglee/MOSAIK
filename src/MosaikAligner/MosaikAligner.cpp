@@ -122,9 +122,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	
 	// both of full- and low-memory MOSAIK need multiply-mapped bam in AlignmentThread.cpp
-	mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
+	mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
 	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-	mBams.mHeader.pReadGroups = &readGroups;
+	mBams.mHeader.pReadGroups         = &readGroups;
 	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 
 	if ( !mFlags.UseLowMemory ) {
@@ -864,7 +864,7 @@ void CMosaikAligner::PrintStatistics () {
 		float allowedMm = mFilters.UseMismatchFilter ? (float)mFilters.MaxNumMismatches : mFilters.MaxMismatchPercent;
 		mStatisticsMaps.SetExpectedStatistics( mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm );
 		string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
-		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups[0].ReadGroupID.c_str() );
+		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups[0].ReadGroupID.c_str(), mStatisticsCounters.StatMappingQuality );
 	}
 	
 	MosaikReadFormat::CReadReader in;

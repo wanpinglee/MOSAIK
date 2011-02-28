@@ -137,7 +137,7 @@ void CArchiveMerge::PrintStatisticsMaps(
 	const float allowedMismatch ) {
 	
 	_statisticsMaps.SetExpectedStatistics( fragmentLength, localSearchRadius, allowedMismatch );
-	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str() );
+	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str(), _statMappingQuality );
 }
 
 void CArchiveMerge::PrintReferenceSequence( vector<ReferenceSequence>& refVec ){

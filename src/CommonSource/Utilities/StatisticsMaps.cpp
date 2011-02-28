@@ -333,12 +333,13 @@ inline void CStatisticsMaps::PrintMap(
 	}
 }
 
-void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId ) {
+void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId, const unsigned char statMappingQuality ) {
 	FILE* fOut;
 	fOut = fopen( filename, "w" );
 
 	// print read group ID
 	fprintf( fOut, "RG:%s\n", readGroupId );
+	fprintf( fOut, "Mapping quality threshold:%u\n", statMappingQuality );
 	
 	if ( fOut != NULL ) {
 		char buffer[1024];
