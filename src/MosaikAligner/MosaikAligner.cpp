@@ -534,6 +534,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		cout << "finished." << endl;
 	}
 
+	if ( !mSReference.found ) {
+		string sBamName = mSettings.OutputReadArchiveFilename + ".special.bam";
+		rm ( sBamName.c_str() );
+	}
+
+
 	PrintStatistics();
 }
 
@@ -684,7 +690,7 @@ void CMosaikAligner::MergeArchives(void) {
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
 		//cerr << outputFilenames[i] << endl;
-		//rm(outputFilenames[i].c_str());
+		rm(outputFilenames[i].c_str());
 	//cerr << endl;
 
 
