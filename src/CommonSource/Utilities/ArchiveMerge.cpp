@@ -425,6 +425,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			exit(1);
 		}
 
+		al1.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
+		al2.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
 
 		SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
 		SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );

@@ -603,9 +603,6 @@ void CAlignmentThread::AlignReadArchive(
 			const bool isUU = isMate1Unique && isMate2Unique;
 			const bool isMM = isMate1Multiple && isMate2Multiple;
 
-			al1.Quality = AdjustMappingQuality( al1.Quality, isUU, isMM );
-			al2.Quality = AdjustMappingQuality( al2.Quality, isUU, isMM );
-
 
 			SetRequiredInfo( al1, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
@@ -619,6 +616,9 @@ void CAlignmentThread::AlignReadArchive(
 			
 			} else {
 
+				al1.RecalibrateQuality(isUU, isMM);
+				al2.RecalibrateQuality(isUU, isMM);
+				
 				if (  isMate1Unique && isMate2Special  ) {
 					Alignment genomicAl = al1;
 					Alignment specialAl = mate2SpecialAl;
@@ -698,6 +698,7 @@ void CAlignmentThread::AlignReadArchive(
 			// patch the information for reporting
 			Alignment al = isFirstMate ? mate1Set[0] : mate2Set[0];
 			Alignment unmappedAl;
+
 			SetRequiredInfo( al, unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 ), mr, false, false, isFirstMate, isPairedEnd, true, false );
 			SetRequiredInfo( unmappedAl, al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
@@ -710,6 +711,8 @@ void CAlignmentThread::AlignReadArchive(
 
 			} else {
 			
+				al.RecalibratedQuality = al.Quality;
+				
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
 				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
@@ -792,19 +795,19 @@ void CAlignmentThread::AlignReadArchive(
 }
 
 // adjust alignment quality
-inline int CAlignmentThread::AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM ) {
-	int aq = mq;
-
-	if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
-	else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
-	else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
-
-	if(aq < 0)       aq = 0;
-	else if(aq > 99) aq = 99;
-	
-
-	return aq;
-}
+//inline int CAlignmentThread::AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM ) {
+//	int aq = mq;
+//
+//	if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
+//	else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+//	else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
+//
+//	if(aq < 0)       aq = 0;
+//	else if(aq > 99) aq = 99;
+//	
+//
+//	return aq;
+//}
 
 // Set the required information and flag for alignments
 void CAlignmentThread::SetRequiredInfo (

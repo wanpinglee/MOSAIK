@@ -637,7 +637,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	unsigned int buffer[8];
 	buffer[0] = alIter->ReferenceIndex;
 	buffer[1] = alIter->ReferenceBegin;
-	buffer[2] = (bin << 16) | (alIter->Quality << 8) | nameLen;
+	buffer[2] = (bin << 16) | (alIter->RecalibratedQuality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;
 
@@ -823,7 +823,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	unsigned int buffer[8] = {0};
 	buffer[0] = notShowRnamePos ? 0xffffffff : al.ReferenceIndex;
 	buffer[1] = notShowRnamePos ? 0xffffffff : al.ReferenceBegin;
-	buffer[2] = (bin << 16) | (al.Quality << 8) | nameLen;
+	buffer[2] = (bin << 16) | (al.RecalibratedQuality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;
 

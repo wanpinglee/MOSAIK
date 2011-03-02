@@ -384,5 +384,5 @@ private:
 	inline bool IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, 
 		const unsigned int competitor_fragmentLength, const Alignment& mate1, const Alignment& mate2, const unsigned int fragmentLength );
 	static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2);
-	inline int AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM );
+	//inline int AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM );
 };

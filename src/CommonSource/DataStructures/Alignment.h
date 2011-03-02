@@ -14,6 +14,7 @@
 #include <cmath>
 #include <string>
 
+#include "Mosaik.h"
 #include "MosaikString.h"
 #include "SequencingTechnologies.h"
 #include "StrandChecker.h"
@@ -39,6 +40,7 @@ struct Alignment {
 	unsigned short QueryEnd;
 	unsigned char Quality;             // alignment quality
 	unsigned char NextBestQuality;     // the next best alignment quality
+	unsigned char RecalibratedQuality; // recalibrated quality
 	bool CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
 	bool IsFirstMate;                  // is this alignment from the first mate in a paired-end read
 	bool IsJunk;                       // are the fileds in this alignment used for other propose, e.g. counting total numbers of alignments?
@@ -76,6 +78,7 @@ struct Alignment {
 		, QueryEnd(0)
 		, Quality(0)
 		, NextBestQuality(0)
+		, RecalibratedQuality(0)
 		, CanBeMappedToSpecialReference(false)
 		, IsFirstMate(false)
 		, IsJunk(false)
@@ -132,6 +135,22 @@ struct Alignment {
 		}
 
 		return IsResolvedAsProperPair;
+	}
+
+	// recalibrate mapping qaulity for paired-end alignments
+	bool RecalibrateQuality ( const bool isUU, const bool isMM ) {
+		
+		int aq = Quality;
+		if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
+		else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+		else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
+
+		if(aq < 0)       aq = 0;
+		else if(aq > 99) aq = 99;
+
+		RecalibratedQuality = aq;
+
+		return true;
 	}
 };
 
