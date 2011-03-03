@@ -724,6 +724,21 @@ void CAlignmentThread::AlignReadArchive(
 
 
 				if ( isPairedEnd ) {
+					
+					if ( isMate1Special || isMate2Special ) {
+						
+						Alignment specialAl = isMate1Special ? mate1SpecialAl : mate2SpecialAl ;
+						SetRequiredInfo( specialAl, al, ( isMate1Special ? mr.Mate1 : mr.Mate2 ), 
+							mr, false, false, isMate1Special, isPairedEnd, true, false );
+	
+						//CZaTager zas1, zas2;
+
+						const char *zas2Tag = za2.GetZaTag( specialAl, al, isMate1Special );
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
@@ -738,6 +753,17 @@ void CAlignmentThread::AlignReadArchive(
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 				else {
+					
+					if ( isMate1Special ) {
+						Alignment specialAl = mate1SpecialAl;
+						SetRequiredInfo( specialAl, al, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
+						
+						const char *zas2Tag = za2.GetZaTag( specialAl, al, true );
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
 					pthread_mutex_lock(&mSaveReadMutex);
 					pBams->rBam.SaveAlignment( al, zaTag1 );
 					pthread_mutex_unlock(&mSaveReadMutex);
