@@ -758,7 +758,7 @@ void CAlignmentThread::AlignReadArchive(
 						Alignment specialAl = mate1SpecialAl;
 						SetRequiredInfo( specialAl, al, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
 						
-						const char *zas2Tag = za2.GetZaTag( specialAl, al, true );
+						const char *zas2Tag = za2.GetZaTag( specialAl, al, true, !isPairedEnd, true );
 						pthread_mutex_lock(&mSaveSpecialBamMutex);
 						pBams->sBam.SaveAlignment( specialAl, zas2Tag );
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
