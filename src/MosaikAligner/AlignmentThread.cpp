@@ -1620,7 +1620,8 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	}
 
 	// calculate the total number of mismatches
-	const unsigned short numTotalMismatches = al.NumMismatches + (mFlags.UseAlignedReadLengthForMismatchCalculation ? 0 : numNonAlignedBases);
+	//const unsigned short numTotalMismatches = al.NumMismatches + (mFlags.UseAlignedReadLengthForMismatchCalculation ? 0 : numNonAlignedBases);
+	const unsigned short numTotalMismatches = al.NumMismatches + (mFilters.UseMinAlignmentFilter ? 0 : numNonAlignedBases);
 
 	// check to see if this alignment meets the maximum mismatch threshold
 	if(mFilters.UseMismatchFilter && (numTotalMismatches > mFilters.MaxNumMismatches)) ret = false;
