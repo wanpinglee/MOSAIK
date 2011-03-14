@@ -1003,7 +1003,7 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			//r.Mate1.Qualities.TrimBegin(1);
+			r.Mate1.Qualities.TrimBegin(1);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 		}
 
@@ -1635,7 +1635,7 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 }
 
 // trims the mate
-void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
+//void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
 
 	//if(mTrimReads) {
 	//
@@ -1701,14 +1701,14 @@ void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
 	//	mNumLeadingNsTrimmed += numLeadingNs;
 	//	mNumLaggingNsTrimmed += numLaggingNs;
 	//}
-}
+//}
 
 // trims the read name and adds a read name prefix
-void CMosaikBuild::ProcessReadName(CMosaikString& readName) {
+//void CMosaikBuild::ProcessReadName(CMosaikString& readName) {
 	//if(mTrimReadNames && (mReadNamePrefixTrim > 0)) readName.TrimBegin(mReadNamePrefixTrim);
 	//if(mHasReadNamePrefix)                          readName.Prepend(mReadNamePrefix);
 	//if(mTrimReadNames && (mReadNameSuffixTrim > 0)) readName.TrimEnd(mReadNameSuffixTrim);
-}
+//}
 
 // returns true if a swap had to performed to guarantee that filename1 is the F3 read (filename2 = R3)
 void CMosaikBuild::ReorderSolidFastaFilenames(string& filename1, string& filename2) {
