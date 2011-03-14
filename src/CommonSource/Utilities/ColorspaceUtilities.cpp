@@ -591,15 +591,16 @@ void CColorspaceUtilities::ConvertReadColorspaceToPseudoColorspace(CMosaikString
 			case '3':
 				*pBases = 'T';
 				break;
-			case 'X':
-				break;
-			case '-':
-				*pBases = 'N';
-				break;
+			//case 'X':
+			//	break;
+			//case '-':
+			//	*pBases = 'N';
+			//	break;
 			case '.':
 				// here we pick an arbitrary colorspace transition, this will have at
 				// least 25 % of being correct as opposed to specifying an 'N'.
 				//*pBases = 'A';
+				// We shouldn't translate . to A(0).
 				*pBases = 'N';
 				break;
 			default:
@@ -628,8 +629,9 @@ void CColorspaceUtilities::ConvertReadPseudoColorspaceToColorspace(CMosaikString
 			case 'T':
 				*pBases = '3';
 				break;
-			case 'X':
+			//case 'X':
 			case 'N':
+				*pBases = '.';
 				break;
 			default:
 				printf("ERROR: Unrecognized nucleotide (%c) when converting read to colorspace.\n", pBases[i]);
