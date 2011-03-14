@@ -761,14 +761,14 @@ void CMosaikBuild::EnableReadLimit(const uint64_t readLimit) {
 }
 
 // returns the colorspace name for the given read name
-void CMosaikBuild::GetColorspaceName(const CMosaikString& readName, ColorspaceName& cn) {
-	vector<string> columns;
-	back_insert_iterator<vector<string> > backiter(columns);
-	SplitString(backiter, "_", readName.CData());
-	cn.first  = GetUnsignedShort((char*)columns[0].c_str());
-	cn.second = GetUnsignedShort((char*)columns[1].c_str());
-	cn.third  = GetUnsignedShort((char*)columns[2].c_str());
-}
+//void CMosaikBuild::GetColorspaceName(const CMosaikString& readName, ColorspaceName& cn) {
+	//vector<string> columns;
+	//back_insert_iterator<vector<string> > backiter(columns);
+	//SplitString(backiter, "_", readName.CData());
+	//cn.first  = GetUnsignedShort((char*)columns[0].c_str());
+	//cn.second = GetUnsignedShort((char*)columns[1].c_str());
+	//cn.third  = GetUnsignedShort((char*)columns[2].c_str());
+//}
 
 // Parses an Illumina Bustard directory
 void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, const string& outputFilename, const bool splitReads) {
@@ -1044,7 +1044,8 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 	writer.Open(outputFilename, RS_PAIRED_END_READ, mReadGroup);
 
 	bool removedMateSuffix = false;
-	unsigned short numSuffixCharactersRemoved = 0;
+	unsigned short numSuffixCharactersRemoved1 = 0;
+	unsigned short numSuffixCharactersRemoved2 = 0;
 
 	// re-arrange the FASTA filenames if we are parsing a SOLiD csfasta file
 	// the F3 read will always be mate1 and the R3 read will always be mate2
@@ -1087,7 +1088,7 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 	CColorspaceUtilities csu;
 
 	FastaTags ftags1, ftags2;
-	ColorspaceName cn1, cn2;
+	vector< string > cn1, cn2; // colorspace names
 	CMosaikString mate2Name;
 	Mosaik::Read r;
 	while(true) {
@@ -1102,61 +1103,130 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 		// trim the read names
 		if(!removedMateSuffix) {
 
-			numSuffixCharactersRemoved = 0;
-			while((ftags1.Name != ftags2.Name) && (ftags1.Name.Length() > 0)) {
-				ftags1.Name.TrimEnd(1);
-				ftags2.Name.TrimEnd(1);
-				numSuffixCharactersRemoved++;
-			}
+			if (mEnableColorspace) {
+				// split read names by '_'
+				cn1.clear();
+				cn2.clear();
+				back_insert_iterator<vector<string> > backiter1(cn1);
+				back_insert_iterator<vector<string> > backiter2(cn2);
+				SplitString(backiter1, "_", ftags1.Name.CData());
+				SplitString(backiter2, "_", ftags2.Name.CData());
 
-			char lastChar = ftags1.Name[ftags1.Name.Length() - 1];
-			if((lastChar == '/') || (lastChar == '_') || (lastChar == '.') || (lastChar == '|')) {
-				ftags1.Name.TrimEnd(1);
-				ftags2.Name.TrimEnd(1);
-				numSuffixCharactersRemoved++;
-			}
+				for ( unsigned int i = 0; i < cn1.size(); ++i )
+					cout << cn1[i];
+				cout << endl;
+				for ( unsigned int i = 0; i < cn2.size(); ++i )
+					cout << cn2[i];
+				cout << endl;
 
-			removedMateSuffix = true;
+				numSuffixCharactersRemoved1 = 0;
+				numSuffixCharactersRemoved2 = 0;
+				unsigned short currentColumn;
+				if ( cn1.size() < cn2.size() ) {
+					currentColumn = cn1.size() - 1;
+					for ( unsigned short i = currentColumn + 1; i < cn2.size(); ++i )
+						numSuffixCharactersRemoved2 = numSuffixCharactersRemoved2 + cn2[i].size() + 1;
+				} else {
+					currentColumn = cn2.size() - 1;
+					for ( unsigned short i = currentColumn + 1; i < cn1.size(); ++i )
+						numSuffixCharactersRemoved1 = numSuffixCharactersRemoved1 + cn1[i].size() + 1;
+				}
+
+				bool found = false;
+				while (  currentColumn > 0 ) {
+					if ( cn1[ currentColumn ] != cn2[ currentColumn ] ) {
+						numSuffixCharactersRemoved1 = numSuffixCharactersRemoved1 + cn1[currentColumn].size() + 1;
+						numSuffixCharactersRemoved2 = numSuffixCharactersRemoved2 + cn2[currentColumn].size() + 1;
+						currentColumn--;
+					}
+					else {
+						found = true;
+						break;
+					}
+				}
+
+				// current == 0
+				if ( !found && ( cn1[0] != cn2[0] ) ) {		
+					cout << "ERROR: The mate1 read name did not match the mate2 read name. Resynchronization support needs to be implemented." << endl;
+					cout << "mate 1 name: " << ftags1.Name << endl;
+					cout << "mate 2 name: " << ftags2.Name << endl;
+					exit(1);
+				} else {
+					ftags1.Name.TrimEnd(numSuffixCharactersRemoved1);
+					ftags2.Name.TrimEnd(numSuffixCharactersRemoved2);
+					removedMateSuffix = true;
+				}
+
+			}
+			else {
+
+				if ( ftags1.Name.Length() != ftags2.Name.Length() ) {
+					cout << "ERROR: The lengths of mate1 and mate2 read names did not match." << endl;
+					cout << "mate 1 name: " << ftags1.Name << endl;
+					cout << "mate 2 name: " << ftags2.Name << endl;
+					exit(1);
+				}
+
+				numSuffixCharactersRemoved1 = 0;
+				numSuffixCharactersRemoved2 = 0;
+				while((ftags1.Name != ftags2.Name) && (ftags1.Name.Length() > 0)) {
+					ftags1.Name.TrimEnd(1);
+					ftags2.Name.TrimEnd(1);
+					numSuffixCharactersRemoved1++;
+					numSuffixCharactersRemoved2++;
+				}
+	
+				char lastChar = ftags1.Name[ftags1.Name.Length() - 1];
+				if((lastChar == '/') || (lastChar == '_') || (lastChar == '.') || (lastChar == '|')) {
+					ftags1.Name.TrimEnd(1);
+					ftags2.Name.TrimEnd(1);
+					numSuffixCharactersRemoved1++;
+					numSuffixCharactersRemoved2++;
+				}
+
+				removedMateSuffix = true;
+			}
 
 		} else {
 
-			ftags1.Name.TrimEnd(numSuffixCharactersRemoved);
-			ftags2.Name.TrimEnd(numSuffixCharactersRemoved);
+			ftags1.Name.TrimEnd(numSuffixCharactersRemoved1);
+			ftags2.Name.TrimEnd(numSuffixCharactersRemoved2);
 		}
 
 		if(ftags1.Name != ftags2.Name) {
 
-			if(mEnableColorspace) {
-				GetColorspaceName(ftags1.Name, cn1);
-				GetColorspaceName(ftags2.Name, cn2);
+			//if(mEnableColorspace) {
+			//	GetColorspaceName(ftags1.Name, cn1);
+			//	GetColorspaceName(ftags2.Name, cn2);
+			//
+			//	while(ftags1.Name != ftags2.Name) {
+			//		if(cn1 < cn2) {
+			//			if(!reader.LoadNextMate(ftags1, r.Mate1)) break;
+			//			numMate1Read++;
+			//			ftags1.Name.TrimEnd(numSuffixCharactersRemoved);
+			//			GetColorspaceName(ftags1.Name, cn1);
+			//		} else if(cn2 < cn1) {
+			//			if(!reader2.LoadNextMate(ftags2, r.Mate2)) break;
+			//			numMate2Read++;
+			//			ftags2.Name.TrimEnd(numSuffixCharactersRemoved);
+			//			GetColorspaceName(ftags2.Name, cn2);
+			//		}
+			//	}
 
-				while(ftags1.Name != ftags2.Name) {
-					if(cn1 < cn2) {
-						if(!reader.LoadNextMate(ftags1, r.Mate1)) break;
-						numMate1Read++;
-						ftags1.Name.TrimEnd(numSuffixCharactersRemoved);
-						GetColorspaceName(ftags1.Name, cn1);
-					} else if(cn2 < cn1) {
-						if(!reader2.LoadNextMate(ftags2, r.Mate2)) break;
-						numMate2Read++;
-						ftags2.Name.TrimEnd(numSuffixCharactersRemoved);
-						GetColorspaceName(ftags2.Name, cn2);
-					}
-				}
+			//	if(ftags1.Name != ftags2.Name) {
+			//		cout << "ERROR: Resynchronization colorspace support failed." << endl;
+			//		exit(1);
+			//	}
 
-				if(ftags1.Name != ftags2.Name) {
-					cout << "ERROR: Resynchronization colorspace support failed." << endl;
-					exit(1);
-				}
-
-			} else {
+			//} else {
 				cout << "ERROR: The mate1 read name did not match the mate2 read name. Resynchronization support needs to be implemented." << endl;
 				cout << "mate 1 name: " << ftags1.Name << endl;
 				cout << "mate 2 name: " << ftags2.Name << endl;
 				exit(1);
-			}
+			//}
 		}
 
+		
 		if(mEnableColorspace) {
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);

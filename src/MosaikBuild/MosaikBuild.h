@@ -134,18 +134,19 @@ private:
 		unsigned char AssignedBaseQuality;
 	} mSettings;
 	// stores the colorspace triplet
-	struct ColorspaceName {
-		unsigned short first;
-		unsigned short second;
-		unsigned short third;
+	//struct ColorspaceName {
+		//unsigned short first;
+		//unsigned short second;
+		//unsigned short third;
+	//	vector< string > columns;
 
 		// our less-than operator
-		bool operator<(const ColorspaceName& cn) const {
-			if((first == cn.first) && (second == cn.second)) return third < cn.third;
-			if(first == cn.first) return second < cn.second;
-			return first < cn.first;
-		}
-	};
+	//	bool operator<(const ColorspaceName& cn) const {
+	//		if((first == cn.first) && (second == cn.second)) return third < cn.third;
+	//		if(first == cn.first) return second < cn.second;
+	//		return first < cn.first;
+	//	}
+	//};
 	// stores the conversion statistics
 	struct Statistics {
 		uint64_t NumTotalMates;
@@ -179,7 +180,7 @@ private:
 	// activates the specified Illumina lanes
 	void ActivateIlluminaLanes(const string& lanes);
 	// returns the colorspace name for the given read name
-	static void GetColorspaceName(const CMosaikString& readName, ColorspaceName& cn);
+	//static void GetColorspaceName(const CMosaikString& readName, ColorspaceName& cn);
 	// trims the mate
 	void ProcessMate(Mosaik::Mate& mate);
 	// trims the read name and adds a read name prefix

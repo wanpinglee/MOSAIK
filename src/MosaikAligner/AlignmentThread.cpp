@@ -619,7 +619,7 @@ void CAlignmentThread::AlignReadArchive(
 				al1.RecalibrateQuality(isUU, isMM);
 				al2.RecalibrateQuality(isUU, isMM);
 				
-				if (  isMate1Unique && isMate2Special  ) {
+				if (  isMate2Special  ) {
 					Alignment genomicAl = al1;
 					Alignment specialAl = mate2SpecialAl;
 
@@ -635,7 +635,7 @@ void CAlignmentThread::AlignReadArchive(
 					pthread_mutex_unlock(&mSaveSpecialBamMutex);
 				}
 
-				if (  isMate2Unique && isMate1Special  ) {
+				if (  isMate1Special  ) {
 					Alignment genomicAl = al2;
 					Alignment specialAl = mate1SpecialAl;
 					SetRequiredInfo( specialAl, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
