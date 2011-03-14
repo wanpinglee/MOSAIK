@@ -1112,12 +1112,12 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 				SplitString(backiter1, "_", ftags1.Name.CData());
 				SplitString(backiter2, "_", ftags2.Name.CData());
 
-				for ( unsigned int i = 0; i < cn1.size(); ++i )
-					cout << cn1[i];
-				cout << endl;
-				for ( unsigned int i = 0; i < cn2.size(); ++i )
-					cout << cn2[i];
-				cout << endl;
+				//for ( unsigned int i = 0; i < cn1.size(); ++i )
+				//	cout << cn1[i];
+				//cout << endl;
+				//for ( unsigned int i = 0; i < cn2.size(); ++i )
+				//	cout << cn2[i];
+				//cout << endl;
 
 				numSuffixCharactersRemoved1 = 0;
 				numSuffixCharactersRemoved2 = 0;
@@ -1231,12 +1231,12 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			//r.Mate1.Qualities.TrimBegin(1);
+			r.Mate1.Qualities.TrimBegin(1);
 
 			const char* bases2 = r.Mate2.Bases.CData();
 			memcpy((char*)&r.Mate2.SolidPrefixTransition, bases2, 1);
 			r.Mate2.Bases.TrimBegin(1);
-			//r.Mate2.Qualities.TrimBegin(1);
+			r.Mate2.Qualities.TrimBegin(1);
 
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate2.Bases);
