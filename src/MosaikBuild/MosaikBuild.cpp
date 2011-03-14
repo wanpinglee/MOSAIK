@@ -1711,6 +1711,7 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 //}
 
 // returns true if a swap had to performed to guarantee that filename1 is the F3 read (filename2 = R3)
+/*
 void CMosaikBuild::ReorderSolidFastaFilenames(string& filename1, string& filename2) {
 
 	// initialize
@@ -1883,7 +1884,7 @@ void CMosaikBuild::ReorderSolidFastaFilenames(string& filename1, string& filenam
 		filename2 = t;
 	}
 }
-
+*/
 // Sets the default base quality when a data set lacks BQ data
 void CMosaikBuild::SetAssignedBaseQuality(unsigned char baseQuality) {
 	mSettings.AssignedBaseQuality = baseQuality;

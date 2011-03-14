@@ -186,7 +186,7 @@ private:
 	// trims the read name and adds a read name prefix
 	//void ProcessReadName(CMosaikString& readName);
 	// returns true if a swap had to performed to guarantee that filename1 is the F3 read (filename2 = R3)
-	static void ReorderSolidFastaFilenames(string& filename1, string& filename2);
+	//static void ReorderSolidFastaFilenames(string& filename1, string& filename2);
 	// shows the conversion statistics
 	void ShowStatistics(const Statistics& s);
 	// toggles if SOLiD colorspace translation should be performed
