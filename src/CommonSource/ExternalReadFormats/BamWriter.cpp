@@ -227,6 +227,7 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 	if ( isSolid && ( al.QueryBegin != 0 ) ) {
 		*pPackedCigar = ( al.QueryBegin + 1 ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
 		++pPackedCigar;
+		++numCigarOperations;
 	}
 
 	// create the cigar string by parsing the reference and query strings 
@@ -293,6 +294,7 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 	if ( isSolid && ( al.QueryEnd != ( al.CsQuery.size() - 1 ) ) ) {
 		*pPackedCigar = ( al.CsQuery.size() - 1 - al.QueryEnd ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
 		++pPackedCigar;
+		++numCigarOperations;
 	}
 
 	// resize the packed cigar string
