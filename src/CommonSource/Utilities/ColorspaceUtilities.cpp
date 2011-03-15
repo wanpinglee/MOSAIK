@@ -160,7 +160,10 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	BS_MAP_t::const_iterator bsIter;
 	for ( unsigned int i = 0; i < pairwiseLen; i++ ) {
 		
+		// ==========================
 		// determine identical region
+		// ==========================
+		// if the number of matches is smaller than mNAllowedMismatch, the region wouldn't considered as an identical region
 		const bool isEndIdentity = ( mCsAl.csQuery[i] != mCsAl.csReference[i] ) && ( nMatch >= mNAllowedMismatch );
 		if ( isEndIdentity ) {
 			mCsAl.identical[ mCsAl.nIdentical ].Begin  = i - nMatch;
@@ -168,78 +171,92 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 			mCsAl.nIdentical++;
 		}
 
-		if ( mCsAl.csQuery[i] == mCsAl.csReference[i])
+		if ( mCsAl.csQuery[ i ] == mCsAl.csReference[ i ] )
 			nMatch++;
 		else 
 			nMatch = 0;
 		
+		// ====================
 		// determine mismatches
-		bool isN = (mCsAl.csReference[i] != 'A') && (mCsAl.csReference[i] != 'C') && (mCsAl.csReference[i] != 'G') && (mCsAl.csReference[i] != 'T');
-		const bool isMismatch = (mCsAl.csReference[i] != '-') && (mCsAl.csQuery[i] != '-') && !isN && (mCsAl.csReference[i] != mCsAl.csQuery[i]);
+		// ====================
+		const bool isN = ( mCsAl.csReference[ i ] != 'A' ) && ( mCsAl.csReference[ i ] != 'C' ) 
+			&& ( mCsAl.csReference[ i ] != 'G' ) && ( mCsAl.csReference[ i ] != 'T' );
+		const bool isMismatch = ( mCsAl.csReference[ i ] != '-' ) && ( mCsAl.csQuery[ i ] != '-' ) 
+			&& !isN && ( mCsAl.csReference[ i ] != mCsAl.csQuery[ i ] );
+		
 		if ( isMismatch ) {
 			// set the position
-			mCsAl.mismatch[mCsAl.nMismatch] = i;
+			mCsAl.mismatch[ mCsAl.nMismatch ] = i;
 			mCsAl.nMismatch++;
 			// set the mismatch flag
-			mCsAl.type[i] = 0;
+			mCsAl.type[ i ] = 0;
 		}
 
 		
-		// for reference convertion
-		if ( mCsAl.csReference[i] != '-' ) {
+		// ========================
+		// for reference conversion
+		// ========================
+		if ( mCsAl.csReference[ i ] != '-' ) {
 			// end the current dash region
 			if ( continuedDReference ) {
 				mCsAl.nDashReference++;
 				// the current position could be a mismatch
-				mCsAl.mismatch[mCsAl.nMismatch] = i;
+				mCsAl.mismatch[ mCsAl.nMismatch ] = i;
 				mCsAl.nMismatch++;
-				mCsAl.type[i] = 1;
+				mCsAl.type[ i ] = 1;
 			}
 			continuedDReference = false;
 		}
 		else {
 			// start a dash region
 			if ( !continuedDReference ) {
-				mCsAl.dashReference[mCsAl.nDashReference].Begin  = i;
-				mCsAl.dashReference[mCsAl.nDashReference].Length = 0;
+				mCsAl.dashReference[ mCsAl.nDashReference ].Begin  = i;
+				mCsAl.dashReference[ mCsAl.nDashReference ].Length = 0;
 				// the preceding position could be a mismatch
-				mCsAl.mismatch[mCsAl.nMismatch] = i;
+				mCsAl.mismatch[ mCsAl.nMismatch ] = i;
 				mCsAl.nMismatch++;
-				mCsAl.type[i] = 3;
+				mCsAl.type[ i ] = 3;
 			}
-			mCsAl.dashReference[mCsAl.nDashReference].Length++;
+			mCsAl.dashReference[ mCsAl.nDashReference ].Length++;
 			continuedDReference = true;
 		}
 
-		// for query convertion
-		if ( mCsAl.csQuery[i] != '-' ) {
+		// ====================
+		// for query conversion
+		// ====================
+		if ( mCsAl.csQuery[ i ] != '-' ) {
 			// end the current dash region
 			if ( continuedDQuery ) {
 				mCsAl.nDashQuery++;
 				// the current position could be a mismatch
-				mCsAl.mismatch[mCsAl.nMismatch] = i;
+				mCsAl.mismatch[ mCsAl.nMismatch ] = i;
 				mCsAl.nMismatch++;
-				mCsAl.type[i] = 2;
+				mCsAl.type[ i ] = 2;
 			}
 			continuedDQuery = false;
 		}
 		else {
 			// start a dash region
 			if ( !continuedDQuery ) {
-				mCsAl.dashQuery[mCsAl.nDashQuery].Begin  = i;
-				mCsAl.dashQuery[mCsAl.nDashQuery].Length = 0;
+				mCsAl.dashQuery[ mCsAl.nDashQuery ].Begin  = i;
+				mCsAl.dashQuery[ mCsAl.nDashQuery ].Length = 0;
 				// the preceding position could be a mismatch
-				mCsAl.mismatch[mCsAl.nMismatch] = i;
+				mCsAl.mismatch[ mCsAl.nMismatch ] = i;
 				mCsAl.nMismatch++;
-				mCsAl.type[i] = 4;
+				mCsAl.type[ i ] = 4;
 			}
-			mCsAl.dashQuery[mCsAl.nDashQuery].Length++;
+			mCsAl.dashQuery[ mCsAl.nDashQuery ].Length++;
 			continuedDQuery = true;
 		}
 
 
-	}
+	} // end of for loop
 
+
+
+	// ===============================
+	// close the last identical region
+	// ===============================
 	if ( nMatch > 0 ) {
 		mCsAl.identical[ mCsAl.nIdentical ].Begin  = pairwiseLen - nMatch;
 		mCsAl.identical[ mCsAl.nIdentical ].Length = nMatch;
@@ -247,10 +264,14 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	}
 	
 	
-	if ( mCsAl.identical[mCsAl.nIdentical - 1].Begin != 0 ) {
+	// ================
+	// start converting
+	// ================
+	if ( mCsAl.identical[ mCsAl.nIdentical - 1 ].Begin != 0 ) {
 		// find sequencing errors
 		if ( mCsAl.nMismatch > 0 )
-			FindSequencingError(pairwiseLen);
+			if ( !FindSequencingError(pairwiseLen) )
+				return false;
 
         	if ( mCsAl.nDashReference > 0 ) {
 			for ( unsigned int i = 0; i < mCsAl.nDashReference; i++ ) {
@@ -405,12 +426,12 @@ void CColorspaceUtilities::AdjustDash(const char* csSequence, const char* csSequ
 
 
 // detect sequencing errors
-bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
+bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen ) {
 
 	
-	for (unsigned int i = 0; i < mCsAl.nMismatch; i++) {
+	for ( unsigned int i = 0; i < mCsAl.nMismatch; i++ ) {
 	
-		unsigned short curPosition = mCsAl.mismatch[ i ];
+		const unsigned short curPosition = mCsAl.mismatch[ i ];
 		// Assumption: the mismatch before or after a dash region couldn't be a sequencing error
 		if ( mCsAl.type[ curPosition ] != 0 )
 		        continue;
@@ -423,19 +444,18 @@ bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 		bool isSnp = false;
 		unsigned int nSnp = 0;
 		
-		for (unsigned int j = i + 1; j < mCsAl.nMismatch; j++) {
+		// check the mismatches from the current one
+		for ( unsigned int j = i + 1; j < mCsAl.nMismatch; j++ ) {
 		        unsigned short nextPosition = mCsAl.mismatch[ j ];
-			char nextBsReference = mCsAl.bsReference[ nextPosition + 1 ];
-			char nextBsQuery     = mCsAl.bsQuery[ nextPosition + 1 ];
+			char nextBsReference        = mCsAl.bsReference[ nextPosition + 1 ];
+			char nextBsQuery            = mCsAl.bsQuery[ nextPosition + 1 ];
 
 			// the # of SNPS is larger than the given # of mismatchs
 			// in this case, the mismatch is determined as a sequence error
 			nSnp = mCsAl.mismatch[ j ] - mCsAl.mismatch[ i ];
 			if ( nSnp >  mNAllowedMismatch ) {
 				i = j - 1;
-			
 				isSnp = false;
-			
 				break;
 			}
 			
@@ -485,12 +505,14 @@ bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 				break;
 			}
 
-		}
+		} // end of inner for loop
 
 
 		// the current position is a sequencing error
-		bool isN = (mCsAl.csReference[ curPosition ] != 'A') && (mCsAl.csReference[ curPosition ] != 'C') && (mCsAl.csReference[ curPosition ] != 'G') && (mCsAl.csReference[ curPosition ] != 'T');
-		if ( !isSnp && !isN) {
+		const bool isN = ( mCsAl.csReference[ curPosition ] != 'A' ) && ( mCsAl.csReference[ curPosition ] != 'C' ) 
+			&& ( mCsAl.csReference[ curPosition ] != 'G' ) && ( mCsAl.csReference[ curPosition ] != 'T' );
+		
+		if ( !isSnp && !isN ) {
 		        
 			mCsAl.type[ curPosition ] = 9;
 			
@@ -499,6 +521,7 @@ bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 			
 			unsigned int curPosition2 = curPosition;
 			char lastQueryBase = mCsAl.bsReference[ curPosition2 ];
+			// try to find a base that we know how to convert sequence from it
 			while ( ( lastQueryBase == '-' ) || ( lastQueryBase == 'N' ) ) {
 				curPosition2--;
 				lastQueryBase = mCsAl.bsReference[ curPosition2 ];
@@ -511,14 +534,14 @@ bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 				isGoodBsBase = true;
 			
 			if ( isGoodBsBase )
-				if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, curPosition, pairwiseLen - 1, lastQueryBase) )
+				if ( !ConvertCs2Bs( mCsAl.csQuery, mCsAl.bsQuery, curPosition, pairwiseLen - 1, lastQueryBase ) )
 					return false;
 			
-		} // end of if ( !isSnp )
+		} // end of if ( !isSnp && !isN )
 
 		// if the number of snps is larger than 2
 		// we use Ns to present the SNPs
-		if ( isSnp && (nSnp > 2) ) {
+		if ( isSnp && ( nSnp > 2 ) ) {
 			for ( unsigned int i = 0; i < nSnp; i++ ) {
 				mCsAl.bsQuery[ curPosition + i + 1 ] = 'N';
 			}
