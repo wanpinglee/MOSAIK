@@ -138,6 +138,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		while(fasta.LoadNextMate(ft, m)) {
 
 			// convert the reference sequence to colorspace if necessary
+			// Note: the length of converted colorspace string would be the original one - 1
+			// IUPAC will be translated to A, C, G, or T.
 			if(mEnableColorspace) csu.ConvertReadBasespaceToPseudoColorspace(m.Bases);
 
 			// sanity check: make sure we don't have the same reference name

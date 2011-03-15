@@ -43,17 +43,17 @@ CColorspaceUtilities::~CColorspaceUtilities(void) {
 	//if (mCsAl.type)        delete [] mCsAl.type;
 	
 	delete [] mCsAl.csReference; mCsAl.csReference = NULL;
-	delete [] mCsAl.csQuery; mCsAl.csQuery = NULL;
+	delete [] mCsAl.csQuery;     mCsAl.csQuery = NULL;
 	delete [] mCsAl.bsReference; mCsAl.bsReference = NULL;
-	delete [] mCsAl.bsQuery; mCsAl.bsQuery = NULL;
-	delete [] mCsAl.type; mCsAl.type = NULL;
+	delete [] mCsAl.bsQuery;     mCsAl.bsQuery = NULL;
+	delete [] mCsAl.type;        mCsAl.type = NULL;
 	
 	mCsAl.nDashReference = 0;
 	mCsAl.nDashQuery     = 0;
 	//if (mCsAl.dashReference) delete [] mCsAl.dashReference;
 	//if (mCsAl.dashQuery)     delete [] mCsAl.dashQuery;
 	delete [] mCsAl.dashReference; mCsAl.dashReference = NULL;
-	delete [] mCsAl.dashQuery; mCsAl.dashQuery = NULL;
+	delete [] mCsAl.dashQuery;     mCsAl.dashQuery = NULL;
 
 	mCsAl.nMismatch = 0;
 	//if (mCsAl.mismatch)    delete [] mCsAl.mismatch;
@@ -65,7 +65,7 @@ CColorspaceUtilities::~CColorspaceUtilities(void) {
 }
 
 // converts the supplied alignment from colorspace to basespace
-void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
+bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 
 	
 	// convert the alignment to character arrays
@@ -135,10 +135,11 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	// convert cs to bs
 	// initial the first BS base
 	char bsBase = mpBsRefSeqs[al.ReferenceIndex][al.ReferenceBegin];
-	if ( bsBase == 'N' || bsBase == 'X' ) {
-		cout << "ERROR: The first base of the colorspace-basespace converter is N or X." << endl;
-		exit(1);
-	}
+	if ( bsBase == 'N' || bsBase == 'X' )
+		return false;
+		//cout << "ERROR: The first base of the colorspace-basespace converter is N or X." << endl;
+		//exit(1);
+
 	// copy CS alignments
 	memcpy ( mCsAl.csReference, al.Reference.Data(), pairwiseLen );
 	memcpy ( mCsAl.csQuery,     al.Query.Data(),     pairwiseLen );
@@ -146,8 +147,10 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	
 	mCsAl.bsReference[0] = bsBase;
 	mCsAl.bsQuery[0]     = bsBase;
-	ConvertCs2Bs(mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen-1, bsBase);
-	ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen-1, bsBase);
+	if ( !ConvertCs2Bs(mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen-1, bsBase) )
+		return false;
+	if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen-1, bsBase) )
+		return false;
 
 
 	// search the dash regions & mismatches
@@ -283,7 +286,8 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 				isGoodBsBase = true;
 			
 			if ( isGoodBsBase )
-				ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, mCsAl.identical[i].Begin, csEnd, bsBase);
+				if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, mCsAl.identical[i].Begin, csEnd, bsBase) )
+					return false;
 		}
 		
 
@@ -337,11 +341,13 @@ void CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		if(mCsAl.bsReference[i] != mCsAl.bsQuery[i]) al.NumMismatches++;
 	}
 
+	return true;
+
 }
 
 // convert cs sequence to bs sequence
 // a '-' converter would produce a '-'
-void CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase) {
+bool CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase) {
 
 	char lastQueryBase = startBase;
 	//bsSequence[ start ] = startBase;
@@ -352,8 +358,9 @@ void CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequenc
 		if ( csSequence[i] != '-' ) {
 			bsIter = mBSMap.find(PACK_SHORT(lastQueryBase, csSequence[i]));
 			if(bsIter == mBSMap.end()) {
-		        	printf("ERROR: Unknown combination found when converting to basespace: [%c] & [%c]\n", lastQueryBase, csSequence[i]);
-				exit(1);
+		        	return false;
+				//printf("ERROR: Unknown combination found when converting to basespace: [%c] & [%c]\n", lastQueryBase, csSequence[i]);
+				//exit(1);
 			}
 			bsSequence[ i + 1 ] = bsIter->second;
 			lastQueryBase   = bsIter->second;
@@ -361,6 +368,8 @@ void CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequenc
 		else
 			bsSequence[ i + 1 ] = '-';
 	}
+
+	return true;
 }
 
 
@@ -396,7 +405,7 @@ void CColorspaceUtilities::AdjustDash(const char* csSequence, const char* csSequ
 
 
 // detect sequencing errors
-void CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
+bool CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 
 	
 	for (unsigned int i = 0; i < mCsAl.nMismatch; i++) {
@@ -502,7 +511,8 @@ void CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 				isGoodBsBase = true;
 			
 			if ( isGoodBsBase )
-				ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, curPosition, pairwiseLen - 1, lastQueryBase);
+				if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, curPosition, pairwiseLen - 1, lastQueryBase) )
+					return false;
 			
 		} // end of if ( !isSnp )
 
@@ -517,6 +527,7 @@ void CColorspaceUtilities::FindSequencingError(const unsigned int pairwiseLen) {
 
 	}
 
+	return true;
 }
 
 

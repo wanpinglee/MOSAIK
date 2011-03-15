@@ -106,7 +106,7 @@ public:
 	// destructor
 	~CColorspaceUtilities(void);
 	// converts the supplied alignment from colorspace to basespace
-	void ConvertAlignmentToBasespace(Alignment& al);
+	bool ConvertAlignmentToBasespace(Alignment& al);
 	// converts the supplied read from basespace to pseudo-colorspace
 	void ConvertReadBasespaceToPseudoColorspace(CMosaikString& s);
 	// converts the supplied read from colorspace to pseudo-colorspace
@@ -138,11 +138,11 @@ private:
 	// updates the observed gaps array and returns true if gaps are found in the alignment
 	bool UpdateObservedGaps(const char* pReference, const char* pQuery, const unsigned short pairwiseLen);
 	// detect sequencing errors
-	void FindSequencingError(unsigned int pairwiseLen);
+	bool FindSequencingError(unsigned int pairwiseLen);
 	// adjust positions of insertions or deletion
 	void AdjustDash(const char* csSequence, const char* csSequenceOpp, const RegionT* dashRegion, const unsigned int nDashRegion, char* bsSequence);
 	// convert cs sequence to bs sequence
-	void ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase);
+	bool ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase);
 	// get the complement base
 	inline char GetComplementBase(char c) ;
 	// our colorspace to basespace conversion map
