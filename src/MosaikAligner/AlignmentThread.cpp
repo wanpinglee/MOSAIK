@@ -850,8 +850,10 @@ void CAlignmentThread::SetRequiredInfo (
 	if( !mFlags.EnableColorspace ) 
 		al.BaseQualities = m.Qualities;
 	else {
+		CMosaikString rawCS = m.Bases;
+		mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );
 		al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
-		al.CsQuery += m.Bases.CData();
+		al.CsQuery += rawCS.CData();
 	}
 
 	CMosaikString patchBases   = m.Bases;
