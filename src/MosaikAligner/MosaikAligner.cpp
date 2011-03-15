@@ -706,8 +706,8 @@ void CMosaikAligner::MergeArchives(void) {
         	CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
 
         CArchiveMerge merger( 
-		temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, 
-		mSReference.found, mStatisticsCounters.StatMappingQuality );
+		temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mFlags.EnableColorspace,
+		mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, mSReference.found, mStatisticsCounters.StatMappingQuality );
 
 	merger.Merge();
 

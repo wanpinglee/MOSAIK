@@ -139,6 +139,7 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		return false;
 		//cout << "ERROR: The first base of the colorspace-basespace converter is N or X." << endl;
 		//exit(1);
+	
 
 	// copy CS alignments
 	memcpy ( mCsAl.csReference, al.Reference.Data(), pairwiseLen );
@@ -334,8 +335,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	const unsigned short lastCSQIndex = numColorspaceQualities - 1;
 
 	CMosaikString csQualities = al.BaseQualities;
-	al.BaseQualities.Reserve(numColorspaceQualities + 1);
-	al.BaseQualities.SetLength(numColorspaceQualities + 1);
+	al.BaseQualities.Reserve( numColorspaceQualities + 1 );
+	al.BaseQualities.SetLength( numColorspaceQualities + 1 );
 
 	const char* pCSQual = csQualities.CData();
 	char* pBSQual       = al.BaseQualities.Data();
@@ -346,10 +347,10 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 
 	// handle the internal base qualities
 	for(unsigned short i = 1; i < numColorspaceQualities; ++i, ++pBSQual)
-		*pBSQual = min(pCSQual[i - 1], pCSQual[i]);
+		*pBSQual = min(pCSQual[ i - 1 ], pCSQual[ i ]);
 
 	// handle the final base quality
-           *pBSQual = pCSQual[lastCSQIndex];
+        *pBSQual = pCSQual[ lastCSQIndex ];
 
 
 

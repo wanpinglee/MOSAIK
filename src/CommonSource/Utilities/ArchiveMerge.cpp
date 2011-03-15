@@ -52,7 +52,8 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 CArchiveMerge::CArchiveMerge ( 
 	vector < string > inputFilenames, 
 	string outputFilename, 
-	unsigned int        *readNo, 
+	unsigned int        *readNo,
+	const bool          isSolid,
 	const unsigned int  fragmentLength,
 	const unsigned int  localAlignmentSearchRadius,
 	const bool          hasSpecial,
@@ -61,6 +62,7 @@ CArchiveMerge::CArchiveMerge (
 	: _inputFilenames( inputFilenames )
 	, _outputFilename( outputFilename )
 	, _readNo                    ( readNo )
+	, _isSolid                   ( isSolid )
 	, _expectedFragmentLength    ( fragmentLength )
 	, _localAlignmentSearchRadius( localAlignmentSearchRadius )
 	, _hasSpecial                ( hasSpecial )
@@ -449,8 +451,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 
-			_sBam.SaveAlignment( genomicAl, zas1Tag );
-			_sBam.SaveAlignment( specialAl, zas2Tag );
+			_sBam.SaveAlignment( genomicAl, zas1Tag, false, false, _isSolid );
+			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
 
 		if ( isMate2Unique && isMate1Special ) {
@@ -463,15 +465,15 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 
-			_sBam.SaveAlignment( genomicAl, zas1Tag );
-			_sBam.SaveAlignment( specialAl, zas2Tag );
+			_sBam.SaveAlignment( genomicAl, zas1Tag, false, false, _isSolid );
+			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
 
 		if ( isMate1Multiple ) al1.Quality = 0;
 		if ( isMate2Multiple ) al2.Quality = 0;
 
-		_rBam.SaveAlignment( al1, zaTag1 );
-		_rBam.SaveAlignment( al2, zaTag2 );
+		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
+		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
 		if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
@@ -522,12 +524,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		else if ( !isFirstMate && isMate2Multiple )
 			al.Quality = 0;
 		
-		_rBam.SaveAlignment( al, zaTag1 );
+		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
 		
 		
 		if ( _isPairedEnd ) {
-			_rBam.SaveAlignment( unmappedAl, zaTag2, true );
-			_uBam.SaveAlignment( unmappedAl, 0, true );
+			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
+			_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
 		}
 			
 		if ( _statMappingQuality <= al.Quality ) 
@@ -546,7 +548,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 		unmappedAl1.Query         = read.Mate1.Bases;
 		unmappedAl1.BaseQualities = read.Mate1.Qualities;
-		_uBam.SaveAlignment( unmappedAl1, 0, true );
+		_uBam.SaveAlignment( unmappedAl1, 0, true, false, _isSolid );
 		
 		if ( _isPairedEnd ) {
 			unmappedAl2 = r.Mate2Alignments[0];
@@ -555,7 +557,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			
 			unmappedAl2.Query         = read.Mate2.Bases;
 			unmappedAl2.BaseQualities = read.Mate2.Qualities;
-			_uBam.SaveAlignment( unmappedAl2, 0, true );
+			_uBam.SaveAlignment( unmappedAl2, 0, true, false, _isSolid );
 		}
 
 		//_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );

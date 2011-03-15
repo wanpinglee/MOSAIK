@@ -139,8 +139,8 @@ public:
 	// opens the alignment archive
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
-	void SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString);
-	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm = false, const bool& notShowRnamePos = false );
+	//void SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString);
+	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid );
 	// saves the reference and position of an alignment to the alignment archive
 	void SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd );
 private:
@@ -161,7 +161,7 @@ private:
 	// calculates the minimum bin that contains a region [begin, end)
 	static inline unsigned int CalculateMinimumBin(unsigned int begin, unsigned int end);
 	// creates a packed cigar string from the supplied alignment
-	static void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations);
+	static void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations, const bool& isSolid );
 	// encodes the supplied query sequence into 4-bit notation
 	static void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
 	// MD tager

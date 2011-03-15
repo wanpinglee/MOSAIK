@@ -367,16 +367,15 @@ void CAlignmentThread::AlignReadArchive(
 				if ( !isAlExisting ) {
 
 				Alignment al;
-				if(RescueMate(lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
+				if( RescueMate( lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
 
 					const char* pQualities = mr.Mate2.Qualities.CData();
 					const char* pBases = mr.Mate2.Bases.CData();
 
 					// add the alignment to the alignment set if it passes the filters
-					if(ApplyReadFilters(al, pBases, pQualities, mr.Mate2.Bases.Length())) {
+					if( ApplyReadFilters( al, pBases, pQualities, mr.Mate2.Bases.Length() ) ) {
 						al.WasRescued = true;
-						//al.Bases = pBases;
-						if(mate2Alignments.Add(al)) {
+						if( mate2Alignments.Add( al ) ) {
 							mStatisticsCounters.AdditionalLocalMates++;
 							mate2Status    = ALIGNMENTSTATUS_GOOD;
 							isMate2Aligned = true;
@@ -431,10 +430,9 @@ void CAlignmentThread::AlignReadArchive(
 					const char* pBases = mr.Mate1.Bases.Data();
 
 					// add the alignment to the alignment set if it passes the filters
-					if(ApplyReadFilters(al, pBases, pQualities, mr.Mate1.Bases.Length())) {
+					if( ApplyReadFilters( al, pBases, pQualities, mr.Mate1.Bases.Length() ) ) {
 						al.WasRescued = true;
-						//al.Bases = pBases;
-						if(mate1Alignments.Add(al)) {
+						if( mate1Alignments.Add( al ) ) {
 							mStatisticsCounters.AdditionalLocalMates++;
 							mate1Status    = ALIGNMENTSTATUS_GOOD;
 							isMate1Aligned = true;
@@ -630,8 +628,8 @@ void CAlignmentThread::AlignReadArchive(
 					const char *zas1Tag = za1.GetZaTag( genomicAl, al2, true );
 					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
-					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
-					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+					pBams->sBam.SaveAlignment( genomicAl, zas1Tag, false, false, mFlags.EnableColorspace );
+					pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveSpecialBamMutex);
 				}
 
@@ -645,8 +643,8 @@ void CAlignmentThread::AlignReadArchive(
 					const char *zas1Tag = za1.GetZaTag( genomicAl, al1, false );
 					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 					pthread_mutex_lock(&mSaveSpecialBamMutex);
-					pBams->sBam.SaveAlignment( genomicAl, zas1Tag );
-					pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+					pBams->sBam.SaveAlignment( genomicAl, zas1Tag, false, false, mFlags.EnableColorspace );
+					pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveSpecialBamMutex);
 				}
 
@@ -657,8 +655,8 @@ void CAlignmentThread::AlignReadArchive(
 				if ( isMate1Multiple ) al1.Quality = 0;
 				if ( isMate2Multiple ) al2.Quality = 0;
 				pthread_mutex_lock(&mSaveReadMutex);
-				pBams->rBam.SaveAlignment( al1, zaTag1 );
-				pBams->rBam.SaveAlignment( al2, zaTag2 );
+				pBams->rBam.SaveAlignment( al1, zaTag1, false, false, mFlags.EnableColorspace );
+				pBams->rBam.SaveAlignment( al2, zaTag2, false, false, mFlags.EnableColorspace );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 				if ( ( statMappingQuality <= al1.Quality ) && ( statMappingQuality <= al2.Quality ) ) {
@@ -735,7 +733,7 @@ void CAlignmentThread::AlignReadArchive(
 
 						const char *zas2Tag = za2.GetZaTag( specialAl, al, isMate1Special );
 						pthread_mutex_lock(&mSaveSpecialBamMutex);
-						pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
 					}
 					
@@ -743,13 +741,13 @@ void CAlignmentThread::AlignReadArchive(
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
 					pthread_mutex_lock(&mSaveReadMutex);
-					pBams->rBam.SaveAlignment( al, zaTag1 );
-					pBams->rBam.SaveAlignment( unmappedAl, zaTag2, true );  // noCigarMdNm
+					pBams->rBam.SaveAlignment( al, zaTag1, false, false, mFlags.EnableColorspace );
+					pBams->rBam.SaveAlignment( unmappedAl, zaTag2, true, false, mFlags.EnableColorspace );  // noCigarMdNm
 					pthread_mutex_unlock(&mSaveReadMutex);
 
 					
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 				else {
@@ -760,12 +758,12 @@ void CAlignmentThread::AlignReadArchive(
 						
 						const char *zas2Tag = za2.GetZaTag( specialAl, al, true, !isPairedEnd, true );
 						pthread_mutex_lock(&mSaveSpecialBamMutex);
-						pBams->sBam.SaveAlignment( specialAl, zas2Tag );
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
 					}
 					
 					pthread_mutex_lock(&mSaveReadMutex);
-					pBams->rBam.SaveAlignment( al, zaTag1 );
+					pBams->rBam.SaveAlignment( al, zaTag1, false, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveReadMutex);
 				}
 				
@@ -796,12 +794,12 @@ void CAlignmentThread::AlignReadArchive(
 				
 				if ( isPairedEnd ) {
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
-					pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, false, mFlags.EnableColorspace );
+					pBams->uBam.SaveAlignment( unmappedAl2, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				} else {
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 
@@ -848,11 +846,18 @@ void CAlignmentThread::SetRequiredInfo (
 	const bool& isItselfMapped,
 	const bool& isMateMapped) {
 
-	al.BaseQualities = m.Qualities;
+        // the base qualities of SOLiD reads are attached in ApplyReadFilters
+	if( !mFlags.EnableColorspace ) 
+		al.BaseQualities = m.Qualities;
+	else {
+		al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
+		al.CsQuery += m.Bases.CData();
+	}
+
 	CMosaikString patchBases   = m.Bases;
 	unsigned int patchStartLen = al.QueryBegin;
 	unsigned int patchEndLen   = patchBases.Length() - al.QueryEnd - 1;
-	if ( al.IsReverseStrand ) {
+	if ( al.IsReverseStrand && !mFlags.EnableColorspace ) {
 		al.BaseQualities.Reverse();
 		patchBases.ReverseComplement();
 		unsigned int temp;
@@ -860,24 +865,6 @@ void CAlignmentThread::SetRequiredInfo (
 		patchStartLen = patchEndLen;
 		patchEndLen = temp;
 	}
-	
-	// GetFragmentAlignmentQuality
-	// For archive output, we recalculate MQ when merging archives
-	/*
-	if ( isProperPair && !mFlags.UseArchiveOutput ) {
-		const bool isUU = ( al.NumMapped == 1 ) && ( mate.NumMapped == 1 );
-		const bool isMM = ( al.NumMapped > 1 ) && ( mate.NumMapped > 1 );
-		
-		int aq = al.Quality;
-		if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
-		else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
-		else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
-
-		if(aq < 0)       al.Quality = 0;
-		else if(aq > 99) al.Quality = 99;
-		else             al.Quality = aq;
-	}
-	*/
 	
 	al.IsResolvedAsPair       = isPair;
 	al.IsResolvedAsProperPair = isProperPair;
@@ -900,40 +887,42 @@ void CAlignmentThread::SetRequiredInfo (
 	else 
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
-	if ( !isItselfMapped ) {
-		al.NumMapped = 0;
-		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
-			al.Query = m.Bases;
-			al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
-			al.IsJunk = false;
-		} else {
-			al.IsJunk = true;
-		}
-	}
-	else {
-		
-		// patch bases and base qualities
-		if ( patchStartLen > 0 ) {
-			al.Query.Prepend    ( patchBases.CData(), patchStartLen );
-			al.Reference.Prepend( softClippedIdentifier, patchStartLen );
-		}
-
-		if ( patchEndLen > 0 ) {
-			const unsigned int length = patchBases.Length();
-			const unsigned int start  = length - patchEndLen;
-			const char* startPoint    = patchBases.CData() + start;
-			// sanity check
-			if ( length > patchBases.Length() ) {
-				cout << "ERROR: The soft chip position is wrong" << endl;
-				exit(1);
+	if ( !mFlags.EnableColorspace ) {
+		if ( !isItselfMapped ) {
+			al.NumMapped = 0;
+			if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
+				al.Query = m.Bases;
+				al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
+				al.IsJunk = false;
+			} else {
+				al.IsJunk = true;
 			}
-			al.Query.Append    ( startPoint, patchEndLen );
-			al.Reference.Append( softClippedIdentifier, patchEndLen );
 		}
-	}
+		else {
+		
+			// patch bases and base qualities
+			if ( patchStartLen > 0 ) {
+				al.Query.Prepend    ( patchBases.CData(), patchStartLen );
+				al.Reference.Prepend( softClippedIdentifier, patchStartLen );
+			}
 
-	al.QueryBegin = 0;
-	al.QueryEnd   = m.Bases.Length() - 1;
+			if ( patchEndLen > 0 ) {
+				const unsigned int length = patchBases.Length();
+				const unsigned int start  = length - patchEndLen;
+				const char* startPoint    = patchBases.CData() + start;
+				// sanity check
+				if ( length > patchBases.Length() ) {
+					cout << "ERROR: The soft chip position is wrong" << endl;
+					exit(1);
+				}
+				al.Query.Append    ( startPoint, patchEndLen );
+				al.Reference.Append( softClippedIdentifier, patchEndLen );
+			}
+		}
+
+		al.QueryBegin = 0;
+		al.QueryEnd   = m.Bases.Length() - 1;
+	}
 }
 
 // handle and then delete special alignments
@@ -1368,16 +1357,18 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 
 			// create a new alignment data structure
 			Alignment al;
-			al.IsReverseStrand = isFastHashRegionReverseStrand;
-			al.BaseQualities.Copy(qualities, queryLength);
-			if ( al.IsReverseStrand ) al.BaseQualities.Reverse();
+			//al.IsReverseStrand = isFastHashRegionReverseStrand;
+			//al.BaseQualities.Copy( qualities, queryLength );
+			//if ( al.IsReverseStrand ) al.BaseQualities.Reverse();
 	
 			// perform a Smith-Waterman alignment
 			AlignRegion(fastHashRegion, al, fastHashRead, queryLength, numExtensionBases);
 
 			// add the alignment to the vector if it passes the filters
-			if(ApplyReadFilters(al, query, qualities, queryLength)) {
-				//al.Bases = query;
+			if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
+				// the base qualities of SOLiD reads are attached in ApplyReadFilters
+				//if( mFlags.EnableColorspace )
+				//	al.BaseQualities.Copy(qualities, queryLength);
 				alignments.Add(al);
 			}
 
@@ -1402,25 +1393,10 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				AlignRegion(forwardRegions[i], al, mForwardRead, queryLength, numExtensionBases);
 
 				// add the alignment to the alignments vector
-				if(ApplyReadFilters(al, query, qualities, queryLength)) {
-					
-					al.BaseQualities.Copy(qualities, queryLength);
-					//if ( al.QueryBegin > 0 ) {
-					//	al.Query.Prepend    ( query, al.QueryBegin );
-					//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
-					//}
-
-					//if ( al.QueryEnd != ( queryLength - 1 ) ) {
-					//	const char* startPoint    = query + al.QueryEnd + 1;
-					//	const unsigned int length = queryLength - al.QueryEnd - 1;
-					//	al.Query.Append    ( startPoint, length );
-					//	al.Reference.Append( softClippedIdentifier, length );
-					//}
-
-					//al.QueryBegin = 0;
-					//al.QueryEnd   = queryLength - 1;
-					//al.BaseQualities.Copy( qualities, queryLength);
-					//al.Bases = query;
+				if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
+					// the base qualities of SOLiD reads are attached in ApplyReadFilters
+					//if( mFlags.EnableColorspace )
+					//	al.BaseQualities.Copy(qualities, queryLength);
 					alignments.Add(al);
 				}
 
@@ -1458,28 +1434,12 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					AlignRegion(reverseRegions[i], al, mReverseRead, queryLength, numExtensionBases);
 
 					// add the alignment to the alignments vector
-					if(ApplyReadFilters(al, query, qualities, queryLength)) {
-					
-						al.BaseQualities.Copy( qualities, queryLength);
-						al.BaseQualities.Reverse();
-
-						//if ( al.QueryBegin > 0 ) {
-						//	al.Query.Prepend    ( query, al.QueryBegin );
-						//	al.Reference.Prepend( softClippedIdentifier, al.QueryBegin );
+					if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
+						// the base qualities of SOLiD reads are attached in ApplyReadFilters
+						//if( mFlags.EnableColorspace ) {
+						//	al.BaseQualities.Copy( qualities, queryLength);
+						//	al.BaseQualities.Reverse();
 						//}
-
-						//if ( al.QueryEnd != ( queryLength - 1 ) ) {
-						//	const char* startPoint    = query + al.QueryEnd + 1;
-						//	const unsigned int length = queryLength - al.QueryEnd - 1;
-						//	al.Query.Append    ( startPoint, length );
-						//	al.Reference.Append( softClippedIdentifier, length );
-						//}
-
-						//al.QueryBegin = 0;
-						//al.QueryEnd   = queryLength - 1;
-						//al.BaseQualities.Copy( qualities, queryLength);
-						//al.BaseQualities.Reverse();
-						//al.Bases = query;
 						alignments.Add(al);
 					}
 
@@ -1593,30 +1553,28 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	// assuming this is a good read
 	bool ret = true;
 
-	// copy the base qualities
-	// TODO: there may be a significant penalty involved in performing this on all aligned reads
-	//al.BaseQualities.Copy(qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1);
-	//if(al.IsReverseStrand) al.BaseQualities.Reverse();
-
 	unsigned short numNonAlignedBases = queryLength - al.QueryLength;
 
-	// don't count leading and lagging N's as mismatches
-	unsigned int pos = 0;
-	while( ( bases[pos] == 'N' ) && ( pos < queryLength ) ) {
-		numNonAlignedBases--;
-		pos++;
-	}
-	pos = queryLength - 1;
-	while( ( bases[pos] == 'N' ) && ( pos >= 0 ) ) {
-		numNonAlignedBases--;
-		pos--;
-	}
-
 	// convert from colorspace to basespace
-	// unenable EnableColorspace flag for low-memory algorithm, deal with the SOLiD convertion when sorting the aligned archives
 	if( mFlags.EnableColorspace ) {
-		mCS.ConvertAlignmentToBasespace(al);		
-		numNonAlignedBases = (queryLength + 1) - al.QueryLength;
+		al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
+		if(al.IsReverseStrand) al.BaseQualities.Reverse();
+		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
+		numNonAlignedBases = ( queryLength + 1 ) - al.QueryLength;
+
+	} else {
+	
+		// don't count leading and lagging N's as mismatches
+		unsigned int pos = 0;
+		while( ( bases[pos] == 'N' ) && ( pos < queryLength ) ) {
+			numNonAlignedBases--;
+			pos++;
+		}
+		pos = queryLength - 1;
+		while( ( bases[pos] == 'N' ) && ( pos >= 0 ) ) {
+			numNonAlignedBases--;
+			pos--;
+		}
 	}
 
 	// calculate the total number of mismatches

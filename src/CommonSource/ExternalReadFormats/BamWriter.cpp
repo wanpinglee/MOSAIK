@@ -211,7 +211,7 @@ void CBamWriter::TranslateCigarToPackCigar ( const string cigar, string packCiga
 
 
 // creates a cigar string from the supplied alignment
-void CBamWriter::CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations) {
+void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, unsigned int& numCigarOperations, const bool& isSolid ) {
 
 	// initialize
 	const char* pReference = al.Reference.CData();
@@ -223,6 +223,11 @@ void CBamWriter::CreatePackedCigar(const Alignment& al, string& packedCigar, uns
 	packedCigar.resize(numBases * SIZEOF_INT);
 	unsigned int* pPackedCigar = (unsigned int*)packedCigar.data();
 	numCigarOperations = 0;
+
+	if ( isSolid && ( al.QueryBegin != 0 ) ) {
+		*pPackedCigar = ( al.QueryBegin + 1 ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
+		++pPackedCigar;
+	}
 
 	// create the cigar string by parsing the reference and query strings 
 	while(currentPos < numBases) {
@@ -283,6 +288,11 @@ void CBamWriter::CreatePackedCigar(const Alignment& al, string& packedCigar, uns
 			printf("ERROR: buffer overflow detected when creating the packed cigar string.\n");
 			exit(1);
 		}
+	}
+
+	if ( isSolid && ( al.QueryEnd != ( al.CsQuery.size() - 1 ) ) ) {
+		*pPackedCigar = ( al.CsQuery.size() - 1 - al.QueryEnd ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
+		++pPackedCigar;
 	}
 
 	// resize the packed cigar string
@@ -519,6 +529,7 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 }
 
 // saves the alignment to the alignment archive
+/*
 void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString ) {
 
 	// =================
@@ -684,10 +695,10 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	if ( zaString != 0 )
 		BgzfWrite(zaTag.data(), zaTagLen);
 }
-
+*/
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos ) {
+void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid ) {
 
 	// =================
 	// set the BAM flags
@@ -745,7 +756,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	string packedCigar;
 	unsigned int numCigarOperations = 0;
 	if ( !noCigarMdNm )
-		CreatePackedCigar(al, packedCigar, numCigarOperations);
+		CreatePackedCigar( al, packedCigar, numCigarOperations, isSolid );
 	else
 		packedCigar = "\0";
 	const unsigned int packedCigarLen = !noCigarMdNm ? packedCigar.size() : 0;
@@ -806,6 +817,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 		sprintf(pMdTag, "MDZ%s", pMd);
 	}
 
+	// create our za tag
 	unsigned int zaTagLen = 0;
 	string zaTag;
 	char* pZaTag;
@@ -814,6 +826,20 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 		zaTag.resize( zaTagLen );
 		pZaTag = (char*)zaTag.data();
 		sprintf(pZaTag, "ZAZ%s",zaString);
+	}
+
+	// create our cs tag
+	unsigned int csTagLen = 0;
+	string csTag;
+	char* pCsTag;
+	if ( isSolid ) {
+		cout << al.CsQuery.c_str() << endl;
+		csTagLen = 3 + strlen (al.CsQuery.c_str()) + 1;
+		cout << csTagLen << endl;
+		csTag.resize( csTagLen );
+		pCsTag = (char*)csTag.data();
+		sprintf( pCsTag, "CSZ%s", al.CsQuery.c_str() );
+		cout << csTag << endl;
 	}
 
 	// retrieve our bin
@@ -838,7 +864,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen + csTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -871,4 +897,8 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	// write the ZA tag
 	if ( zaString != 0 )
 		BgzfWrite(zaTag.data(), zaTagLen);
+
+	// write the cs tag
+	if ( isSolid )
+		BgzfWrite(csTag.data(), csTagLen);
 }

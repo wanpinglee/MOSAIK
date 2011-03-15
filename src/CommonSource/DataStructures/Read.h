@@ -12,7 +12,7 @@
 
 #include "MosaikString.h"
 
-#define SOLID_PREFIX_LENGTH 2
+#define SOLID_PREFIX_LENGTH 1
 
 namespace Mosaik {
 
