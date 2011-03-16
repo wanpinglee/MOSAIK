@@ -68,7 +68,7 @@ namespace MosaikReadFormat {
 		// saves the alignment to the alignment archive
 		void SaveAlignment(Alignment* pAl);
 		// saves the read to the alignment archive
-		void SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments);
+		//void SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments);
 		void SaveRead(const Mosaik::Read& mr, const Alignment & mate1Alignments, const Alignment & mate2Alignments, 
 			const bool& isLongRead, const bool & isSaveMate1 = true, const bool & isSaveMate2 = true );
 		// adds a header tag (only works before opening the file)

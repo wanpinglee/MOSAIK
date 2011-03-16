@@ -612,7 +612,7 @@ namespace MosaikReadFormat {
 		// increment the read counter
 		mNumReads++;
 	}
-
+/*
 	// saves the paired-end read to the alignment archive
 	void CAlignmentWriter::SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments) {
 
@@ -670,7 +670,7 @@ namespace MosaikReadFormat {
 		// increment the read counter
 		mNumReads++;
 	}
-
+*/
 	// saves the paired-end read to the alignment archive
 	void CAlignmentWriter::SaveRead(
 		const Mosaik::Read& mr, 

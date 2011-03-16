@@ -141,6 +141,20 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		//exit(1);
 	
 
+	// make Ns in Query be the same bases in Reference
+	char* pQuery = al.Query.Data();
+	char* pRef   = al.Reference.Data();
+	for ( unsigned int i = 0; i < pairwiseLen; ++i ) {
+		if ( *pQuery == 'N' ) {
+			if ( *pRef == '-' ) return false;
+			else                *pQuery = *pRef;
+		}
+			
+		++pQuery;
+		++pRef;
+	}
+	
+	
 	// copy CS alignments
 	memcpy ( mCsAl.csReference, al.Reference.Data(), pairwiseLen );
 	memcpy ( mCsAl.csQuery,     al.Query.Data(),     pairwiseLen );
