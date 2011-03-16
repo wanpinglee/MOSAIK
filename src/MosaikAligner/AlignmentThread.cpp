@@ -182,7 +182,7 @@ void CAlignmentThread::AlignReadArchive(
 	const bool isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
 
 	// catch unsupported local alignment search sequencing technologies
-	if(mFlags.UseLocalAlignmentSearch && (!isUsing454 && !isUsingIllumina && !isUsingIlluminaLong)) {
+	if(mFlags.UseLocalAlignmentSearch && (!isUsing454 && !isUsingIllumina && !isUsingIlluminaLong && !isUsingSOLiD )) {
 		cout << "ERROR: This sequencing technology is not currently supported for local alignment search." << endl;
 		exit(1);
 	}
@@ -343,6 +343,11 @@ void CAlignmentThread::AlignReadArchive(
 						lam.IsTargetBeforeUniqueMate = true;
 					else if( isUsing454 ) 
 						lam.IsTargetReverseStrand    = true;
+					else if ( isUsingSOLiD ) {
+						lam.IsTargetBeforeUniqueMate = true;
+						lam.IsTargetReverseStrand    = true;
+					}
+						
 					// NB: we caught other technologies during initialization
 				} else {
 					if( isUsingIllumina ) 
@@ -366,25 +371,25 @@ void CAlignmentThread::AlignReadArchive(
 				
 				if ( !isAlExisting ) {
 
-				Alignment al;
-				if( RescueMate( lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
+					Alignment al;
+					if( RescueMate( lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
 
-					const char* pQualities = mr.Mate2.Qualities.CData();
-					const char* pBases = mr.Mate2.Bases.CData();
+						const char* pQualities = mr.Mate2.Qualities.CData();
+						const char* pBases = mr.Mate2.Bases.CData();
 
-					// add the alignment to the alignment set if it passes the filters
-					if( ApplyReadFilters( al, pBases, pQualities, mr.Mate2.Bases.Length() ) ) {
-						al.WasRescued = true;
-						if( mate2Alignments.Add( al ) ) {
-							mStatisticsCounters.AdditionalLocalMates++;
-							mate2Status    = ALIGNMENTSTATUS_GOOD;
-							isMate2Aligned = true;
+						// add the alignment to the alignment set if it passes the filters
+						if( ApplyReadFilters( al, pBases, pQualities, mr.Mate2.Bases.Length() ) ) {
+							al.WasRescued = true;
+							if( mate2Alignments.Add( al ) ) {
+								mStatisticsCounters.AdditionalLocalMates++;
+								mate2Status    = ALIGNMENTSTATUS_GOOD;
+								isMate2Aligned = true;
+							}
 						}
-					}
 
-					// increment our candidates counter
-					mStatisticsCounters.AlignmentCandidates++;
-				}
+						// increment our candidates counter
+						mStatisticsCounters.AlignmentCandidates++;
+					}
 
 				}
 			}
@@ -423,25 +428,25 @@ void CAlignmentThread::AlignReadArchive(
 
 				if ( !isAlExisting ) {
 
-				Alignment al;
-				if(RescueMate(lam, mr.Mate1.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
+					Alignment al;
+					if(RescueMate(lam, mr.Mate1.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
 
-					const char* pQualities = mr.Mate1.Qualities.CData();
-					const char* pBases = mr.Mate1.Bases.Data();
+						const char* pQualities = mr.Mate1.Qualities.CData();
+						const char* pBases = mr.Mate1.Bases.Data();
 
-					// add the alignment to the alignment set if it passes the filters
-					if( ApplyReadFilters( al, pBases, pQualities, mr.Mate1.Bases.Length() ) ) {
-						al.WasRescued = true;
-						if( mate1Alignments.Add( al ) ) {
-							mStatisticsCounters.AdditionalLocalMates++;
-							mate1Status    = ALIGNMENTSTATUS_GOOD;
-							isMate1Aligned = true;
+						// add the alignment to the alignment set if it passes the filters
+						if( ApplyReadFilters( al, pBases, pQualities, mr.Mate1.Bases.Length() ) ) {
+							al.WasRescued = true;
+							if( mate1Alignments.Add( al ) ) {
+								mStatisticsCounters.AdditionalLocalMates++;
+								mate1Status    = ALIGNMENTSTATUS_GOOD;
+								isMate1Aligned = true;
+							}
 						}
-					}
 
-					// increment our candidates counter
-					mStatisticsCounters.AlignmentCandidates++;
-				}
+						// increment our candidates counter
+						mStatisticsCounters.AlignmentCandidates++;
+					}
 
 				}
 			}
