@@ -372,6 +372,7 @@ void CAlignmentThread::AlignReadArchive(
 				if ( !isAlExisting ) {
 
 					Alignment al;
+					
 					if( RescueMate( lam, mr.Mate2.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
 
 						const char* pQualities = mr.Mate2.Qualities.CData();
@@ -390,6 +391,7 @@ void CAlignmentThread::AlignReadArchive(
 						// increment our candidates counter
 						mStatisticsCounters.AlignmentCandidates++;
 					}
+					
 
 				}
 			}
@@ -429,6 +431,7 @@ void CAlignmentThread::AlignReadArchive(
 				if ( !isAlExisting ) {
 
 					Alignment al;
+					
 					if(RescueMate(lam, mr.Mate1.Bases, localSearchBegin, localSearchEnd, refIndex, al)) {
 
 						const char* pQualities = mr.Mate1.Qualities.CData();
@@ -1585,7 +1588,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	if( mFlags.EnableColorspace ) {
 		//cerr << al.NumMismatches;
 		al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
-		if(al.IsReverseStrand) al.BaseQualities.Reverse();
+		if( al.IsReverseStrand ) al.BaseQualities.Reverse();
 		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
 		numNonAlignedBases = queryLength1 - al.QueryLength;
 		//cerr << " " << al.NumMismatches << " " << al.QueryLength << endl;
@@ -1882,6 +1885,9 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikS
 	al.ReferenceBegin += begin - mReferenceBegin[refIndex];
 	al.ReferenceEnd   += begin - mReferenceBegin[refIndex];
 
-	// an alignment was performed
-	return true;
+	if ( al.QueryBegin >= al.QueryEnd )
+		return false;
+	else
+		// an alignment was performed
+		return true;
 }

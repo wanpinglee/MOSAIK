@@ -352,7 +352,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	++al.QueryEnd;
 	al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
 
-        
+       
+      
 	// ------------------------------------------------------------------------------------------
 	// convert the colorspace transition qualities to base qualities
 	// NOTE: this algorithm will simply take the minimum of the two qualities that overlap a base
