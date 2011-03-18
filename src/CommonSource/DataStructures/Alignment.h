@@ -58,8 +58,9 @@ struct Alignment {
 	CMosaikString Query;
 	CMosaikString BaseQualities;
 	CMosaikString Name;                // the read name
-	string CsQuery;
-	string Cigar;
+	string CsQuery;                    // colorspace read sequence
+	string CsBaseQualities;            // colorspace base qualities
+	string Cigar;                      // the cigar string
 	string ReadGroup;                  // the read group string
 	string SpecialCode;                // 2 letters to indicate the sequence can be mapped to which special reference
 	bool Mark;

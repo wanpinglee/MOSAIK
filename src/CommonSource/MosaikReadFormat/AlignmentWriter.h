@@ -66,11 +66,11 @@ namespace MosaikReadFormat {
 		// saves the read to the alignment archive
 		void SaveAlignedRead(const Mosaik::AlignedRead& ar);
 		// saves the alignment to the alignment archive
-		void SaveAlignment(Alignment* pAl);
+		//void SaveAlignment(Alignment* pAl);
 		// saves the read to the alignment archive
 		//void SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments);
 		void SaveRead(const Mosaik::Read& mr, const Alignment & mate1Alignments, const Alignment & mate2Alignments, 
-			const bool& isLongRead, const bool & isSaveMate1 = true, const bool & isSaveMate2 = true );
+			const bool& isLongRead, const bool & isSaveMate1, const bool & isSaveMate2, const bool & hasCsString );
 		// adds a header tag (only works before opening the file)
 		void AddHeaderTag(const unsigned char tagID, const TagType& tagType);
 		// set reference gaps vector
@@ -95,7 +95,7 @@ namespace MosaikReadFormat {
 		// adjusts the buffer
 		void AdjustBuffer(void);
 		// serializes the specified alignment
-		void WriteAlignment(const Alignment* pAl, const bool isLongRead, const bool isPairedEnd, const bool isFirstMate, const bool isResolvedAsPair);
+		void WriteAlignment(const Alignment* pAl, const bool isLongRead, const bool isPairedEnd, const bool isFirstMate, const bool isResolvedAsPair, const bool hasCsString);
 		// write partition to disk
 		void WritePartition(void);
 		// write the read header to disk

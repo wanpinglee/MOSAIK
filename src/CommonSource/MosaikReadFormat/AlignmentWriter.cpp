@@ -498,7 +498,7 @@ namespace MosaikReadFormat {
 	}
 
 	// saves the read to the alignment archive
-	void CAlignmentWriter::SaveAlignedRead(const Mosaik::AlignedRead& ar ) {
+	void CAlignmentWriter::SaveAlignedRead( const Mosaik::AlignedRead& ar ) {
 
 		// check the memory buffer
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
@@ -524,11 +524,12 @@ namespace MosaikReadFormat {
 		// derive our read status
 		unsigned char readStatus = RF_UNKNOWN;
 
-		if(haveMate1)      readStatus |= RF_HAVE_MATE1;
-		if(haveMate2)      readStatus |= RF_HAVE_MATE2;
-		if(isLongRead)     readStatus |= RF_IS_LONG_READ;
-		if(ar.IsPairedEnd) readStatus |= RF_IS_PAIRED_IN_SEQUENCING;
+		if(haveMate1)           readStatus |= RF_HAVE_MATE1;
+		if(haveMate2)           readStatus |= RF_HAVE_MATE2;
+		if(isLongRead)          readStatus |= RF_IS_LONG_READ;
+		if(ar.IsPairedEnd)      readStatus |= RF_IS_PAIRED_IN_SEQUENCING;
 		if(ar.IsResolvedAsPair) readStatus |= RF_RESOLVED_AS_PAIR;
+		if(ar.hasCsString)      readStatus |= RF_HAS_CS_STRING;
 
 		// write the read header
 		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments );
@@ -544,7 +545,7 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate1Alignments[0];
 			for(alIter = ar.Mate1Alignments.begin(); alIter != ar.Mate1Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate1Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				WriteAlignment( pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair, ar.hasCsString );
 				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, true, false);
 			}
 		}
@@ -557,7 +558,7 @@ namespace MosaikReadFormat {
 			pAlBegin = &ar.Mate2Alignments[0];
 			for(alIter = ar.Mate2Alignments.begin(); alIter != ar.Mate2Alignments.end(); ++alIter) {
 				pAl = pAlBegin + (alIter - ar.Mate2Alignments.begin());
-				WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair);
+				WriteAlignment( pAl, isLongRead, ar.IsPairedEnd, alIter->IsFirstMate, ar.IsResolvedAsPair, ar.hasCsString );
 				//WriteAlignment(pAl, isLongRead, ar.IsPairedEnd, false, false);
 			}
 		}
@@ -570,6 +571,7 @@ namespace MosaikReadFormat {
 		mNumReads++;
 	}
 
+/*
 	// saves the alignment to the alignment archive
 	void CAlignmentWriter::SaveAlignment(Alignment* pAl) {
 
@@ -612,6 +614,7 @@ namespace MosaikReadFormat {
 		// increment the read counter
 		mNumReads++;
 	}
+*/
 /*
 	// saves the paired-end read to the alignment archive
 	void CAlignmentWriter::SaveRead(const Mosaik::Read& mr, CNaiveAlignmentSet& mate1Alignments, CNaiveAlignmentSet& mate2Alignments) {
@@ -678,7 +681,8 @@ namespace MosaikReadFormat {
 		const Alignment & mate2Alignment, 
 		const bool & isLongRead,
 		const bool & isSaveMate1,
-		const bool & isSaveMate2) {
+		const bool & isSaveMate2,
+		const bool & hasCsString) {
 
 		// check the memory buffer
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
@@ -708,6 +712,8 @@ namespace MosaikReadFormat {
 		if(haveMate2)           readStatus |= RF_HAVE_MATE2;
 		if(isLongRead)          readStatus |= RF_IS_LONG_READ;
 		if(mIsPairedEndArchive) readStatus |= RF_IS_PAIRED_IN_SEQUENCING;
+		if(hasCsString)         readStatus |= RF_HAS_CS_STRING;
+
 
 		// write the read header
 		WriteReadHeader( mr.Name, mr.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments );
@@ -721,7 +727,7 @@ namespace MosaikReadFormat {
 			//for(vector<Alignment>::const_iterator alIter = mate1Alignments.begin(); alIter != mate1Alignments.end(); ++alIter) {
 			//	WriteAlignment(&(*alIter), isLongRead, mIsPairedEndArchive, true, false);
 			//}
-			WriteAlignment( &mate1Alignment, isLongRead, mIsPairedEndArchive, true, false );
+			WriteAlignment( &mate1Alignment, isLongRead, mIsPairedEndArchive, true, false, hasCsString );
 		}
 
 		// ===============================
@@ -733,7 +739,7 @@ namespace MosaikReadFormat {
 			//for(vector<Alignment>::const_iterator alIter = mate2Alignments.begin(); alIter != mate2Alignments.end(); ++alIter) {
 			//	WriteAlignment(&(*alIter), isLongRead, mIsPairedEndArchive, false, false);
 			//}
-			WriteAlignment( &mate2Alignment, isLongRead, mIsPairedEndArchive, false, false );
+			WriteAlignment( &mate2Alignment, isLongRead, mIsPairedEndArchive, false, false, hasCsString );
 		}
 
 		// flush the buffer
@@ -745,7 +751,7 @@ namespace MosaikReadFormat {
 	}
 
 	// serializes the specified alignment
-	void CAlignmentWriter::WriteAlignment(const Alignment* pAl, const bool isLongRead, const bool isPairedEnd, const bool isFirstMate, const bool isResolvedAsPair) {
+	void CAlignmentWriter::WriteAlignment(const Alignment* pAl, const bool isLongRead, const bool isPairedEnd, const bool isFirstMate, const bool isResolvedAsPair, const bool hasCsString) {
 
 		// check the memory buffer
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
@@ -789,95 +795,108 @@ namespace MosaikReadFormat {
 
 		mBuffer[mBufferPosition++] = status;
 
+		if ( hasCsString ) {
+			unsigned short csLen = pAl->CsQuery.size();
+			if( isLongRead ) {
+				memcpy(mBuffer + mBufferPosition, (char*)&csLen, SIZEOF_SHORT);
+				mBufferPosition += SIZEOF_SHORT;
+			} else {
+				mBuffer[mBufferPosition++] = (unsigned char)csLen;
+			}
+
+			memcpy(mBuffer + mBufferPosition, pAl->CsQuery.c_str(), csLen);
+			mBufferPosition += csLen;
+		}
+
 		if ( pAl->IsJunk )
 			mBuffer[mBufferPosition++] = 0;
 		else {	
 		
-		// store the number of mismatches
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumMismatches, SIZEOF_SHORT);
-		mBufferPosition += SIZEOF_SHORT;
-
-		// get the pairwise length
-		const unsigned short pairwiseLength = (unsigned short)pAl->Reference.Length();
-
-		// add mate pair information
-		if(isResolvedAsPair) {
-
-			// store the mate reference sequence start position
-			memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceBegin, SIZEOF_INT);
-			mBufferPosition += SIZEOF_INT;
-
-			// store the mate reference sequence end position
-			memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceEnd, SIZEOF_INT);
-			mBufferPosition += SIZEOF_INT;
-
-			// store the mate reference sequence index
-			memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceIndex, SIZEOF_INT);
-			mBufferPosition += SIZEOF_INT;
-		}
-
-		if(isLongRead) {
-
-			// store the pairwise length
-			memcpy(mBuffer + mBufferPosition, (char*)&pairwiseLength, SIZEOF_SHORT);
+			// store the number of mismatches
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumMismatches, SIZEOF_SHORT);
 			mBufferPosition += SIZEOF_SHORT;
 
-			// store the query begin
-			memcpy(mBuffer + mBufferPosition, (char*)&pAl->QueryBegin, SIZEOF_SHORT);
-			mBufferPosition += SIZEOF_SHORT;
+			// get the pairwise length
+			const unsigned short pairwiseLength = (unsigned short)pAl->Reference.Length();
 
-			// store the query end
-			memcpy(mBuffer + mBufferPosition, (char*)&pAl->QueryEnd, SIZEOF_SHORT);
-			mBufferPosition += SIZEOF_SHORT;
+			// add mate pair information
+			if(isResolvedAsPair) {
 
-		} else {
+				// store the mate reference sequence start position
+				memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceBegin, SIZEOF_INT);
+				mBufferPosition += SIZEOF_INT;
 
-			// store the pairwise length
-			mBuffer[mBufferPosition++] = (unsigned char)pairwiseLength;
+				// store the mate reference sequence end position
+				memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceEnd, SIZEOF_INT);
+				mBufferPosition += SIZEOF_INT;
 
-			// store the query begin
-			mBuffer[mBufferPosition++] = (unsigned char)pAl->QueryBegin;
+				// store the mate reference sequence index
+				memcpy(mBuffer + mBufferPosition, (char*)&pAl->MateReferenceIndex, SIZEOF_INT);
+				mBufferPosition += SIZEOF_INT;
+			}
 
-			// store the query end
-			mBuffer[mBufferPosition++] = (unsigned char)pAl->QueryEnd;
-		}
+			if(isLongRead) {
 
-		// pack the pairwise-alignment string
-		CMosaikString packString(pAl->Reference);
-		packString.Pack(pAl->Query);
+				// store the pairwise length
+				memcpy(mBuffer + mBufferPosition, (char*)&pairwiseLength, SIZEOF_SHORT);
+				mBufferPosition += SIZEOF_SHORT;
 
-		// store the packed pairwise alignment
-		memcpy(mBuffer + mBufferPosition, packString.CData(), pairwiseLength);
-		mBufferPosition += pairwiseLength;
+				// store the query begin
+				memcpy(mBuffer + mBufferPosition, (char*)&pAl->QueryBegin, SIZEOF_SHORT);
+				mBufferPosition += SIZEOF_SHORT;
 
-		// DEBUG
-		//printf("\nReference: %s\n", pAl->Reference.CData());
-		//printf("Query:     %s\n", pAl->Query.CData());
-		////printf("Packed data: ");
-		////for(unsigned short k = 0; k < pairwiseLength; ++k) {
-		////	printf("%02x ", packString[k]);
-		////}
-		//const char* pRef = pAl->Reference.CData();
-		//const char* pQry = pAl->Query.CData();
-		//for(unsigned short k = 0; k < pairwiseLength; ++k) {
-		//	if(pRef[k] != pQry[k]) {
-		//		printf("ref: %c, query: %c, pack string: %02x\n", pRef[k], pQry[k], packString[k]);
-		//	}
-		//	//printf("%02x ", packString[k]);
-		//}
-		//printf("\n\n");
-		////exit(1);
+				// store the query end
+				memcpy(mBuffer + mBufferPosition, (char*)&pAl->QueryEnd, SIZEOF_SHORT);
+				mBufferPosition += SIZEOF_SHORT;
 
-		// store the pairwise query base qualities
-		const unsigned int bqLength = pAl->BaseQualities.Length();
-		memcpy(mBuffer + mBufferPosition, pAl->BaseQualities.CData(), bqLength);
-		mBufferPosition += bqLength;
+			} else {
 
-		// write the number of tags present in this alignment (hard coded as 0 for now)
-		mBuffer[mBufferPosition++] = 0;
+				// store the pairwise length
+				mBuffer[mBufferPosition++] = (unsigned char)pairwiseLength;
 
-		// update our statistics
-		mNumBases += bqLength;
+				// store the query begin
+				mBuffer[mBufferPosition++] = (unsigned char)pAl->QueryBegin;
+
+				// store the query end
+				mBuffer[mBufferPosition++] = (unsigned char)pAl->QueryEnd;
+			}
+
+			// pack the pairwise-alignment string
+			CMosaikString packString(pAl->Reference);
+			packString.Pack(pAl->Query);
+
+			// store the packed pairwise alignment
+			memcpy(mBuffer + mBufferPosition, packString.CData(), pairwiseLength);
+			mBufferPosition += pairwiseLength;
+
+			// DEBUG
+			//printf("\nReference: %s\n", pAl->Reference.CData());
+			//printf("Query:     %s\n", pAl->Query.CData());
+			////printf("Packed data: ");
+			////for(unsigned short k = 0; k < pairwiseLength; ++k) {
+			////	printf("%02x ", packString[k]);
+			////}
+			//const char* pRef = pAl->Reference.CData();
+			//const char* pQry = pAl->Query.CData();
+			//for(unsigned short k = 0; k < pairwiseLength; ++k) {
+			//	if(pRef[k] != pQry[k]) {
+			//		printf("ref: %c, query: %c, pack string: %02x\n", pRef[k], pQry[k], packString[k]);
+			//	}
+			//	//printf("%02x ", packString[k]);
+			//}
+			//printf("\n\n");
+			////exit(1);
+
+			// store the pairwise query base qualities
+			const unsigned int bqLength = pAl->BaseQualities.Length();
+			memcpy(mBuffer + mBufferPosition, pAl->BaseQualities.CData(), bqLength);
+			mBufferPosition += bqLength;
+
+			// write the number of tags present in this alignment (hard coded as 0 for now)
+			mBuffer[mBufferPosition++] = 0;
+	
+			// update our statistics
+			mNumBases += bqLength;
 		}
 		
 		// check the buffer

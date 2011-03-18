@@ -28,6 +28,7 @@ namespace Mosaik {
 		bool IsLongRead;
 		bool IsPairedEnd;
 		bool IsResolvedAsPair;
+		bool hasCsString;
 
 		// constructor
 		AlignedRead()
@@ -36,6 +37,7 @@ namespace Mosaik {
 			, IsLongRead(false)
 			, IsPairedEnd(false)
 			, IsResolvedAsPair(false)
+			, hasCsString(false)
 		{}
 
                 bool Clear(){

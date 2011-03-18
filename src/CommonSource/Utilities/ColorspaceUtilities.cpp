@@ -146,8 +146,12 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	char* pRef   = al.Reference.Data();
 	for ( unsigned int i = 0; i < pairwiseLen; ++i ) {
 		if ( *pQuery == 'N' ) {
-			if ( *pRef == '-' ) return false;
-			else                *pQuery = *pRef;
+			if ( *pRef == '-' ) { 
+				//cerr << "NF" << endl; 
+				return false; 
+			}
+			else                
+				*pQuery = *pRef;
 		}
 			
 		++pQuery;
@@ -162,10 +166,14 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	
 	mCsAl.bsReference[0] = bsBase;
 	mCsAl.bsQuery[0]     = bsBase;
-	if ( !ConvertCs2Bs(mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen-1, bsBase) )
+	if ( !ConvertCs2Bs(mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen-1, bsBase) ) {
+		//cerr << "RF" << endl;
 		return false;
-	if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen-1, bsBase) )
+	}
+	if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen-1, bsBase) ) {
+		//cerr << "QF" << endl;
 		return false;
+	}
 
 
 	// search the dash regions & mismatches
@@ -285,8 +293,10 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	if ( mCsAl.identical[ mCsAl.nIdentical - 1 ].Begin != 0 ) {
 		// find sequencing errors
 		if ( mCsAl.nMismatch > 0 )
-			if ( !FindSequencingError(pairwiseLen) )
+			if ( !FindSequencingError(pairwiseLen) ) {
+				//cerr << "EF" << endl;
 				return false;
+			}
 
         	if ( mCsAl.nDashReference > 0 ) {
 			for ( unsigned int i = 0; i < mCsAl.nDashReference; i++ ) {
@@ -322,8 +332,10 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 				isGoodBsBase = true;
 			
 			if ( isGoodBsBase )
-				if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, mCsAl.identical[i].Begin, csEnd, bsBase) )
+				if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, mCsAl.identical[i].Begin, csEnd, bsBase) ) {
+					//cerr << "BF" << endl;
 					return false;
+				}
 		}
 		
 

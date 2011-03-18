@@ -614,7 +614,7 @@ void CAlignmentThread::AlignReadArchive(
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, al1, al2, isLongRead );
+				pOut->SaveRead( mr, al1, al2, isLongRead, true, true, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
 			
 			} else {
@@ -709,7 +709,7 @@ void CAlignmentThread::AlignReadArchive(
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd );
+				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
@@ -792,7 +792,7 @@ void CAlignmentThread::AlignReadArchive(
 
 				const bool isLongRead = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongRead, true, isPairedEnd );
+				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
@@ -853,12 +853,29 @@ void CAlignmentThread::SetRequiredInfo (
 
         // the base qualities of SOLiD reads are attached in ApplyReadFilters
 	if( !mFlags.EnableColorspace ) 
-		al.BaseQualities = m.Qualities;
+		al.BaseQualities    = m.Qualities;
 	else {
-		CMosaikString rawCS = m.Bases;
-		mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );
-		al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
-		al.CsQuery += rawCS.CData();
+		al.CsQuery.clear();
+		al.CsBaseQualities.clear();
+
+		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
+			// raw sequence
+			CMosaikString rawCS = m.Bases;
+			mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );
+			al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
+			al.CsQuery += rawCS.CData();
+
+			// raw base qualities
+			// Note: if the first quality base is not '!'
+			CMosaikString rawCQ = m.Qualities;
+			rawCQ.Increment(33);
+			char prefix = '!';
+			rawCQ.Prepend( &prefix, 1);
+			al.CsBaseQualities = rawCQ.CData();
+		}
+
+		if ( !isItselfMapped )
+			al.IsJunk = true;
 	}
 
 	CMosaikString patchBases   = m.Bases;
@@ -1557,27 +1574,31 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 // returns true if the alignment passes all of the user-specified filters
 bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength) {
 
+	unsigned int queryLength1 = mFlags.EnableColorspace ? queryLength + 1 : queryLength;
+	
 	// assuming this is a good read
 	bool ret = true;
 
-	unsigned short numNonAlignedBases = queryLength - al.QueryLength;
+	unsigned short numNonAlignedBases = queryLength1 - al.QueryLength;
 
 	// convert from colorspace to basespace
 	if( mFlags.EnableColorspace ) {
+		//cerr << al.NumMismatches;
 		al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 		if(al.IsReverseStrand) al.BaseQualities.Reverse();
 		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
-		numNonAlignedBases = ( queryLength + 1 ) - al.QueryLength;
+		numNonAlignedBases = queryLength1 - al.QueryLength;
+		//cerr << " " << al.NumMismatches << " " << al.QueryLength << endl;
 
 	} else {
 	
 		// don't count leading and lagging N's as mismatches
 		unsigned int pos = 0;
-		while( ( bases[pos] == 'N' ) && ( pos < queryLength ) ) {
+		while( ( bases[pos] == 'N' ) && ( pos < queryLength1 ) ) {
 			numNonAlignedBases--;
 			pos++;
 		}
-		pos = queryLength - 1;
+		pos = queryLength1 - 1;
 		while( ( bases[pos] == 'N' ) && ( pos >= 0 ) ) {
 			numNonAlignedBases--;
 			pos--;
@@ -1593,13 +1614,16 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 
 	// check to see if this alignment meets the maximum mismatch threshold
 	if(mFilters.UseMismatchPercentFilter) {
-		double percentMismatch = (double)numTotalMismatches / (double)al.QueryLength;
-		if(percentMismatch > mFilters.MaxMismatchPercent) ret = false;
+		double percentMismatch = (double)numTotalMismatches / (double)queryLength1;
+		if(percentMismatch > mFilters.MaxMismatchPercent) { 
+			//cerr << "filter" << endl; 
+			ret = false; 
+		}
 	}
 
 	// check to see if this alignment meets the minimum percentage alignment threshold
 	if(mFilters.UseMinAlignmentPercentFilter) {
-		double percentageAligned = (double)al.QueryLength / (double)queryLength;
+		double percentageAligned = (double)al.QueryLength / (double)queryLength1;
 		if(percentageAligned < mFilters.MinPercentAlignment) ret = false;
 	}
 

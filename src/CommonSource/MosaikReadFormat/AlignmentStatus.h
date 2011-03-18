@@ -30,7 +30,7 @@ typedef unsigned char AlignmentStatus;
 #define RF_IS_LONG_READ                 8   // specifies any read that is longer than 255 bases
 #define RF_IS_PAIRED_IN_SEQUENCING      16  // originates from a paired-end data set
 #define RF_IS_PCR_OR_OPTICAL_DUPLICATE  32  // reserved, not currently used
-#define RF_IS_UNALIGNED                 64  // reserved, not currently used
+#define RF_HAS_CS_STRING                64  // specifies the read having colorspace raw strings
 #define RF_RESOLVED_AS_PAIR             128 // seen only after MosaikSort or MosaikMerge
 
 // define our alignment flags
@@ -41,7 +41,7 @@ typedef unsigned char AlignmentStatus;
 #define AF_IS_REVERSE_STRAND            8   // specifies the orientation of the current alignment
 #define AF_IS_SECOND_MATE               16  // specifies the alignment is the second mate when sequencing the read
 #define AF_WAS_RESCUED                  32  // specifies if the alignment was rescued during local alignment search
-#define AF_IS_JUNK                      64  // not used, specifies the alignment is junk; currently it is used for indicating # of alignments
+#define AF_IS_JUNK                      64  // specifies the alignment is junk; currently it is used for indicating # of alignments
 #define AF_RESERVED2                    128 // reserved, not currently used
 
 // define our alignment tags

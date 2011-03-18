@@ -225,7 +225,7 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 	numCigarOperations = 0;
 
 	if ( isSolid && ( al.QueryBegin != 0 ) ) {
-		*pPackedCigar = ( al.QueryBegin + 1 ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
+		*pPackedCigar = al.QueryBegin << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
 		++pPackedCigar;
 		++numCigarOperations;
 	}
@@ -835,13 +835,21 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	string csTag;
 	char* pCsTag;
 	if ( isSolid ) {
-		cout << al.CsQuery.c_str() << endl;
-		csTagLen = 3 + strlen (al.CsQuery.c_str()) + 1;
-		cout << csTagLen << endl;
+		csTagLen = 3 + strlen ( al.CsQuery.c_str() ) + 1;
 		csTag.resize( csTagLen );
 		pCsTag = (char*)csTag.data();
 		sprintf( pCsTag, "CSZ%s", al.CsQuery.c_str() );
-		cout << csTag << endl;
+	}
+
+	// create our cq tag
+	unsigned int cqTagLen = 0;
+	string cqTag;
+	char* pCqTag;
+	if ( isSolid ) {
+		cqTagLen = 3 + strlen ( al.CsBaseQualities.c_str() ) + 1;
+		cqTag.resize( cqTagLen );
+		pCqTag = (char*)cqTag.data();
+		sprintf( pCqTag, "CQZ%s", al.CsBaseQualities.c_str() );
 	}
 
 	// retrieve our bin
@@ -866,7 +874,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen + csTagLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen + csTagLen + cqTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -903,4 +911,8 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	// write the cs tag
 	if ( isSolid )
 		BgzfWrite(csTag.data(), csTagLen);
+
+	// write the cq tag
+	if ( isSolid )
+		BgzfWrite(cqTag.data(), cqTagLen);
 }
