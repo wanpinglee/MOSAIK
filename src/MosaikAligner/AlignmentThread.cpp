@@ -616,6 +616,7 @@ void CAlignmentThread::AlignReadArchive(
 
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
 				pthread_mutex_lock(&mSaveReadMutex);
 				pOut->SaveRead( mr, al1, al2, isLongRead, true, true, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
@@ -711,6 +712,7 @@ void CAlignmentThread::AlignReadArchive(
 
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
 				pthread_mutex_lock(&mSaveReadMutex);
 				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
@@ -793,9 +795,11 @@ void CAlignmentThread::AlignReadArchive(
 
 			if ( mFlags.UseArchiveOutput ) {
 
-				const bool isLongRead = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
+				bool isLongReadXX = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
+				isLongReadXX |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
+			
 				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
+				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongReadXX, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
 				pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {

@@ -313,6 +313,7 @@ namespace MosaikReadFormat {
 		mPartitionSize    = 0;
 	}
 
+/*
 	// loads the next alignment from the alignment archive
 	bool CAlignmentReader::LoadNextAlignment(Alignment& al) {
 
@@ -354,6 +355,7 @@ namespace MosaikReadFormat {
 
 		return true;
 	}
+*/
 
 	// loads the next read from the alignment archive
 	bool CAlignmentReader::LoadNextRead(Mosaik::AlignedRead& ar) {
@@ -386,23 +388,25 @@ namespace MosaikReadFormat {
 		const bool haveMate1        = ((readStatus & RF_HAVE_MATE1)              != 0 ? true : false);
 		const bool haveMate2        = ((readStatus & RF_HAVE_MATE2)              != 0 ? true : false);
 		const bool isResolvedAsPair = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
+		const bool hasCsString      = ((readStatus & RF_HAS_CS_STRING)           != 0 ? true : false);
 		ar.IsLongRead               = ((readStatus & RF_IS_LONG_READ)            != 0 ? true : false);
 		ar.IsPairedEnd              = ((readStatus & RF_IS_PAIRED_IN_SEQUENCING) != 0 ? true : false);
 		ar.IsResolvedAsPair         = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
+		
 
 		// =================================
 		// deserialize each mate 1 alignment
 		// =================================
 
 		ar.Mate1Alignments.resize(numMate1Alignments);
-		if(haveMate1) ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments);
+		if(haveMate1) ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, hasCsString);
 
 		// =================================
 		// deserialize each mate 2 alignment
 		// =================================
 
 		ar.Mate2Alignments.resize(numMate2Alignments);
-		if(haveMate2) ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments);
+		if(haveMate2) ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, hasCsString);
 
 		// increment the read counter
 		++mCurrentRead;
@@ -804,11 +808,12 @@ namespace MosaikReadFormat {
 		const bool isResolvedAsPair, 
 		const unsigned int readGroupCode,
 		const unsigned int numMate1OriginalAlignments,
-		const unsigned int numMate2OriginalAlignments) {
+		const unsigned int numMate2OriginalAlignments,
+		const bool hasCsString) {
 		
 		vector<Alignment>::iterator alIter;
 		for(alIter = alignments.begin(); alIter != alignments.end(); ++alIter) {
-			ReadAlignment(*alIter, isLongRead, isPairedInSequencing, isResolvedAsPair, numMate1OriginalAlignments, numMate2OriginalAlignments);
+			ReadAlignment(*alIter, isLongRead, isPairedInSequencing, isResolvedAsPair, numMate1OriginalAlignments, numMate2OriginalAlignments, hasCsString);
 			alIter->ReadGroupCode = readGroupCode;
 		}
 	}
@@ -820,7 +825,8 @@ namespace MosaikReadFormat {
 		const bool isPairedInSequencing, 
 		const bool isResolvedAsPair,
 		const unsigned int numMate1OriginalAlignments,
-		const unsigned int numMate2OriginalAlignments) {
+		const unsigned int numMate2OriginalAlignments,
+		const bool hasCsString) {
 
 		// get the reference sequence start position
 		memcpy((char*)&al.ReferenceBegin, mBufferPtr, SIZEOF_INT);
@@ -868,76 +874,91 @@ namespace MosaikReadFormat {
 		else
 			al.NumMapped = numMate2OriginalAlignments;
 
+		if ( hasCsString ) {
+			unsigned short csLen = 0;
+			if( isLongRead ) {
+				memcpy((char*)&csLen, mBufferPtr, SIZEOF_SHORT);
+				mBufferPtr += SIZEOF_SHORT;
+			} else {
+				csLen = (unsigned char)*mBufferPtr;
+				++mBufferPtr;
+			}
+
+                        // retrieve the colorspace raw sequence
+			al.CsQuery.insert(0, (const char*)mBufferPtr, csLen);
+			mBufferPtr += csLen;
+		}
+
 		if ( !al.IsJunk ) {
 
-		// get the number of mismatches
-		memcpy((char*)&al.NumMismatches, mBufferPtr, SIZEOF_SHORT);
-		mBufferPtr += SIZEOF_SHORT;
-
-		// get mate pair information
-		if(isResolvedAsPair) {
-
-			// get the mate reference sequence start position
-			memcpy((char*)&al.MateReferenceBegin, mBufferPtr, SIZEOF_INT);
-			mBufferPtr += SIZEOF_INT;
-
-			// get the mate reference sequence end position
-			memcpy((char*)&al.MateReferenceEnd, mBufferPtr, SIZEOF_INT);
-			mBufferPtr += SIZEOF_INT;
-
-			// get the mate reference sequence index
-			memcpy((char*)&al.MateReferenceIndex, mBufferPtr, SIZEOF_INT);
-			mBufferPtr += SIZEOF_INT;
-
-		} else {
-
-			al.MateReferenceBegin = 0;
-			al.MateReferenceEnd   = 0;
-			al.MateReferenceIndex = 0;
-		}
-
-		unsigned short pairwiseLength = 0;
-
-		if(isLongRead) {
-
-			// get the pairwise length
-			memcpy((char*)&pairwiseLength, mBufferPtr, SIZEOF_SHORT);
+			// get the number of mismatches
+			memcpy((char*)&al.NumMismatches, mBufferPtr, SIZEOF_SHORT);
 			mBufferPtr += SIZEOF_SHORT;
 
-			// get the query begin
-			memcpy((char*)&al.QueryBegin, mBufferPtr, SIZEOF_SHORT);
-			mBufferPtr += SIZEOF_SHORT;
+			// get mate pair information
+			if(isResolvedAsPair) {
 
-			// get the query end
-			memcpy((char*)&al.QueryEnd, mBufferPtr, SIZEOF_SHORT);
-			mBufferPtr += SIZEOF_SHORT;
+				// get the mate reference sequence start position
+				memcpy((char*)&al.MateReferenceBegin, mBufferPtr, SIZEOF_INT);
+				mBufferPtr += SIZEOF_INT;
 
-		} else {
+				// get the mate reference sequence end position
+				memcpy((char*)&al.MateReferenceEnd, mBufferPtr, SIZEOF_INT);
+				mBufferPtr += SIZEOF_INT;
 
-			// get the pairwise length
-			pairwiseLength = (unsigned char)*mBufferPtr;
-			++mBufferPtr;
+				// get the mate reference sequence index
+				memcpy((char*)&al.MateReferenceIndex, mBufferPtr, SIZEOF_INT);
+				mBufferPtr += SIZEOF_INT;
 
-			// get the query begin
-			al.QueryBegin = (unsigned char)*mBufferPtr;
-			++mBufferPtr;
+			} else {
 
-			// get the query end
-			al.QueryEnd = (unsigned char)*mBufferPtr;
-			++mBufferPtr;
-		}
+				al.MateReferenceBegin = 0;
+				al.MateReferenceEnd   = 0;
+				al.MateReferenceIndex = 0;
+			}
 
-		// retrieve the packed pairwise alignment
-		al.Reference.Copy((const char*)mBufferPtr, pairwiseLength);
-		mBufferPtr += pairwiseLength;
+			unsigned short pairwiseLength = 0;
 
-		// unpack the pairwise query bases
-		al.Reference.Unpack(al.Query);
+			if(isLongRead) {
 
-		// get the pairwise query base qualities
-		const unsigned short bqLength = al.QueryEnd - al.QueryBegin + 1;
-		al.BaseQualities.Copy((const char*)mBufferPtr, bqLength);
-		mBufferPtr += bqLength;
+				// get the pairwise length
+				memcpy((char*)&pairwiseLength, mBufferPtr, SIZEOF_SHORT);
+				mBufferPtr += SIZEOF_SHORT;
+
+				// get the query begin
+				memcpy((char*)&al.QueryBegin, mBufferPtr, SIZEOF_SHORT);
+				mBufferPtr += SIZEOF_SHORT;
+
+				// get the query end
+				memcpy((char*)&al.QueryEnd, mBufferPtr, SIZEOF_SHORT);
+				mBufferPtr += SIZEOF_SHORT;
+
+			} else {
+
+				// get the pairwise length
+				pairwiseLength = (unsigned char)*mBufferPtr;
+				++mBufferPtr;
+
+				// get the query begin
+				al.QueryBegin = (unsigned char)*mBufferPtr;
+				++mBufferPtr;
+
+				// get the query end
+				al.QueryEnd = (unsigned char)*mBufferPtr;
+				++mBufferPtr;
+			}
+
+			// retrieve the packed pairwise alignment
+			al.Reference.Copy((const char*)mBufferPtr, pairwiseLength);
+			mBufferPtr += pairwiseLength;
+
+			// unpack the pairwise query bases
+			al.Reference.Unpack(al.Query);
+
+			// get the pairwise query base qualities
+			const unsigned short bqLength = al.QueryEnd - al.QueryBegin + 1;
+			al.BaseQualities.Copy((const char*)mBufferPtr, bqLength);
+			mBufferPtr += bqLength;
 		}
 
 		//al.BaseQualities.Increment(33);

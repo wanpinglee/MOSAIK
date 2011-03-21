@@ -69,7 +69,7 @@ namespace MosaikReadFormat {
 		// jumps to the block containing the specified reference index and position
 		void Jump(const unsigned int referenceIndex, const unsigned int referencePosition);
 		// loads the next alignment from the alignment archive
-		bool LoadNextAlignment(Alignment& al);
+		//bool LoadNextAlignment(Alignment& al);
 		// loads the next read from the alignment archive
 		bool LoadNextRead(Mosaik::AlignedRead& ar);
 		// opens the alignment archive
@@ -87,10 +87,10 @@ namespace MosaikReadFormat {
 			unsigned int& numMate1OriginalAlignments, unsigned int& numMate2OriginalAlignments);
 		// deserializes each alignment and stores them in the supplied vector
 		void ReadAlignments(vector<Alignment>& alignments, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair, const unsigned int readGroupCode,
-			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments);
+			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments, const bool hasCsString);
 		// deserialize the alignment
 		void ReadAlignment(Alignment& al, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair,
-			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments);
+			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments, const bool hasCsString);
 		// reads a new compressed partition (returns false if EOF occurs)
 		bool ReadPartition(void);
 		// reads the tag from disk
