@@ -887,6 +887,9 @@ namespace MosaikReadFormat {
                         // retrieve the colorspace raw sequence
 			al.CsQuery.insert(0, (const char*)mBufferPtr, csLen);
 			mBufferPtr += csLen;
+			// retrieve the colorspace raw base qualities
+			al.CsBaseQualities.insert(0, (const char*)mBufferPtr, csLen);
+			mBufferPtr += csLen;
 		}
 
 		if ( !al.IsJunk ) {

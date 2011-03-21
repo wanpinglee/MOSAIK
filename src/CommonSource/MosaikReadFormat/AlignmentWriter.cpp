@@ -804,7 +804,11 @@ namespace MosaikReadFormat {
 				mBuffer[mBufferPosition++] = (unsigned char)csLen;
 			}
 
+			// store the colorspace raw sequence
 			memcpy(mBuffer + mBufferPosition, pAl->CsQuery.c_str(), csLen);
+			mBufferPosition += csLen;
+			// store the colorspace raw base qualities
+			memcpy(mBuffer + mBufferPosition, pAl->CsBaseQualities.c_str(), csLen);
 			mBufferPosition += csLen;
 		}
 
