@@ -388,25 +388,25 @@ namespace MosaikReadFormat {
 		const bool haveMate1        = ((readStatus & RF_HAVE_MATE1)              != 0 ? true : false);
 		const bool haveMate2        = ((readStatus & RF_HAVE_MATE2)              != 0 ? true : false);
 		const bool isResolvedAsPair = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
-		const bool hasCsString      = ((readStatus & RF_HAS_CS_STRING)           != 0 ? true : false);
+		ar.hasCsString              = ((readStatus & RF_HAS_CS_STRING)           != 0 ? true : false);
 		ar.IsLongRead               = ((readStatus & RF_IS_LONG_READ)            != 0 ? true : false);
 		ar.IsPairedEnd              = ((readStatus & RF_IS_PAIRED_IN_SEQUENCING) != 0 ? true : false);
 		ar.IsResolvedAsPair         = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
-		
+
 
 		// =================================
 		// deserialize each mate 1 alignment
 		// =================================
 
 		ar.Mate1Alignments.resize(numMate1Alignments);
-		if(haveMate1) ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, hasCsString);
+		if(haveMate1) ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, ar.hasCsString);
 
 		// =================================
 		// deserialize each mate 2 alignment
 		// =================================
 
 		ar.Mate2Alignments.resize(numMate2Alignments);
-		if(haveMate2) ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, hasCsString);
+		if(haveMate2) ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, ar.hasCsString);
 
 		// increment the read counter
 		++mCurrentRead;

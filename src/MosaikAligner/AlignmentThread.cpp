@@ -881,8 +881,10 @@ void CAlignmentThread::SetRequiredInfo (
 			al.CsBaseQualities = rawCQ.CData();
 		}
 
-		if ( !isItselfMapped )
+		if ( !isItselfMapped ) {
+			al.NumMapped = 0;
 			al.IsJunk = true;
+		}
 	}
 
 	CMosaikString patchBases   = m.Bases;

@@ -351,7 +351,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( ite->Owner == 0 ) {
 			read.Mate1.Bases     = ite->Query;
 			read.Mate1.Qualities = ite->BaseQualities;
-			read.Mate1.Bases.Remove('-');
+			if ( read.Mate1.Bases.Length() > 0 ) read.Mate1.Bases.Remove('-');
 		}
 	}
 	
@@ -363,13 +363,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( ite->Owner == 0 ) {
 			read.Mate2.Bases     = ite->Query;
 			read.Mate2.Qualities = ite->BaseQualities;
-			read.Mate2.Bases.Remove('-');
+			if ( read.Mate2.Bases.Length() > 0 ) read.Mate2.Bases.Remove('-');
 		}
 	}
 
 	if ( nMate1Alignments > 0 ) {
 		if ( newMate1Set.empty() ) {
-			cout << "ERROR: The vector is empty." << endl;
+			cout << "ERROR: The vector is empty." << nMate1Alignments << endl;
 			exit(1);
 		}
 		r.Mate1Alignments.clear();

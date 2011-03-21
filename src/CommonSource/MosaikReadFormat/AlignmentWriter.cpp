@@ -532,7 +532,7 @@ namespace MosaikReadFormat {
 		if(ar.hasCsString)      readStatus |= RF_HAS_CS_STRING;
 
 		// write the read header
-		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments );
+		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments);
 
 		// ===============================
 		// serialize each mate 1 alignment

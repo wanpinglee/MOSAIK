@@ -288,24 +288,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	else {
 /*
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Cv2mO");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edufRXZN6");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu6Bo8HY");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edudHlwk5");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edu7bPZFH");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduMLRPfp");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduzklS4g");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduM4tV5Z");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduyGTdXA");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduk0IzMn");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduv9PGwi");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduFKaufG");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edubsrRqT");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edudcbwou");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduqQFeSM");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduaJXgUb");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.eduOFjjrz");
-            outputFilenames.push_back("/home/wanping/temp_bak/humu.bc.edunz8kOR");
+	outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/1");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/2");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/3");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/4");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/5");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/6");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/7");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/8");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/9");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/10");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/11");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/12");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/13");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/14");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/15");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/16");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/17");
             MergeArchives();
 
 	string tempDir1;
@@ -318,48 +317,6 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
             exit(1);
 */
-// ***************** DEBUG ********************************
-/*
-	vector< string > temporaryFiles;
-	temporaryFiles.push_back("tmp/8o6alatupker9gjfdq1rhedsjmotu6k8.tmp");
-	temporaryFiles.push_back("tmp/0irp1o7i6mf3lobzn9g7zu704107yvvp.tmp");
-	temporaryFiles.push_back("tmp/0is4wz3iym8z9pymvtooo1aw6x0oa8p1.tmp");
-	temporaryFiles.push_back("tmp/5mmtiidwccg2w3n8xqi8ub31fmmpukl5.tmp");
-	temporaryFiles.push_back("tmp/5ycfibyqc2w5u3pexwus6y77ggvywevr.tmp");
-	temporaryFiles.push_back("tmp/6aapikdzhzzu2ufgklbio6qit5d3kp0g.tmp");
-	temporaryFiles.push_back("tmp/6kh36jet3u6oi7no244te9fyo63f3ttz.tmp");
-	temporaryFiles.push_back("tmp/88m60ulflju501cs1r10mq3z1qk9jbdx.tmp");
-	temporaryFiles.push_back("tmp/9d2m0nq2nlcwi6506yg09obr6ytm8rkn.tmp");
-	temporaryFiles.push_back("tmp/mpdxuj9cqdlkyqoj8w9vyqu8h37i19et.tmp");
-	temporaryFiles.push_back("tmp/mtwwtcb6kk4usapw0jzscq1lel0hdrt5.tmp");
-	temporaryFiles.push_back("tmp/o3lgmk35jzd8ihx273bxkzh0qyf1g1ea.tmp");
-	temporaryFiles.push_back("tmp/rl7eqwrkv7usu0eu97o8espziyisv53s.tmp");
-	temporaryFiles.push_back("tmp/tesg83el0xtsddevbvnjz4ffc8nt5s64.tmp");
-	temporaryFiles.push_back("tmp/vl5fca8vnck1mzgv6rkhnr6szuo3g1c1.tmp");
-	temporaryFiles.push_back("tmp/ydkjuh9vg3qpjsdck9s1lxpw7zap2ewq.tmp");
-	//temporaryFiles.push_back("tmp/");
-        
-        // calculate total # of reads
-        unsigned int nReads = 0;
-        for ( unsigned int i = 0 ; i < temporaryFiles.size(); i++ ) {
-	        MosaikReadFormat::CAlignmentReader reader;
-                reader.Open( temporaryFiles[i] );
-                nReads += reader.GetNumReads();
-                reader.Close();
-        }
-	
-	CConsole::Heading();
-	cout << "Merging alignment archive:" << endl;
-	CConsole::Reset();
-	unsigned int readNo        = 0;
-	//unsigned int nMaxAlignment = 1000;
-        CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
-        CArchiveMerge merger( temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mSettings.MedianFragmentLength, true );
-        merger.Merge();
-        CProgressBar<unsigned int>::WaitThread();
-	exit(1);
-*/
-// ********************************************************
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -689,9 +646,9 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-		//cerr << outputFilenames[i] << endl;
-		rm(outputFilenames[i].c_str());
-	//cerr << endl;
+		cerr << outputFilenames[i] << endl;
+		//rm(outputFilenames[i].c_str());
+	cerr << endl;
 
 
 	CConsole::Heading();

@@ -83,6 +83,7 @@ namespace Mosaik {
 			IsLongRead       = x.IsLongRead;
 			IsPairedEnd      = x.IsPairedEnd;
 			IsResolvedAsPair = x.IsResolvedAsPair;
+			hasCsString      = x.hasCsString;
 		}
 
 	};
