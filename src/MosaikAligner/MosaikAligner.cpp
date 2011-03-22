@@ -287,7 +287,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-/*
+
 	outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/1");
             outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/2");
             outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/3");
@@ -316,7 +316,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
             exit(1);
-*/
+
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -483,13 +483,13 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		MergeArchives();
 
 	// clean up temp files
-	string tempDir;
-	CFileUtilities::GetTempDirectory( tempDir );
-	if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
-	        cout << endl << "- cleaning up temp files...";
-		CFileUtilities::DeleteDir( tempDir );
-		cout << "finished." << endl;
-	}
+	//string tempDir;
+	//CFileUtilities::GetTempDirectory( tempDir );
+	//if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
+	//        cout << endl << "- cleaning up temp files...";
+	//	CFileUtilities::DeleteDir( tempDir );
+	//	cout << "finished." << endl;
+	//}
 
 	if ( !mSReference.found ) {
 		string sBamName = mSettings.OutputReadArchiveFilename + ".special.bam";
