@@ -456,7 +456,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		al1.NumMapped = nMate1Alignments;
 		al2.NumMapped = nMate2Alignments;
 
-		if ( isMate1Unique && isMate2Special ) {
+		if ( isMate2Special ) {
 			Alignment genomicAl = al1;
 			Alignment specialAl = _specialAl.Mate2Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
@@ -473,7 +473,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
 
-		if ( isMate2Unique && isMate1Special ) {
+		if ( isMate1Special ) {
 			Alignment genomicAl = al2;
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
@@ -550,13 +550,52 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		else if ( !isFirstMate && isMate2Multiple )
 			al.Quality = 0;
 		
+		// store mate1 alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
-		
+	
+
+		// store special hits
+		if ( isMate1Special ) {
+			Alignment specialAl = _specialAl.Mate1Alignments[0];
+			SetAlignmentFlags( specialAl, al, !isFirstMate, false, true, _isPairedEnd, true, !isFirstMate, r );
+
+			//CZaTager zas1, zas2;
+
+			const char* zas2Tag = isFirstMate 
+				? za2.GetZaTag( specialAl, al, true, !_isPairedEnd, true ) 
+				: za2.GetZaTag( specialAl, al, true );
+
+			specialAl.CsQuery         = mate1Cs;
+			specialAl.CsBaseQualities = mate1Cq;
+
+			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+		}
+
 		
 		if ( _isPairedEnd ) {
+			// store mate2 alignment in regular and unmapped bams
 			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
 			_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
+
+			// store special hits
+			if ( isMate2Special ) {
+				Alignment specialAl = _specialAl.Mate2Alignments[0];
+				SetAlignmentFlags( specialAl, al, isFirstMate, false, false, _isPairedEnd, true, isFirstMate, r );
+
+				//CZaTager zas1, zas2;
+
+				const char* zas2Tag = !isFirstMate 
+					? za2.GetZaTag( specialAl, al, false, !_isPairedEnd, true ) 
+					: za2.GetZaTag( specialAl, al, false );
+
+				specialAl.CsQuery         = mate2Cs;
+				specialAl.CsBaseQualities = mate2Cq;
+
+				_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+			}
 		}
+
+
 			
 		if ( _statMappingQuality <= al.Quality ) 
 			_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
@@ -579,6 +618,23 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 		_uBam.SaveAlignment( unmappedAl1, 0, true, false, _isSolid );
 		
+
+		// store special hits
+		if ( isMate1Special ) {
+			Alignment specialAl = _specialAl.Mate1Alignments[0];
+			SetAlignmentFlags( specialAl, unmappedAl2, false, false, true, _isPairedEnd, true, false, r );
+
+			//CZaTager zas1, zas2;
+
+			const char* zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !_isPairedEnd, true );
+
+			specialAl.CsQuery         = mate1Cs;
+			specialAl.CsBaseQualities = mate1Cq;
+
+			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+		}
+
+
 		if ( _isPairedEnd ) {
 			unmappedAl2 = r.Mate2Alignments[0];
 			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
@@ -590,6 +646,21 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			unmappedAl2.CsBaseQualities = mate2Cq;
 
 			_uBam.SaveAlignment( unmappedAl2, 0, true, false, _isSolid );
+
+			// store special hits
+			if ( isMate2Special ) {
+				Alignment specialAl = _specialAl.Mate2Alignments[0];
+				SetAlignmentFlags( specialAl, unmappedAl1, false, false, false, _isPairedEnd, true, false, r );
+
+				//CZaTager zas1, zas2;
+
+				const char* zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !_isPairedEnd, true );
+
+				specialAl.CsQuery         = mate2Cs;
+				specialAl.CsBaseQualities = mate2Cq;
+
+				_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+			}
 		}
 
 		//_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );

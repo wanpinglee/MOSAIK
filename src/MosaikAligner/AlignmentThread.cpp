@@ -574,7 +574,7 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
-			
+		
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
 				|| ( isMate1Multiple && isMate2Multiple ) )
@@ -681,7 +681,7 @@ void CAlignmentThread::AlignReadArchive(
 		// UX and MX pair
 		} else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
-			
+
 			if ( isMate1Multiple || isMate2Multiple ) 
 				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology );
 
@@ -733,15 +733,28 @@ void CAlignmentThread::AlignReadArchive(
 
 				if ( isPairedEnd ) {
 					
-					if ( isMate1Special || isMate2Special ) {
+					if ( isMate1Special ) {
 						
-						Alignment specialAl = isMate1Special ? mate1SpecialAl : mate2SpecialAl ;
-						SetRequiredInfo( specialAl, al, ( isMate1Special ? mr.Mate1 : mr.Mate2 ), 
-							mr, false, false, isMate1Special, isPairedEnd, true, false );
+						Alignment specialAl = mate1SpecialAl;
+						SetRequiredInfo( specialAl, al, mr.Mate1, mr, !isFirstMate, false, true, isPairedEnd, true, !isFirstMate );
+	
+						//CZaTager zas1, zas2;
+						const char *zas2Tag = isFirstMate ? za2.GetZaTag( specialAl, al, true, !isPairedEnd, true ) : za2.GetZaTag( specialAl, al, true );
+
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
+					if ( isMate2Special ) {
+						
+						Alignment specialAl = mate2SpecialAl ;
+						SetRequiredInfo( specialAl, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
 	
 						//CZaTager zas1, zas2;
 
-						const char *zas2Tag = za2.GetZaTag( specialAl, al, isMate1Special );
+						const char *zas2Tag = !isFirstMate ? za2.GetZaTag( specialAl, al, false, !isPairedEnd, true ) : za2.GetZaTag( specialAl, al, false );
+
 						pthread_mutex_lock(&mSaveSpecialBamMutex);
 						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
@@ -760,8 +773,10 @@ void CAlignmentThread::AlignReadArchive(
 					pBams->uBam.SaveAlignment( unmappedAl, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
+				// single end
 				else {
 					
+					// store special hits
 					if ( isMate1Special ) {
 						Alignment specialAl = mate1SpecialAl;
 						SetRequiredInfo( specialAl, al, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
@@ -805,11 +820,53 @@ void CAlignmentThread::AlignReadArchive(
 			} else {
 				
 				if ( isPairedEnd ) {
+
+					// store special hits
+					if ( isMate1Special ) {
+						
+						Alignment specialAl = mate1SpecialAl;
+						SetRequiredInfo( specialAl, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
+	
+						//CZaTager zas1, zas2;
+						const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !isPairedEnd, true );
+
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
+					if ( isMate2Special ) {
+						
+						Alignment specialAl = mate2SpecialAl;
+						SetRequiredInfo( specialAl, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, true, false );
+	
+						//CZaTager zas1, zas2;
+
+						const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !isPairedEnd, true );
+
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
+
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
 					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, false, mFlags.EnableColorspace );
 					pBams->uBam.SaveAlignment( unmappedAl2, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				} else {
+
+					// store special hits
+					if ( isMate1Special ) {
+						Alignment specialAl = mate1SpecialAl;
+						SetRequiredInfo( specialAl, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
+						
+						const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !isPairedEnd, true );
+						pthread_mutex_lock(&mSaveSpecialBamMutex);
+						pBams->sBam.SaveAlignment( specialAl, zas2Tag, false, false, mFlags.EnableColorspace );
+						pthread_mutex_unlock(&mSaveSpecialBamMutex);
+					}
+					
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
 					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, false, mFlags.EnableColorspace );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
