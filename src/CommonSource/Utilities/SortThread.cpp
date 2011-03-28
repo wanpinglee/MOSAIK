@@ -37,7 +37,7 @@ void SortThread::Start() {
 	
 	
 	if ( !IsQuietMode )
-		CProgressBar<unsigned int>::StartThread(&_td._readNo, 0, _td._nRead * 2, "reads");
+		CProgressBar<uint64_t>::StartThread(&_td._readNo, 0, _td._nRead * 2, "reads");
 
 	for ( unsigned int i = 0 ; i < _nThread; i++ ) {
 		int rc = pthread_create(&_threads[i], &_td._attr, StartThread, (void*)&_td);

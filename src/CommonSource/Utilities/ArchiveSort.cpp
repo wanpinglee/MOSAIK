@@ -19,7 +19,7 @@
 #include "ArchiveSort.h"
 
 
-CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, unsigned int *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength )
+CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, uint64_t *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength )
 	:_inputFilename(inputFilename)
 	,_outputFilename(outputFilename)
 	,_readCounter(readCounter)

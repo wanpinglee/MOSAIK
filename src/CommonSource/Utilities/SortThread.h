@@ -39,8 +39,8 @@ namespace SortThreadData {
 		vector < string > _output;
 		unsigned int _nArchive;
 		unsigned int _archiveNo;
-		unsigned int _nRead;
-		unsigned int _readNo;
+		uint64_t _nRead;
+		uint64_t _readNo;
 		unsigned int _medianFragmentLength;
 
 		pthread_attr_t  _attr;
@@ -88,7 +88,7 @@ namespace SortThreadData {
 class SortThread {
 	
 	public:
-		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, unsigned int nRead, const unsigned int medianFragmentLength )
+		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, uint64_t nRead, const unsigned int medianFragmentLength )
 			:_nThread(nThread)
 			, IsQuietMode(false)
 		{

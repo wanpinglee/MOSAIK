@@ -287,24 +287,25 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-/*
-	outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/1");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/2");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/3");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/4");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/5");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/6");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/7");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/8");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/9");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/10");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/11");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/12");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/13");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/14");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/15");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/16");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/bsort/17");
+
+	    outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/1");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/2");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/3");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/4");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/5");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/6");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/7");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/8");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/9");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/10");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/11");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/12");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/13");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/14");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/15");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/16");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/17");
+            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/18");
             MergeArchives();
 
 	string tempDir1;
@@ -316,7 +317,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
             exit(1);
-*/
+
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -612,12 +613,13 @@ void CMosaikAligner::MergeArchives(void) {
 	}
 
         // calculate total # of reads
-        unsigned int nReads = 0;
+        uint64_t nReads = 0;
 	//unsigned int nOutputFilenames = mSReference.found ? outputFilenames.size() - 1 : outputFilenames.size() ;
         for ( unsigned int i = 0 ; i < outputFilenames.size(); i++ ) {
 	        MosaikReadFormat::CAlignmentReader reader;
                 reader.Open( outputFilenames[i] );
                 nReads += reader.GetNumReads();
+		cout << reader.GetNumReads() << "\t" << nReads << endl;
                 reader.Close();
         }
 
@@ -647,7 +649,7 @@ void CMosaikAligner::MergeArchives(void) {
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
 		//cerr << outputFilenames[i] << endl;
-		rm(outputFilenames[i].c_str());
+		//rm(outputFilenames[i].c_str());
 	//cerr << endl;
 
 
