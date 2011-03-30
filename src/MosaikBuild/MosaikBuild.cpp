@@ -1005,7 +1005,7 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			r.Mate1.Qualities.TrimBegin(1);
+			//r.Mate1.Qualities.TrimBegin(1);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 		}
 
@@ -1233,12 +1233,12 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			r.Mate1.Qualities.TrimBegin(1);
+			//r.Mate1.Qualities.TrimBegin(1);
 
 			const char* bases2 = r.Mate2.Bases.CData();
 			memcpy((char*)&r.Mate2.SolidPrefixTransition, bases2, 1);
 			r.Mate2.Bases.TrimBegin(1);
-			r.Mate2.Qualities.TrimBegin(1);
+			//r.Mate2.Qualities.TrimBegin(1);
 
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate2.Bases);
