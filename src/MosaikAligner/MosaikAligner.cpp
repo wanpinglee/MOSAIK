@@ -442,7 +442,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
 			MosaikReadFormat::CAlignmentWriter out;
 			out.Open(tempFilename.c_str(), smallReferenceSequences, readGroups, alignmentStatus, ALIGNER_SIGNATURE);
-			out.AdjustPartitionSize(20000/referenceGroups.size());
+			//out.AdjustPartitionSize(20000/referenceGroups.size());
+			out.AdjustPartitionSize(1000);
 
 			mFlags.SaveMultiplyBam = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) ? false : true;
 			mFlags.SaveUnmappedBasesInArchive = ( i == 0 ) ? true : false; 
@@ -628,8 +629,8 @@ void CMosaikAligner::MergeArchives(void) {
 
 	// if nThread is too large, it'll open too many files at the same time.
 	// Then, we'll get an error since system doesn't allow us to open any file.
-	if ( nThread > 10 )
-		nThread = 10;
+	if ( nThread > 5 )
+		nThread = 5;
 
 	// prepare reference offset vector for SOLiD
 	//vector<unsigned int> refOffsets;
@@ -659,10 +660,10 @@ void CMosaikAligner::MergeArchives(void) {
 
 	//mStatisticsMaps.Reset();
 
-        unsigned int readNo        = 0;
+        uint64_t readNo        = 0;
 	
 	if ( !mFlags.IsQuietMode )
-        	CProgressBar<unsigned int>::StartThread(&readNo, 0, nReads, "reads");
+        	CProgressBar<uint64_t>::StartThread(&readNo, 0, nReads, "reads");
 
         CArchiveMerge merger( 
 		temporaryFiles, mSettings.OutputReadArchiveFilename, &readNo, mFlags.EnableColorspace,

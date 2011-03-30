@@ -26,7 +26,7 @@ CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, uint64
 	,_readCounterMutex(readCounterMutex)
 	,_medianFragmentLength(medianFragmentLength)
 {
-	_alignedReadCacheSize = 500000;
+	_alignedReadCacheSize = 1000000;
 	//_extendedFragmentLength = 3;
 
 

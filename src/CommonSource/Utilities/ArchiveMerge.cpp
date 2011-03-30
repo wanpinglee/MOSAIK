@@ -52,7 +52,7 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 CArchiveMerge::CArchiveMerge ( 
 	vector < string > inputFilenames, 
 	string outputFilename, 
-	unsigned int        *readNo,
+	uint64_t           *readNo,
 	const bool          isSolid,
 	const unsigned int  fragmentLength,
 	const unsigned int  localAlignmentSearchRadius,

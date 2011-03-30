@@ -80,7 +80,7 @@ class CArchiveMerge
 		CArchiveMerge (
 			vector < string > inputFilenames, 
 			string outputFilename, 
-			unsigned int *readNo, 
+			uint64_t *readNo, 
 			const bool isSolid,
 			const unsigned int fragmentLength = 0,
 			const unsigned int localAlignmentSearchRadius = 0,
@@ -107,7 +107,7 @@ class CArchiveMerge
 		string _outputFilename;
 
 		//unsigned int               _nMaxAlignment;
-		unsigned int*              _readNo;
+		uint64_t*                  _readNo;
 		bool                       _isSolid;
 		unsigned int               _expectedFragmentLength;
 		unsigned int               _localAlignmentSearchRadius;
