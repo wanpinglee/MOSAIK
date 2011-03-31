@@ -590,8 +590,10 @@ void CAlignmentThread::AlignReadArchive(
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
-			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
-			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
+			if ( !isMate1Multiple && !isMate2Multiple ) {
+				properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
+				properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
+			}
 
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;
