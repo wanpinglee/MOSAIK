@@ -518,6 +518,7 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 
 }
 
+/*
 // saves the alignment to the alignment archive
 void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString ) {
 
@@ -684,7 +685,7 @@ void CBamWriter::SaveAlignment(const CMosaikString& readName, const string& read
 	if ( zaString != 0 )
 		BgzfWrite(zaTag.data(), zaTagLen);
 }
-
+*/
 
 // saves the alignment to the alignment archive
 void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos ) {

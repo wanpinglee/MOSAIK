@@ -543,7 +543,6 @@ void CAlignmentThread::AlignReadArchive(
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
-					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				}
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -551,7 +550,6 @@ void CAlignmentThread::AlignReadArchive(
 			if ( isPairedEnd && isMate2Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
-					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
@@ -749,7 +747,7 @@ void CAlignmentThread::AlignReadArchive(
 
 					
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl, 0, true, true );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 				else {
@@ -796,12 +794,12 @@ void CAlignmentThread::AlignReadArchive(
 				
 				if ( isPairedEnd ) {
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
-					pBams->uBam.SaveAlignment( unmappedAl2, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, true );
+					pBams->uBam.SaveAlignment( unmappedAl2, 0, true, true );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				} else {
 					pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					pBams->uBam.SaveAlignment( unmappedAl1, 0, true );
+					pBams->uBam.SaveAlignment( unmappedAl1, 0, true, true );
 					pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 
