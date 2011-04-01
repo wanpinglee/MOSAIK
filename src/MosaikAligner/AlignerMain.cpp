@@ -141,7 +141,7 @@ struct ConfigurationSettings {
 		, HasStatMappingQuality(false)
 		, KeepJumpKeysOnDisk(false)
 		, KeepJumpPositionsOnDisk(false)
-		, LimitHashPositions(false)
+		, LimitHashPositions(true)
 		//, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
@@ -152,6 +152,7 @@ struct ConfigurationSettings {
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
 		, StatMappingQuality(DEFAULT_STAT_MAPPING_QUALITY)
+		, HashPositionThreshold(200)
 		, JumpCacheMemory(0)
 //		, NumMismatches(DEFAULT_NUM_MISMATCHES)
 		, NumThreads(DEFAULT_NUM_THREADS)
@@ -298,18 +299,22 @@ int main(int argc, char* argv[]) {
 	}
 
 	// set the hash positions threshold
-	if(settings.LimitHashPositions) {
+	if ( ( settings.LimitHashPositions ) && ( settings.HashPositionThreshold == 0 ) )
+		settings.LimitHashPositions = false;
+
+	if ( settings.LimitHashPositions ) {
 
 		// make sure we're using the all algorithm
-		if(algorithmType != CAlignmentThread::AlignerAlgorithm_ALL) {
-			errorBuilder << ERROR_SPACER << "Setting the hash positions threshold is only applicable when using the 'all' algorithm. This can be set by using the '-a all' parameter." << endl;
+		if ( algorithmType != CAlignmentThread::AlignerAlgorithm_ALL ) {
+			errorBuilder << ERROR_SPACER << "Setting the hash positions threshold is only applicable when using the 'all' algorithm. This can be set by using the '-a all' parameter. Or turn off the hash positions threshold by using '-mhp 0'" << endl;
 			foundError = true;
 		}
 
-		if(settings.HashPositionThreshold == 0) {
-			errorBuilder << ERROR_SPACER << "The hash position threshold should be larger than 0. Use the -mhp parameter to change the hash position threshold." << endl;
-			foundError = true;
-		}
+		// won't be the case
+		//if ( settings.HashPositionThreshold == 0 ) {
+		//	errorBuilder << ERROR_SPACER << "The hash position threshold should be larger than 0. Use the -mhp parameter to change the hash position threshold." << endl;
+		//	foundError = true;
+		//}
 	}
 
 	// figure out which alignment mode to use
