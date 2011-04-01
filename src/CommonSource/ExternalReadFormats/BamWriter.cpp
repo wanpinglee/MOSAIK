@@ -400,6 +400,9 @@ void CBamWriter::Open(const string& filename, const BamHeader& header) {
 			case ST_ILLUMINA:
 				sb << "\tPL:illumina" << endl;
 				break;
+			case ST_ILLUMINA_LONG:
+				sb << "\tPL:illumina long" << endl;
+				break;
 			case ST_PACIFIC_BIOSCIENCES:
 				sb << "\tPL:pacific biosciences" << endl;
 				break;

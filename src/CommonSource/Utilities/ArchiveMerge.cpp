@@ -131,13 +131,13 @@ CArchiveMerge::CArchiveMerge (
 
 void CArchiveMerge::PrintStatisticsMaps( 
 	const string filename, 
-	const string readGroupId, 
+	const vector<MosaikReadFormat::ReadGroup>& readGroup, 
 	const uint8_t fragmentLength, 
 	const uint8_t localSearchRadius, 
 	const float allowedMismatch ) {
 	
 	_statisticsMaps.SetExpectedStatistics( fragmentLength, localSearchRadius, allowedMismatch );
-	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str(), _statMappingQuality );
+	_statisticsMaps.PrintMaps( filename.c_str(), readGroup, _statMappingQuality );
 }
 
 void CArchiveMerge::PrintReferenceSequence( vector<ReferenceSequence>& refVec ){
