@@ -125,6 +125,12 @@ namespace MosaikReadFormat {
 		return mNumReads;
 	}
 
+	// gets the archive total number of bases
+	uint64_t CReadReader::GetNumBases(void) const {
+		if(!mIsOpen) return 0;
+		return mNumBases;
+	}
+
 	// gets the read archive sequencing technology
 	SequencingTechnologies CReadReader::GetSequencingTechnology(void) const {
 		return mReadGroup.SequencingTechnology;
