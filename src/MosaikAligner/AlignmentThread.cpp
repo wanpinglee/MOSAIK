@@ -654,8 +654,8 @@ void CAlignmentThread::AlignReadArchive(
 				//CZaTager za1, za2;
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-				if ( isMate1Multiple ) al1.Quality = 0;
-				if ( isMate2Multiple ) al2.Quality = 0;
+				//if ( isMate1Multiple ) al1.Quality = 0;
+				//if ( isMate2Multiple ) al2.Quality = 0;
 				pthread_mutex_lock(&mSaveReadMutex);
 				pBams->rBam.SaveAlignment( al1, zaTag1 );
 				pBams->rBam.SaveAlignment( al2, zaTag2 );

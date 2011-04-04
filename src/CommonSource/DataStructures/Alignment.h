@@ -142,7 +142,8 @@ struct Alignment {
 		
 		int aq = Quality;
 		if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
-		else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
+		else if ( isMM ) aq = 0;
+		//else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
 		else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
 
 		if(aq < 0)       aq = 0;

@@ -467,8 +467,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_sBam.SaveAlignment( specialAl, zas2Tag );
 		}
 
-		if ( isMate1Multiple ) al1.Quality = 0;
-		if ( isMate2Multiple ) al2.Quality = 0;
+		//if ( isMate1Multiple ) al1.Quality = 0;
+		//if ( isMate2Multiple ) al2.Quality = 0;
 
 		_rBam.SaveAlignment( al1, zaTag1 );
 		_rBam.SaveAlignment( al2, zaTag2 );
