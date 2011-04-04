@@ -392,16 +392,23 @@ int main(int argc, char* argv[]) {
 
 		double readLength = nBases/nReads;
 		
+		// act
 		if ( settings.EnableAlignmentCandidateThreshold ) {
 			if ( settings.AlignmentCandidateThreshold == 0 ) {
 				settings.EnableAlignmentCandidateThreshold = false;
 				settings.AlignmentCandidateThreshold       = 0;
 			}
 		} else {
-			settings.EnableAlignmentCandidateThreshold = true;
-			settings.AlignmentCandidateThreshold       = (unsigned char)floor( 20.0 + ( readLength / 7 ) );
+			if ( seqTech == ST_454 ) {
+				settings.EnableAlignmentCandidateThreshold = true;
+				settings.AlignmentCandidateThreshold       = ( readLength > 350.0 ) ? 55 : 26;
+			} else {
+				settings.EnableAlignmentCandidateThreshold = true;
+				settings.AlignmentCandidateThreshold       = (unsigned char)floor( 20 + ( readLength / 7 ) );
+			}
 		}
 
+		// bw
 		if ( settings.HasBandwidth ) {
 			if ( settings.Bandwidth == 0 ) {
 				settings.HasBandwidth = false;
@@ -419,6 +426,27 @@ int main(int argc, char* argv[]) {
 			} else {
 				settings.HasBandwidth = false;
 				settings.Bandwidth    = 0;
+			}
+		}
+
+		// ls
+		// only for paired-end data and the -mfl setting in the given archive != 0
+		MosaikReadFormat::ReadGroup readGroup = reader.GetReadGroup();
+		if ( settings.HasLocalAlignmentSearchRadius ) {
+			if ( settings.LocalAlignmentSearchRadius == 0 ) {
+				settings.HasLocalAlignmentSearchRadius = false;
+				settings.LocalAlignmentSearchRadius    = 0;
+			}
+		} else {
+			if ( ( readStatus & RS_PAIRED_END_READ ) != 0 ) {
+				if ( readGroup.MedianFragmentLength != 0 ) {
+					cout << "WARNING: Paired-end data is detected, but the median fragment length is not specified." << endl; 
+					cout << "         Accordingly, local alignment search is not enabled." << endl;
+					cout << "         The median fragment length (-mfl parameter) can be specified in MosaikBuild.\n" << endl;
+				} else {
+					settings.HasLocalAlignmentSearchRadius = true;
+					settings.LocalAlignmentSearchRadius    = readGroup.MedianFragmentLength;
+				}
 			}
 		}
 
@@ -540,7 +568,7 @@ int main(int argc, char* argv[]) {
 	if(settings.HasLocalAlignmentSearchRadius) {
 
 		// show the warning message if we have a SE read archive
-		if((readStatus & RS_SINGLE_END_READ) != 0) {
+		if( ( readStatus & RS_SINGLE_END_READ ) != 0 ) {
 			cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads.\n" << endl << endl;
 			settings.HasLocalAlignmentSearchRadius = false;
 		} else { 
@@ -551,7 +579,7 @@ int main(int argc, char* argv[]) {
 			MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
 			in.Close();
 
-			if(readGroup.MedianFragmentLength == 0) {
+			if( readGroup.MedianFragmentLength == 0 ) {
 				cout << "WARNING: Local alignment search only works when the median fragment length (-mfl parameter) has been specified in MosaikBuild.\n" << endl << endl;
 				settings.HasLocalAlignmentSearchRadius = false;
 			}
