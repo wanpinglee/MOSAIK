@@ -391,6 +391,8 @@ int main(int argc, char* argv[]) {
 			errorBuilder << ERROR_SPACER << "The number of reads is smaller than the number of total bases in " << settings.ReadsFilename;
 
 		double readLength = nBases/nReads;
+		if ( ( readStatus & RS_PAIRED_END_READ ) != 0 )
+			readLength /= 2;
 		
 		// act
 		if ( settings.EnableAlignmentCandidateThreshold ) {
@@ -439,7 +441,7 @@ int main(int argc, char* argv[]) {
 			}
 		} else {
 			if ( ( readStatus & RS_PAIRED_END_READ ) != 0 ) {
-				if ( readGroup.MedianFragmentLength != 0 ) {
+				if ( readGroup.MedianFragmentLength == 0 ) {
 					cout << "WARNING: Paired-end data is detected, but the median fragment length is not specified." << endl; 
 					cout << "         Accordingly, local alignment search is not enabled." << endl;
 					cout << "         The median fragment length (-mfl parameter) can be specified in MosaikBuild.\n" << endl;
