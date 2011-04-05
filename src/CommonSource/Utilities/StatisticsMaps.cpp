@@ -408,8 +408,8 @@ void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFo
 		fprintf( fOut, "\tbin\tcombo\tn\tcum\tlabel\n");
 		fprintf( fOut, "\t1\t1\t%lu\t%lu\t0-1\n", non_unique,        non_unique );
 		fprintf( fOut, "\t2\t2\t%lu\t%lu\t0-N\n", non_multiple,      non_unique + non_multiple );
-		fprintf( fOut, "\t4\t4\t%lu\t%lu\t1-1\n", unique_unique,     non_unique + non_multiple + non_multiple );
-		fprintf( fOut, "\t5\t5\t%lu\t%lu\t1-N\n", unique_multiple,   non_unique + non_multiple + non_multiple + unique_multiple );
+		fprintf( fOut, "\t4\t4\t%lu\t%lu\t1-1\n", unique_unique,     non_unique + non_multiple + unique_unique );
+		fprintf( fOut, "\t5\t5\t%lu\t%lu\t1-N\n", unique_multiple,   non_unique + non_multiple + unique_unique + unique_multiple );
 		fprintf( fOut, "\t8\t8\t%lu\t%lu\tN-N\n", multiple_multiple, total );
 
 		// print model
