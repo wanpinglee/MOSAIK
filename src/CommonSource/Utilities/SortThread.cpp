@@ -58,6 +58,6 @@ void SortThread::Start() {
 
 	//CProgressCounter<unsigned int>::WaitThread();
 	if ( !IsQuietMode )
-		CProgressBar<unsigned int>::WaitThread();
+		CProgressBar<uint64_t>::WaitThread();
 }
 

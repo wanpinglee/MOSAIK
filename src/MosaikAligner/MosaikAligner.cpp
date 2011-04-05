@@ -287,7 +287,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-
+/*
 	    outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/1");
             outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/2");
             outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/3");
@@ -317,7 +317,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
             exit(1);
-
+*/
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -620,7 +620,6 @@ void CMosaikAligner::MergeArchives(void) {
 	        MosaikReadFormat::CAlignmentReader reader;
                 reader.Open( outputFilenames[i] );
                 nReads += reader.GetNumReads();
-		cout << reader.GetNumReads() << "\t" << nReads << endl;
                 reader.Close();
         }
 
@@ -672,7 +671,7 @@ void CMosaikAligner::MergeArchives(void) {
 	merger.Merge();
 
 	if ( !mFlags.IsQuietMode )
-	        CProgressBar<unsigned int>::WaitThread();
+	        CProgressBar<uint64_t>::WaitThread();
 
 	
 	for ( unsigned int i = 0; i < temporaryFiles.size(); i++ )

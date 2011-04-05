@@ -39,8 +39,8 @@ namespace SortThreadData {
 		vector < string > _output;
 		unsigned int _nArchive;
 		unsigned int _archiveNo;
-		uint64_t _nRead;
-		uint64_t _readNo;
+		uint64_t     _nRead;
+		uint64_t     _readNo;
 		unsigned int _medianFragmentLength;
 
 		pthread_attr_t  _attr;

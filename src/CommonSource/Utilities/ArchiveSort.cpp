@@ -72,7 +72,7 @@ void CArchiveSort::SortNStoreCache( vector<string>& tempFiles, list<Mosaik::Alig
 void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 	
 	unsigned int nTemp = tempFiles.size();
-	unsigned int nRead = 0;
+	//unsigned int nRead = 0;
 
 	// initialize MOSAIK readers for all temp files
 	vector< MosaikReadFormat::CAlignmentReader* > readers;
@@ -103,7 +103,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 	while ( nDone != ( nTemp - 1 ) ) {
 		SortNMergeUtilities::FindMinElement(reads, ite);
 		writer.SaveAlignedRead(ite->read);
-		nRead++;
+		//nRead++;
 
 		pthread_mutex_lock(_readCounterMutex);
 		*_readCounter = *_readCounter + 1;
@@ -134,7 +134,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 		if ( !done[i] ) {
 
 			writer.SaveAlignedRead(reads[i].read);
-			nRead++;
+			//nRead++;
 	
 			pthread_mutex_lock(_readCounterMutex);
 			*_readCounter = *_readCounter + 1;
@@ -146,7 +146,7 @@ void CArchiveSort::SortNStoreTemp( vector<string>& tempFiles ){
 					break;
 				
 				writer.SaveAlignedRead(mr);
-				nRead++;
+				//nRead++;
 
 				pthread_mutex_lock(_readCounterMutex);
 				*_readCounter = *_readCounter + 1;
@@ -244,9 +244,9 @@ void CArchiveSort::Sort(){
 	reader.GetReadGroups(_readGroups);
 	_alignmentStatus    = reader.GetStatus();
 	
-	unsigned int totalRead = reader.GetNumReads();
-	unsigned int count     = 0;
-	unsigned int nRead     = 0;
+	uint64_t totalRead = reader.GetNumReads();
+	uint64_t count     = 0;
+	uint64_t nRead     = 0;
 	vector<string> tempFiles;
 		
 	list<Mosaik::AlignedRead> _alignedReadCache;
@@ -286,7 +286,7 @@ void CArchiveSort::Sort(){
 
 			_alignedReadCache.clear();
 			// allocate space for _alignedReadCache
-			unsigned int remaining = totalRead - nRead;
+			uint64_t remaining = totalRead - nRead;
 			if ( remaining < _alignedReadCacheSize )
 				_alignedReadCache.resize( remaining );
 			else
