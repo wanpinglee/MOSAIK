@@ -308,7 +308,7 @@ inline void CStatisticsMaps::PrintMap(
 
 	// calculate sum and count
 	int64_t sum   = 0;
-	int64_t count = 0;
+	uint64_t count = 0;
 	for ( uint64_t i = 0; i < size; ++i ) {
 		sum += array[i] * ( start + i );
 		count += array[i];
@@ -373,8 +373,8 @@ void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId, 
 		fprintf( fOut, "\tbin\tcombo\tn\tcum\tlabel\n");
 		fprintf( fOut, "\t1\t1\t%lu\t%lu\t0-1\n", non_unique,        non_unique );
 		fprintf( fOut, "\t2\t2\t%lu\t%lu\t0-N\n", non_multiple,      non_unique + non_multiple );
-		fprintf( fOut, "\t4\t4\t%lu\t%lu\t1-1\n", unique_unique,     non_unique + non_multiple + non_multiple );
-		fprintf( fOut, "\t5\t5\t%lu\t%lu\t1-N\n", unique_multiple,   non_unique + non_multiple + non_multiple + unique_multiple );
+		fprintf( fOut, "\t4\t4\t%lu\t%lu\t1-1\n", unique_unique,     non_unique + non_multiple + unique_unique );
+		fprintf( fOut, "\t5\t5\t%lu\t%lu\t1-N\n", unique_multiple,   non_unique + non_multiple + unique_unique + unique_multiple );
 		fprintf( fOut, "\t8\t8\t%lu\t%lu\tN-N\n", multiple_multiple, total );
 
 		// print model
