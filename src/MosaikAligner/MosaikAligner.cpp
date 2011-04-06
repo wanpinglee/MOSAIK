@@ -626,8 +626,6 @@ void CMosaikAligner::MergeArchives(void) {
         }
 
 
-
-
 	// if nThread is too large, it'll open too many files at the same time.
 	// Then, we'll get an error since system doesn't allow us to open any file.
 	if ( nThread > 10 )
@@ -650,13 +648,8 @@ void CMosaikAligner::MergeArchives(void) {
 	sThread.Start();
 
 	for ( unsigned int i = 0; i < outputFilenames.size(); i++ )
-<<<<<<< Updated upstream
 		//cerr << outputFilenames[i] << endl;
 		rm(outputFilenames[i].c_str());
-=======
-		cerr << outputFilenames[i] << endl;
-		//rm(outputFilenames[i].c_str());
->>>>>>> Stashed changes
 	//cerr << endl;
 
 
