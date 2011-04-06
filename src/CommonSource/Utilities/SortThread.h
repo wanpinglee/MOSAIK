@@ -88,7 +88,7 @@ namespace SortThreadData {
 class SortThread {
 	
 	public:
-		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, uint64_t nRead, const unsigned int medianFragmentLength )
+		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, unsigned int nRead, const unsigned int medianFragmentLength )
 			:_nThread(nThread)
 			, IsQuietMode(false)
 		{
