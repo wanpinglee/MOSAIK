@@ -40,6 +40,8 @@ namespace MosaikReadFormat {
 		ReadGroup GetReadGroup(void) const;
 		// gets the archive read count
 		uint64_t GetNumReads(void) const;
+		// gets the archive bases count
+		uint64_t GetNumBases(void) const;
 		// gets the read archive sequencing technology
 		SequencingTechnologies GetSequencingTechnology(void) const;
 		// gets the read archive status

@@ -128,6 +128,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	mBams.mHeader.pReadGroups         = &readGroups;
 	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
 
+	// ===================
+	// full-memory version
+	// ===================
 	if ( !mFlags.UseLowMemory ) {
 		
 		// ==============================
@@ -624,8 +627,6 @@ void CMosaikAligner::MergeArchives(void) {
         }
 
 
-
-
 	// if nThread is too large, it'll open too many files at the same time.
 	// Then, we'll get an error since system doesn't allow us to open any file.
 	if ( nThread > 5 )
@@ -682,7 +683,7 @@ void CMosaikAligner::MergeArchives(void) {
 	// get statistics information
 	float allowedMm = mFilters.UseMismatchFilter ? (float)mFilters.MaxNumMismatches :  mFilters.MaxMismatchPercent;
 	string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
-	merger.PrintStatisticsMaps( mapFile, readGroups[0].ReadGroupID, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm  );
+	merger.PrintStatisticsMaps( mapFile, readGroups, mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm  );
 
 
 	CArchiveMerge::StatisticsCounters mergeCounters;
@@ -831,7 +832,7 @@ void CMosaikAligner::PrintStatistics () {
 		float allowedMm = mFilters.UseMismatchFilter ? (float)mFilters.MaxNumMismatches : mFilters.MaxMismatchPercent;
 		mStatisticsMaps.SetExpectedStatistics( mSettings.MedianFragmentLength, mSettings.LocalAlignmentSearchRadius, allowedMm );
 		string mapFile = mSettings.OutputReadArchiveFilename + ".stat";
-		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups[0].ReadGroupID.c_str(), mStatisticsCounters.StatMappingQuality );
+		mStatisticsMaps.PrintMaps( mapFile.c_str(), readGroups, mStatisticsCounters.StatMappingQuality );
 	}
 	
 	MosaikReadFormat::CReadReader in;

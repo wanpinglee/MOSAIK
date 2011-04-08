@@ -42,14 +42,14 @@ unsigned int DEFAULT_SPECIAL_HASHES         = 20;
 struct ConfigurationSettings {
 
 	// flags
-	bool CheckAlignmentQuality;
+//	bool CheckAlignmentQuality;
 	bool CheckMinAlignment;
 	bool CheckMinAlignmentPercent;
 	bool CheckMismatchPercent;
 	bool CheckNumMismatches;
 	bool EnableAlignmentCandidateThreshold;
 	bool EnableColorspace;
-	bool EnableDoubleHashHits;
+//	bool EnableDoubleHashHits;
 	bool HasAlgorithm;
 	bool HasAlignmentsFilename;
 	bool HasBandwidth;
@@ -98,7 +98,7 @@ struct ConfigurationSettings {
 	string Mode;
 	string SpecialReferencePrefix;
 	unsigned char AlignmentCandidateThreshold;
-	unsigned char AlignmentQualityThreshold;
+//	unsigned char AlignmentQualityThreshold;
 	unsigned char HashSize;
 	unsigned char StatMappingQuality;
 	unsigned int Bandwidth;
@@ -112,14 +112,14 @@ struct ConfigurationSettings {
 
 	// constructor
 	ConfigurationSettings()
-		: CheckAlignmentQuality(false)
-		, CheckMinAlignment(false)
+//		: CheckAlignmentQuality(false)
+		: CheckMinAlignment(false)
 		, CheckMinAlignmentPercent(false)
 		, CheckMismatchPercent(false)
 		, CheckNumMismatches(false)
 		, EnableAlignmentCandidateThreshold(false)
 		, EnableColorspace(false)
-		, EnableDoubleHashHits(false)
+//		, EnableDoubleHashHits(false)
 		, HasAlgorithm(false)
 		, HasAlignmentsFilename(false)
 		, HasBandwidth(false)
@@ -141,7 +141,7 @@ struct ConfigurationSettings {
 		, HasStatMappingQuality(false)
 		, KeepJumpKeysOnDisk(false)
 		, KeepJumpPositionsOnDisk(false)
-		, LimitHashPositions(false)
+		, LimitHashPositions(true)
 		//, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
@@ -152,6 +152,7 @@ struct ConfigurationSettings {
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
 		, StatMappingQuality(DEFAULT_STAT_MAPPING_QUALITY)
+		, HashPositionThreshold(200)
 		, JumpCacheMemory(0)
 //		, NumMismatches(DEFAULT_NUM_MISMATCHES)
 		, NumThreads(DEFAULT_NUM_THREADS)
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]) {
 	// add the filtering options
 	OptionGroup* pFilterOpts = COptions::CreateOptionGroup("Filtering");
 	COptions::AddValueOption("-act",  "threshold",      "the alignment candidate threshold (length)", "", settings.EnableAlignmentCandidateThreshold, settings.AlignmentCandidateThreshold, pFilterOpts);
-	COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
+	//COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
 	COptions::AddValueOption("-ls",   "radius",         "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
 	COptions::AddValueOption("-mhp",  "hash positions", "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-min",  "nucleotides",  "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
@@ -256,10 +257,10 @@ int main(int argc, char* argv[]) {
 	ostringstream errorBuilder;
 	const string ERROR_SPACER(7, ' ');
 
-	if(settings.EnableAlignmentCandidateThreshold && settings.EnableDoubleHashHits) {
-		errorBuilder << ERROR_SPACER << "Please specify either an alignment candidate threshold (-act) or double-hash hits (-dh). Double-hash hits are equivalent to '-act <hash size + 1>." << endl;
-		foundError = true;
-	}
+	//if(settings.EnableAlignmentCandidateThreshold && settings.EnableDoubleHashHits) {
+	//	errorBuilder << ERROR_SPACER << "Please specify either an alignment candidate threshold (-act) or double-hash hits (-dh). Double-hash hits are equivalent to '-act <hash size + 1>." << endl;
+	//	foundError = true;
+	//}
 
 	if((settings.HasJumpCacheMemory || settings.KeepJumpKeysOnDisk || settings.KeepJumpPositionsOnDisk) && !settings.UseJumpDB) {
 		errorBuilder << ERROR_SPACER << "Jump database settings were specified, but the jump database was not explicitly chosen. Please use the -j parameter." << endl;
@@ -279,7 +280,7 @@ int main(int argc, char* argv[]) {
 			settings.HasJumpCacheMemory = false;
 	}
 
-	if(!settings.CheckNumMismatches && !settings.CheckMismatchPercent && !settings.CheckAlignmentQuality) {
+	if(!settings.CheckNumMismatches && !settings.CheckMismatchPercent ) {
 		//settings.CheckNumMismatches = true;
 		settings.CheckMismatchPercent = true;
 	}
@@ -298,18 +299,22 @@ int main(int argc, char* argv[]) {
 	}
 
 	// set the hash positions threshold
-	if(settings.LimitHashPositions) {
+	if ( ( settings.LimitHashPositions ) && ( settings.HashPositionThreshold == 0 ) )
+		settings.LimitHashPositions = false;
+
+	if ( settings.LimitHashPositions ) {
 
 		// make sure we're using the all algorithm
-		if(algorithmType != CAlignmentThread::AlignerAlgorithm_ALL) {
-			errorBuilder << ERROR_SPACER << "Setting the hash positions threshold is only applicable when using the 'all' algorithm. This can be set by using the '-a all' parameter." << endl;
+		if ( algorithmType != CAlignmentThread::AlignerAlgorithm_ALL ) {
+			errorBuilder << ERROR_SPACER << "Setting the hash positions threshold is only applicable when using the 'all' algorithm. This can be set by using the '-a all' parameter. Or turn off the hash positions threshold by using '-mhp 0'" << endl;
 			foundError = true;
 		}
 
-		if(settings.HashPositionThreshold == 0) {
-			errorBuilder << ERROR_SPACER << "The hash position threshold should be larger than 0. Use the -mhp parameter to change the hash position threshold." << endl;
-			foundError = true;
-		}
+		// won't be the case
+		//if ( settings.HashPositionThreshold == 0 ) {
+		//	errorBuilder << ERROR_SPACER << "The hash position threshold should be larger than 0. Use the -mhp parameter to change the hash position threshold." << endl;
+		//	foundError = true;
+		//}
 	}
 
 	// figure out which alignment mode to use
@@ -351,10 +356,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	// check the minimum alignment quality
-	if(settings.CheckAlignmentQuality && (settings.AlignmentQualityThreshold > 99)) {
-		errorBuilder << ERROR_SPACER << "The alignment quality threshold should be between 0 and 99." << endl;
-		foundError = true;
-	}
+	//if(settings.CheckAlignmentQuality && (settings.AlignmentQualityThreshold > 99)) {
+	//	errorBuilder << ERROR_SPACER << "The alignment quality threshold should be between 0 and 99." << endl;
+	//	foundError = true;
+	//}
 
 	// set the hash size
 	if(settings.HasHashSize && ((settings.HashSize < MIN_HASH_SIZE) || (settings.HashSize > MAX_HASH_SIZE))) {
@@ -368,17 +373,93 @@ int main(int argc, char* argv[]) {
 		foundError = true;
 	}
 
-	// set the Smith-Waterman bandwidth
-	if(settings.HasBandwidth && ((settings.Bandwidth % 2) != 1)) {
-		errorBuilder << ERROR_SPACER << "The bandwidth must be an odd number. Use the -bw parameter to change the bandwidth." << endl;
-		foundError = true;
-	}
-
 	// test if the specified input files exist and are in the right format
 	SequencingTechnologies seqTech;
 	ReadStatus readStatus;
 	MosaikReadFormat::CReadReader::CheckFile(settings.ReadsFilename, seqTech, readStatus, true);
 	MosaikReadFormat::CReferenceSequenceReader::CheckFile(settings.ReferencesFilename, true);
+	
+	// set defaults of act, ls and bw
+	{
+		MosaikReadFormat::CReadReader reader;
+		reader.Open( settings.ReadsFilename );
+		uint64_t nReads, nBases;
+		nReads = reader.GetNumReads();
+		nBases = reader.GetNumBases();
+		// sanity checker
+		if ( nBases < nReads )
+			errorBuilder << ERROR_SPACER << "The number of reads is smaller than the number of total bases in " << settings.ReadsFilename;
+
+		double readLength = nBases/nReads;
+		if ( ( readStatus & RS_PAIRED_END_READ ) != 0 )
+			readLength /= 2;
+		
+		// act
+		if ( settings.EnableAlignmentCandidateThreshold ) {
+			if ( settings.AlignmentCandidateThreshold == 0 ) {
+				settings.EnableAlignmentCandidateThreshold = false;
+				settings.AlignmentCandidateThreshold       = 0;
+			}
+		} else {
+			if ( seqTech == ST_454 ) {
+				settings.EnableAlignmentCandidateThreshold = true;
+				settings.AlignmentCandidateThreshold       = ( readLength > 350.0 ) ? 55 : 26;
+			} else {
+				settings.EnableAlignmentCandidateThreshold = true;
+				settings.AlignmentCandidateThreshold       = (unsigned char)floor( 20 + ( readLength / 7 ) );
+			}
+		}
+
+		// bw
+		if ( settings.HasBandwidth ) {
+			if ( settings.Bandwidth == 0 ) {
+				settings.HasBandwidth = false;
+				settings.Bandwidth    = 0;
+			}
+		} else {
+			if ( settings.CheckNumMismatches ) {
+				settings.HasBandwidth = true;
+				settings.Bandwidth    = ceil( 2.5 * settings.NumMismatches );
+				if ( ( settings.Bandwidth % 2 ) != 1 ) ++settings.Bandwidth;
+			} else if ( settings.CheckMismatchPercent ) {
+				settings.HasBandwidth = true;
+				settings.Bandwidth    = ceil( 2.5 * settings.MismatchPercent * ceil(readLength) );
+				if ( ( settings.Bandwidth % 2 ) != 1 ) ++settings.Bandwidth;
+			} else {
+				settings.HasBandwidth = false;
+				settings.Bandwidth    = 0;
+			}
+		}
+
+		// ls
+		// only for paired-end data and the -mfl setting in the given archive != 0
+		MosaikReadFormat::ReadGroup readGroup = reader.GetReadGroup();
+		if ( settings.HasLocalAlignmentSearchRadius ) {
+			if ( settings.LocalAlignmentSearchRadius == 0 ) {
+				settings.HasLocalAlignmentSearchRadius = false;
+				settings.LocalAlignmentSearchRadius    = 0;
+			}
+		} else {
+			if ( ( readStatus & RS_PAIRED_END_READ ) != 0 ) {
+				if ( readGroup.MedianFragmentLength == 0 ) {
+					cout << "WARNING: Paired-end data is detected, but the median fragment length is not specified." << endl; 
+					cout << "         Accordingly, local alignment search is not enabled." << endl;
+					cout << "         The median fragment length (-mfl parameter) can be specified in MosaikBuild.\n" << endl;
+				} else {
+					settings.HasLocalAlignmentSearchRadius = true;
+					settings.LocalAlignmentSearchRadius    = readGroup.MedianFragmentLength;
+				}
+			}
+		}
+
+		reader.Close();
+	}
+
+	// set the Smith-Waterman bandwidth
+	if ( settings.HasBandwidth && ( ( settings.Bandwidth % 2 ) != 1  ) ) {
+		errorBuilder << ERROR_SPACER << "The bandwidth must be an odd number. Use the -bw parameter to change the bandwidth." << endl;
+		foundError = true;
+	}
 
 	switch(seqTech) {
 		case ST_454:
@@ -449,10 +530,10 @@ int main(int argc, char* argv[]) {
 	// ===================================================
 
 	// set the minimum alignment quality
-	if(settings.CheckAlignmentQuality) {
-		CPairwiseUtilities::MinAlignmentQuality          = settings.AlignmentQualityThreshold;
-		CPairwiseUtilities::UseMinAlignmentQualityFilter = true;
-	}
+	//if(settings.CheckAlignmentQuality) {
+	//	CPairwiseUtilities::MinAlignmentQuality          = settings.AlignmentQualityThreshold;
+	//	CPairwiseUtilities::UseMinAlignmentQualityFilter = true;
+	//}
 
 	// set the maximum number of mismatches
 	if(settings.CheckNumMismatches) {
@@ -489,7 +570,7 @@ int main(int argc, char* argv[]) {
 	if(settings.HasLocalAlignmentSearchRadius) {
 
 		// show the warning message if we have a SE read archive
-		if((readStatus & RS_SINGLE_END_READ) != 0) {
+		if( ( readStatus & RS_SINGLE_END_READ ) != 0 ) {
 			cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads.\n" << endl << endl;
 			settings.HasLocalAlignmentSearchRadius = false;
 		} else { 
@@ -500,7 +581,7 @@ int main(int argc, char* argv[]) {
 			MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
 			in.Close();
 
-			if(readGroup.MedianFragmentLength == 0) {
+			if( readGroup.MedianFragmentLength == 0 ) {
 				cout << "WARNING: Local alignment search only works when the median fragment length (-mfl parameter) has been specified in MosaikBuild.\n" << endl << endl;
 				settings.HasLocalAlignmentSearchRadius = false;
 			}
@@ -540,7 +621,7 @@ int main(int argc, char* argv[]) {
 	if(settings.EnableColorspace) ma.EnableColorspace(settings.BasespaceReferencesFilename);
 
 	// enable double-hash hits
-	if(settings.EnableDoubleHashHits) ma.EnableAlignmentCandidateThreshold(settings.HashSize + 1);
+	//if(settings.EnableDoubleHashHits) ma.EnableAlignmentCandidateThreshold(settings.HashSize + 1);
 
 	// enable entire read length mismatch checking
 	if(settings.UseAlignedLengthForMismatches) ma.UseAlignedReadLengthForMismatchCalculation();
@@ -615,13 +696,13 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 
-	if(settings.CheckAlignmentQuality)    cout << "- Using an alignment quality threshold of " << CPairwiseUtilities::MinAlignmentQuality << endl;
+	//if(settings.CheckAlignmentQuality)    cout << "- Using an alignment quality threshold of " << CPairwiseUtilities::MinAlignmentQuality << endl;
 	if(settings.CheckNumMismatches)       cout << "- Using a maximum mismatch threshold of " << CPairwiseUtilities::MaxNumMismatches << endl;
 	if(settings.CheckMismatchPercent)     cout << "- Using a maximum mismatch percent threshold of " << CPairwiseUtilities::MaxMismatchPercent << endl;
 	if(settings.CheckMinAlignment)        cout << "- Using a minimum alignment threshold of " << CPairwiseUtilities::MinAlignment << endl;
 	if(settings.CheckMinAlignmentPercent) cout << "- Using a minimum percent alignment threshold of " << CPairwiseUtilities::MinPercentAlignment << endl;
 	if(settings.HasHashSize)              cout << "- Using a hash size of " << (unsigned int)settings.HashSize << endl;
-	if(settings.EnableDoubleHashHits)     cout << "- Using double-hash hits" << endl;
+	//if(settings.EnableDoubleHashHits)     cout << "- Using double-hash hits" << endl;
 	if(settings.EnableColorspace)         cout << "- Aligning in colorspace (SOLiD)" << endl;
 	if(settings.HasNumThreads)            cout << "- Using " << (short)settings.NumThreads << (settings.NumThreads > 1 ? " processors" : " processor") << endl;
 	if(settings.HasBandwidth)             cout << "- Using a Smith-Waterman bandwidth of " << settings.Bandwidth << endl;

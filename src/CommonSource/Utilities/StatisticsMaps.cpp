@@ -339,12 +339,47 @@ inline void CStatisticsMaps::PrintMap(
 	}
 }
 
-void CStatisticsMaps::PrintMaps( const char* filename, const char* readGroupId, const unsigned char statMappingQuality ) {
+void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFormat::ReadGroup>& readGroup, const unsigned char statMappingQuality ) {
 	FILE* fOut;
 	fOut = fopen( filename, "w" );
 
-	// print read group ID
-	fprintf( fOut, "RG:%s\n", readGroupId );
+	// print the header
+	for ( vector<MosaikReadFormat::ReadGroup>::const_iterator ite = readGroup.begin(); ite != readGroup.end(); ++ite ) {
+		fprintf( fOut, "@RG\tID:%s\tSM:%s", ( ite->ReadGroupID.empty() ? "unknown" : ite->ReadGroupID.c_str() ), ( ite->SampleName.empty() ? "unknown" : ite->SampleName.c_str() ) );
+		if ( !ite->LibraryName.empty() )  fprintf( fOut, "\tLB:%s", ite->LibraryName.c_str() );
+		if ( !ite->Description.empty() )  fprintf( fOut, "\tDS:%s", ite->Description.c_str() );
+		if ( !ite->PlatformUnit.empty() ) fprintf( fOut, "\tPU:%s", ite->PlatformUnit.c_str() );
+		                                  fprintf( fOut, "\tPI:%u", ite->MedianFragmentLength );
+		if ( !ite->CenterName.empty() )   fprintf( fOut, "\tCN:%s", ite->CenterName.c_str() );
+		
+		switch( ite->SequencingTechnology ) {
+			case ST_454:
+				fprintf( fOut, "\tPL:454" );
+				break;
+			case ST_HELICOS:
+				fprintf( fOut, "\tPL:helicos" );
+				break;
+			case ST_ILLUMINA:
+				fprintf( fOut, "\tPL:illumina" );
+				break;
+			case ST_ILLUMINA_LONG:
+				fprintf( fOut, "\tPL:illumina long" );
+				break;
+			case ST_PACIFIC_BIOSCIENCES:
+				fprintf( fOut, "\tPL:pacific biosciences" );
+				break;
+			case ST_SOLID:
+				fprintf( fOut, "\tPL:solid" );
+				break;
+			case ST_SANGER:
+				fprintf( fOut, "\tPL:sanger" );
+				break;
+			default:
+				fprintf( fOut, "\tPL:unknown" );
+		}
+		fprintf( fOut, "\n" );
+	}
+
 	fprintf( fOut, "Mapping quality threshold:%u\n", statMappingQuality );
 	
 	if ( fOut != NULL ) {

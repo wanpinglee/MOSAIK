@@ -549,7 +549,6 @@ void CAlignmentThread::AlignReadArchive(
 			if ( isMate1Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
-					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				}
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -557,7 +556,6 @@ void CAlignmentThread::AlignReadArchive(
 			if ( isPairedEnd && isMate2Multiple ) {
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
 				for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
-					//if ( alIter->Quality > 20 )
 					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
 				pthread_mutex_unlock(&mSaveMultipleBamMutex);
 			}
@@ -598,8 +596,10 @@ void CAlignmentThread::AlignReadArchive(
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
-			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
-			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
+			if ( !isMate1Multiple && !isMate2Multiple ) {
+				properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
+				properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
+			}
 
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;
@@ -661,8 +661,8 @@ void CAlignmentThread::AlignReadArchive(
 				//CZaTager za1, za2;
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-				if ( isMate1Multiple ) al1.Quality = 0;
-				if ( isMate2Multiple ) al2.Quality = 0;
+				//if ( isMate1Multiple ) al1.Quality = 0;
+				//if ( isMate2Multiple ) al2.Quality = 0;
 				pthread_mutex_lock(&mSaveReadMutex);
 				pBams->rBam.SaveAlignment( al1, zaTag1, false, false, mFlags.EnableColorspace );
 				pBams->rBam.SaveAlignment( al2, zaTag2, false, false, mFlags.EnableColorspace );

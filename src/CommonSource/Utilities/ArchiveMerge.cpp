@@ -133,13 +133,13 @@ CArchiveMerge::CArchiveMerge (
 
 void CArchiveMerge::PrintStatisticsMaps( 
 	const string filename, 
-	const string readGroupId, 
+	const vector<MosaikReadFormat::ReadGroup>& readGroup, 
 	const uint8_t fragmentLength, 
 	const uint8_t localSearchRadius, 
 	const float allowedMismatch ) {
 	
 	_statisticsMaps.SetExpectedStatistics( fragmentLength, localSearchRadius, allowedMismatch );
-	_statisticsMaps.PrintMaps( filename.c_str(), readGroupId.c_str(), _statMappingQuality );
+	_statisticsMaps.PrintMaps( filename.c_str(), readGroup, _statMappingQuality );
 }
 
 void CArchiveMerge::PrintReferenceSequence( vector<ReferenceSequence>& refVec ){
@@ -490,8 +490,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
 
-		if ( isMate1Multiple ) al1.Quality = 0;
-		if ( isMate2Multiple ) al2.Quality = 0;
+		//if ( isMate1Multiple ) al1.Quality = 0;
+		//if ( isMate2Multiple ) al2.Quality = 0;
 
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
