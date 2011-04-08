@@ -1646,17 +1646,19 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	bool ret = true;
 
 	unsigned short numNonAlignedBases = queryLength1 - al.QueryLength;
+	al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 
 	// convert from colorspace to basespace
 	if( mFlags.EnableColorspace ) {
 		//cerr << al.NumMismatches;
-		al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
+		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 		if( al.IsReverseStrand ) al.BaseQualities.Reverse();
 		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
 		numNonAlignedBases = queryLength1 - al.QueryLength;
 		//cerr << " " << al.NumMismatches << " " << al.QueryLength << endl;
 
 	} else {
+		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 	
 		// don't count leading and lagging N's as mismatches
 		unsigned int pos = 0;
