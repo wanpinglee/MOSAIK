@@ -1302,9 +1302,9 @@ void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vect
 */
 
 // greater-than operator of mapping qualities
-inline bool CAlignmentThread::LessThanMQ ( const Alignment& al1, const Alignment& al2){
-	return al1.Quality < al2.Quality;
-}
+//inline bool CAlignmentThread::LessThanMQ ( const Alignment& al1, const Alignment& al2){
+//	return al1.Quality < al2.Quality;
+//}
 
 
 // aligns the read against the reference sequence and returns true if the read was aligned
@@ -1347,9 +1347,13 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 
 	// calculate the number of bases to extend past the hash regions during alignment
 	unsigned int numExtensionBases = 0;
-	if(mFilters.UseMismatchFilter)        numExtensionBases = mFilters.MaxNumMismatches;
-	if(mFilters.UseMismatchPercentFilter) numExtensionBases = (unsigned int)(queryLength * mFilters.MaxMismatchPercent);
-	if(numExtensionBases < 2)             numExtensionBases = 2;
+	if ( mSettings.SequencingTechnology == ST_454 ) {
+		if(mFilters.UseMismatchFilter)        numExtensionBases = mFilters.MaxNumMismatches;
+		if(mFilters.UseMismatchPercentFilter) numExtensionBases = (unsigned int)(queryLength * mFilters.MaxMismatchPercent);
+		if(numExtensionBases < 2)             numExtensionBases = 2;
+	} else {
+		numExtensionBases = queryLength;
+	}
 
 	// statistics variables
 	int64_t hashRegionLength = 0;
@@ -1820,7 +1824,7 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	}
 
 	// sort the hash regions according to length (descending)
-	if(!mFlags.IsAligningAllReads) sort(regions.begin(), regions.end(), SortHashRegionByLength());
+	if( !mFlags.IsAligningAllReads) sort(regions.begin(), regions.end(), SortHashRegionByLength() );
 }
 
 // settles the local Smith-Waterman window
