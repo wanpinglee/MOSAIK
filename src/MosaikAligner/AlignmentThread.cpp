@@ -596,6 +596,7 @@ void CAlignmentThread::AlignReadArchive(
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
+			// MM pair is always an improper pair
 			if ( !isMate1Multiple && !isMate2Multiple ) {
 				properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
 				properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );

@@ -39,6 +39,7 @@ class CStatisticsMaps {
 
 		inline void SaveModel( const Alignment& al1, const Alignment& al2 );
 		inline void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
+		inline void SaveIsize( const Alignment& al1, const Alignment& al2 );
 		inline void SaveReadLength( const unsigned int length );
 		inline void SaveMultiplicity( const unsigned int nAlignment );
 		inline void SaveMappingQuality( const unsigned char mq );
@@ -64,7 +65,12 @@ class CStatisticsMaps {
 		uint64_t nFrangmentUnder;
 		int64_t  minFragment;
 		uint64_t* fragments;
-		// read length map
+		// fragment length map
+		const uint64_t nIsize;
+		uint64_t nIsizeOver;
+		uint64_t nIsizeUnder;
+		uint64_t* isizes;
+		// mapped read length map
 		const uint64_t nReadLength;
 		uint64_t nReadLengthOver;
 		uint64_t nReadLengthUnder;

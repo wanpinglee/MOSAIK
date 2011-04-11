@@ -9,6 +9,9 @@ CStatisticsMaps::CStatisticsMaps( void )
 	, nFrangmentOver(0)
 	, nFrangmentUnder(0)
 	, minFragment(-99)
+	, nIsize(10000)
+	, nIsizeOver(0)
+	, nIsizeUnder(0)
 	, nReadLength(1000)
 	, nReadLengthOver(0)
 	, nReadLengthUnder(0)
@@ -37,19 +40,21 @@ CStatisticsMaps::CStatisticsMaps( void )
 	, r2_r1(0)
 {
 	fragments        = new uint64_t [ nFragment ];
+	isizes           = new uint64_t [ nIsize ];
 	readLengths      = new uint64_t [ nReadLength ];
 	multiplicities   = new uint64_t [ nMultiplicity ];
 	mappingQualities = new uint64_t [ nMappingQuality ];
 	mismatches       = new uint64_t [ nMismatch ];
 	
-	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
-	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
-	memset ( multiplicities, 0, nMultiplicity * sizeof(uint64_t) );
+	memset ( fragments,        0, nFragment       * sizeof(uint64_t) );
+	memset ( isizes,           0, nIsize          * sizeof(uint64_t) );
+	memset ( readLengths,      0, nReadLength     * sizeof(uint64_t) );
+	memset ( multiplicities,   0, nMultiplicity   * sizeof(uint64_t) );
 	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
-	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
+	memset ( mismatches,       0, nMismatch       * sizeof(uint64_t) );
 }
 
-
+/*
 CStatisticsMaps::CStatisticsMaps( int64_t mfl )
 	: _fragmentLength(0)
 	, _localSearchRadius(0)
@@ -98,15 +103,19 @@ CStatisticsMaps::CStatisticsMaps( int64_t mfl )
 	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
 	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
 }
+*/
+
 
 CStatisticsMaps::~CStatisticsMaps( void ) {
 	if ( fragments )        delete [] fragments;
+	if ( isizes )           delete [] isizes;
 	if ( readLengths )      delete [] readLengths;
 	if ( multiplicities )   delete [] multiplicities;
 	if ( mappingQualities ) delete [] mappingQualities;
 	if ( mismatches )       delete [] mismatches;
 
 	fragments        = NULL;
+	isizes           = NULL;
 	readLengths      = NULL;
 	multiplicities   = NULL;
 	mappingQualities = NULL;
@@ -133,6 +142,8 @@ void CStatisticsMaps::Reset( void ) {
 	
 	nFrangmentOver       = 0;
 	nFrangmentUnder      = 0;
+	nIsizeOver           = 0;
+	nIsizeUnder          = 0;
 	nReadLengthOver      = 0;
 	nReadLengthUnder     = 0;
 	nMultiplicityOver    = 0;
@@ -155,11 +166,12 @@ void CStatisticsMaps::Reset( void ) {
 	r2_f1                = 0;
 	r2_r1                = 0;
 
-	memset ( fragments, 0, nFragment * sizeof(uint64_t) );
-	memset ( readLengths, 0, nReadLength * sizeof(uint64_t) );
-	memset ( multiplicities, 0, nMultiplicity * sizeof(uint64_t) );
+	memset ( fragments,        0, nFragment * sizeof(uint64_t) );
+	memset ( isizes,           0, nIsize * sizeof(uint64_t) );
+	memset ( readLengths,      0, nReadLength * sizeof(uint64_t) );
+	memset ( multiplicities,   0, nMultiplicity * sizeof(uint64_t) );
 	memset ( mappingQualities, 0, nMappingQuality * sizeof(uint64_t) );
-	memset ( mismatches, 0, nMismatch * sizeof(uint64_t) );
+	memset ( mismatches,       0, nMismatch * sizeof(uint64_t) );
 
 }
 
@@ -250,6 +262,19 @@ inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment
 		else
 			fragments[ length - minFragment ]++;
 	}
+}
+
+inline void CStatisticsMaps::SaveIsize( const Alignment& al1, const Alignment& al2 ) {
+	unsigned int al1_5Prime = al1.IsReverseStrand ? al1.ReferenceEnd : al1.ReferenceBegin;
+	unsigned int al2_5Prime = al2.IsReverseStrand ? al2.ReferenceEnd : al2.ReferenceBegin;
+
+	unsigned int isize = ( al1_5Prime < al2_5Prime ) ? al2_5Prime - al1_5Prime : al1_5Prime - al2_5Prime;
+	if ( isize > nIsize ) {
+		nIsizeOver++;
+	} else {
+		isizes[ isize ]++;
+	}
+
 }
 
 inline void CStatisticsMaps::SaveReadLength( const unsigned int length ) {
@@ -383,6 +408,8 @@ void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFo
 	fprintf( fOut, "Mapping quality threshold:%u\n", statMappingQuality );
 	
 	if ( fOut != NULL ) {
+		PrintMap( fOut, "IS isize", nIsize, nIsizeOver, nIsizeUnder, isizes, 0);
+
 		char buffer[1024];
 		uint8_t n = sprintf( buffer, "LF fragment mapping length (-mfl: %u; -ls: %u)", _fragmentLength, _localSearchRadius);
 		if ( n > 1024 ) {
@@ -390,9 +417,13 @@ void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFo
 			exit(1);
 		}
 		PrintMap( fOut, buffer,                nFragment,       nFrangmentOver,      nFrangmentUnder,      fragments,        minFragment );
+		
 		PrintMap( fOut, "LR read mapping length",               nReadLength,     nReadLengthOver,     nReadLengthUnder,     readLengths,      0 );
+		
 		PrintMap( fOut, "NA read mapping multiplicity", nMultiplicity,   nMultiplicityOver,   nMultiplicityUnder,   multiplicities,   0 );
+		
 		PrintMap( fOut, "RQ read map quality",          nMappingQuality, nMappingQualityOver, nMappingQualityUnder, mappingQualities, 0 );
+		
 		n = sprintf( buffer, "MM read map mismatch (-mm/-mmp: %4.2f)", _allowedMismatch );
 		if ( n > 1024 ) {
 			printf("ERROR: The buffer for MM title is insufficient.\n");
@@ -497,6 +528,7 @@ void CStatisticsMaps::SaveRecord(
 			unique_unique++;
 			SaveFragment( al1, al2, tech );
 			SaveModel( al1, al2 );
+			SaveIsize( al1, al2 );
 		}
 
 		if ( ( ( al1.NumMapped == 1 ) && ( al2.NumMapped > 1 ) ) || ( ( al1.NumMapped > 1 ) && ( al2.NumMapped == 1 ) ) )
