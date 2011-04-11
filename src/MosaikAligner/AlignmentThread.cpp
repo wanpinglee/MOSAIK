@@ -328,7 +328,7 @@ void CAlignmentThread::AlignReadArchive(
 		if(areBothMatesPresent) {
 
 			// perform local alignment search WHEN MATE1 IS UNIQUE
-			if(mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate1 ) {
+			if(mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) {
 
 				// extract the unique begin and end coordinates
 				AlignmentSet::const_iterator uniqueIter = mate1Alignments.GetSet()->begin();
@@ -397,7 +397,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			// perform local alignment search WHEN MATE2 IS UNIQUE
-			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate2 ) {
+			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 ) {
 
 				// extract the unique begin and end coordinates
 				AlignmentSet::const_iterator uniqueIter = mate2Alignments.GetSet()->begin();
