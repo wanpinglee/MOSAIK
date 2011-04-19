@@ -1637,20 +1637,20 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 }
 
 // trims the mate
-//void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
+void CMosaikBuild::ProcessMate(Mosaik::Mate& mate) {
 
-	//if(mTrimReads) {
-	//
-	//	if(mReadSuffixTrim > 0) {
-	//		mate.Bases.TrimEnd(mReadSuffixTrim);
-	//		mate.Qualities.TrimEnd(mReadSuffixTrim);
-	//	}
-	//
-	//	if(mReadPrefixTrim > 0) {
-	//		mate.Bases.TrimBegin(mReadPrefixTrim);
-	//		mate.Qualities.TrimBegin(mReadPrefixTrim);
-	//	}
-	//}
+	if(mTrimReads) {
+	
+		if(mReadSuffixTrim > 0) {
+			mate.Bases.TrimEnd(mReadSuffixTrim);
+			mate.Qualities.TrimEnd(mReadSuffixTrim);
+		}
+	
+		if(mReadPrefixTrim > 0) {
+			mate.Bases.TrimBegin(mReadPrefixTrim);
+			mate.Qualities.TrimBegin(mReadPrefixTrim);
+		}
+	}
 
 	// trim the leading and lagging N's
 	//unsigned short numLeadingNs = 0;
@@ -1703,7 +1703,7 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 	//	mNumLeadingNsTrimmed += numLeadingNs;
 	//	mNumLaggingNsTrimmed += numLaggingNs;
 	//}
-//}
+}
 
 // trims the read name and adds a read name prefix
 //void CMosaikBuild::ProcessReadName(CMosaikString& readName) {

@@ -208,9 +208,9 @@ int main(int argc, char* argv[]) {
 	//COptions::AddValueOption("-p",   "read name prefix",     "adds the prefix to each read name",        "", settings.HasReadNamePrefix,      settings.ReadNamePrefix,      pReadArchiveOpts);
 	//COptions::AddValueOption("-rl",  "# of reads",           "limits the # of reads processed",          "", settings.HasReadLimit,           settings.ReadLimit,           pReadArchiveOpts);
 	//COptions::AddOption("-nt",  "don't trim any bases", settings.DisableTrimmer, pReadArchiveOpts);
-	//COptions::AddValueOption("-tn",  "# of characters",      "sets the max # of internal Ns allowed",    "", settings.SetNumNBasesAllowed,    settings.NumNBasesAllowed,    pReadArchiveOpts);
-	//COptions::AddValueOption("-tp",  "# of beginning bases", "trims the first # of bases",               "", settings.HasTrimPrefixBases,     settings.NumTrimPrefixBases,  pReadArchiveOpts);
-	//COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
+	COptions::AddValueOption("-tn",  "# of characters",      "sets the max # of internal Ns allowed",    "", settings.SetNumNBasesAllowed,    settings.NumNBasesAllowed,    pReadArchiveOpts);
+	COptions::AddValueOption("-tp",  "# of beginning bases", "trims the first # of bases",               "", settings.HasTrimPrefixBases,     settings.NumTrimPrefixBases,  pReadArchiveOpts);
+	COptions::AddValueOption("-ts",  "# of end bases",       "trims the last # of bases",                "", settings.HasTrimSuffixBases,     settings.NumTrimSuffixBases,  pReadArchiveOpts);
 	//COptions::AddValueOption("-tpr", "# of characters",      "trims the first characters from the name", "", settings.HasTrimPrefixName,      settings.NumTrimPrefixName,   pReadArchiveOpts);
 	//COptions::AddValueOption("-tsr", "# of characters",      "trims the last characters from the name",  "", settings.HasTrimSuffixName,      settings.NumTrimSuffixName,   pReadArchiveOpts);
 
@@ -490,13 +490,16 @@ int main(int argc, char* argv[]) {
 
 	// set the max number of N's allowed
 	if(!settings.HasOutputReferenceFilename) {
-		if ( settings.DisableTrimmer ) {
-			mb.DisableTrimmer();
-		} else {
-			cout << "- trimming leading and lagging N's. ";
-			if(settings.NumNBasesAllowed == 0) cout << "Mates with interior N's will not be deleted." << endl;	
-			else cout << "Mates with >" << settings.NumNBasesAllowed << " interior N's will be deleted." << endl;
+		//if ( settings.DisableTrimmer ) {
+		//	mb.DisableTrimmer();
+		//} else {
+		if ( settings.SetNumNBasesAllowed ) {
+			//cout << "- trimming leading and lagging N's. ";
+			//if(settings.NumNBasesAllowed == 0) cout << "Mates with interior N's will not be deleted." << endl;	
+			//else cout << "Mates with >" << settings.NumNBasesAllowed << " interior N's will be deleted." << endl;
 			//if(settings.SetNumNBasesAllowed) mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
+			cout << "Mates with >" << settings.NumNBasesAllowed << " N's will be deleted." << endl;
+			mb.SetNumNBasesAllowed(settings.NumNBasesAllowed);
 		}
 	} else {
 
