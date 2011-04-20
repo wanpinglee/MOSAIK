@@ -1706,10 +1706,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	// check to see if this alignment meets the maximum mismatch threshold
 	if(mFilters.UseMismatchPercentFilter) {
 		double percentMismatch = (double)numTotalMismatches / (double)queryLength1;
-		if(percentMismatch > mFilters.MaxMismatchPercent) { 
-			//cerr << "filter" << endl; 
-			ret = false; 
-		}
+		if(percentMismatch > mFilters.MaxMismatchPercent) ret = false; 
 	}
 
 	// check to see if this alignment meets the minimum percentage alignment threshold

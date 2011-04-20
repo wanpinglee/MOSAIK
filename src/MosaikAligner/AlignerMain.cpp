@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-minp", "percent",        "the minimum alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
 	COptions::AddValueOption("-mm",   "mismatches",     "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
 	COptions::AddValueOption("-mmp",  "threshold",      "the percentage of mismatches allowed [0.0 - 1.0]",      "", settings.CheckMismatchPercent,              settings.MismatchPercent,             pFilterOpts);
-	COptions::AddOption("-mmal", "when enabled, unaligned portions of the read will not count as a mismatch", settings.UseAlignedLengthForMismatches,                                       pFilterOpts);
+	//COptions::AddOption("-mmal", "when enabled, unaligned portions of the read will not count as a mismatch", settings.UseAlignedLengthForMismatches,                                       pFilterOpts);
 
 	// TODO: we need to move the alignment quality calculation up to ApplyReadFilters in order to make this option useable
 	//COptions::AddValueOption("-aq",   "threshold",      "enable an alignment quality threshold",      "", settings.CheckAlignmentQuality,             settings.AlignmentQualityThreshold,   pFilterOpts);
