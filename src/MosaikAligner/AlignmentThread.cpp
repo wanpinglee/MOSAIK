@@ -220,23 +220,41 @@ void CAlignmentThread::AlignReadArchive(
 
 		// specify the percent of N's in the read
 		unsigned short numMate1NBases = 0;
+		unsigned short numMate1ABases = 0;
+		unsigned short numMate1TBases = 0;
 		char* basePtr = mr.Mate1.Bases.Data();
 		for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
 			if ( *basePtr == 'N' )
 				numMate1NBases++;
+			if ( *basePtr == 'A' )
+				numMate1ABases++;
+			if ( *basePtr == 'T' )
+				numMate1TBases++;
 			++basePtr;
 		}
 
 		unsigned short numMate2NBases = 0;
+		unsigned short numMate2ABases = 0;
+		unsigned short numMate2TBases = 0;
 		basePtr = mr.Mate2.Bases.Data();
 		for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
 			if ( *basePtr == 'N' )
 				numMate2NBases++;
+			if ( *basePtr == 'A' )
+				numMate2ABases++;
+			if ( *basePtr == 'T' )
+				numMate2TBases++;
 			++basePtr;
 		}
 
-		const bool isTooManyNMate1 = ( ( numMate1NBases / (double) numMate1Bases ) > 0.7 ) ? true : false;
-		const bool isTooManyNMate2 = ( ( numMate2NBases / (double) numMate2Bases ) > 0.7 ) ? true : false;
+		const bool isTooManyNMate1 = ( ( ( numMate1NBases / (double) numMate1Bases ) > 0.7 ) 
+			|| ( ( numMate1ABases / (double) numMate1Bases ) > 0.7 ) 
+			|| ( ( numMate1TBases / (double) numMate1Bases ) > 0.7 ) ) 
+			? true : false;
+		const bool isTooManyNMate2 = ( ( ( numMate2NBases / (double) numMate2Bases ) > 0.7 ) 
+			|| ( ( numMate2ABases / (double) numMate1Bases ) > 0.7 ) 
+			|| ( ( numMate2TBases / (double) numMate1Bases ) > 0.7 ) ) 
+			? true : false;
 
 		const bool areBothMatesPresent = (((numMate1Bases != 0) && (numMate2Bases != 0)) ? true : false);
 
@@ -1680,7 +1698,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 
 	// calculate the total number of mismatches
 	//const unsigned short numTotalMismatches = al.NumMismatches + (mFlags.UseAlignedReadLengthForMismatchCalculation ? 0 : numNonAlignedBases);
-	const unsigned short numTotalMismatches = al.NumMismatches + (mFilters.UseMinAlignmentFilter ? 0 : numNonAlignedBases);
+	const unsigned short numTotalMismatches = al.NumMismatches + ( (mFilters.UseMinAlignmentFilter || mFilters.UseMinAlignmentPercentFilter ) ? 0 : numNonAlignedBases);
 
 	// check to see if this alignment meets the maximum mismatch threshold
 	if(mFilters.UseMismatchFilter && (numTotalMismatches > mFilters.MaxNumMismatches)) ret = false;
