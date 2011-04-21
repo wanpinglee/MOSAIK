@@ -219,58 +219,61 @@ void CAlignmentThread::AlignReadArchive(
 		const unsigned short numMate2Bases = (unsigned short)mr.Mate2.Bases.Length();
 
 		// specify the percent of N's in the read
-		unsigned short numMate1NBases = 0;
-		unsigned short numMate1ABases = 0;
-		unsigned short numMate1TBases = 0;
-		unsigned short numMate1CBases = 0;
-		unsigned short numMate1GBases = 0;
-		char* basePtr = mr.Mate1.Bases.Data();
-		for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
-			if ( *basePtr == 'N' )
-				numMate1NBases++;
-			if ( *basePtr == 'A' )
-				numMate1ABases++;
-			if ( *basePtr == 'T' )
-				numMate1TBases++;
-			if ( *basePtr == 'C' )
-				numMate1CBases++;
-			if ( *basePtr == 'G' )
-				numMate1GBases++;
-			++basePtr;
-		}
+		//unsigned short numMate1NBases = 0;
+		//unsigned short numMate1ABases = 0;
+		//unsigned short numMate1TBases = 0;
+		//unsigned short numMate1CBases = 0;
+		//unsigned short numMate1GBases = 0;
+		//char* basePtr = mr.Mate1.Bases.Data();
+		//for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
+		//	if ( *basePtr == 'N' )
+		//		numMate1NBases++;
+		//	if ( *basePtr == 'A' )
+		//		numMate1ABases++;
+		//	if ( *basePtr == 'T' )
+		//		numMate1TBases++;
+		//	if ( *basePtr == 'C' )
+		//		numMate1CBases++;
+		//	if ( *basePtr == 'G' )
+		//		numMate1GBases++;
+		//	++basePtr;
+		//}
 
-		unsigned short numMate2NBases = 0;
-		unsigned short numMate2ABases = 0;
-		unsigned short numMate2TBases = 0;
-		unsigned short numMate2CBases = 0;
-		unsigned short numMate2GBases = 0;
-		basePtr = mr.Mate2.Bases.Data();
-		for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
-			if ( *basePtr == 'N' )
-				numMate2NBases++;
-			if ( *basePtr == 'A' )
-				numMate2ABases++;
-			if ( *basePtr == 'T' )
-				numMate2TBases++;
-			if ( *basePtr == 'C' )
-				numMate2CBases++;
-			if ( *basePtr == 'G' )
-				numMate2GBases++;
-			++basePtr;
-		}
+		//unsigned short numMate2NBases = 0;
+		//unsigned short numMate2ABases = 0;
+		//unsigned short numMate2TBases = 0;
+		//unsigned short numMate2CBases = 0;
+		//unsigned short numMate2GBases = 0;
+		//basePtr = mr.Mate2.Bases.Data();
+		//for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
+		//	if ( *basePtr == 'N' )
+		//		numMate2NBases++;
+		//	if ( *basePtr == 'A' )
+		//		numMate2ABases++;
+		//	if ( *basePtr == 'T' )
+		//		numMate2TBases++;
+		//	if ( *basePtr == 'C' )
+		//		numMate2CBases++;
+		//	if ( *basePtr == 'G' )
+		//		numMate2GBases++;
+		//	++basePtr;
+		//}
 
-		const bool isTooManyNMate1 = ( ( ( numMate1NBases / (double) numMate1Bases ) > 0.6 ) 
-			|| ( ( numMate1ABases / (double) numMate1Bases ) > 0.6 ) )
+		//const bool isTooManyNMate1 = ( ( ( numMate1NBases / (double) numMate1Bases ) > 0.6 ) 
+		//	|| ( ( numMate1ABases / (double) numMate1Bases ) > 0.6 ) )
 			//|| ( ( numMate1TBases / (double) numMate1Bases ) > 0.5 ) )
 			//|| ( ( numMate1CBases / (double) numMate1Bases ) > 0.5 )
 			//|| ( ( numMate1GBases / (double) numMate1Bases ) > 0.5 ) ) 
-			? true : false;
-		const bool isTooManyNMate2 = ( ( ( numMate2NBases / (double) numMate2Bases ) > 0.6 ) 
-			|| ( ( numMate2ABases / (double) numMate1Bases ) > 0.6 ) )
+		//	? true : false;
+		//const bool isTooManyNMate2 = ( ( ( numMate2NBases / (double) numMate2Bases ) > 0.6 ) 
+		//	|| ( ( numMate2ABases / (double) numMate1Bases ) > 0.6 ) )
 			//|| ( ( numMate2TBases / (double) numMate1Bases ) > 0.5 ) )
 			//|| ( ( numMate2CBases / (double) numMate1Bases ) > 0.5 )
 			//|| ( ( numMate2GBases / (double) numMate1Bases ) > 0.5 ) ) 
-			? true : false;
+		//	? true : false;
+
+		const bool isTooManyNMate1 = false;
+		const bool isTooManyNMate2 = false;
 
 		const bool areBothMatesPresent = (((numMate1Bases != 0) && (numMate2Bases != 0)) ? true : false);
 
@@ -284,33 +287,11 @@ void CAlignmentThread::AlignReadArchive(
 
 			// align the read
 			if(AlignRead(mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status)) {
-
 				// calculate the alignment qualities
 				mate1Alignments.CalculateAlignmentQualities(calculateCorrectionCoefficient, minSpanLength);
 				isMate1Aligned = true;
 
 			} 
-			//else {
-
-				// TODO: the informtion is not correct
-				// write the unaligned read if specified
-			//	if(mFlags.IsReportingUnalignedReads) {
-			//		pthread_mutex_lock(&mReportUnalignedMate1Mutex);
-			//		mr.Mate1.Qualities.Increment(33);
-			//
-			//		if(isUsingSOLiD) {
-			//			mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate1.Bases);
-			//			mr.Mate1.Bases.Prepend(mr.Mate1.SolidPrefixTransition, 2);
-			//			mr.Mate1.Qualities.Prepend("!?", 2);
-			//		}
-			//
-			//		fprintf(pUnalignedStream, "@%s (mate 1, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
-			//			(isUsingSOLiD ? numMate1Bases + 1 : numMate1Bases), mr.Mate1.Bases.CData(), 
-			//			mr.Mate1.Qualities.CData());
-			//
-			//		pthread_mutex_unlock(&mReportUnalignedMate1Mutex);
-			//	}
-			//}
 		}
 
 		// =====================
@@ -329,26 +310,6 @@ void CAlignmentThread::AlignReadArchive(
 				isMate2Aligned = true;
 
 			} 
-			//else {
-			//
-				// write the unaligned read if specified
-			//	if(mFlags.IsReportingUnalignedReads) {
-			//		pthread_mutex_lock(&mReportUnalignedMate2Mutex);
-			//		mr.Mate2.Qualities.Increment(33);
-			//
-			//		if(isUsingSOLiD) {
-			//			mCS.ConvertReadPseudoColorspaceToColorspace(mr.Mate2.Bases);
-			//			mr.Mate2.Bases.Prepend(mr.Mate2.SolidPrefixTransition, 2);
-			//			mr.Mate2.Qualities.Prepend("!?", 2);
-			//		}
-			//
-			//		fprintf(pUnalignedStream, "@%s (mate 2, length=%u)\n%s\n+\n%s\n", mr.Name.CData(), 
-			//			(isUsingSOLiD ? numMate2Bases + 1 : numMate2Bases), mr.Mate2.Bases.CData(), 
-			//			mr.Mate2.Qualities.CData());
-			//
-			//		pthread_mutex_unlock(&mReportUnalignedMate2Mutex);
-			//	}
-			//}
 		}
 
 		// ======================
@@ -360,7 +321,6 @@ void CAlignmentThread::AlignReadArchive(
 
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
-
 			// perform local alignment search WHEN MATE1 IS UNIQUE
 			if(mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) {
 
@@ -595,7 +555,6 @@ void CAlignmentThread::AlignReadArchive(
 			}
 		}
 		
-
 
 		// ===================================
 		// Save alignments to BAMs or archives
@@ -1151,189 +1110,6 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	}
 }
 
-
-/*
-// compare the given proper pairs
-inline bool CAlignmentThread::IsBetterPair ( const Alignment& competitor_mate1, const Alignment& competitor_mate2, 
-	const unsigned int competitor_fragmentLength, const Alignment& mate1, 
-	const Alignment& mate2, const unsigned int fragmentLength ) {
-
-	// rescured mate always wins
-	if ( competitor_mate1.WasRescued ) return true;
-	if ( competitor_mate2.WasRescued ) return true;
-	// proper pair always wins improper pair
-	bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
-	bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;
-	if ( competitor_model && !current_model ) return true;
-	if ( !competitor_model && current_model ) return false;
-
-	double competitor = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 100.00;
-	double current    = ( mate1.Quality + mate2.Quality ) / 100.00;
-
-	unsigned int competitor_diff = ( mSettings.MedianFragmentLength > competitor_fragmentLength ) ? 
-		mSettings.MedianFragmentLength - competitor_fragmentLength : 
-		competitor_fragmentLength - mSettings.MedianFragmentLength;
-	
-	unsigned int diff            = ( mSettings.MedianFragmentLength > fragmentLength ) ? 
-		mSettings.MedianFragmentLength - fragmentLength : 
-		fragmentLength - mSettings.MedianFragmentLength;
-
-	competitor += ( 200 - (int)competitor_diff ) / 200;
-	current    += ( 200 - (int)diff ) / 200;
-
-	if ( competitor > current ) return true;
-	else return false;
-}
-
-// Select and only keep best and 2nd best
-void CAlignmentThread::SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned) {
-	
-	vector<Alignment> newMate1Set;
-	vector<Alignment> newMate2Set;
-	// store the number of alignments
-	Alignment junkAl;
-	junkAl.IsJunk = true;
-	unsigned int nMate1 = 0;
-	unsigned int nMate2 = 0;
-
-	Alignment bestMate1, bestMate2; 
-	Alignment secondBestMate1, secondBestMate2;
-
-	bool best          = false;
-	bool secondBest    = false;
-
-	unsigned int bestFl          = INT_MAX;
-	unsigned int secondBestFl    = INT_MAX;
-	
-	if ( isMate1Aligned && isMate2Aligned ) {
-		
-		nMate1 = mate1Set.size();
-		nMate2 = mate2Set.size();
-
-		sort( mate1Set.begin(), mate1Set.end() );
-		sort( mate2Set.begin(), mate2Set.end() );
-
-
-		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
-		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
-				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin) 
-					? ite->ReferenceEnd - ite2->ReferenceBegin 
-					: ite2->ReferenceEnd - ite->ReferenceBegin;
-				
-				if ( ( ite->ReferenceIndex == ite2->ReferenceIndex ) 
-					&& ( length > ( 2 * mSettings.MedianFragmentLength ) ) ) {
-					if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
-						lastMinM2 = ( ite->ReferenceBegin > ite2->ReferenceBegin) ? ite2 : lastMinM2;
-						continue;
-					} else {
-						break;
-					}
-					
-				// in the fragment length threshold
-				} else {
-					if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl ) ) {
-						// store the current best as second best
-						if ( best ) {
-							secondBest = true;
-							secondBestMate1 = bestMate1;
-							secondBestMate2 = bestMate2;
-							secondBestFl    = bestFl;
-						}
-						best = true;
-						bestMate1 = *ite;
-						bestMate2 = *ite2;
-						bestFl    = length;
-
-					} else {
-						if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl ) ) {
-							secondBest = true;
-							secondBestMate1 = *ite;
-							secondBestMate2 = *ite2;
-							secondBestFl    = length;
-						}
-					}
-				}
-				
-			}
-		}
-
-		
-		if ( best ) {
-			newMate1Set.push_back( bestMate1 );
-			newMate2Set.push_back( bestMate2 );
-		}
-		else {
-			// pick up mates having highest MQ
-			sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
-			sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
-			newMate1Set.push_back( *mate1Set.rbegin() );
-			newMate2Set.push_back( *mate2Set.rbegin() );
-		}
-
-		
-		if ( secondBest ) {
-			newMate1Set.begin()->NextBestQuality = secondBestMate1.Quality;
-			newMate2Set.begin()->NextBestQuality = secondBestMate2.Quality;
-		} else {
-			if ( best ) {
-				sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
-				sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
-			}
-
-			if ( nMate1 == 1 )
-				newMate1Set.begin()->NextBestQuality = 0;
-			else
-				newMate1Set.begin()->NextBestQuality = ( mate1Set.rbegin() + 1 )->Quality;
-
-			if ( nMate2 == 1 )
-				newMate2Set.begin()->NextBestQuality = 0;
-			else
-				newMate2Set.begin()->NextBestQuality = ( mate2Set.rbegin() + 1 )->Quality;
-		}
-
-		newMate1Set.begin()->NumMapped = nMate1;
-		newMate2Set.begin()->NumMapped = nMate2;
-		
-		mate1Set.clear();
-		mate2Set.clear();
-		mate1Set = newMate1Set;
-		mate2Set = newMate2Set;
-		
-		
-	} else if ( isMate1Aligned ) {
-		nMate1 = mate1Set.size();
-
-		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
-		// note: the size of mate1Set must be larger than one
-		vector<Alignment>::reverse_iterator ite = mate1Set.rbegin();
-		// the one having the highest MQ
-		newMate1Set.push_back( *ite );
-		ite++;
-		newMate1Set.begin()->NextBestQuality = ite->Quality;
-		newMate1Set.begin()->NumMapped = nMate1;
-
-		mate1Set.clear();
-		mate1Set = newMate1Set;
-
-	} else if ( isMate2Aligned ) {
-		nMate2 = mate2Set.size();
-		
-		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
-		// note: the size of mate2Set must be larger than one
-		vector<Alignment>::reverse_iterator ite = mate2Set.rbegin();
-		// the one having the highest MQ
-		newMate2Set.push_back( *ite );
-		ite++;
-		newMate2Set.begin()->NextBestQuality = ite->Quality;
-		newMate2Set.begin()->NumMapped = nMate2;
-
-		mate2Set.clear();
-		mate2Set = newMate2Set;
-
-	}
-}
-*/
 
 // greater-than operator of mapping qualities
 //inline bool CAlignmentThread::LessThanMQ ( const Alignment& al1, const Alignment& al2){

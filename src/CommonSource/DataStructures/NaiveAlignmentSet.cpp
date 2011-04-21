@@ -90,34 +90,40 @@ void CNaiveAlignmentSet::CalculateAlignmentQualities(const bool calculateCorrect
 		mFwdMhpOccupancyList.sort();
 		mRevMhpOccupancyList.sort();
 	}
-
+	
 	// calculate the alignment qualities
 	AlignmentSet::iterator setIter;
+	
 	for(setIter = mAlignments.begin(); setIter != mAlignments.end(); ++setIter) {
+		
 		mAlignmentQuality.CalculateQuality(setIter);
-
 		if(calculateCorrectionCoefficient) {
 			const double correctionCoefficient = CalculateCorrectionCoefficient(setIter->QueryBegin, setIter->QueryEnd, 
 				(setIter->IsReverseStrand ? mRevMhpOccupancyList : mFwdMhpOccupancyList), minSpanLength);
-
+			
 			// modify the alignment quality if the correction coefficient kicks in
 			if( !setIter->CanBeMappedToSpecialReference && ( correctionCoefficient < 1.0 ) ) {
 				const double Pcorrect = 1.0 - pow(10.0, -setIter->Quality / 10.0);
 				setIter->Quality = (unsigned char)(-10.0 * log10(1.0 - correctionCoefficient * Pcorrect) + 0.5);
 			}
 		}
+
 	}
 }
 
 // calculates the correction coefficient
 double CNaiveAlignmentSet::CalculateCorrectionCoefficient(const unsigned short queryBegin, const unsigned short queryEnd, const MhpOccupancyList& mhpOccupancyList, const unsigned short minSpanLength) {
-
+	
 	// process the first mhp occupancy position that is within [queryBegin, queryEnd]
 	MhpOccupancyList::const_iterator mhpIter = mhpOccupancyList.begin();
-	while((mhpIter->Begin < queryBegin) || (mhpIter->End > queryEnd)) ++mhpIter;
+	while((mhpIter->Begin < queryBegin) || (mhpIter->End > queryEnd)) {
+		++mhpIter;
+		if ( mhpIter == mhpOccupancyList.end() ) return 0.0;
+	}
 
 	MhpOccupancyRegion mor(mhpIter->Begin, mhpIter->End, mhpIter->Occupancy);
 	++mhpIter;
+	if ( mhpIter == mhpOccupancyList.end() ) return 0.0;
 
 	// process the remaining mhp occupancy positions within [queryBegin, queryEnd]
 	for(; mhpIter != mhpOccupancyList.end(); ++mhpIter) {
