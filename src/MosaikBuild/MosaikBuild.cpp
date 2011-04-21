@@ -927,8 +927,8 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 
 				// save both mates
 				//ProcessReadName(mr.Name);
-				//ProcessMate(mr.Mate1);
-				//ProcessMate(mr.Mate2);
+				ProcessMate(mr.Mate1);
+				ProcessMate(mr.Mate2);
 				writer.SaveRead(mr);
 				numReadsParsed++;
 
@@ -936,7 +936,7 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 
 				// save our read
 				//ProcessReadName(mr.Name);
-				//ProcessMate(mr.Mate1);
+				ProcessMate(mr.Mate1);
 				writer.SaveRead(mr);
 				numReadsParsed++;
 			}
@@ -1011,7 +1011,7 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 
 		r.Name = ft.Name;
 		//ProcessReadName(r.Name);
-		//ProcessMate(r.Mate1);
+		ProcessMate(r.Mate1);
 		writer.SaveRead(r);
 		numReadsParsed++;
 		if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1251,8 +1251,8 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 
 		r.Name = ftags1.Name;
 		//ProcessReadName(r.Name);
-		//ProcessMate(r.Mate1);
-		//ProcessMate(r.Mate2);
+		ProcessMate(r.Mate1);
+		ProcessMate(r.Mate2);
 		writer.SaveRead(r);
 		numReadsParsed++;
 		if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1317,7 +1317,7 @@ void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFi
 			}
 
 			//ProcessReadName(r.Name);
-			//ProcessMate(r.Mate1);
+			ProcessMate(r.Mate1);
 			writer.SaveRead(r);
 			numReadsParsed++;
 
@@ -1445,8 +1445,8 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 			}
 
 			//ProcessReadName(r.Name);
-			//ProcessMate(r.Mate1);
-			//ProcessMate(r.Mate2);
+			ProcessMate(r.Mate1);
+			ProcessMate(r.Mate2);
 			writer.SaveRead(r);
 			numReadsParsed++;
 			if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1548,7 +1548,7 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 		Mosaik::Read r;
 		while(reader.LoadNextMate(r.Name, r.Mate1)) {
 			//ProcessReadName(r.Name);
-			//ProcessMate(r.Mate1);
+			ProcessMate(r.Mate1);
 			writer.SaveRead(r);
 			numReadsParsed++;
 			if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
@@ -1605,7 +1605,7 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 		while(reader.GetRead(mr)) {
 			mr.Mate1.Bases.Uppercase();
 			//ProcessReadName(mr.Name);
-			//ProcessMate(mr.Mate1);
+			ProcessMate(mr.Mate1);
 			writer.SaveRead(mr);
 			numReadsParsed++;
 
