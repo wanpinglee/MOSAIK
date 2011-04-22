@@ -540,18 +540,54 @@ void CAlignmentThread::AlignReadArchive(
 
 		// save chromosomes and positions of multiple alignments in bam
 		if ( mFlags.SaveMultiplyBam ) {
-			if ( isMate1Multiple ) {
-				pthread_mutex_lock(&mSaveMultipleBamMutex);
-				for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
-					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
+			if ( mFlags.OutputMultiply ) {
+				if ( isMate1Multiple ) {
+					Alignment mateAl;
+					if ( !isMate2Empty ) mateAl = mate2Set[0];
+
+					vector<Alignment> mate1SetTemp = mate1Set;
+					for(vector<Alignment>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
+						if ( !isMate2Empty )
+							alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+						SetRequiredInfo( *alIter, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, isPairedEnd, true, !isMate2Empty);
+					}
+					
+					pthread_mutex_lock(&mSaveMultipleBamMutex);
+					for(vector<Alignment>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter)
+						pBams->mBam.SaveAlignment( *alIter, 0, false, false, mFlags.EnableColorspace );
+					pthread_mutex_unlock(&mSaveMultipleBamMutex);
 				}
-				pthread_mutex_unlock(&mSaveMultipleBamMutex);
+				if ( isPairedEnd && isMate2Multiple ) {
+					Alignment mateAl;
+					if ( !isMate1Empty ) mateAl = mate1Set[0];
+
+					vector<Alignment> mate2SetTemp = mate2Set;
+					for(vector<Alignment>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
+						if ( !isMate1Empty )
+							alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+						SetRequiredInfo( *alIter, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, isPairedEnd, true, !isMate1Empty);
+					}
+					
+					pthread_mutex_lock(&mSaveMultipleBamMutex);
+					for(vector<Alignment>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter)
+						pBams->mBam.SaveAlignment( *alIter, 0, false, false, mFlags.EnableColorspace );
+					pthread_mutex_unlock(&mSaveMultipleBamMutex);
+				}
 			}
-			if ( isPairedEnd && isMate2Multiple ) {
-				pthread_mutex_lock(&mSaveMultipleBamMutex);
-				for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
-					pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
-				pthread_mutex_unlock(&mSaveMultipleBamMutex);
+			else {
+				if ( isMate1Multiple ) {
+					pthread_mutex_lock(&mSaveMultipleBamMutex);
+					for(vector<Alignment>::iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
+						pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
+					}
+					pthread_mutex_unlock(&mSaveMultipleBamMutex);
+				}
+				if ( isPairedEnd && isMate2Multiple ) {
+					pthread_mutex_lock(&mSaveMultipleBamMutex);
+					for(vector<Alignment>::iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter)
+						pBams->mBam.SaveReferencePosition( alIter->ReferenceIndex + mReferenceOffset, alIter->ReferenceBegin, alIter->ReferenceEnd );
+					pthread_mutex_unlock(&mSaveMultipleBamMutex);
+				}
 			}
 		}
 		

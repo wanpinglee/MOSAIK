@@ -991,6 +991,11 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 	mSReference.count = count;
 }
 
+// outputs multiply mapped alignments
+void CMosaikAligner::OutputMultiply( void ) {
+	mFlags.OutputMultiply = true;
+}
+
 // sets quiet mode
 void CMosaikAligner::SetQuietMode( void ) {
 	mFlags.IsQuietMode = true;

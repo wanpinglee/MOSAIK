@@ -77,6 +77,7 @@ struct ConfigurationSettings {
 	bool UseJumpDB;
 	bool UseLowMemory;
 	bool IsQuietMode;
+	bool OutputMultiply;
 
 	// filenames
 	string AlignmentsFilename;
@@ -147,6 +148,7 @@ struct ConfigurationSettings {
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
+		, OutputMultiply(false)
 		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
@@ -606,6 +608,9 @@ int main(int argc, char* argv[]) {
 	// enable features
 	// ===============
 
+	// output multiply mapped alignments
+	if ( settings.OutputMultiply ) ma.OutputMultiply();
+	
 	// enable quiet mode
 	if( settings.IsQuietMode ) ma.SetQuietMode();
 

@@ -80,6 +80,8 @@ public:
 	void UseAlignedReadLengthForMismatchCalculation(void);
 	// sets quiet mode
 	void SetQuietMode( void );
+	// outputs multiply mapped alignments
+	void OutputMultiply( void );
 
 private:
 	// copy constructor
