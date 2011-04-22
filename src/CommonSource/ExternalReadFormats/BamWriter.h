@@ -139,7 +139,6 @@ public:
 	// opens the alignment archive
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
-	//void SaveAlignment(const CMosaikString& readName, const string& readGroupID, const vector<Alignment>::iterator& alIter, const char* zaString);
 	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid );
 	// saves the reference and position of an alignment to the alignment archive
 	void SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd );

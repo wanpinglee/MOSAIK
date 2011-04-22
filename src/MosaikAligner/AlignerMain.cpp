@@ -232,6 +232,7 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
+	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts); 
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
 	// add the pairwise alignment scoring options
@@ -244,7 +245,7 @@ int main(int argc, char* argv[]) {
 
 	// add interface options
 	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
-	COptions::AddOption("-quiet",  "enable progress bars and counters", settings.IsQuietMode, pInterface);
+	COptions::AddOption("-quiet",  "disenable progress bars and counters", settings.IsQuietMode, pInterface);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
