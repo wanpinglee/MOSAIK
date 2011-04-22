@@ -549,6 +549,7 @@ void CAlignmentThread::AlignReadArchive(
 					for(vector<Alignment>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
 						if ( !isMate2Empty )
 							alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+						alIter->RecalibratedQuality = alIter->Quality;
 						SetRequiredInfo( *alIter, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, isPairedEnd, true, !isMate2Empty);
 					}
 					
@@ -565,6 +566,7 @@ void CAlignmentThread::AlignReadArchive(
 					for(vector<Alignment>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
 						if ( !isMate1Empty )
 							alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+						alIter->RecalibratedQuality = alIter->Quality;
 						SetRequiredInfo( *alIter, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, isPairedEnd, true, !isMate1Empty);
 					}
 					
