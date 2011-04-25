@@ -540,6 +540,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		// save chromosomes and positions of multiple alignments in bam
 		if ( mFlags.SaveMultiplyBam ) {
+			// -om is enabled
 			if ( mFlags.OutputMultiply ) {
 				if ( isMate1Multiple ) {
 					Alignment mateAl;
@@ -758,9 +759,9 @@ void CAlignmentThread::AlignReadArchive(
 				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
 
 				if ( isFirstMate && isMate1Multiple )
-					al.Quality = 0;
+					al.RecalibratedQuality = 0;
 				else if ( !isFirstMate && isMate2Multiple )
-					al.Quality = 0;
+					al.RecalibratedQuality = 0;
 
 
 				if ( isPairedEnd ) {
