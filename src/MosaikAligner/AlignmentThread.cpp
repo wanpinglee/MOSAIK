@@ -656,6 +656,7 @@ void CAlignmentThread::AlignReadArchive(
 			
 			} else {
 
+				//Note: the following function will set RecalibratedQuality and RecalibratedQuality will be shown in the bam
 				al1.RecalibrateQuality(isUU, isMM);
 				al2.RecalibrateQuality(isUU, isMM);
 				
@@ -758,6 +759,7 @@ void CAlignmentThread::AlignReadArchive(
 				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
 				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
 
+				// Note: RecalibratedQuality will be shown in the bam
 				if ( isFirstMate && isMate1Multiple )
 					al.RecalibratedQuality = 0;
 				else if ( !isFirstMate && isMate2Multiple )

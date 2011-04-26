@@ -436,7 +436,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			cout << "ERROR: An inconsistent proper pair is found." << endl;
 			exit(1);
 		}
-
+		
+		//Note: the following function will set RecalibratedQuality and RecalibratedQuality will be shown in the bam
 		al1.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
 		al2.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
 
@@ -545,10 +546,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
 		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
 
+		// Note: RecalibratedQuality will be shown in the bam
+		al.RecalibratedQuality = al.Quality;
 		if ( isFirstMate && isMate1Multiple )
-			al.Quality = 0;
+			al.RecalibratedQuality = 0;
 		else if ( !isFirstMate && isMate2Multiple )
-			al.Quality = 0;
+			al.RecalibratedQuality = 0;
 		
 		// store mate1 alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
