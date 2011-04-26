@@ -73,15 +73,15 @@ namespace MosaikReadFormat {
 	}
 
 	// let the references be increased by 1
-	void CAlignmentWriter::AdjustSolidReferenceBases(void) {
+	//void CAlignmentWriter::AdjustSolidReferenceBases(void) {
 		// we can only adjust references when the file is open
-		if(!mIsOpen)
-			printf("Warning: Unable to adjust the numbers of references bases before opeing the alignment archive.");
-		else
-			for ( vector<ReferenceSequence>::iterator rsIte = mReferenceSequences.begin(); rsIte != mReferenceSequences.end(); rsIte++ )
-				rsIte->NumBases++;
-		
-	}
+	//	if(!mIsOpen)
+	//		printf("Warning: Unable to adjust the numbers of references bases before opeing the alignment archive.");
+	//	else
+	//		for ( vector<ReferenceSequence>::iterator rsIte = mReferenceSequences.begin(); rsIte != mReferenceSequences.end(); rsIte++ )
+	//			rsIte->NumBases++;
+	//	
+	//}
 
 	// checks the buffer
 	void CAlignmentWriter::AdjustBuffer(void) {

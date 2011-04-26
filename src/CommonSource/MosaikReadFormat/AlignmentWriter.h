@@ -77,7 +77,7 @@ namespace MosaikReadFormat {
 		void SetReferenceGaps(vector<unordered_map<unsigned int, unsigned short> >* pRefGapVector);
 		// the lengths of references should + 1 
 		// since there would be one more base after converting references from solid (colorspace) to basespace
-		void AdjustSolidReferenceBases(void);
+		//void AdjustSolidReferenceBases(void);
 		// adjust the size of partition; the default is 20000
 		void AdjustPartitionSize(unsigned short size);
 

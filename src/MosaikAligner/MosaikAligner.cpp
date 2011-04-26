@@ -63,6 +63,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 
         // retrieve the concatenated reference sequence length
 	vector<ReferenceSequence> referenceSequences;
+	vector<ReferenceSequence> referenceSequencesBs;
 
 	// get reference information
 	MosaikReadFormat::CReferenceSequenceReader refseq;
@@ -86,6 +87,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			printf("ERROR: The basespace and colorspace reference sequence archives do not seem to represent the same FASTA file.\n"); 
 			exit(1);
 		}
+
+		bsRefSeq.GetReferenceSequences(referenceSequencesBs);
 
 		bsRefSeq.Close();
 	}
@@ -116,7 +119,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		exit(1);
 	}
 	const unsigned int nReference = referenceSequences.size() - mSReference.nReference;
-	vector<ReferenceSequence>::iterator ite1 = referenceSequences.begin();
+	vector<ReferenceSequence>::const_iterator ite1;
+	ite1 = mFlags.EnableColorspace ? referenceSequencesBs.begin() : referenceSequences.begin();
 	for ( unsigned int i = 0; i < nReference; ++i ) {
 		referenceSequencesWoSpecial.push_back( *ite1 );
 		++ite1;
@@ -142,7 +146,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
 
 		//mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-		mBams.sHeader.pReferenceSequences = &referenceSequences;
+		mBams.sHeader.pReferenceSequences = mFlags.EnableColorspace ? &referenceSequencesBs : &referenceSequences;
 		mBams.uHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 		mBams.rHeader.pReferenceSequences = &referenceSequencesWoSpecial;
 	
@@ -436,7 +440,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			// prepare a new vector for the current chromosome for opening out archive
 			vector<ReferenceSequence> smallReferenceSequences;
 			for ( unsigned int j = 0; j < referenceGroups[i].second; j++ ){
-				smallReferenceSequences.push_back(referenceSequences[startRef+j]);
+				if ( mFlags.EnableColorspace )
+					smallReferenceSequences.push_back(referenceSequencesBs[startRef+j]);
+				else
+					smallReferenceSequences.push_back(referenceSequences[startRef+j]);
+
 			}
 
 			// define our output file
@@ -456,7 +464,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			inn.Close();
 
 			// solid references should be one-base longer after converting back to basespace
-			if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
+			//if(mFlags.EnableColorspace) out.AdjustSolidReferenceBases();
 			out.Close();
 
 			// free memory
@@ -632,14 +640,6 @@ void CMosaikAligner::MergeArchives(void) {
 	if ( nThread > 5 )
 		nThread = 5;
 
-	// prepare reference offset vector for SOLiD
-	//vector<unsigned int> refOffsets;
-	//refOffsets.resize(referenceGroups.size());
-	//for ( unsigned int i = 0; i < referenceGroups.size(); i++ ) {
-	//	unsigned int startRef = referenceGroups[i].first;
-	//	refOffsets[i] = referenceSequences[startRef].Begin;
-	//}
-
 	CConsole::Heading();
 	cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
@@ -659,10 +659,8 @@ void CMosaikAligner::MergeArchives(void) {
 	cout << "Merging alignment archive:" << endl;
 	CConsole::Reset();
 
-	//mStatisticsMaps.Reset();
 
         uint64_t readNo        = 0;
-	
 	if ( !mFlags.IsQuietMode )
         	CProgressBar<uint64_t>::StartThread(&readNo, 0, nReads, "reads");
 

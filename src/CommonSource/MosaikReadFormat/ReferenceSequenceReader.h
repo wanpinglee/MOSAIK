@@ -67,6 +67,10 @@ namespace MosaikReadFormat {
 				return ar1.Begin < ar2.Begin;
 			}
 		};
+		// copy constructor
+		CReferenceSequenceReader ( const CReferenceSequenceReader& copy );
+		// assign operator
+		CReferenceSequenceReader& operator=( const CReferenceSequenceReader& copy );
 		// stores the file state
 		bool mIsOpen;
 		// our input file stream
