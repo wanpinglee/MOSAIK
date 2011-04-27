@@ -629,11 +629,12 @@ void CAlignmentThread::AlignReadArchive(
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
 			// MM pair is always an improper pair
-			if ( !isMate1Multiple && !isMate2Multiple ) {
+			if ( !isMate1Multiple || !isMate2Multiple ) {
 				properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
 				properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
 			}
 
+			// sanity checker
 			if ( properPair1 != properPair2 ) {
 				cout << "ERROR: An inconsistent proper pair is found." << endl;
 				exit(1);
