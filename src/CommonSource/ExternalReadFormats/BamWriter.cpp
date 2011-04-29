@@ -224,11 +224,11 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 	unsigned int* pPackedCigar = (unsigned int*)packedCigar.data();
 	numCigarOperations = 0;
 
-	if ( isSolid && ( al.QueryBegin != 0 ) ) {
-		*pPackedCigar = al.QueryBegin << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
-		++pPackedCigar;
-		++numCigarOperations;
-	}
+	//if ( isSolid && ( al.QueryBegin != 0 ) ) {
+	//	*pPackedCigar = al.QueryBegin << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
+	//	++pPackedCigar;
+	//	++numCigarOperations;
+	//}
 
 	// create the cigar string by parsing the reference and query strings 
 	while(currentPos < numBases) {
@@ -291,11 +291,11 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 		}
 	}
 
-	if ( isSolid && ( al.QueryEnd != ( al.CsQuery.size() - 1 ) ) ) {
-		*pPackedCigar = ( al.CsQuery.size() - 1 - al.QueryEnd ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
-		++pPackedCigar;
-		++numCigarOperations;
-	}
+	//if ( isSolid && ( al.QueryEnd != ( al.CsQuery.size() - 1 ) ) ) {
+	//	*pPackedCigar = ( al.CsQuery.size() - 1 - al.QueryEnd ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
+	//	++pPackedCigar;
+	//	++numCigarOperations;
+	//}
 
 	// resize the packed cigar string
 	packedCigar.resize(numCigarOperations * SIZEOF_INT);

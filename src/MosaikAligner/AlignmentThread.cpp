@@ -1071,15 +1071,15 @@ void CAlignmentThread::SetRequiredInfo (
 				al.Reference.TrimBegin(1);
 			}
 			else if ( patchStartLen > 1 ) {
-				al.Query.Append('N', patchStartLen - 1 );
-				al.BaseQualities.Append('!', patchStartLen - 1 );
-				al.Reference.Append('Z', patchStartLen - 1 );
+				al.Query.Prepend('N', patchStartLen - 1 );
+				al.BaseQualities.Prepend('!', patchStartLen - 1 );
+				al.Reference.Prepend('Z', patchStartLen - 1 );
 			}
 
 			if ( patchEndLen > 0 ) {
-				al.Query.Prepend('N', patchEndLen );
-				al.BaseQualities.Prepend('!', patchEndLen );
-				al.Reference.Prepend('Z', patchEndLen );
+				al.Query.Append('N', patchEndLen );
+				al.BaseQualities.Append('!', patchEndLen );
+				al.Reference.Append('Z', patchEndLen );
 			}
 
 			al.QueryBegin  = 0;
