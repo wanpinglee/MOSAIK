@@ -43,21 +43,21 @@ CColorspaceUtilities::~CColorspaceUtilities(void) {
 	//if (mCsAl.type)        delete [] mCsAl.type;
 	
 	delete [] mCsAl.csReference; mCsAl.csReference = NULL;
-	delete [] mCsAl.csQuery;     mCsAl.csQuery = NULL;
+	delete [] mCsAl.csQuery;     mCsAl.csQuery     = NULL;
 	delete [] mCsAl.bsReference; mCsAl.bsReference = NULL;
-	delete [] mCsAl.bsQuery;     mCsAl.bsQuery = NULL;
-	delete [] mCsAl.type;        mCsAl.type = NULL;
+	delete [] mCsAl.bsQuery;     mCsAl.bsQuery     = NULL;
+	delete [] mCsAl.type;        mCsAl.type        = NULL;
 	
 	mCsAl.nDashReference = 0;
 	mCsAl.nDashQuery     = 0;
 	//if (mCsAl.dashReference) delete [] mCsAl.dashReference;
 	//if (mCsAl.dashQuery)     delete [] mCsAl.dashQuery;
 	delete [] mCsAl.dashReference; mCsAl.dashReference = NULL;
-	delete [] mCsAl.dashQuery;     mCsAl.dashQuery = NULL;
+	delete [] mCsAl.dashQuery;     mCsAl.dashQuery     = NULL;
 
-	mCsAl.nMismatch = 0;
+	mCsAl.nMismatch  = 0;
 	//if (mCsAl.mismatch)    delete [] mCsAl.mismatch;
-	delete [] mCsAl.mismatch; mCsAl.mismatch = NULL;
+	delete [] mCsAl.mismatch; mCsAl.mismatch   = NULL;
 
 	mCsAl.nIdentical = 0;
 	//if (mCsAl.identical)   delete [] mCsAl.identical;
@@ -166,11 +166,11 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	
 	mCsAl.bsReference[0] = bsBase;
 	mCsAl.bsQuery[0]     = bsBase;
-	if ( !ConvertCs2Bs(mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen-1, bsBase) ) {
+	if ( !ConvertCs2Bs( mCsAl.csReference, mCsAl.bsReference, 0, pairwiseLen - 1, bsBase ) ) {
 		//cerr << "RF" << endl;
 		return false;
 	}
-	if ( !ConvertCs2Bs(mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen-1, bsBase) ) {
+	if ( !ConvertCs2Bs( mCsAl.csQuery, mCsAl.bsQuery, 0, pairwiseLen - 1, bsBase ) ) {
 		//cerr << "QF" << endl;
 		return false;
 	}

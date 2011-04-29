@@ -55,10 +55,14 @@ public:
 	void Append(const char* s);
 	// appends the specified string to the current string
 	void Append(const char* s, const unsigned int sLen);
+	// appends the specified string to the current string
+	void Append(const char c, const unsigned int sLen);
 	// returns a const pointer to the data
 	const char* CData(void) const;
 	// copies the specified c-style string
 	void Copy(const char* string, const unsigned int numBytes);
+	// copies the specified c-style string
+	void Copy(const char c, const unsigned int numBytes);
 	// returns a pointer to the data
 	char* Data(void);
 	// decrements each character in the string by the specified amount
@@ -79,6 +83,8 @@ public:
 	void Prepend(const CMosaikString& ms);
 	// prepends the specified string to the current string
 	void Prepend(const char* s, const unsigned int sLen);
+	// prepends the specified string to the current string
+	void Prepend(const char c, const unsigned int sLen);
 	// replaces all occurrences of the first parameter with the second parameter
 	void Replace(const char oldCh, const char newCh);
 	// removes all occurrences of the specified character

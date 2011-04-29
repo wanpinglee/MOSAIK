@@ -361,7 +361,7 @@ private:
 	static const double ONE_THIRD;
 	static const double TWO_NINTHS;
 	// for soft clips
-	const unsigned int softClippedIdentifierLength;
+	//const unsigned int softClippedIdentifierLength;
 	char* softClippedIdentifier;
 	// our colorspace to basespace converter
 	CColorspaceUtilities mCS;

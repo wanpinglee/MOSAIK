@@ -239,10 +239,48 @@ void CMosaikString::Append(const char* s, const unsigned int sLen) {
 
 }
 
+// append the specified string to the current string
+void CMosaikString::Append(const char c, const unsigned int sLen) {
+	// check the allocated room
+	const unsigned int suffixLength  = sLen;
+	const unsigned int currentLength = mLength;
+	unsigned int newLength = suffixLength + currentLength;
+
+	if((newLength + 1) > mAllocatedLength) {
+	
+		// save the old string
+		char* newData = new char[currentLength + 1];
+		memcpy(newData, mData, currentLength);
+		newData[currentLength] = 0;
+
+		// copy the old string
+		Reserve(newLength);
+		memcpy(mData, newData, currentLength);
+
+		// clean up
+		delete [] newData;
+	}
+
+	// assign the suffix
+	memset( mData + currentLength, c, suffixLength );
+
+	mLength = newLength;
+	mData[newLength] = 0;
+
+}
+
 // copies the specified c-style string
 void CMosaikString::Copy(const char* string, const unsigned int numBytes) {
 	Reserve(numBytes);
 	memcpy(mData, string, numBytes);
+	mData[numBytes] = 0;
+	mLength = numBytes;
+}
+
+// copies the specified c-style string
+void CMosaikString::Copy(const char c, const unsigned int numBytes) {
+	Reserve(numBytes);
+	memset(mData, c, numBytes);
 	mData[numBytes] = 0;
 	mLength = numBytes;
 }
@@ -409,6 +447,38 @@ void CMosaikString::Prepend(const char* s, const unsigned int sLen) {
 
 		memmove_s(mData + prefixLength, mAllocatedLength - prefixLength, mData, currentLength);
 		memcpy(mData, s, prefixLength);
+	}
+
+	mLength = newLength;
+	mData[newLength] = 0;
+}
+
+// prepends the specified string to the current string
+void CMosaikString::Prepend(const char c, const unsigned int sLen) {
+	// check the allocated room
+	const unsigned int prefixLength  = sLen;
+	const unsigned int currentLength = mLength;
+	unsigned int newLength = prefixLength + currentLength;
+
+	if((newLength + 1) > mAllocatedLength) {
+		
+		// save the old string
+		char* newData = new char[currentLength + 1];
+		memcpy(newData, mData, currentLength);
+		newData[currentLength] = 0;
+
+		// copy the prefix
+		Reserve(newLength);
+		memset(mData, c, prefixLength);
+
+		// copy the old string
+		memcpy(mData + prefixLength, newData, currentLength);
+
+		// clean up
+		delete [] newData;
+	} else {
+		memmove_s(mData + prefixLength, mAllocatedLength - prefixLength, mData, currentLength);
+		memset(mData, c, prefixLength);
 	}
 
 	mLength = newLength;

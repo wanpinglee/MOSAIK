@@ -68,7 +68,7 @@ CAlignmentThread::CAlignmentThread(
 	, mReferenceEnd(pRefEnd)
 	, mReferenceSpecies(pRefSpecies)
 	, mReferenceSpecial(pRefSpecial)
-	, softClippedIdentifierLength(2048)
+//	, softClippedIdentifierLength(2048)
 	, mReadGroupsMap(pReadGroupsMap)
 	, mReferenceOffset( referenceOffset )
 {
@@ -82,9 +82,9 @@ CAlignmentThread::CAlignmentThread(
 	mCS.SetReferenceSequences(pBsRefSeqs);
 
 	// initialize our soft clip identifier
-	softClippedIdentifier = new char [ softClippedIdentifierLength + 1 ];
-	memset(softClippedIdentifier, 'Z', softClippedIdentifierLength);
-	softClippedIdentifier[ softClippedIdentifierLength ] = 0;
+//	softClippedIdentifier = new char [ softClippedIdentifierLength + 1 ];
+//	memset(softClippedIdentifier, 'Z', softClippedIdentifierLength);
+//	softClippedIdentifier[ softClippedIdentifierLength ] = 0;
 
 }
 
@@ -100,10 +100,10 @@ CAlignmentThread::~CAlignmentThread(void) {
 		mReverseRead = NULL;
 	}
 
-	if ( softClippedIdentifier ) {
-		delete [] softClippedIdentifier; 
-		softClippedIdentifier = NULL;
-	}
+//	if ( softClippedIdentifier ) {
+//		delete [] softClippedIdentifier; 
+//		softClippedIdentifier = NULL;
+//	}
 }
 
 // activates the current alignment thread
@@ -951,47 +951,6 @@ void CAlignmentThread::SetRequiredInfo (
 	const bool& isItselfMapped,
 	const bool& isMateMapped) {
 
-        // the base qualities of SOLiD reads are attached in ApplyReadFilters
-	if( !mFlags.EnableColorspace ) 
-		al.BaseQualities    = m.Qualities;
-	else {
-		al.CsQuery.clear();
-		al.CsBaseQualities.clear();
-
-		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
-			// raw sequence
-			CMosaikString rawCS = m.Bases;
-			mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );
-			al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
-			al.CsQuery += rawCS.CData();
-
-			// raw base qualities
-			// Note: if the first quality base is not '!'
-			CMosaikString rawCQ = m.Qualities;
-			rawCQ.Increment(33);
-			char prefix = '!';
-			rawCQ.Prepend( &prefix, 1);
-			al.CsBaseQualities = rawCQ.CData();
-		}
-
-		if ( !isItselfMapped ) {
-			al.NumMapped = 0;
-			al.IsJunk = true;
-		}
-	}
-
-	CMosaikString patchBases   = m.Bases;
-	unsigned int patchStartLen = al.QueryBegin;
-	unsigned int patchEndLen   = patchBases.Length() - al.QueryEnd - 1;
-	if ( al.IsReverseStrand && !mFlags.EnableColorspace ) {
-		al.BaseQualities.Reverse();
-		patchBases.ReverseComplement();
-		unsigned int temp;
-		temp = patchStartLen;
-		patchStartLen = patchEndLen;
-		patchEndLen = temp;
-	}
-	
 	al.IsResolvedAsPair       = isPair;
 	al.IsResolvedAsProperPair = isProperPair;
 	al.IsFirstMate            = isFirstMate;
@@ -1013,23 +972,44 @@ void CAlignmentThread::SetRequiredInfo (
 	else 
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
+	// fill out the alignment
+	// not SOLiD
 	if ( !mFlags.EnableColorspace ) {
+		// copy qualities
+		al.BaseQualities    = m.Qualities;
+
+		// handle bases
+		CMosaikString patchBases   = m.Bases;
+		unsigned int patchStartLen = al.QueryBegin;
+		unsigned int patchEndLen   = patchBases.Length() - al.QueryEnd - 1;
+
+		if ( al.IsReverseStrand ) {
+			// reverse qualities
+			al.BaseQualities.Reverse();
+			// reverse complement bases
+			patchBases.ReverseComplement();
+			// re-calculate patching start and end
+			unsigned int temp;
+			temp = patchStartLen;
+			patchStartLen = patchEndLen;
+			patchEndLen = temp;
+		}
+
 		if ( !isItselfMapped ) {
 			al.NumMapped = 0;
 			if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
 				al.Query = m.Bases;
-				al.Reference.Copy( softClippedIdentifier, al.Query.Length() );
+				al.Reference.Copy( 'Z', al.Query.Length() );
 				al.IsJunk = false;
 			} else {
 				al.IsJunk = true;
 			}
 		}
-		else {
-		
-			// patch bases and base qualities
+		else {	
+			// patch bases
 			if ( patchStartLen > 0 ) {
 				al.Query.Prepend    ( patchBases.CData(), patchStartLen );
-				al.Reference.Prepend( softClippedIdentifier, patchStartLen );
+				al.Reference.Prepend( 'Z', patchStartLen );
 			}
 
 			if ( patchEndLen > 0 ) {
@@ -1038,17 +1018,76 @@ void CAlignmentThread::SetRequiredInfo (
 				const char* startPoint    = patchBases.CData() + start;
 				// sanity check
 				if ( length > patchBases.Length() ) {
-					cout << "ERROR: The soft chip position is wrong" << endl;
+					cout << "ERROR: The soft chip position is wrong." << endl;
 					exit(1);
 				}
 				al.Query.Append    ( startPoint, patchEndLen );
-				al.Reference.Append( softClippedIdentifier, patchEndLen );
+				al.Reference.Append( 'Z', patchEndLen );
 			}
 		}
 
 		al.QueryBegin = 0;
 		al.QueryEnd   = m.Bases.Length() - 1;
 	}
+	else {
+		// fill out Colorspace raw bases and qualites
+		al.CsQuery.clear();
+		al.CsBaseQualities.clear();
+		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
+			// raw sequence
+			CMosaikString rawCS = m.Bases;
+			mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );
+			al.CsQuery.insert( 0, m.SolidPrefixTransition, SOLID_PREFIX_LENGTH );
+			al.CsQuery += rawCS.CData();
+
+			// raw base qualities
+			// Note: if the first quality base is not '!'
+			CMosaikString rawCQ = m.Qualities;
+			rawCQ.Increment(33);
+			char prefix = '!';
+			rawCQ.Prepend( &prefix, 1);
+			al.CsBaseQualities = rawCQ.CData();
+		}
+
+		if ( !isItselfMapped ) {
+			al.NumMapped = 0;
+			al.IsJunk = true;
+		} else {
+			// patch N's
+			--al.QueryEnd;
+			const unsigned int readLength    = m.Bases.Length();
+			const unsigned int patchStartLen = al.IsReverseStrand ? readLength - al.QueryEnd - 1 : al.QueryBegin;
+			const unsigned int patchEndLen   = al.IsReverseStrand ? al.QueryBegin : readLength - al.QueryEnd - 1;
+
+			// sanity checker
+			if ( al.QueryEnd > ( readLength - 1 ) ) {
+				cout << "ERROR: The aligned length is larger than the read length." << endl;
+				exit(1);
+			}
+
+			if ( patchStartLen == 0 ) {
+				al.Query.TrimBegin(1);
+				al.BaseQualities.TrimBegin(1);
+				al.Reference.TrimBegin(1);
+			}
+			else if ( patchStartLen > 1 ) {
+				al.Query.Append('N', patchStartLen - 1 );
+				al.BaseQualities.Append('!', patchStartLen - 1 );
+				al.Reference.Append('Z', patchStartLen - 1 );
+			}
+
+			if ( patchEndLen > 0 ) {
+				al.Query.Prepend('N', patchEndLen );
+				al.BaseQualities.Prepend('!', patchEndLen );
+				al.Reference.Prepend('Z', patchEndLen );
+			}
+
+			al.QueryBegin  = 0;
+			al.QueryEnd    = readLength - 1;
+			al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
+		}
+	}
+
 }
 
 // handle and then delete special alignments
