@@ -409,7 +409,7 @@ int main(int argc, char* argv[]) {
 				settings.AlignmentCandidateThreshold       = ( readLength > 350.0 ) ? 55 : 26;
 			} else {
 				settings.EnableAlignmentCandidateThreshold = true;
-				settings.AlignmentCandidateThreshold       = (unsigned char)floor( 20 + ( readLength / 7 ) );
+				settings.AlignmentCandidateThreshold       = (unsigned char)floor( 13 + ( readLength / 5 ) );
 			}
 		}
 
