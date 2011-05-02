@@ -219,15 +219,15 @@ void CAlignmentThread::AlignReadArchive(
 		const unsigned short numMate2Bases = (unsigned short)mr.Mate2.Bases.Length();
 
 		// specify the percent of N's in the read
-		//unsigned short numMate1NBases = 0;
+		unsigned short numMate1NBases = 0;
 		//unsigned short numMate1ABases = 0;
 		//unsigned short numMate1TBases = 0;
 		//unsigned short numMate1CBases = 0;
 		//unsigned short numMate1GBases = 0;
-		//char* basePtr = mr.Mate1.Bases.Data();
-		//for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
-		//	if ( *basePtr == 'N' )
-		//		numMate1NBases++;
+		char* basePtr = mr.Mate1.Bases.Data();
+		for ( unsigned short i = 0; i < numMate1Bases; ++i ) {
+			if ( *basePtr == 'N' )
+				numMate1NBases++;
 		//	if ( *basePtr == 'A' )
 		//		numMate1ABases++;
 		//	if ( *basePtr == 'T' )
@@ -236,18 +236,18 @@ void CAlignmentThread::AlignReadArchive(
 		//		numMate1CBases++;
 		//	if ( *basePtr == 'G' )
 		//		numMate1GBases++;
-		//	++basePtr;
-		//}
+			++basePtr;
+		}
 
-		//unsigned short numMate2NBases = 0;
+		unsigned short numMate2NBases = 0;
 		//unsigned short numMate2ABases = 0;
 		//unsigned short numMate2TBases = 0;
 		//unsigned short numMate2CBases = 0;
 		//unsigned short numMate2GBases = 0;
-		//basePtr = mr.Mate2.Bases.Data();
-		//for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
-		//	if ( *basePtr == 'N' )
-		//		numMate2NBases++;
+		basePtr = mr.Mate2.Bases.Data();
+		for ( unsigned short i = 0; i < numMate2Bases; ++i ) {
+			if ( *basePtr == 'N' )
+				numMate2NBases++;
 		//	if ( *basePtr == 'A' )
 		//		numMate2ABases++;
 		//	if ( *basePtr == 'T' )
@@ -256,24 +256,24 @@ void CAlignmentThread::AlignReadArchive(
 		//		numMate2CBases++;
 		//	if ( *basePtr == 'G' )
 		//		numMate2GBases++;
-		//	++basePtr;
-		//}
+			++basePtr;
+		}
 
-		//const bool isTooManyNMate1 = ( ( ( numMate1NBases / (double) numMate1Bases ) > 0.6 ) 
+		const bool isTooManyNMate1 = ( ( numMate1NBases / (double) numMate1Bases ) > 0.7 ) 
 		//	|| ( ( numMate1ABases / (double) numMate1Bases ) > 0.6 ) )
 			//|| ( ( numMate1TBases / (double) numMate1Bases ) > 0.5 ) )
 			//|| ( ( numMate1CBases / (double) numMate1Bases ) > 0.5 )
 			//|| ( ( numMate1GBases / (double) numMate1Bases ) > 0.5 ) ) 
-		//	? true : false;
-		//const bool isTooManyNMate2 = ( ( ( numMate2NBases / (double) numMate2Bases ) > 0.6 ) 
+			? true : false;
+		const bool isTooManyNMate2 = ( ( numMate2NBases / (double) numMate2Bases ) > 0.7 ) 
 		//	|| ( ( numMate2ABases / (double) numMate1Bases ) > 0.6 ) )
 			//|| ( ( numMate2TBases / (double) numMate1Bases ) > 0.5 ) )
 			//|| ( ( numMate2CBases / (double) numMate1Bases ) > 0.5 )
 			//|| ( ( numMate2GBases / (double) numMate1Bases ) > 0.5 ) ) 
-		//	? true : false;
+			? true : false;
 
-		const bool isTooManyNMate1 = false;
-		const bool isTooManyNMate2 = false;
+		//const bool isTooManyNMate1 = false;
+		//const bool isTooManyNMate2 = false;
 
 		const bool areBothMatesPresent = (((numMate1Bases != 0) && (numMate2Bases != 0)) ? true : false);
 
