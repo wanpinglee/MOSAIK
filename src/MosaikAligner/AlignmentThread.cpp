@@ -1072,13 +1072,13 @@ void CAlignmentThread::SetRequiredInfo (
 			}
 			else if ( patchStartLen > 1 ) {
 				al.Query.Prepend( 'N', patchStartLen - 1 );
-				al.BaseQualities.Prepend( 0, patchStartLen - 1 );
+				al.BaseQualities.Prepend( (char)0, patchStartLen - 1 );
 				al.Reference.Prepend( 'Z', patchStartLen - 1 );
 			}
 
 			if ( patchEndLen > 0 ) {
 				al.Query.Append( 'N', patchEndLen );
-				al.BaseQualities.Append( 0, patchEndLen );
+				al.BaseQualities.Append( (char)0, patchEndLen );
 				al.Reference.Append( 'Z', patchEndLen );
 			}
 
