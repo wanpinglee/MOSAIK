@@ -364,6 +364,7 @@ void CFileUtilities::GetTempDirectory(string& tempDirectory) {
 	tempDirectory = tmpDir;
 	tempDirectory += '\\';
 
+	tempDirectory += "MOSAIK.";
 	if ( isHostname == 0 ) {
 		tempDirectory += hostname;
 		tempDirectory += '.';
@@ -391,6 +392,7 @@ void CFileUtilities::GetTempDirectory(string& tempDirectory) {
 		tempDirectory = "/tmp/";
 	}
 
+	tempDirectory += "MOSAIK.";
 	if ( isHostname == 0 ) {
 		tempDirectory += hostname;
 		tempDirectory += '.';
