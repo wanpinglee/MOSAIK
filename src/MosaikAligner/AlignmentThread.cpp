@@ -1238,13 +1238,13 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 
 	// calculate the number of bases to extend past the hash regions during alignment
 	unsigned int numExtensionBases = 0;
-	if ( mSettings.SequencingTechnology == ST_454 ) {
+	//if ( mSettings.SequencingTechnology == ST_454 ) {
 		if(mFilters.UseMismatchFilter)        numExtensionBases = mFilters.MaxNumMismatches;
 		if(mFilters.UseMismatchPercentFilter) numExtensionBases = (unsigned int)(queryLength * mFilters.MaxMismatchPercent);
 		if(numExtensionBases < 2)             numExtensionBases = 2;
-	} else {
-		numExtensionBases = queryLength;
-	}
+	//} else {
+	//	numExtensionBases = queryLength;
+	//}
 
 	// statistics variables
 	int64_t hashRegionLength = 0;
