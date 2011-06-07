@@ -18,7 +18,7 @@ _EXT_OBJECTS= Benchmark.o ColorspaceUtilities.o ConsoleUtilities.o Fasta.o Fastq
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikBuild
-LIBS=$(PLATFORM_LIBS) -lz -lpthread 
+LIBS=$(PLATFORM_LIBS) -lz -lpthread
 
 all: $(PROGRAM)
 

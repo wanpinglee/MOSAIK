@@ -524,16 +524,21 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	
 		// patch the information for reporting
 		Alignment al         = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-
 		al.CsQuery           = isFirstMate ? mate1Cs : mate2Cs;
 		al.CsBaseQualities   = isFirstMate ? mate1Cq : mate2Cq;
-		unmappedAl.Query           = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
-		unmappedAl.BaseQualities   = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
-		unmappedAl.ReferenceIndex  = al.ReferenceIndex;
-		unmappedAl.ReferenceBegin  = al.ReferenceBegin;
-		unmappedAl.CsQuery         = !isFirstMate ? mate1Cs : mate2Cs;
-		unmappedAl.CsBaseQualities = !isFirstMate ? mate1Cq : mate2Cq;
+
+		//Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		Alignment unmappedAl;
+
+		if ( _isPairedEnd ) {
+			unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+			unmappedAl.Query           = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
+			unmappedAl.BaseQualities   = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
+			unmappedAl.ReferenceIndex  = al.ReferenceIndex;
+			unmappedAl.ReferenceBegin  = al.ReferenceBegin;
+			unmappedAl.CsQuery         = !isFirstMate ? mate1Cs : mate2Cs;
+			unmappedAl.CsBaseQualities = !isFirstMate ? mate1Cq : mate2Cq;
+		}
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
@@ -553,11 +558,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		else if ( !isFirstMate && isMate2Multiple )
 			al.RecalibratedQuality = 0;
 		
-		// store mate1 alignment
+		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
 	
 
-		// store special hits
+		// store mate1 special hits
+		// NOTE: we consider mate2 special hits in the next block
 		if ( isMate1Special ) {
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
 			SetAlignmentFlags( specialAl, al, !isFirstMate, false, true, _isPairedEnd, true, !isFirstMate, r );

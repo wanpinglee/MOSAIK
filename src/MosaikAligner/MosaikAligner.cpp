@@ -294,37 +294,37 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-/*
-	    outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/1");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/2");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/3");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/4");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/5");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/6");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/7");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/8");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/9");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/10");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/11");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/12");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/13");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/14");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/15");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/16");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/17");
-            outputFilenames.push_back("/home/wanping/bugTest/SOLiD/bak/18");
-            MergeArchives();
 
-	string tempDir1;
-	CFileUtilities::GetTempDirectory( tempDir1 );
-	if ( CFileUtilities::DirExists( tempDir1.c_str() ) ) {
-	        cout << endl << "- cleaning up temp files...";
-		CFileUtilities::DeleteDir( tempDir1 );
-		cout << "finished." << endl;
-	}
+	    //outputFilenames.push_back("/home/wanping/seg/tmp/test/1");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/2");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/3");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/4");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/5");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/6");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/7");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/8");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/9");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/10");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/11");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/12");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/13");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/14");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/15");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/16");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/17");
+            //outputFilenames.push_back("/home/wanping/seg/tmp/test/18");
+            //MergeArchives();
 
-            exit(1);
-*/
+	//string tempDir1;
+	//CFileUtilities::GetTempDirectory( tempDir1 );
+	//if ( CFileUtilities::DirExists( tempDir1.c_str() ) ) {
+	//        cout << endl << "- cleaning up temp files...";
+	//	CFileUtilities::DeleteDir( tempDir1 );
+	//	cout << "finished." << endl;
+	//}
+
+        //    exit(1);
+
 
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
