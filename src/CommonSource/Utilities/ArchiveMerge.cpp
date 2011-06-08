@@ -54,6 +54,7 @@ CArchiveMerge::CArchiveMerge (
 	string outputFilename, 
 	uint64_t           *readNo,
 	const bool          isSolid,
+	const string        commandLine,
 	const unsigned int  fragmentLength,
 	const unsigned int  localAlignmentSearchRadius,
 	const bool          hasSpecial,
@@ -127,6 +128,23 @@ CArchiveMerge::CArchiveMerge (
 	_sHeader.pReadGroups = &_readGroups;
 	_uHeader.pReadGroups = &_readGroups;
 	_rHeader.pReadGroups = &_readGroups;
+
+	ProgramGroup pg;
+	pg.ID = "MosaikAligner";
+	stringstream ss;
+	ss << (int)MOSAIK_MAJOR_VERSION << "." << (int)MOSAIK_MINOR_VERSION << "." << (int)MOSAIK_BUILD_VERSION;
+	pg.VN = ss.str();
+	pg.CL = commandLine;
+
+	_sHeader.pg.ID = "MosaikAligner";
+	_uHeader.pg.ID = "MosaikAligner";
+	_rHeader.pg.ID = "MosaikAligner";
+	_sHeader.pg.VN = ss.str();
+	_uHeader.pg.VN = ss.str();
+	_rHeader.pg.VN = ss.str();
+	_sHeader.pg.CL = commandLine;
+	_uHeader.pg.CL = commandLine;
+	_rHeader.pg.CL = commandLine;
 
 }
 
