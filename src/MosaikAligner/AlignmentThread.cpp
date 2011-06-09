@@ -1390,10 +1390,13 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				mStatisticsCounters.AlignmentCandidates++;
 
 				// check if we can prematurely stop
-				if(!alignAllReads && (alignments.GetCount() > 1)) {
+				if( !alignAllReads && ( alignments.GetCount() > 1 ) ) {
 					evaluateReverseReads = false;				
 					break;
 				}
+
+				if ( mFlags.IsUsingHashRegionThreshold && ( i > mSettings.HashRegionThreshold ) )
+					break;
 			}
 
 			// ==========================
@@ -1433,7 +1436,10 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					mStatisticsCounters.AlignmentCandidates++;
 
 					// check if we can prematurely stop
-					if(!alignAllReads && (alignments.GetCount() > 1)) break;
+					if (!alignAllReads && (alignments.GetCount() > 1))
+						break;
+					if ( mFlags.IsUsingHashRegionThreshold && ( i > mSettings.HashRegionThreshold ) )
+						break;
 				}
 			}
 		}
@@ -1712,7 +1718,7 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	}
 
 	// sort the hash regions according to length (descending)
-	if( !mFlags.IsAligningAllReads) sort(regions.begin(), regions.end(), SortHashRegionByLength() );
+	if( !mFlags.IsAligningAllReads || mFlags.IsUsingHashPositionThreshold ) sort(regions.begin(), regions.end(), SortHashRegionByLength() );
 }
 
 // settles the local Smith-Waterman window

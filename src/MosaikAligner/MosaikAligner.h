@@ -60,6 +60,8 @@ public:
 	void EnableColorspace(const string& basespaceReferenceFilename);
 	// enables the hash position threshold
 	void EnableHashPositionThreshold(const unsigned short hashPositionThreshold);
+	// enable the hash region threshold
+	void EnableHashRegionThreshold(const unsigned short hashRegionThreshold);
 	// enables the use of the jump database
 	void EnableJumpDB(const string& filenameStub, const unsigned int cacheSizeMB, const bool keepKeysInMemory, const bool keepPositionsInMemory);
 	// enables the local alignment search

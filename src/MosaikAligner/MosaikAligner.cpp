@@ -1028,6 +1028,12 @@ void CMosaikAligner::EnableHashPositionThreshold(const unsigned short hashPositi
 	mSettings.HashPositionThreshold = hashPositionThreshold;
 }
 
+// enable the hash region threshold
+void CMosaikAligner::EnableHashRegionThreshold(const unsigned short hashRegionThreshold) {
+	mFlags.IsUsingHashRegionThreshold = true;
+	mSettings.HashRegionThreshold = hashRegionThreshold;
+}
+
 // enables the use of the jump database
 void CMosaikAligner::EnableJumpDB(const string& filenameStub, const unsigned int numCachedHashes, const bool keepKeysInMemory, const bool keepPositionsInMemory) {
 	mFlags.IsUsingJumpDB             = true;

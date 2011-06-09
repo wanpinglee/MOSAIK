@@ -76,6 +76,7 @@ public:
 		unsigned int NumCachedHashes;
 		unsigned short AlignmentCandidateThreshold;
 		unsigned short HashPositionThreshold;
+		unsigned short HashRegionThreshold;
 		unsigned char HashSize;
 		unsigned char NumThreads;
 		SequencingTechnologies SequencingTechnology;
@@ -111,6 +112,7 @@ public:
 		//bool IsReportingUnalignedReads;
 		bool IsUsingAlignmentCandidateThreshold;
 		bool IsUsingHashPositionThreshold;
+		bool IsUsingHashRegionThreshold;
 		bool IsUsingJumpDB;
 		bool KeepJumpKeysInMemory;
 		bool KeepJumpPositionsInMemory;
@@ -132,6 +134,7 @@ public:
 			//, IsReportingUnalignedReads(false)
 			, IsUsingAlignmentCandidateThreshold(false)
 			, IsUsingHashPositionThreshold(false)
+			, IsUsingHashRegionThreshold(false)
 			, IsUsingJumpDB(false)
 			, KeepJumpKeysInMemory(false)
 			, KeepJumpPositionsInMemory(false)

@@ -72,6 +72,7 @@ struct ConfigurationSettings {
 	bool KeepJumpKeysOnDisk;
 	bool KeepJumpPositionsOnDisk;
 	bool LimitHashPositions;
+	bool LimitHashRegions;
 	//bool RecordUnalignedReads;
 	bool UseAlignedLengthForMismatches;
 	bool UseJumpDB;
@@ -104,6 +105,7 @@ struct ConfigurationSettings {
 	unsigned char StatMappingQuality;
 	unsigned int Bandwidth;
 	unsigned int HashPositionThreshold;
+	unsigned int HashRegionThreshold;
 	unsigned int JumpCacheMemory;
 	unsigned int LocalAlignmentSearchRadius;
 	unsigned int MinimumAlignment;
@@ -143,6 +145,7 @@ struct ConfigurationSettings {
 		, KeepJumpKeysOnDisk(false)
 		, KeepJumpPositionsOnDisk(false)
 		, LimitHashPositions(true)
+		, LimitHashRegions(false)
 		//, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
@@ -207,6 +210,7 @@ int main(int argc, char* argv[]) {
 	//COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
 	COptions::AddValueOption("-ls",   "radius",         "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
 	COptions::AddValueOption("-mhp",  "hash positions", "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
+	COptions::AddValueOption("-mhr",  "hash regionss", "the maximum # of regions for aligning",      "", settings.LimitHashRegions,                settings.HashRegionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-min",  "nucleotides",  "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
 	COptions::AddValueOption("-minp", "percent",        "the minimum alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
 	COptions::AddValueOption("-mm",   "mismatches",     "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
@@ -318,6 +322,13 @@ int main(int argc, char* argv[]) {
 		//	errorBuilder << ERROR_SPACER << "The hash position threshold should be larger than 0. Use the -mhp parameter to change the hash position threshold." << endl;
 		//	foundError = true;
 		//}
+	}
+
+	if ( settings.LimitHashRegions ) {
+		if ( settings.HashRegionThreshold == 0 ) {
+			errorBuilder << ERROR_SPACER << "The hash region threshold should be larger than 0. Use the -mhr parameter to change the hash position threshold." << endl;
+			foundError = true;
+		}
 	}
 
 	// figure out which alignment mode to use
@@ -616,6 +627,9 @@ int main(int argc, char* argv[]) {
 
 	// enable the hash positions threshold
 	if(settings.LimitHashPositions) ma.EnableHashPositionThreshold(settings.HashPositionThreshold);
+
+	// enable the hash region threshold
+	if(settings.LimitHashRegions) ma.EnableHashRegionThreshold(settings.HashRegionThreshold);
 
 	// enable the alignment candidate threshold
 	if(settings.EnableAlignmentCandidateThreshold) ma.EnableAlignmentCandidateThreshold(settings.AlignmentCandidateThreshold);
