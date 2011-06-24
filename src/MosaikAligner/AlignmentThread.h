@@ -386,6 +386,8 @@ private:
 	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
 		Alignment& mate1SpecialAl, Alignment& mate2SpecialAl, bool& mate1Special, bool& mate2Special );
+	// treat the best alignment as an unique mapping and than turn on local search
+	bool TreatBestAsUnique( vector<Alignment>& mateSet );
 	
 	static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2) {
 		return al1.Quality < al2.Quality;

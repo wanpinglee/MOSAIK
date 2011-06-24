@@ -319,6 +319,14 @@ void CAlignmentThread::AlignReadArchive(
 		bool isMate1Unique = mate1Alignments.IsUnique();
 		bool isMate2Unique = mate2Alignments.IsUnique();
 
+		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
+		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
+
+		if ( mate1Set.size() > 2 )
+			isMate1Unique = TreatBestAsUnique( mate1Set );
+		if ( mate2Set.size() > 2 )
+			isMate2Unique = TreatBestAsUnique( mate2Set );
+
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
 			// perform local alignment search WHEN MATE1 IS UNIQUE
@@ -493,8 +501,8 @@ void CAlignmentThread::AlignReadArchive(
 
 
 		// process alignments mapped in special references and delete them in vectors
-		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
-		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
+		mate1Set = *mate1Alignments.GetSet();
+		mate2Set = *mate2Alignments.GetSet();
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 		mate1Alignments.Clear();
 		mate2Alignments.Clear();
@@ -923,20 +931,21 @@ void CAlignmentThread::AlignReadArchive(
 	}
 }
 
-// adjust alignment quality
-//inline int CAlignmentThread::AdjustMappingQuality ( const unsigned char& mq, const bool& isUU, const bool& isMM ) {
-//	int aq = mq;
-//
-//	if ( isUU )      aq = (int) ( UU_COEFFICIENT * aq + UU_INTERCEPT );
-//	else if ( isMM ) aq = (int) ( MM_COEFFICIENT * aq + MM_INTERCEPT );
-//	else             aq = (int) ( UM_COEFFICIENT * aq + UM_INTERCEPT );
-//
-//	if(aq < 0)       aq = 0;
-//	else if(aq > 99) aq = 99;
-//	
-//
-//	return aq;
-//}
+// treat the best alignment as an unique mapping and than turn on local search
+bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet ) {
+	sort( mateSet.begin(), mateSet.end(), Alignment_LessThanMq() );
+
+	// Note that there are at least two alignments
+	vector<Alignment>::reverse_iterator rit = mateSet.rbegin();
+	unsigned short mq1 = rit->Quality;
+	rit++;
+	unsigned short mq2 = rit->Quality;
+
+	if ( ( mq1 > 30 ) && ( mq2 < 10 ) )
+		return true;
+	else
+		return false;
+}
 
 // Set the required information and flag for alignments
 void CAlignmentThread::SetRequiredInfo (

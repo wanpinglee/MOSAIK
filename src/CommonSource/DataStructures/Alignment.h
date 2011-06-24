@@ -157,5 +157,11 @@ struct Alignment {
 	}
 };
 
+struct Alignment_LessThanMq {
+	bool operator() ( const Alignment& al1, const Alignment& al2 ) {
+		return al1.Quality < al2.Quality;
+	}
+};
+
 
 #endif
