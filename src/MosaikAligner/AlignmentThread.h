@@ -389,8 +389,8 @@ private:
 	// treat the best alignment as an unique mapping and than turn on local search
 	bool TreatBestAsUnique( vector<Alignment>& mateSet );
 	
-	static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2) {
-		return al1.Quality < al2.Quality;
-	}
+	//static inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2) {
+	//	return al1.Quality < al2.Quality;
+	//}
 	
 };

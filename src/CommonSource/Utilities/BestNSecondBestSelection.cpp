@@ -1,11 +1,6 @@
 #include "BestNSecondBestSelection.h"
 
 
-// greater-than operator of mapping qualities
-inline bool BestNSecondBestSelection::LessThanMQ ( const Alignment& al1, const Alignment& al2){
-	return al1.Quality < al2.Quality;
-}
-
 // compare the given proper pairs
 inline bool BestNSecondBestSelection::IsBetterPair ( 
 	const Alignment& competitor_mate1, 
@@ -163,8 +158,8 @@ void BestNSecondBestSelection::Select (
 		}
 		else {
 			// pick up mates having highest MQ
-			sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
-			sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+			sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
+			sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 			newMate1Set.push_back( *mate1Set.rbegin() );
 			newMate2Set.push_back( *mate2Set.rbegin() );
 		}
@@ -175,8 +170,8 @@ void BestNSecondBestSelection::Select (
 			newMate2Set.begin()->NextBestQuality = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.Quality;
 		} else {
 			if ( best ) {
-				sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
-				sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+				sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
+				sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 			}
 
 			if ( nMate1 == 1 )
@@ -202,7 +197,7 @@ void BestNSecondBestSelection::Select (
 	} else if ( isMate1Aligned ) {
 		nMate1 = mate1Set.size();
 
-		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+		sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
 		// note: the size of mate1Set must be larger than one
 		vector<Alignment>::reverse_iterator ite = mate1Set.rbegin();
 		// the one having the highest MQ
@@ -217,7 +212,7 @@ void BestNSecondBestSelection::Select (
 	} else if ( isMate2Aligned ) {
 		nMate2 = mate2Set.size();
 		
-		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+		sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 		// note: the size of mate2Set must be larger than one
 		vector<Alignment>::reverse_iterator ite = mate2Set.rbegin();
 		// the one having the highest MQ

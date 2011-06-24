@@ -15,7 +15,6 @@ using namespace std;
 
 namespace BestNSecondBestSelection {
 
-	inline bool LessThanMQ ( const Alignment& al1, const Alignment& al2);
 	inline bool IsBetterPair ( 
 		const Alignment& competitor_mate1, 
 		const Alignment& competitor_mate2,

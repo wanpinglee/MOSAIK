@@ -322,18 +322,19 @@ void CAlignmentThread::AlignReadArchive(
 		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
 		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
 
-		if ( mate1Set.size() > 2 )
-			isMate1Unique = TreatBestAsUnique( mate1Set );
-		if ( mate2Set.size() > 2 )
-			isMate2Unique = TreatBestAsUnique( mate2Set );
-
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
+
+			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 2 ) )
+				isMate1Unique = TreatBestAsUnique( mate1Set );
+			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 2 ) )
+				isMate2Unique = TreatBestAsUnique( mate2Set );
+
 			// perform local alignment search WHEN MATE1 IS UNIQUE
 			if(mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) {
 
 				// extract the unique begin and end coordinates
-				AlignmentSet::const_iterator uniqueIter = mate1Alignments.GetSet()->begin();
+				AlignmentSet::const_iterator uniqueIter = mate1Set.begin();
 				const unsigned int refIndex    = uniqueIter->ReferenceIndex;
 				const unsigned int uniqueBegin = mReferenceBegin[refIndex] + uniqueIter->ReferenceBegin;
 				const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + uniqueIter->ReferenceEnd;
@@ -402,7 +403,7 @@ void CAlignmentThread::AlignReadArchive(
 			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 ) {
 
 				// extract the unique begin and end coordinates
-				AlignmentSet::const_iterator uniqueIter = mate2Alignments.GetSet()->begin();
+				AlignmentSet::const_iterator uniqueIter = mate2Set.begin();
 				const unsigned int refIndex    = uniqueIter->ReferenceIndex;
 				const unsigned int uniqueBegin = mReferenceBegin[refIndex] + uniqueIter->ReferenceBegin;
 				const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + uniqueIter->ReferenceEnd;
@@ -501,6 +502,8 @@ void CAlignmentThread::AlignReadArchive(
 
 
 		// process alignments mapped in special references and delete them in vectors
+		mate1Set.clear();
+		mate2Set.clear();
 		mate1Set = *mate1Alignments.GetSet();
 		mate2Set = *mate2Alignments.GetSet();
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
@@ -1126,7 +1129,7 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	if ( ( nMobAl == mate1Set.size() ) && ( mate1Set.size() != 0 ) ) {
 
 		isMate1Special = true;
-		sort ( mate1Set.begin(), mate1Set.end(), LessThanMQ );
+		sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
 		mate1SpecialAl = *mate1Set.rbegin();
 		mate1SpecialAl.SpecialCode = specialCode;
 		mate1SpecialAl.NumMapped   = nMobAl;
@@ -1173,7 +1176,7 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 	if ( ( nMobAl2 == mate2Set.size() ) && ( mate2Set.size() != 0 ) ) {
 
 		isMate2Special = true;
-		sort ( mate2Set.begin(), mate2Set.end(), LessThanMQ );
+		sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 		mate2SpecialAl = *mate2Set.rbegin();
 		mate2SpecialAl.SpecialCode = specialCode2;
 		mate2SpecialAl.NumMapped   = nMobAl2;
@@ -1202,7 +1205,7 @@ void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, ve
 
 
 // greater-than operator of mapping qualities
-//inline bool CAlignmentThread::LessThanMQ ( const Alignment& al1, const Alignment& al2){
+//inline bool CAlignmentThread::Alignment_LessThanMq() ( const Alignment& al1, const Alignment& al2){
 //	return al1.Quality < al2.Quality;
 //}
 

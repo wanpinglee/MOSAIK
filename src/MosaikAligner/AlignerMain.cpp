@@ -28,7 +28,7 @@ string DEFAULT_ALGORITHM = "all";
 string DEFAULT_MODE      = "all";
 
 unsigned char DEFAULT_HASH_SIZE             = 15;
-unsigned char DEFAULT_STAT_MAPPING_QUALITY  = 20;
+//unsigned char DEFAULT_STAT_MAPPING_QUALITY  = 20;
 //unsigned char DEFAULT_NUM_MISMATCHES        = 4;
 double        DEFAULT_PERCENTAGE_MISMATCHES = 0.15;
 unsigned int DEFAULT_BANDWIDTH              = 9;
@@ -59,6 +59,8 @@ struct ConfigurationSettings {
 	bool HasHashSize;
 	bool HasHomoPolymerGapOpenPenalty;
 	bool HasJumpCacheMemory;
+	bool HasLocalAlignmentSearchHighMqThreshold;
+	bool HasLocalAlignmentSearchLowMqThreshold;
 	bool HasLocalAlignmentSearchRadius;
 	bool HasMatchScore;
 	bool HasMismatchScore;
@@ -102,6 +104,8 @@ struct ConfigurationSettings {
 	unsigned char AlignmentCandidateThreshold;
 //	unsigned char AlignmentQualityThreshold;
 	unsigned char HashSize;
+	unsigned char LocalAlignmentSearchHighMqThreshold;
+	unsigned char LocalAlignmentSearchLowMqThreshold;
 	unsigned char StatMappingQuality;
 	unsigned int Bandwidth;
 	unsigned int HashPositionThreshold;
@@ -132,6 +136,8 @@ struct ConfigurationSettings {
 		, HasHashSize(false)
 		, HasHomoPolymerGapOpenPenalty(false)
 		, HasJumpCacheMemory(false)
+		, HasLocalAlignmentSearchHighMqThreshold(false)
+		, HasLocalAlignmentSearchLowMqThreshold(false)
 		, HasLocalAlignmentSearchRadius(false)
 		, HasMatchScore(false)
 		, HasMismatchScore(false)
@@ -156,7 +162,9 @@ struct ConfigurationSettings {
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
 		, HashSize(DEFAULT_HASH_SIZE)
-		, StatMappingQuality(DEFAULT_STAT_MAPPING_QUALITY)
+		, LocalAlignmentSearchHighMqThreshold(30)
+		, LocalAlignmentSearchLowMqThreshold(10)
+		, StatMappingQuality(20)
 		, HashPositionThreshold(200)
 		, JumpCacheMemory(0)
 //		, NumMismatches(DEFAULT_NUM_MISMATCHES)
@@ -208,13 +216,15 @@ int main(int argc, char* argv[]) {
 	OptionGroup* pFilterOpts = COptions::CreateOptionGroup("Filtering");
 	COptions::AddValueOption("-act",  "threshold",      "the alignment candidate threshold (length)", "", settings.EnableAlignmentCandidateThreshold, settings.AlignmentCandidateThreshold, pFilterOpts);
 	//COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
-	COptions::AddValueOption("-ls",   "radius",         "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
-	COptions::AddValueOption("-mhp",  "hash positions", "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
-	COptions::AddValueOption("-mhr",  "hash regionss", "the maximum # of regions for aligning",      "", settings.LimitHashRegions,                settings.HashRegionThreshold,       pFilterOpts);
-	COptions::AddValueOption("-min",  "nucleotides",  "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
-	COptions::AddValueOption("-minp", "percent",        "the minimum alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
-	COptions::AddValueOption("-mm",   "mismatches",     "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
-	COptions::AddValueOption("-mmp",  "threshold",      "the percentage of mismatches allowed [0.0 - 1.0]",      "", settings.CheckMismatchPercent,              settings.MismatchPercent,             pFilterOpts);
+	COptions::AddValueOption("-ls",   "radius",          "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
+	COptions::AddValueOption("-lsh",  "mapping quality", "MQ threshold", "", settings.HasLocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchHighMqThreshold, pFilterOpts );
+	COptions::AddValueOption("-lsl",  "mapping quality", "MQ threshold; when the best MQ is higher than -lsh and the second best is lower than -lsl, local alignment search is enabled.", "", settings.HasLocalAlignmentSearchLowMqThreshold, settings.LocalAlignmentSearchLowMqThreshold, pFilterOpts );
+	COptions::AddValueOption("-mhp",  "hash positions",  "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
+	COptions::AddValueOption("-mhr",  "hash regionss",   "the maximum # of regions for aligning",      "", settings.LimitHashRegions,                settings.HashRegionThreshold,       pFilterOpts);
+	COptions::AddValueOption("-min",  "nucleotides",     "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
+	COptions::AddValueOption("-minp", "percent",         "the minimum alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
+	COptions::AddValueOption("-mm",   "mismatches",      "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
+	COptions::AddValueOption("-mmp",  "threshold",       "the percentage of mismatches allowed [0.0 - 1.0]",      "", settings.CheckMismatchPercent,              settings.MismatchPercent,             pFilterOpts);
 	//COptions::AddOption("-mmal", "when enabled, unaligned portions of the read will not count as a mismatch", settings.UseAlignedLengthForMismatches,                                       pFilterOpts);
 
 	// TODO: we need to move the alignment quality calculation up to ApplyReadFilters in order to make this option useable
@@ -452,6 +462,12 @@ int main(int argc, char* argv[]) {
 			if ( settings.LocalAlignmentSearchRadius == 0 ) {
 				settings.HasLocalAlignmentSearchRadius = false;
 				settings.LocalAlignmentSearchRadius    = 0;
+			} else {
+				if ( ( readStatus & RS_PAIRED_END_READ ) == 0 ) {
+					cout << "WARNING: Local alignment search only works for paired-end data." << endl;
+					settings.HasLocalAlignmentSearchRadius = false;
+					settings.LocalAlignmentSearchRadius    = 0;
+				}
 			}
 		} else {
 			if ( ( readStatus & RS_PAIRED_END_READ ) != 0 ) {
@@ -463,6 +479,19 @@ int main(int argc, char* argv[]) {
 					settings.HasLocalAlignmentSearchRadius = true;
 					settings.LocalAlignmentSearchRadius    = readGroup.MedianFragmentLength;
 				}
+			}
+		}
+
+		if ( !settings.HasLocalAlignmentSearchRadius && settings.HasLocalAlignmentSearchHighMqThreshold )
+			cout << "WARNING: -lsh is enabled but -ls is not." << endl;
+
+		if ( !settings.HasLocalAlignmentSearchRadius && settings.HasLocalAlignmentSearchLowMqThreshold )
+			cout << "WARNING: -lsl is enabled but -ls is not." << endl;
+
+		if ( settings.HasLocalAlignmentSearchHighMqThreshold || settings.HasLocalAlignmentSearchLowMqThreshold ) {
+			if ( settings.LocalAlignmentSearchLowMqThreshold > settings.LocalAlignmentSearchHighMqThreshold ) {
+				errorBuilder << ERROR_SPACER << "The high MQ threshold (-lsh) must be larger than low MQ threshold (-lsl)." << endl;
+				foundError = true;
 			}
 		}
 
