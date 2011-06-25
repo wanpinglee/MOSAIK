@@ -1081,6 +1081,7 @@ void CAlignmentThread::SetRequiredInfo (
 				al.Query.TrimBegin(1);
 				al.BaseQualities.TrimBegin(1);
 				al.Reference.TrimBegin(1);
+				al.ReferenceBegin++;
 			}
 			else if ( patchStartLen > 1 ) {
 				al.Query.Prepend( 'N', patchStartLen - 1 );

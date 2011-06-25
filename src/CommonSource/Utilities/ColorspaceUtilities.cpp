@@ -175,6 +175,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		return false;
 	}
 
+	//cout << endl << mCsAl.bsReference << endl << mCsAl.bsQuery << endl;
+
 
 	// search the dash regions & mismatches
 	bool continuedDReference = false;
