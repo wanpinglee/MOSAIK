@@ -944,7 +944,7 @@ bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet ) {
 	rit++;
 	unsigned short mq2 = rit->Quality;
 
-	if ( ( mq1 > 30 ) && ( mq2 < 10 ) )
+	if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
 		return true;
 	else
 		return false;

@@ -495,6 +495,16 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		if ( settings.LocalAlignmentSearchHighMqThreshold > 255 ) {
+			errorBuilder << ERROR_SPACER << "The range of high MQ threshold (-lsh) is 0-255." << endl;
+			foundError = true;
+		}
+
+		if ( settings.LocalAlignmentSearchLowMqThreshold > 255 ) {
+			errorBuilder << ERROR_SPACER << "The range of low MQ threshold (-lsl) is 0-255." << endl;
+			foundError = true;
+		}
+
 		reader.Close();
 	}
 
@@ -695,6 +705,10 @@ int main(int argc, char* argv[]) {
 		else
 			ma.SetSpecialHashCount(DEFAULT_SPECIAL_HASHES);
 	}
+
+	// set the trigger condition of local search
+	if ( settings.HasLocalAlignmentSearchHighMqThreshold || settings.HasLocalAlignmentSearchLowMqThreshold ) 
+		ma.SetLocalAlignmentSearchMqThreshold ( settings.LocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchLowMqThreshold );
 
 	// set the mapping quality threshold for stat map
 	if ( settings.HasStatMappingQuality ) ma.SetStatMappingQuality( settings.StatMappingQuality );

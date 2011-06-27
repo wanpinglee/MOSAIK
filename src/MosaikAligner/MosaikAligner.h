@@ -70,6 +70,7 @@ public:
 	void EnablePairedEndOutput(void);
 	// sets mapping quality threshold for stat map
 	void SetStatMappingQuality( const unsigned char mq );
+	void SetLocalAlignmentSearchMqThreshold ( const unsigned char LocalAlignmentSearchHighMqThreshold, const unsigned char LocalAlignmentSearchLowMqThreshold );
 	// enables reporting of unaligned reads
 	//void EnableUnalignedReadReporting(const string& unalignedReadReportFilename);
 	// enables special references checker

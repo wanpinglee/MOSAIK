@@ -92,6 +92,8 @@ public:
 		double MaxMismatchPercent;
 		unsigned int MinAlignment;
 		unsigned int MaxNumMismatches;
+		unsigned char LocalAlignmentSearchHighMqThreshold;
+		unsigned char LocalAlignmentSearchLowMqThreshold;
 
 		FilterSettings()
 			: UseMinAlignmentFilter(CPairwiseUtilities::UseMinAlignmentFilter)
@@ -102,6 +104,8 @@ public:
 			, MaxMismatchPercent(CPairwiseUtilities::MaxMismatchPercent)
 			, MinAlignment(CPairwiseUtilities::MinAlignment)
 			, MaxNumMismatches(CPairwiseUtilities::MaxNumMismatches)
+			, LocalAlignmentSearchHighMqThreshold(30)
+			, LocalAlignmentSearchLowMqThreshold(10)
 		{}
 	};
 	// define our boolean flags structure

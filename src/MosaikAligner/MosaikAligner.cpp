@@ -1308,3 +1308,8 @@ void CMosaikAligner::SetFilenames(const string& inputReadArchiveFilename, const 
 void CMosaikAligner::UseAlignedReadLengthForMismatchCalculation(void) {
 	mFlags.UseAlignedReadLengthForMismatchCalculation = true;
 }
+
+void CMosaikAligner::SetLocalAlignmentSearchMqThreshold ( const unsigned char LocalAlignmentSearchHighMqThreshold, const unsigned char LocalAlignmentSearchLowMqThreshold ) {
+	mFilters.LocalAlignmentSearchHighMqThreshold = LocalAlignmentSearchHighMqThreshold;
+	mFilters.LocalAlignmentSearchLowMqThreshold  = LocalAlignmentSearchLowMqThreshold;
+}

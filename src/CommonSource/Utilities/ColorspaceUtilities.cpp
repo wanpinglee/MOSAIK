@@ -175,6 +175,10 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		return false;
 	}
 
+	cout << endl << al.ReferenceBegin << " " << al.ReferenceEnd << " " << al.QueryBegin << " " << al.QueryEnd << endl;
+	cout << mCsAl.csReference << endl << mCsAl.csQuery << endl;
+	cout << mCsAl.bsReference << endl << mCsAl.bsQuery << endl;
+
 	//cout << endl << mCsAl.bsReference << endl << mCsAl.bsQuery << endl;
 
 
