@@ -178,7 +178,10 @@ bool CFileUtilities::DirExists(const char* directory) {
 
 	if ( stat( directory, &st ) == 0 ) {
 		DIR *pDirectory = opendir(directory);
-		if ( pDirectory != NULL ) foundDirectory = true;
+		if ( pDirectory != NULL ) {
+			foundDirectory = true;
+			closedir( pDirectory );
+		}
 	}
 	
 	
@@ -272,6 +275,8 @@ void CFileUtilities::SearchDirectory(vector<string>& filenames, const char* dire
 			}
 		} else break;
 	}
+
+	closedir( dirp );
 #endif
 }
 
@@ -501,6 +506,9 @@ off_type CFileUtilities::GetFileSize(const char* filename) {
 		fileSize = ftell64(FILEHANDLE);
 		fclose(FILEHANDLE);
 	}
+
+	if ( FILEHANDLE != NULL )
+		fclose( FILEHANDLE );
 
 	return fileSize;
 }

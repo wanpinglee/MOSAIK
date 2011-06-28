@@ -951,6 +951,7 @@ bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet ) {
 }
 
 // Set the required information and flag for alignments
+// Note: Don't apply this function for SOLiD alignments more than once
 void CAlignmentThread::SetRequiredInfo (
 	Alignment& al,
 	const Alignment& mate,
@@ -1066,7 +1067,7 @@ void CAlignmentThread::SetRequiredInfo (
 			al.IsJunk = true;
 		} else {
 			// patch N's
-			--al.QueryEnd;
+			--al.QueryEnd;  //CS query end
 			const unsigned int readLength    = m.Bases.Length();
 			const unsigned int patchStartLen = al.IsReverseStrand ? readLength - al.QueryEnd - 1 : al.QueryBegin;
 			const unsigned int patchEndLen   = al.IsReverseStrand ? al.QueryBegin : readLength - al.QueryEnd - 1;
@@ -1098,6 +1099,8 @@ void CAlignmentThread::SetRequiredInfo (
 			al.QueryBegin  = 0;
 			al.QueryEnd    = readLength - 1;
 			al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
+
+//cout << endl << al.ReferenceBegin << " " << al.ReferenceEnd << " " << al.QueryBegin << " " << al.QueryEnd << endl;
 		}
 	}
 
