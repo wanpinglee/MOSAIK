@@ -42,6 +42,7 @@ namespace SortThreadData {
 		uint64_t     _nRead;
 		uint64_t     _readNo;
 		unsigned int _medianFragmentLength;
+		unsigned int _sorterCacheSize;
 
 		pthread_attr_t  _attr;
 		pthread_mutex_t _mutex;
@@ -88,7 +89,7 @@ namespace SortThreadData {
 class SortThread {
 	
 	public:
-		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, uint64_t nRead, const unsigned int medianFragmentLength )
+		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, uint64_t nRead, const unsigned int medianFragmentLength, const unsigned int sorterCacheSize )
 			:_nThread(nThread)
 			, IsQuietMode(false)
 		{
@@ -98,6 +99,7 @@ class SortThread {
 			_td._archiveNo  = 0;
 			_td._nRead      = nRead;
 			_td._medianFragmentLength = medianFragmentLength;
+			_td._sorterCacheSize      = sorterCacheSize;
 
 			pthread_attr_init (&_td._attr);
 			pthread_attr_setdetachstate(&_td._attr, PTHREAD_CREATE_JOINABLE);

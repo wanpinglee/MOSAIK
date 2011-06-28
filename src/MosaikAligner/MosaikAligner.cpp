@@ -324,8 +324,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//}
 
             exit(1);
-
 */
+
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
 		
@@ -634,16 +634,22 @@ void CMosaikAligner::MergeArchives(void) {
                 reader.Close();
         }
 
+	// at most, total 8,000,000 alignments will be put in memory
+	const unsigned int alignmentInMemory        = 8000000;
+	const uint64_t     avgReads                 = nReads / outputFilenames.size();
+	unsigned int       alignmentCacheEachSorter = alignmentInMemory / nThread;
+	unsigned int       fileEachSorter           = avgReads / alignmentCacheEachSorter;
 
-	// if nThread is too large, it'll open too many files at the same time.
-	// Then, we'll get an error since system doesn't allow us to open any file.
-	if ( nThread > 5 )
-		nThread = 5;
+	while ( ( nThread > 1 ) && ( fileEachSorter * nThread ) > 1000 ) {
+		--nThread;
+		alignmentCacheEachSorter = alignmentInMemory / nThread;
+		fileEachSorter           = avgReads / alignmentCacheEachSorter;
+	}
 
 	CConsole::Heading();
 	cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
-	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength );
+	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength, alignmentCacheEachSorter );
 	if ( mFlags.IsQuietMode )
 		sThread.SetQuietMode();
 	sThread.Start();

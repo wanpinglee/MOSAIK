@@ -19,14 +19,15 @@
 #include "ArchiveSort.h"
 
 
-CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, uint64_t *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength )
+CArchiveSort::CArchiveSort ( string inputFilename, string outputFilename, uint64_t *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength, const unsigned int cacheSize )
 	:_inputFilename(inputFilename)
 	,_outputFilename(outputFilename)
 	,_readCounter(readCounter)
 	,_readCounterMutex(readCounterMutex)
 	,_medianFragmentLength(medianFragmentLength)
+	,_alignedReadCacheSize(cacheSize)
 {
-	_alignedReadCacheSize = 1000000;
+	//_alignedReadCacheSize = 1000000;
 	//_extendedFragmentLength = 3;
 
 

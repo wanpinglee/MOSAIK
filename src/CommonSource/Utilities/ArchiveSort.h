@@ -54,7 +54,7 @@ class CArchiveSort {
 	public:
 		/* ====================  LIFECYCLE     ======================================= */
 		/*  constructor */ 
-		CArchiveSort ( string inputFilename, string outputFilename, uint64_t *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength );
+		CArchiveSort ( string inputFilename, string outputFilename, uint64_t *readCounter, pthread_mutex_t *readCounterMutex, unsigned int medianFragmentLength, const unsigned int cacheSize );
 		//~CArchiveSort ();
 		void Sort();
 
@@ -73,10 +73,10 @@ class CArchiveSort {
 		string           _outputFilename;
 		vector< string > _tempSortedFiles;
 		
-		unsigned int _alignedReadCacheSize;
 		uint64_t *_readCounter;
 		pthread_mutex_t *_readCounterMutex;
 		unsigned int _medianFragmentLength;
+		unsigned int _alignedReadCacheSize;
 		//unsigned int _extendedFragmentLength;
 
 		vector<ReferenceSequence>           _referenceSequences;
