@@ -329,7 +329,7 @@ private:
 	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int begin, 
 		const unsigned int end, const unsigned int refIndex, Alignment& al);
 	// Prepare bam required info
-	void SetRequiredInfo ( Alignment& al, const Alignment& mate, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
+	void SetRequiredInfo ( Alignment& al, Alignment& mate, const Mosaik::Mate& m, const Mosaik::Read& r, const bool& isPair,
 		const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech, const bool& isItselfMapped, const bool& isMateMapped);
 	// denotes the active alignment algorithm
 	AlignerAlgorithmType mAlgorithm;
@@ -380,7 +380,6 @@ private:
 	// ZA tagers
 	CZaTager za1, za2;
 	// best and second best utilities
-	void SelectBestNSecondBest ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const bool isMate1Aligned, const bool isMate2Aligned);
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
 		Alignment& mate1SpecialAl, Alignment& mate2SpecialAl, bool& mate1Special, bool& mate2Special );
 	// treat the best alignment as an unique mapping and than turn on local search

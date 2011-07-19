@@ -657,6 +657,11 @@ void CAlignmentThread::AlignReadArchive(
 
 			SetRequiredInfo( al1, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
+
+			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
+				al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
+				al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
+			}
 			
 
 			if ( mFlags.UseArchiveOutput ) {
@@ -954,7 +959,7 @@ bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet ) {
 // Note: Don't apply this function for SOLiD alignments more than once
 void CAlignmentThread::SetRequiredInfo (
 	Alignment& al,
-	const Alignment& mate,
+	Alignment& mate,
 	const Mosaik::Mate& m,
 	const Mosaik::Read& r,
 	const bool& isPair,
@@ -1083,6 +1088,7 @@ void CAlignmentThread::SetRequiredInfo (
 				al.BaseQualities.TrimBegin(1);
 				al.Reference.TrimBegin(1);
 				al.ReferenceBegin++;
+				mate.MateReferenceBegin++;
 			}
 			else if ( patchStartLen > 1 ) {
 				al.Query.Prepend( 'N', patchStartLen - 1 );
