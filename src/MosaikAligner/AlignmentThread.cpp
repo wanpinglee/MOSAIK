@@ -1102,8 +1102,11 @@ void CAlignmentThread::SetRequiredInfo (
 				al.Reference.Append( 'Z', patchEndLen );
 			}
 
+			al.Query.Prepend( 'N', 1 );
+			al.BaseQualities.Prepend( (char)0, 1 );
+			al.Reference.Prepend( 'Z', 1 );
 			al.QueryBegin  = 0;
-			al.QueryEnd    = readLength - 1;
+			al.QueryEnd    = readLength;
 			al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
 
 //cout << endl << al.ReferenceBegin << " " << al.ReferenceEnd << " " << al.QueryBegin << " " << al.QueryEnd << endl;

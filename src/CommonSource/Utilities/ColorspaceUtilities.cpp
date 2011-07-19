@@ -70,6 +70,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	
 	// convert the alignment to character arrays
 	const unsigned int pairwiseLen = al.Reference.Length();
+	if ( pairwiseLen == 0 )
+		return false;
 	//char* pReference = al.Reference.Data();
 	//char* pQuery     = al.Query.Data();
 
@@ -190,7 +192,7 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		// ==========================
 		// determine identical region
 		// ==========================
-		// if the number of matches is smaller than mNAllowedMismatch, the region wouldn't considered as an identical region
+		// if the number of matches is smaller than mNAllowedMismatch, the region wouldn't be considered as an identical region
 		const bool isEndIdentity = ( mCsAl.csQuery[i] != mCsAl.csReference[i] ) && ( nMatch >= mNAllowedMismatch );
 		if ( isEndIdentity ) {
 			mCsAl.identical[ mCsAl.nIdentical ].Begin  = i - nMatch;
@@ -289,7 +291,9 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		mCsAl.identical[ mCsAl.nIdentical ].Length = nMatch;
 		mCsAl.nIdentical++;
 	}
-	
+
+	if ( mCsAl.nIdentical == 0 )
+		return false;
 	
 	// ================
 	// start converting
