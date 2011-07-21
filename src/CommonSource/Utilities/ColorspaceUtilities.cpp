@@ -160,7 +160,7 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 		++pRef;
 	}
 	
-	
+
 	// copy CS alignments
 	memcpy ( mCsAl.csReference, al.Reference.Data(), pairwiseLen );
 	memcpy ( mCsAl.csQuery,     al.Query.Data(),     pairwiseLen );
@@ -298,6 +298,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	// ================
 	// start converting
 	// ================
+	
+	// mismatches are there
 	if ( mCsAl.identical[ mCsAl.nIdentical - 1 ].Begin != 0 ) {
 		// find sequencing errors
 		if ( mCsAl.nMismatch > 0 )
@@ -477,15 +479,17 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 		        continue;
 
 		// try to find the end of SNPs
-		bool isSnp = false;
-		unsigned int nSnp = 0;
+		bool isSnp          = false;
+		bool isDashIncluded = false;
+		unsigned int nSnp   = 0;
+		unsigned int nDash  = 0;
 		
 		// check the mismatches from the current one
 		for ( unsigned int j = i + 1; j < mCsAl.nMismatch; j++ ) {
 		        unsigned short nextPosition = mCsAl.mismatch[ j ];
 			char nextBsReference        = mCsAl.bsReference[ nextPosition + 1 ];
 			char nextBsQuery            = mCsAl.bsQuery[ nextPosition + 1 ];
-
+//cout << j << " " << mCsAl.mismatch[ j ] << " " << mCsAl.type[ mCsAl.mismatch[ j ] ] << endl;
 			// the # of SNPS is larger than the given # of mismatchs
 			// in this case, the mismatch is determined as a sequence error
 			nSnp = mCsAl.mismatch[ j ] - mCsAl.mismatch[ i ];
@@ -515,21 +519,27 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 					mCsAl.type[ nextPosition ] = 8;
 				break;
 			}
-
+//cout << ( isSnp ? "true" : "false" ) << endl;
 			// when meeting a beginning of dash region
 			// we get a chance to look at one more
-			if ( (mCsAl.type[ j ] == 3) || (mCsAl.type[ j ] == 4) ) {
+			
+			if ( ( mCsAl.type[ mCsAl.mismatch[ j ] ] == 3 ) || ( mCsAl.type[ mCsAl.mismatch[ j ] ] == 4 ) ) {
 				nextPosition = mCsAl.mismatch[ j + 1 ];
 				nextBsReference = mCsAl.bsReference[ nextPosition + 1 ];
 				nextBsQuery     = mCsAl.bsQuery[ nextPosition + 1 ];
-
+//cout << "1. in the loop" << endl;
 				if ( nextBsReference == nextBsQuery ) {
+//cout << "2. in the loop" << endl;
 					// the length of the dash region shouldn't be counted
 					nSnp = mCsAl.mismatch[ j ] - curPosition;
 					i = j;
 
 					isSnp = true;
-					
+					//isDashIncluded = true;
+					//nDash = mCsAl.mismatch[ j + 1 ] - mCsAl.mismatch[ j ];
+
+//cout << mCsAl.mismatch[ j ] << " " << mCsAl.mismatch[ j + 1 ] << endl;					
+
 					if ( mCsAl.type[ nextPosition ]   == 1 )
 						mCsAl.type[ nextPosition ] = 5;
 
@@ -540,9 +550,11 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 				// SNPs should end before the dash region
 				break;
 			}
+			
 
 		} // end of inner for loop
 
+//cout << ( isSnp ? "true" : "false" ) << " " << nDash << endl;
 
 		// the current position is a sequencing error
 		const bool isN = ( mCsAl.csReference[ curPosition ] != 'A' ) && ( mCsAl.csReference[ curPosition ] != 'C' ) 
@@ -578,9 +590,13 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 		// if the number of snps is larger than 2
 		// we use Ns to present the SNPs
 		if ( isSnp && ( nSnp > 2 ) ) {
-			for ( unsigned int i = 0; i < nSnp; i++ ) {
+			//unsigned int nN = nSnp - nDash;
+			//unsigned int i = 0;
+			for ( unsigned int i = 0; i < nSnp; ++i ) 
 				mCsAl.bsQuery[ curPosition + i + 1 ] = 'N';
-			}
+			
+			//for ( unsigned int j = 0; j < nDash; ++j, ++i ) 
+			//	mCsAl.bsQuery[ curPosition + i + 1 ] = '-';
 		}
 		
 

@@ -1071,18 +1071,19 @@ void CAlignmentThread::SetRequiredInfo (
 			al.NumMapped = 0;
 			al.IsJunk = true;
 		} else {
+//cout << al.QueryBegin << " " << al.QueryEnd << endl;
 			// patch N's
 			--al.QueryEnd;  //CS query end
 			const unsigned int readLength    = m.Bases.Length();
 			const unsigned int patchStartLen = al.IsReverseStrand ? readLength - al.QueryEnd - 1 : al.QueryBegin;
 			const unsigned int patchEndLen   = al.IsReverseStrand ? al.QueryBegin : readLength - al.QueryEnd - 1;
-
+//cout << patchStartLen << " " << patchEndLen << endl;
 			// sanity checker
 			if ( al.QueryEnd > ( readLength - 1 ) ) {
 				cout << "ERROR: The aligned length is larger than the read length." << endl;
 				exit(1);
 			}
-
+//cout << al.Query.CData() << endl;
 			if ( patchStartLen == 0 ) {
 				al.Query.TrimBegin(1);
 				al.BaseQualities.TrimBegin(1);
@@ -1095,18 +1096,18 @@ void CAlignmentThread::SetRequiredInfo (
 				al.BaseQualities.Prepend( (char)0, patchStartLen - 1 );
 				al.Reference.Prepend( 'Z', patchStartLen - 1 );
 			}
-
+//cout << al.Query.CData() << endl;
 			if ( patchEndLen > 0 ) {
 				al.Query.Append( 'N', patchEndLen );
 				al.BaseQualities.Append( (char)0, patchEndLen );
 				al.Reference.Append( 'Z', patchEndLen );
 			}
 
-			al.Query.Prepend( 'N', 1 );
-			al.BaseQualities.Prepend( (char)0, 1 );
-			al.Reference.Prepend( 'Z', 1 );
+			//al.Query.Prepend( 'N', 1 );
+			//al.BaseQualities.Prepend( (char)0, 1 );
+			//al.Reference.Prepend( 'Z', 1 );
 			al.QueryBegin  = 0;
-			al.QueryEnd    = readLength;
+			al.QueryEnd    = readLength - 1;
 			al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
 
 //cout << endl << al.ReferenceBegin << " " << al.ReferenceEnd << " " << al.QueryBegin << " " << al.QueryEnd << endl;
