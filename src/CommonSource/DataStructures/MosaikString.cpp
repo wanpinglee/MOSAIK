@@ -177,6 +177,16 @@ bool CMosaikString::clear(void) {
 	return true;
 }
 
+// after applying this, make sure that the object will be never used again
+bool CMosaikString::clearMemory( void ) {
+	if ( mData ) delete [] mData;
+	mData = NULL;
+	mLength = 0;
+	mAllocatedLength = 0;
+
+	return true;
+}
+
 // appends the specified string to the current string
 void CMosaikString::Append(const char* s) {
 
@@ -512,7 +522,7 @@ void CMosaikString::Replace(const char oldCh, const char newCh) {
 // reserve the specified number of bytes
 void CMosaikString::Reserve(const unsigned int numBytes) {
 
-	if((numBytes + 1) > mAllocatedLength) {
+	if( ( numBytes + 1) > mAllocatedLength ) {
 		mAllocatedLength = numBytes + GROWTH_FACTOR + 1;
 		if(mData) delete [] mData;
 		mData = new char[mAllocatedLength];

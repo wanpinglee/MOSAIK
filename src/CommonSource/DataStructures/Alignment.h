@@ -33,15 +33,20 @@ struct Alignment {
 	unsigned int Owner;                // the temporary file that contains the alignment
 	unsigned int ReadGroupCode;        // the read group code (temp)
 	unsigned int NumMapped;            // the total number of mapped alignments
+	unsigned int SwScore;
+	unsigned int NextSwScore;
 	int FragmentLength;                // the fragment length with its pair
 	unsigned short QueryLength;        // used during filtering (temp)
 	unsigned short NumMismatches;      // number of mismatches
 	unsigned short QueryBegin;
 	unsigned short QueryEnd;
+	unsigned short MappedLength;       // the length of mapped bases
+	unsigned short NumCigarOperation;
 	unsigned char Quality;             // alignment quality
 	unsigned char NextBestQuality;     // the next best alignment quality
 	unsigned char RecalibratedQuality; // recalibrated quality
 	bool CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
+	bool IsFilteredOut;                // is mapped to somewhere but cannot pass the filters
 	bool IsFirstMate;                  // is this alignment from the first mate in a paired-end read
 	bool IsJunk;                       // are the fileds in this alignment used for other propose, e.g. counting total numbers of alignments?
 	bool IsMateReverseStrand;          // read orientation for the mate
@@ -50,7 +55,7 @@ struct Alignment {
 	bool IsResolvedAsProperPair;       // is the alignment resolved as proper pair
 	bool IsReverseStrand;              // read orientation
 	bool IsMappedSpecialReference;     // is this alignment mapped to the special references which is defined by "-sref"? 
-	bool IsMapped;                     // is this alignment mapped?
+	bool IsMapped;                     // is this alignment mapped? If true, it also means IsJunk.
 	bool IsMateMapped;                 // is its mate mapped?
 	bool WasRescued;                   // was the alignment rescued during local alignment search
 	char* ReferenceName;               // only filled via CAlignmentReader (temp)
@@ -63,6 +68,10 @@ struct Alignment {
 	string Cigar;                      // the cigar string
 	string ReadGroup;                  // the read group string
 	string SpecialCode;                // 2 letters to indicate the sequence can be mapped to which special reference
+	string MdString;
+	string EncodedQuery;
+	string PackedCigar;
+
 	bool Mark;
 
 	// constructors
@@ -75,13 +84,20 @@ struct Alignment {
 		, ReferenceIndex(0)
 		, ReadGroupCode(0)
 		, NumMapped(1)
+		, SwScore(0)
+		, NextSwScore(0)
 		, FragmentLength(0)
+		, QueryLength(0)
+		, NumMismatches(0)
 		, QueryBegin(0)
 		, QueryEnd(0)
+		, MappedLength(0)
+		, NumCigarOperation(0)
 		, Quality(0)
 		, NextBestQuality(0)
 		, RecalibratedQuality(0)
 		, CanBeMappedToSpecialReference(false)
+		, IsFilteredOut(false)
 		, IsFirstMate(false)
 		, IsJunk(false)
 		, IsMateReverseStrand(false)
@@ -159,7 +175,12 @@ struct Alignment {
 
 struct Alignment_LessThanMq {
 	bool operator() ( const Alignment& al1, const Alignment& al2 ) {
-		return al1.Quality < al2.Quality;
+		if ( al1.SwScore == al2.SwScore )
+			return al1.Quality < al2.Quality;
+		return al1.SwScore < al2.SwScore;
+		//if ( al1.Quality == al2.Quality )
+		//	return al1.SwScore < al2.SwScore;
+		//return al1.Quality < al2.Quality;
 	}
 };
 

@@ -113,6 +113,7 @@ public:
 	bool empty(void);
 	// clear the string
 	bool clear(void);
+	bool clearMemory( void );
 	// checks values of qualities which shouldn't be larger than 60
 	bool CheckQuality( void );
 

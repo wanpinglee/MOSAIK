@@ -19,6 +19,7 @@ export UTILITIES_DIR = CommonSource/Utilities
 # define some default flags
 export CFLAGS ?= -Wall -O3 -Wno-char-subscripts 
 #export CFLAGS ?= -Wall -g -O2
+#export CFLAGS ?= -Wall -pg -O2
 export CXXFLAGS ?= $(CFLAGS)
 #export LDFLAGS ?= -Wl,-s
 export LDFLAGS = -Wl

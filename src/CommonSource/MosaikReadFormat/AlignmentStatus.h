@@ -41,8 +41,8 @@ typedef unsigned char AlignmentStatus;
 #define AF_IS_REVERSE_STRAND            8   // specifies the orientation of the current alignment
 #define AF_IS_SECOND_MATE               16  // specifies the alignment is the second mate when sequencing the read
 #define AF_WAS_RESCUED                  32  // specifies if the alignment was rescued during local alignment search
-#define AF_IS_JUNK                      64  // specifies the alignment is junk; currently it is used for indicating # of alignments
-#define AF_RESERVED2                    128 // reserved, not currently used
+#define AF_IS_JUNK                      64  // specifies the alignment is junk; it is used for indicating # of alignments; the bases wouldn't kept in archives, but the read name is
+#define AF_IS_FILTEREDOUT               128 // specifies the alignment is filtered out which means that the alignment is mapped to somewhere but cannot pass the filters
 
 // define our alignment tags
 #define AT_UNKNOWN                      0

@@ -856,6 +856,7 @@ namespace MosaikReadFormat {
 		al.IsMateReverseStrand = false;
 		al.WasRescued          = false;
 		al.IsMapped            = true;
+		al.IsFilteredOut       = false;
 
 		al.IsPairedEnd      = isPairedInSequencing;
 		al.IsResolvedAsPair = isResolvedAsPair;
@@ -869,6 +870,7 @@ namespace MosaikReadFormat {
 		if((status & AF_WAS_RESCUED)       != 0) al.WasRescued      = true;
 		if((status & AF_IS_UNMAPPED)       != 0) al.IsMapped        = false;
 		if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
+		if((status & AF_IS_FILTEREDOUT)    != 0) al.IsFilteredOut   = true;
 
 		if ( ( isPairedInSequencing && al.IsFirstMate ) || !isPairedInSequencing )
 			al.NumMapped = numMate1OriginalAlignments;

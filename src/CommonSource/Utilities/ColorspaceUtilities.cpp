@@ -480,9 +480,7 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 
 		// try to find the end of SNPs
 		bool isSnp          = false;
-		bool isDashIncluded = false;
 		unsigned int nSnp   = 0;
-		unsigned int nDash  = 0;
 		
 		// check the mismatches from the current one
 		for ( unsigned int j = i + 1; j < mCsAl.nMismatch; j++ ) {
@@ -519,7 +517,6 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 					mCsAl.type[ nextPosition ] = 8;
 				break;
 			}
-//cout << ( isSnp ? "true" : "false" ) << endl;
 			// when meeting a beginning of dash region
 			// we get a chance to look at one more
 			
@@ -527,9 +524,8 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 				nextPosition = mCsAl.mismatch[ j + 1 ];
 				nextBsReference = mCsAl.bsReference[ nextPosition + 1 ];
 				nextBsQuery     = mCsAl.bsQuery[ nextPosition + 1 ];
-//cout << "1. in the loop" << endl;
+				
 				if ( nextBsReference == nextBsQuery ) {
-//cout << "2. in the loop" << endl;
 					// the length of the dash region shouldn't be counted
 					nSnp = mCsAl.mismatch[ j ] - curPosition;
 					i = j;
@@ -538,7 +534,6 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 					//isDashIncluded = true;
 					//nDash = mCsAl.mismatch[ j + 1 ] - mCsAl.mismatch[ j ];
 
-//cout << mCsAl.mismatch[ j ] << " " << mCsAl.mismatch[ j + 1 ] << endl;					
 
 					if ( mCsAl.type[ nextPosition ]   == 1 )
 						mCsAl.type[ nextPosition ] = 5;
@@ -554,7 +549,6 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 
 		} // end of inner for loop
 
-//cout << ( isSnp ? "true" : "false" ) << " " << nDash << endl;
 
 		// the current position is a sequencing error
 		const bool isN = ( mCsAl.csReference[ curPosition ] != 'A' ) && ( mCsAl.csReference[ curPosition ] != 'C' ) 

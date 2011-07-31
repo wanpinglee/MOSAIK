@@ -11,8 +11,8 @@
 #include "BamWriter.h"
 
 // constructor
-CBamWriter::CBamWriter(void)
-{}
+//CBamWriter::CBamWriter(void)
+//{}
 
 // destructor
 CBamWriter::~CBamWriter(void) {
@@ -211,7 +211,7 @@ void CBamWriter::TranslateCigarToPackCigar ( const string cigar, string packCiga
 
 
 // creates a cigar string from the supplied alignment
-void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, unsigned int& numCigarOperations, const bool& isSolid ) {
+void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool isSolid ) {
 
 	// initialize
 	const char* pReference = al.Reference.CData();
@@ -223,12 +223,6 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 	packedCigar.resize(numBases * SIZEOF_INT);
 	unsigned int* pPackedCigar = (unsigned int*)packedCigar.data();
 	numCigarOperations = 0;
-
-	//if ( isSolid && ( al.QueryBegin != 0 ) ) {
-	//	*pPackedCigar = al.QueryBegin << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
-	//	++pPackedCigar;
-	//	++numCigarOperations;
-	//}
 
 	// create the cigar string by parsing the reference and query strings 
 	while(currentPos < numBases) {
@@ -290,12 +284,6 @@ void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, un
 			exit(1);
 		}
 	}
-
-	//if ( isSolid && ( al.QueryEnd != ( al.CsQuery.size() - 1 ) ) ) {
-	//	*pPackedCigar = ( al.CsQuery.size() - 1 - al.QueryEnd ) << BAM_CIGAR_SHIFT | BAM_CHARD_CLIP;
-	//	++pPackedCigar;
-	//	++numCigarOperations;
-	//}
 
 	// resize the packed cigar string
 	packedCigar.resize(numCigarOperations * SIZEOF_INT);
@@ -535,7 +523,7 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid ) {
+void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool processedBamData ) {
 
 	// =================
 	// set the BAM flags
@@ -591,9 +579,15 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	// ==========================
 
 	string packedCigar;
-	unsigned int numCigarOperations = 0;
-	if ( !noCigarMdNm )
-		CreatePackedCigar( al, packedCigar, numCigarOperations, isSolid );
+	unsigned short numCigarOperations = 0;
+	if ( !noCigarMdNm ) {
+		if ( !processedBamData )
+			CreatePackedCigar( al, packedCigar, numCigarOperations, isSolid );
+		else {
+			packedCigar = al.PackedCigar;
+			numCigarOperations = al.NumCigarOperation;
+		}
+	}
 	else
 		packedCigar = "\0";
 	const unsigned int packedCigarLen = !noCigarMdNm ? packedCigar.size() : 0;
@@ -603,12 +597,15 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	// ===================
 
 	// remove the gaps from the read
-	CMosaikString query(al.Query);
-	query.Remove('-');
+	CMosaikString query;
+	if ( !processedBamData ) {
+		query = al.Query.CData();
+		query.Remove('-');
+	}
 
 	// initialize
 	const unsigned int nameLen  = al.Name.Length() + 1;
-	const unsigned int queryLen = query.Length();
+	const unsigned int queryLen = processedBamData ? al.QueryLength : query.Length();
 
 	// sanity check
 	//al.BaseQualities.CheckQuality();
@@ -619,7 +616,10 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	
 	// encode the query
 	string encodedQuery;
-	EncodeQuerySequence(query, encodedQuery);
+	if ( !processedBamData )
+		EncodeQuerySequence(query, encodedQuery);
+	else
+		encodedQuery = al.EncodedQuery;
 	const unsigned int encodedQueryLen = encodedQuery.size();
 
 	// create our read group tag
@@ -647,7 +647,11 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	unsigned int mdTagLen = 0;
 	char* pMdTag;
 	if ( !noCigarMdNm ) {
-		pMd = (char*) mdTager.GetMdTag( al.Reference.CData(), al.Query.CData(), al.Reference.Length() );
+		if ( !processedBamData ) 
+			pMd = (char*) mdTager.GetMdTag( al.Reference.CData(), al.Query.CData(), al.Reference.Length() );
+		else
+			pMd = (char*) al.MdString.c_str();
+
 		mdTagLen = 3 + strlen( pMd ) + 1;
 		mdTag.resize( mdTagLen );
 		pMdTag = (char*)mdTag.data();

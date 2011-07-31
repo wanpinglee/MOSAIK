@@ -273,45 +273,117 @@ void CArchiveMerge::CalculateStatisticsCounters( const Mosaik::AlignedRead& alig
 	unsigned int nMate1Alignments = 0;
 	unsigned int nMate2Alignments = 0;
 
-	if ( !alignedRead.Mate1Alignments.empty() )
+	bool mate1FilteredOut = false;
+	bool mate2FilteredOut = false;
+	bool mate1Rescued     = false;
+	bool mate2Rescued     = false;
+	bool isProperPair     = false;
+
+	if ( !alignedRead.Mate1Alignments.empty() ) {
 		nMate1Alignments = alignedRead.Mate1Alignments[0].NumMapped;
-	if ( !alignedRead.Mate2Alignments.empty() )
+		mate1FilteredOut = alignedRead.Mate1Alignments[0].IsFilteredOut;
+		mate1Rescued     = alignedRead.Mate1Alignments[0].WasRescued;
+		isProperPair     = alignedRead.Mate1Alignments[0].IsResolvedAsProperPair;
+	}
+
+	if ( !alignedRead.Mate2Alignments.empty() ) {
 		nMate2Alignments = alignedRead.Mate2Alignments[0].NumMapped;
+		mate2FilteredOut = alignedRead.Mate2Alignments[0].IsFilteredOut;
+		mate2Rescued     = alignedRead.Mate2Alignments[0].WasRescued;
+		isProperPair    &= alignedRead.Mate2Alignments[0].IsResolvedAsProperPair;
+	}
 	
+	// =====
 	// reads
-	if ( ( nMate1Alignments > 0 ) || ( nMate2Alignments > 0 ) )
-		_counters.AlignedReads++;
+	// =====
+	if ( _isPairedEnd ) {
+	// MM pairs
+	if ( nMate1Alignments > 1 && nMate2Alignments > 1 ) {
+		_counters.MM++;
+		if ( mate1Rescued || mate2Rescued )
+			_counters.MM_localRescue++;
+		else if ( isProperPair )
+			_counters.MM_localConsistance++;
+	}
 	
-	if ( nMate1Alignments > 1 && nMate2Alignments > 1 )
-		_counters.BothNonUniqueReads++;
-	
-	if ( nMate1Alignments == 1 && nMate2Alignments == 1 )
-		_counters.BothUniqueReads++;
+	// UU pairs
+	if ( nMate1Alignments == 1 && nMate2Alignments == 1 ) {
+		_counters.UU++;
+		if ( mate1Rescued || mate2Rescued )
+			_counters.UU_localRescue++;
+		else if ( isProperPair )
+			_counters.UU_localConsistance++;
+	}
 
-	if ( ( nMate1Alignments == 1 && nMate2Alignments > 1 ) || ( nMate1Alignments > 1 && nMate2Alignments == 1) )
-		_counters.OneNonUniqueReads++;
+	// UM pairs
+	if ( ( nMate1Alignments == 1 && nMate2Alignments > 1 ) || ( nMate1Alignments > 1 && nMate2Alignments == 1) ) {
+		_counters.UM++;
+		if ( mate1Rescued || mate2Rescued )
+			_counters.UM_localRescue++;
+		else if ( isProperPair )
+			_counters.UM_localConsistance++;
+	}
 
-	if ( ( nMate1Alignments != 0 && nMate2Alignments == 0 ) || ( nMate1Alignments == 0 && nMate2Alignments != 0 ) )
-		_counters.OrphanedReads++;
+	// UF pairs
+	if ( ( nMate1Alignments == 1 && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) ) || ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && nMate2Alignments == 1 ) ) 
+		_counters.UF++;
 	
+	// MF pairs
+	if ( ( nMate1Alignments > 1 && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) ) || ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && nMate2Alignments > 1 ) )
+		_counters.MF++;
+	
+	// UX pairs
+	if ( ( nMate1Alignments == 1 && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) ) || ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && nMate2Alignments == 1 ) )
+		_counters.UX++;
+
+	// MX pairs
+	if ( ( nMate1Alignments > 1 && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) ) || ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && nMate2Alignments > 1 ) )
+		_counters.MX++;
+
+	// FF pairs
+	if ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) )
+		_counters.FF++;
+	
+	// FX pairs
+	if ( ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) )
+		|| ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) ) )
+		 _counters.FX++;
+
+	// XX pairs
+	if ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) )
+		_counters.XX++;
+	}
+
+
+	// =====
 	// mates
-	if ( nMate1Alignments == 0 )
+	// =====
+	if ( nMate1Alignments == 0 && mate1FilteredOut )
 		_counters.FilteredOutMates++;
-
-	if ( nMate2Alignments == 0 )
-		_counters.FilteredOutMates++;
+	
+	if ( nMate1Alignments == 0 && !mate1FilteredOut )
+		_counters.Unmapped++;
 
 	if ( nMate1Alignments > 1 )
-		_counters.NonUniqueMates++;
-
-	if ( nMate2Alignments > 1 )
-		_counters.NonUniqueMates++;
+		_counters.MultipleMates++;
 
 	if ( nMate1Alignments == 1 )
 		_counters.UniqueMates++;
 
-	if ( nMate2Alignments == 1 )
-		_counters.UniqueMates++;
+	if ( _isPairedEnd ) {
+		if ( nMate2Alignments == 0 && mate2FilteredOut )
+			_counters.FilteredOutMates++;
+
+		if ( nMate2Alignments == 0 && !mate2FilteredOut )
+			_counters.Unmapped++;
+
+		if ( nMate2Alignments > 1 )
+			_counters.MultipleMates++;
+
+		if ( nMate2Alignments == 1 )
+			_counters.UniqueMates++;
+	}
+
 }
 
 
@@ -424,10 +496,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		|| ( isMate1Multiple && isMate2Multiple ) ) {
 
 			
-		if ( ( isMate1Unique && isMate2Multiple )
-			|| ( isMate1Multiple && isMate2Unique )
-			|| ( isMate1Multiple && isMate2Multiple ) )
-				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, _sequencingTechnologies );
+		if ( isMate1Unique && isMate2Multiple )
+				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
 
 		isMate1Empty = r.Mate1Alignments.empty();
 		isMate2Empty = r.Mate2Alignments.empty();
@@ -512,6 +582,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		//if ( isMate1Multiple ) al1.Quality = 0;
 		//if ( isMate2Multiple ) al2.Quality = 0;
 
+		// GetStatisticsCounters needs some information
+		r.Mate1Alignments[0] = al1;
+		r.Mate2Alignments[0] = al2;
+
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
@@ -525,7 +599,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 
 		if ( isMate1Multiple || isMate2Multiple ) 
-			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
+			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
 
 		//isMate1Empty = r.Mate1Alignments.empty();
 		//isMate2Empty = r.Mate2Alignments.empty();
@@ -622,7 +696,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			}
 		}
 
-
+		// GetStatisticsCounters needs some information
+		r.Mate1Alignments[0] = isFirstMate ? al : unmappedAl;
+		if ( _isPairedEnd )
+			r.Mate2Alignments[0] = isFirstMate ? unmappedAl : al;
 			
 		if ( _statMappingQuality <= al.Quality ) 
 			_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
@@ -689,6 +766,11 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 				_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 			}
 		}
+
+		// GetStatisticsCounters needs some information
+		r.Mate1Alignments[0] = unmappedAl1;
+		if ( _isPairedEnd )
+			r.Mate2Alignments[0] = unmappedAl2;
 
 		//_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	

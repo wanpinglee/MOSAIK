@@ -788,6 +788,7 @@ namespace MosaikReadFormat {
 		if(pAl->WasRescued)                              status |= AF_WAS_RESCUED;
 		if(!pAl->IsMapped)                               status |= AF_IS_UNMAPPED;
 		if(pAl->IsJunk)                                  status |= AF_IS_JUNK;
+		if(pAl->IsFilteredOut)                           status |= AF_IS_FILTEREDOUT;
 
 
 		// not really sure how this applies to single-end and paired-end reads. Disabling the flag for now.

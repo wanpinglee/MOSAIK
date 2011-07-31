@@ -291,6 +291,8 @@ namespace AVLTree {
 		HashRegionAvlNode* p = NULL;
 		HashRegionAvlNode* q = NULL;
 
+		key.NumMismatches = 0;
+
 		// A2. Find insertion point
 		if(n) {
 
@@ -359,6 +361,7 @@ namespace AVLTree {
 				// in phase
 				if((!foundCandidate) && (diffAnchors == diffQueries) && (diffQueries >= -mHashSize) 
 					&& (diffQueries <= mHashSize)) {
+				//if((!foundCandidate) && (diffAnchors == diffQueries) && (diffQueries == 0 - ( mHashSize - 2 ) ) ) {
 					foundCandidate = true;
 				}
 
@@ -378,6 +381,7 @@ namespace AVLTree {
 				if(foundCandidate) {
 					phr->End      = key.End;
 					phr->QueryEnd = key.QueryEnd;
+					phr->NumMismatches++;
 					break;
 				}
 

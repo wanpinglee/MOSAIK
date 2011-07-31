@@ -10,13 +10,20 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	const Alignment& mate2,
 	const unsigned int fragmentLength,
 	const unsigned int expectedFragmentLength,
-	const SequencingTechnologies& tech) {
+	const SequencingTechnologies& tech,
+	const unsigned int numMate1Bases, 
+	const unsigned int numMate2Bases) {
 
 	// rescured mate always wins
-	if ( competitor_mate1.WasRescued ) return true;
-	if ( competitor_mate2.WasRescued ) return true;
-	if ( mate1.WasRescued ) return false;
-	if ( mate2.WasRescued ) return false;
+	//bool competitor_wasRescued = competitor_mate1.WasRescued || competitor_mate2.WasRescued;
+	//bool wasRescued            = mate1.WasRescued || mate2.WasRescued;
+	//if ( competitor_wasRescued && !wasRescued ) return true;
+	//if ( !competitor_wasRescued && wasRescued ) return false;
+
+	//if ( competitor_mate1.WasRescued ) return true;
+	//if ( competitor_mate2.WasRescued ) return true;
+	//if ( mate1.WasRescued ) return false;
+	//if ( mate2.WasRescued ) return false;
 
 	// proper pair always wins improper pair
 	//bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
@@ -57,8 +64,88 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	//if ( competitor > current ) return true;
 	//else return false;
 	
-	if ( competitor_diff < diff ) return true;
-	else return false;
+	unsigned int diff_diff = ( competitor_diff < diff ) ? diff - competitor_diff : competitor_diff - diff;
+
+	if ( diff_diff < ( expectedFragmentLength / 2 ) ) {
+	//if ( competitor_diff < expectedFragmentLength ) {
+		float competitor_swScore = ( competitor_mate1.SwScore + competitor_mate2.SwScore ) / (float)( ( numMate1Bases + numMate2Bases ) * 10 );
+		float swScore            = ( mate1.SwScore + mate2.SwScore ) / (float)( ( numMate1Bases + numMate2Bases ) * 10 );
+
+		competitor_swScore *= 1.5;
+		swScore *= 1.5;
+
+		//float competitor_fragScore = ( expectedFragmentLength - competitor_diff ) / (float) ( expectedFragmentLength );
+		//float fragScore            = ( expectedFragmentLength - diff ) / (float) ( expectedFragmentLength );
+		float competitor_fragScore = 0;
+		float fragScore = 0;
+
+		float competitor_mqScore   = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 200.0;
+		float mqScore              = ( mate1.Quality + mate2.Quality ) / 200.0;
+
+		float competitor_finalScore = competitor_swScore + competitor_fragScore + competitor_mqScore;
+		float finalScore            = swScore + fragScore + mqScore;
+
+
+
+//cerr << competitor_swScore << " " << swScore << " " << competitor_fragScore << " " << fragScore << endl;
+
+		return competitor_finalScore >= finalScore;
+
+	} else {
+		if ( competitor_diff < diff ) return true;
+		else return false;
+	}
+	//return competitor_diff < diff;
+}
+
+void BestNSecondBestSelection::CalculateFragmentLength( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech, unsigned int& length ) {
+	
+	bool strand1 = !al1.IsReverseStrand;
+	//bool strand2 = !al2.IsReverseStrand;
+	
+	switch( tech ) {
+		case ST_454:
+			//if ( strand1 == strand2 ) {
+			//	if ( al1.ReferenceIndex != al2.ReferenceIndex )
+			//		okay = false;
+			//	else {
+			//		okay = true;
+					length = strand1 ? (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1 : (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1;
+			//	}
+			//}
+			break;
+		case ST_SOLID:
+			//if ( strand1 == strand2 ) {
+			//	if ( al1.ReferenceIndex != al2.ReferenceIndex )
+			//		okay = false;
+			//	else {
+			//		okay = true;
+					length = strand1 ? (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1 : (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1;
+			//	}
+			//}
+			break;
+
+		case ST_ILLUMINA_LONG:
+			//if ( strand1 != strand2 ) {
+			//	if ( al1.ReferenceIndex != al2.ReferenceIndex )
+			//		okay = false;
+			//	else {
+			//		okay = true;
+					length = strand1 ? (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1 : (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1;
+			//	}
+			//}
+		break;
+		default:
+			//if ( strand1 != strand2 ) {
+			//	if ( al1.ReferenceIndex != al2.ReferenceIndex )
+			//		okay = false;
+			//	else {
+			//		okay = true;
+					length = strand1 ? (int64_t)al2.ReferenceEnd - (int64_t)al1.ReferenceBegin + 1 : (int64_t)al1.ReferenceEnd - (int64_t)al2.ReferenceBegin + 1;
+			//	}
+			//}
+	}
+
 }
 
 // Select and only keep best and 2nd best
@@ -67,8 +154,12 @@ void BestNSecondBestSelection::Select (
 	vector<Alignment>& mate2Set, 
 	const unsigned int expectedFragmentLength,
 	const SequencingTechnologies& tech,
+	const unsigned int numMate1Bases,
+	const unsigned int numMate2Bases,
 	const bool& considerMate1,
 	const bool& considerMate2) {
+	//const unsigned int highestSwScoreMate1,
+	//const unsigned int highestSwScoreMate2) {
 	
 	vector<Alignment> newMate1Set;
 	vector<Alignment> newMate2Set;
@@ -86,7 +177,7 @@ void BestNSecondBestSelection::Select (
 
 	unsigned int bestFl          = INT_MAX;
 	unsigned int secondBestFl    = INT_MAX;
-	
+
 	if ( isMate1Aligned && isMate2Aligned ) {
 		
 		nMate1 = mate1Set.size();
@@ -98,13 +189,24 @@ void BestNSecondBestSelection::Select (
 
 
 		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
+		bestMate1 = *mate1Set.begin();
+		bestMate2 = *mate2Set.begin();
+
 		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+			//if ( ( ite->SwScore / (float) highestSwScoreMate1 ) < 0.9 ) continue;
+
 			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
+				//if ( ( ite2->SwScore / (float) highestSwScoreMate2 ) < 0.9 ) continue;
+
 				// fragment length
-				unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin )
-					? ite->ReferenceEnd - ite2->ReferenceBegin 
-					: ite2->ReferenceEnd - ite->ReferenceBegin;
+				//unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin )
+				//	? ite->ReferenceEnd - ite2->ReferenceBegin 
+				//	: ite2->ReferenceEnd - ite->ReferenceBegin;
+				unsigned int length = 0;
+				CalculateFragmentLength( *ite, *ite2, tech, length );
 				
+//cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->ReferenceEnd << " " << ite->SwScore <<  " " << (int)ite->Quality << " " << ite2->ReferenceIndex << " " << ite2->ReferenceBegin << " " << ite2->ReferenceEnd << " " << ite2->SwScore << " " << (int)ite2->Quality << " " << length << endl;
+
 				if ( ite->ReferenceIndex == ite2->ReferenceIndex ) {
 					if ( length > ( 2 * expectedFragmentLength ) ) {
 						if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
@@ -116,7 +218,7 @@ void BestNSecondBestSelection::Select (
 					
 				// in the fragment length threshold
 					} else {
-						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech ) ) {
+						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
 							// store the current best as second best
 							if ( best ) {
 								secondBest = true;
@@ -130,7 +232,7 @@ void BestNSecondBestSelection::Select (
 							bestFl    = length;
 	
 						} else {
-							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech ) ) {
+							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
 								secondBest = true;
 								secondBestMate1 = *ite;
 								secondBestMate2 = *ite2;
@@ -167,7 +269,9 @@ void BestNSecondBestSelection::Select (
 		
 		if ( secondBest ) {
 			newMate1Set.begin()->NextBestQuality = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.Quality;
+			newMate1Set.begin()->NextSwScore     = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.SwScore;
 			newMate2Set.begin()->NextBestQuality = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.Quality;
+			newMate2Set.begin()->NextSwScore     = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.SwScore;
 		} else {
 			if ( best ) {
 				sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );

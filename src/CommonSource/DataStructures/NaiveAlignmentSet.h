@@ -82,6 +82,7 @@ public:
 	bool IsUnique(void) const;
 	// returns true if the alignment set contains more than one entry
 	bool IsMultiple ( void ) const;
+	unsigned int GetHighestSwScore( void );
 
 private:
 	// calculates the correction coefficient
@@ -97,4 +98,5 @@ private:
 	bool mHasLongAlignment;
 	// our alignment quality object
 	CAlignmentQuality mAlignmentQuality;
+	unsigned int highestSmithWatermanScore;
 };

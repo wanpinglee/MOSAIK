@@ -265,6 +265,7 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 		// set the mhp occupancy
 		bool found = false;
 		if(mLimitPositions && (numPositions > mMaxHashPositions)) {
+//cerr << numPositions << endl;
 			mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
 			numPositions = mMaxHashPositions;
 			found = true;
@@ -280,6 +281,7 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 			island.End           = hashPosition  + mHashSize - 1;
 			island.QueryBegin    = queryPosition;
 			island.QueryEnd      = queryPosition + mHashSize - 1;
+
 			hrt.Insert(island);
 			//if ( hrt.Insert(island) && found )
 			//	i--;

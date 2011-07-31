@@ -217,6 +217,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 	// traceback
 	//
 
+	alignment.SwScore = BestScore;
 	// aligned sequences
 	int gappedAnchorLen  = 0;   // length of sequence #1 after alignment
 	int gappedQueryLen   = 0;   // length of sequence #2 after alignment

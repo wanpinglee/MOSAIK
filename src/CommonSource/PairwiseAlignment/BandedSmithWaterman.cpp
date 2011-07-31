@@ -178,6 +178,7 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 	// Banded Smith-Waterman backtrace algorithm
 	// =========================================
 
+	alignment.SwScore = bestScore;
 	Traceback(alignment, s1, s2, s2Length, bestRow, bestColumn, rowOffset, columnOffset);
 }
 

@@ -9,6 +9,7 @@
 
 #include "Alignment.h"
 #include "SequencingTechnologies.h"
+#include "iostream"
 
 
 using namespace std;
@@ -23,10 +24,27 @@ namespace BestNSecondBestSelection {
 		const Alignment& mate2, 
 		const unsigned int fragmentLength,
 		const unsigned int expectedFragmentLength,
-		const SequencingTechnologies& tech);
+		const SequencingTechnologies& tech,
+		const unsigned int numMate1Bases,
+		const unsigned int numMate2Bases);
 
-	void Select ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, const unsigned int expectedFragmentLength,
-		const SequencingTechnologies& tech, const bool& considerMate1 = true, const bool& considerMate2 = true );
+	void Select ( 
+		vector<Alignment>& mate1Set, 
+		vector<Alignment>& mate2Set, 
+		const unsigned int expectedFragmentLength,
+		const SequencingTechnologies& tech,
+		const unsigned int numMate1Bases,
+		const unsigned int numMate2Bases,
+		const bool& considerMate1 = true,
+		const bool& considerMate2 = true );
+		//const unsigned int highestSwScoreMate1 = 0,
+		//const unsigned int highestSwScoreMate2 = 0);
+
+	void CalculateFragmentLength( 
+		const Alignment& al1, 
+		const Alignment& al2, 
+		const SequencingTechnologies& tech, 
+		unsigned int& length );
 }
 
 #endif

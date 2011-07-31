@@ -24,12 +24,21 @@ CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina)
 //	mRevMhpOccupancyList.clear();
 //}
 
+unsigned int CNaiveAlignmentSet::GetHighestSwScore( void ) {
+	return highestSmithWatermanScore;
+}
+
 // check if there are any alignments sitting in the given region
 bool CNaiveAlignmentSet::CheckExistence ( const unsigned int& refIndex, const unsigned int& begin, const unsigned int& end ) {
 	
 	sort( mAlignments.begin(), mAlignments.end() );
-	
-	for( AlignmentSet::iterator setIter = mAlignments.begin(); setIter != mAlignments.end(); setIter++ ) {
+
+//cerr << refIndex << " " << begin << " " << end << endl;
+
+	for( AlignmentSet::iterator setIter = mAlignments.begin(); setIter != mAlignments.end(); ++setIter ) {
+
+//cerr << setIter->ReferenceIndex << " " << setIter->ReferenceBegin << " " << setIter->ReferenceEnd << " " << (int)setIter->Quality << " " << setIter->SwScore << endl;
+
 		if ( setIter->ReferenceIndex < refIndex )
 			continue;
 		if ( setIter->ReferenceIndex > refIndex )
@@ -71,13 +80,18 @@ bool CNaiveAlignmentSet::Add(Alignment& al) {
 	// add the alignment to the alignment set
 	if(!foundSubset) {
 		mAlignments.push_back(al);
+		if ( al.SwScore > highestSmithWatermanScore ) highestSmithWatermanScore = al.SwScore;
 		return true;
 	}
 
 	// handle the subset: choose the bigger alignment
-	unsigned int alLen = al.ReferenceEnd       - al.ReferenceBegin       + 1;
-	unsigned int axLen = setIter->ReferenceEnd - setIter->ReferenceBegin + 1;
-	if(alLen > axLen) *setIter = al;
+	//unsigned int alLen = al.ReferenceEnd       - al.ReferenceBegin       + 1;
+	//unsigned int axLen = setIter->ReferenceEnd - setIter->ReferenceBegin + 1;
+	//if(alLen > axLen) *setIter = al;
+	if ( al.SwScore > setIter->SwScore ) { 
+		*setIter = al;
+		if ( al.SwScore > highestSmithWatermanScore ) highestSmithWatermanScore = al.SwScore;
+	}
 
 	return false;
 }
@@ -203,6 +217,7 @@ bool CNaiveAlignmentSet::CheckOverlap(const Alignment& al1, AlignmentSet::iterat
 void CNaiveAlignmentSet::Clear(void) {
 	mAlignments.clear();
 	mHasLongAlignment = false;
+	highestSmithWatermanScore = 0;
 }
 
 // dumps the contents of the alignment set to standard output

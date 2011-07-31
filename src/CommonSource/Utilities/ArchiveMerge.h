@@ -49,27 +49,51 @@ class CArchiveMerge
 
 		struct StatisticsCounters {
 	                // reads
-			uint64_t AlignedReads;
-	                uint64_t BothNonUniqueReads;
-	                uint64_t BothUniqueReads;
-	                uint64_t OneNonUniqueReads;
-		        uint64_t OrphanedReads;
+			uint64_t UU;
+	                uint64_t UM;
+	                uint64_t UF;
+	                uint64_t MM;
+		        uint64_t MF;
+			uint64_t UX;
+			uint64_t MX;
+			uint64_t FF;
+			uint64_t FX;
+			uint64_t XX;
+			uint64_t UU_localRescue;
+			uint64_t UU_localConsistance;
+			uint64_t UM_localRescue;
+			uint64_t UM_localConsistance;
+			uint64_t MM_localRescue;
+			uint64_t MM_localConsistance;
 		        // mates
 			uint64_t FilteredOutMates;
-			uint64_t NonUniqueMates;
+			uint64_t MultipleMates;
 			uint64_t UniqueMates;
+			uint64_t Unmapped;
 
 			StatisticsCounters() 
 				// reads
-				: AlignedReads(0)
-				, BothNonUniqueReads(0)
-				, BothUniqueReads(0)
-				, OneNonUniqueReads(0)
-				, OrphanedReads(0)
+				: UU(0)
+				, UM(0)
+				, UF(0)
+				, MM(0)
+				, MF(0)
+				, UX(0)
+				, MX(0)
+				, FF(0)
+				, FX(0)
+				, XX(0)
+				, UU_localRescue(0)
+				, UU_localConsistance(0)
+				, UM_localRescue(0)
+				, UM_localConsistance(0)
+				, MM_localRescue(0)
+				, MM_localConsistance(0)
 				// mates
 				, FilteredOutMates(0)
-				, NonUniqueMates(0)
+				, MultipleMates(0)
 				, UniqueMates(0)
+				, Unmapped(0)
 			{}
 
 		};
@@ -94,7 +118,6 @@ class CArchiveMerge
 		void GetStatisticsCounters ( StatisticsCounters& counter );
 		void PrintStatisticsMaps( const string filename, const vector<MosaikReadFormat::ReadGroup>& readGroup, const uint8_t fragmentLength, const uint8_t localSearchRadius, const float allowedMismatch );
 		/* ====================  ACCESSORS     ======================================= */
-
 		/* ====================  MUTATORS      ======================================= */
 
 		/* ====================  OPERATORS     ======================================= */

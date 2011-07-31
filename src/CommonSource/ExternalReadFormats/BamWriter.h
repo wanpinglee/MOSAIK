@@ -131,7 +131,7 @@ struct BGZF {
 class CBamWriter {
 public:
 	// constructor
-	CBamWriter(void);
+	//CBamWriter(void);
 	// destructor
 	~CBamWriter(void);
 	// closes the alignment archive
@@ -139,9 +139,13 @@ public:
 	// opens the alignment archive
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
-	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid );
+	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool processedBamData = false );
 	// saves the reference and position of an alignment to the alignment archive
 	void SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd );
+	// creates a packed cigar string from the supplied alignment
+	void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool isSolid );
+	// encodes the supplied query sequence into 4-bit notation
+	void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
 private:
 	// closes the BAM file
 	void BgzfClose(void);
@@ -160,9 +164,9 @@ private:
 	// calculates the minimum bin that contains a region [begin, end)
 	static inline unsigned int CalculateMinimumBin(unsigned int begin, unsigned int end);
 	// creates a packed cigar string from the supplied alignment
-	static void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations, const bool& isSolid );
+	//static void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned int& numCigarOperations, const bool& isSolid );
 	// encodes the supplied query sequence into 4-bit notation
-	static void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
+	//static void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
 	// MD tager
 	CMdTager mdTager;
 	// our BGZF output object
