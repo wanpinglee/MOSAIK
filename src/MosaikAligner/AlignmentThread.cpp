@@ -867,9 +867,11 @@ void CAlignmentThread::AlignReadArchive(
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
-				pthread_mutex_lock( &mSaveReadMutex );
-				pOut->SaveRead( mr, al1, al2, isLongRead, true, true, mFlags.SaveUnmappedBasesInArchive );
-				pthread_mutex_unlock( &mSaveReadMutex );
+				SaveArchiveAlignment( mr, al1, al2, isLongRead );
+				++nAlignmentBuffer;
+				//pthread_mutex_lock( &mSaveReadMutex );
+				//pOut->SaveRead( mr, al1, al2, isLongRead, true, true, mFlags.SaveUnmappedBasesInArchive );
+				//pthread_mutex_unlock( &mSaveReadMutex );
 			
 			} else {
 
@@ -915,7 +917,7 @@ void CAlignmentThread::AlignReadArchive(
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 				SaveBamAlignment( al1, zaTag1, false, false );
 				SaveBamAlignment( al2, zaTag2, false, false );
-				nAlignmentBuffer += 2;
+				++nAlignmentBuffer;
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -959,9 +961,11 @@ void CAlignmentThread::AlignReadArchive(
 			if ( mFlags.UseArchiveOutput ) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
-				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
-				pthread_mutex_unlock(&mSaveReadMutex);
+				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
+				++nAlignmentBuffer;
+				//pthread_mutex_lock(&mSaveReadMutex);
+				//pOut->SaveRead( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
+				//pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
 			
@@ -1012,7 +1016,7 @@ void CAlignmentThread::AlignReadArchive(
 
 					SaveBamAlignment( al, zaTag1, false, false );
 					SaveBamAlignment( unmappedAl, zaTag2, true, false );
-					nAlignmentBuffer += 2;
+					++nAlignmentBuffer;
 				}
 				// single end
 				else {
@@ -1029,14 +1033,8 @@ void CAlignmentThread::AlignReadArchive(
 					}
 					
 					SaveBamAlignment( al, zaTag1, false, false );
-					nAlignmentBuffer++;
+					++nAlignmentBuffer;
 				}
-				
-				//if ( statMappingQuality <= al.Quality ) {
-				//	pthread_mutex_lock(&mStatisticsMapsMutex);
-				//	pMaps->SaveRecord( ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al), isPairedEnd, mSettings.SequencingTechnology );
-				//	pthread_mutex_unlock(&mStatisticsMapsMutex);
-				//}
 			}
 
 			UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
@@ -1054,10 +1052,11 @@ void CAlignmentThread::AlignReadArchive(
 
 				bool isLongReadXX = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
 				isLongReadXX |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
-			
-				pthread_mutex_lock(&mSaveReadMutex);
-				pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongReadXX, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
-				pthread_mutex_unlock(&mSaveReadMutex);
+				SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongReadXX );
+				++nAlignmentBuffer;
+				//pthread_mutex_lock(&mSaveReadMutex);
+				//pOut->SaveRead( mr, unmappedAl1, unmappedAl2, isLongReadXX, true, isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
+				//pthread_mutex_unlock(&mSaveReadMutex);
 
 			} else {
 				
@@ -1093,7 +1092,7 @@ void CAlignmentThread::AlignReadArchive(
 
 					SaveBamAlignment( unmappedAl1, 0, true, false );
 					SaveBamAlignment( unmappedAl2, 0, true, false );
-					nAlignmentBuffer += 2;
+					++nAlignmentBuffer;
 
 				} else {
 
