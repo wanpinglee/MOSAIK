@@ -158,11 +158,11 @@ class CArchiveMerge
 		CStatisticsMaps    _statisticsMaps;
 
 		BamHeader _sHeader; // special reads
-		BamHeader _uHeader; // unaligned reads
+		//BamHeader _uHeader; // unaligned reads
 		BamHeader _rHeader; // regular bam
 
 		CBamWriter _sBam; // multiply alignments
-		CBamWriter _uBam; // unaligned reads
+		//CBamWriter _uBam; // unaligned reads
 		CBamWriter _rBam;
 
 		// ZA tagers

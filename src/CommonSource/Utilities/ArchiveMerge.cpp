@@ -118,15 +118,15 @@ CArchiveMerge::CArchiveMerge (
 		_referenceSequencesWoSpecial = _referenceSequences;
 
 	_sHeader.SortOrder = SORTORDER_UNSORTED;
-	_uHeader.SortOrder = SORTORDER_UNSORTED;
+	//_uHeader.SortOrder = SORTORDER_UNSORTED;
 	_rHeader.SortOrder = SORTORDER_UNSORTED;
 
 	_sHeader.pReferenceSequences = &_referenceSequences;
-	_uHeader.pReferenceSequences = &_referenceSequencesWoSpecial;
+	//_uHeader.pReferenceSequences = &_referenceSequencesWoSpecial;
 	_rHeader.pReferenceSequences = &_referenceSequencesWoSpecial;
 
 	_sHeader.pReadGroups = &_readGroups;
-	_uHeader.pReadGroups = &_readGroups;
+	//_uHeader.pReadGroups = &_readGroups;
 	_rHeader.pReadGroups = &_readGroups;
 
 	ProgramGroup pg;
@@ -137,13 +137,13 @@ CArchiveMerge::CArchiveMerge (
 	pg.CL = commandLine;
 
 	_sHeader.pg.ID = "MosaikAligner";
-	_uHeader.pg.ID = "MosaikAligner";
+	//_uHeader.pg.ID = "MosaikAligner";
 	_rHeader.pg.ID = "MosaikAligner";
 	_sHeader.pg.VN = ss.str();
-	_uHeader.pg.VN = ss.str();
+	//_uHeader.pg.VN = ss.str();
 	_rHeader.pg.VN = ss.str();
 	_sHeader.pg.CL = commandLine;
-	_uHeader.pg.CL = commandLine;
+	//_uHeader.pg.CL = commandLine;
 	_rHeader.pg.CL = commandLine;
 
 }
@@ -676,7 +676,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( _isPairedEnd ) {
 			// store mate2 alignment in regular and unmapped bams
 			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
-			_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
+			//_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
 
 			// store special hits
 			if ( isMate2Special ) {
@@ -720,7 +720,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		unmappedAl1.CsQuery         = mate1Cs;
 		unmappedAl1.CsBaseQualities = mate1Cq;
 
-		_uBam.SaveAlignment( unmappedAl1, 0, true, false, _isSolid );
+		//_uBam.SaveAlignment( unmappedAl1, 0, true, false, _isSolid );
+		_rBam.SaveAlignment( unmappedAl1, 0, true, false, _isSolid );
 		
 
 		// store special hits
@@ -749,7 +750,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			unmappedAl2.CsQuery         = mate2Cs;
 			unmappedAl2.CsBaseQualities = mate2Cq;
 
-			_uBam.SaveAlignment( unmappedAl2, 0, true, false, _isSolid );
+			//_uBam.SaveAlignment( unmappedAl2, 0, true, false, _isSolid );
+			_rBam.SaveAlignment( unmappedAl2, 0, true, false, _isSolid );
 
 			// store special hits
 			if ( isMate2Special ) {
@@ -888,7 +890,7 @@ void CArchiveMerge::Merge() {
 	
 	// prepare BAM writers
 	_sBam.Open( _outputFilename + ".special.bam", _sHeader );
-	_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
+	//_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
 	_rBam.Open( _outputFilename + ".bam", _rHeader );
 
 	
@@ -1058,7 +1060,7 @@ void CArchiveMerge::Merge() {
 	
 	// Close BAMs
 	_sBam.Close();
-	_uBam.Close();
+	//_uBam.Close();
 	_rBam.Close();
 
 	
