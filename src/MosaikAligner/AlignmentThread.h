@@ -416,10 +416,11 @@ private:
 	// if the mate has too many N's, filters it out
 	bool FilterMateOut ( const unsigned int length, char* basePtr );
 	bool SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate );
-	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos );
+	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial );
 	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead );
-	bool WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
-	bool SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr
+	void WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
+	void WriteSpecialAlignmentBufferToFile( BamWriters* const pBams );
+	void SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr
 		, BamWriters* const pBams, CStatisticsMaps* const pMaps );
 	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
 
@@ -484,6 +485,7 @@ private:
 	queue<AlignmentBamBuffer> bamMultiplyBuffer;
 	queue<SimpleBamRecordBuffer> bamMultiplySimpleBuffer;
 	queue<AlignmentArchiveBuffer> archiveBuffer; // for archive output; low-memory version
+	queue<AlignmentBamBuffer> bamSpecialBuffer;
 	// reads/mates buffer
 	queue<Mosaik::Read> readBuffer;
 	AlignmentInfo alInfo;
