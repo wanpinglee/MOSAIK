@@ -220,12 +220,12 @@ public:
 	struct BamWriters {
 		BamHeader mHeader; // multiply alignments
 		BamHeader sHeader; // special alignments
-		BamHeader uHeader; // unaligned reads
+		//BamHeader uHeader; // unaligned reads
 		BamHeader rHeader; // regular bam
 
 		CBamWriter mBam;   // multiply alignments
 		CBamWriter sBam;   // special alignments
-		CBamWriter uBam;   // unaligned reads
+		//CBamWriter uBam;   // unaligned reads
 		CBamWriter rBam;
 	};
 	// special reference 
