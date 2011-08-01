@@ -412,11 +412,6 @@ bool CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 
 				bamMultiplyBuffer.push( buffer );
 			}
-			//pthread_mutex_lock(&mSaveMultipleBamMutex);
-			//for(vector<Alignment>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter)
-			//	pBams->mBam.SaveAlignment( *alIter, 0, false, false, mFlags.EnableColorspace );
-			//pthread_mutex_unlock(&mSaveMultipleBamMutex);
-
 		}
 		if ( alInfo.isPairedEnd && isMate2Multiple ) {
 			Alignment mateAl;
@@ -442,11 +437,6 @@ bool CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 
 				bamMultiplyBuffer.push( buffer );
 			}
-					
-			//pthread_mutex_lock(&mSaveMultipleBamMutex);
-			//for(vector<Alignment>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter)
-			//	pBams->mBam.SaveAlignment( *alIter, 0, false, false, mFlags.EnableColorspace );
-			//pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
 
 		if ( bamMultiplyBuffer.size() > _bufferSize ) {
@@ -500,9 +490,9 @@ bool CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 	return true;
 }
 
-void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps ) {
+void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut ) {
 	if ( !bamBuffer.empty() )
-		WriteAlignmentBufferToFile( pBams, pMaps );
+		WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 
 	if ( !bamMultiplyBuffer.empty() ) {
 		AlignmentBamBuffer buffer;
@@ -529,15 +519,16 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 }
 
 // Save alignment in buffer
-bool CAlignmentThread::SaveAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos ) {
+inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos ) {
 	// bam output
-	if ( !mFlags.UseArchiveOutput ) {
+	//if ( !mFlags.UseArchiveOutput ) {
 		AlignmentBamBuffer buffer;
 		buffer.al              = al;
 		buffer.zaString        = zaString;
 		buffer.noCigarMdNm     = noCigarMdNm;
 		buffer.notShowRnamePos = notShowRnamePos;
 
+		// try to speed up
 		bamMisc.CreatePackedCigar( buffer.al, buffer.al.PackedCigar, buffer.al.NumCigarOperation, alInfo.isUsingSOLiD );
 		mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
 		buffer.al.Query.Remove('-');
@@ -548,41 +539,63 @@ bool CAlignmentThread::SaveAlignment( const Alignment& al, const char* zaString,
 		buffer.al.Query.clearMemory();
 
 		bamBuffer.push( buffer );
-	}
+	//}
 
-	return true;
+}
+
+inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead ){
+	AlignmentArchiveBuffer buffer;
+	buffer.mr  = mr;
+	buffer.al1 = al1;
+	buffer.al2 = al2;
+	buffer.isLongRead = isLongRead;
+
+	archiveBuffer.push( buffer );
 }
 
 // write alignment buffer to bam/archive
-bool CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps ) {
-	AlignmentBamBuffer buffer1, buffer2;
-	Alignment dumpAl;
+bool CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut ) {
+	// bam output
+	if ( !mFlags.UseArchiveOutput ) {
+		AlignmentBamBuffer buffer1, buffer2;
+		Alignment dumpAl;
 
-	const bool processedBamData = true;
+		const bool processedBamData = true;
 
-	if ( !alInfo.isPairedEnd ) {
-		pthread_mutex_lock(&mSaveReadMutex);
-		while ( !bamBuffer.empty() ) {
-			buffer1 = bamBuffer.front();
-			bamBuffer.pop();
-			pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
-			pMaps->SaveRecord( buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology );
+		if ( !alInfo.isPairedEnd ) {
+			pthread_mutex_lock(&mSaveReadMutex);
+			while ( !bamBuffer.empty() ) {
+				buffer1 = bamBuffer.front();
+				bamBuffer.pop();
+				pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				pMaps->SaveRecord( buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology );
+			}
+			pthread_mutex_unlock(&mSaveReadMutex);
+		} else {
+			pthread_mutex_lock(&mSaveReadMutex);
+			while ( !bamBuffer.empty() ) {
+				buffer1 = bamBuffer.front();
+				bamBuffer.pop();
+				buffer2 = bamBuffer.front();
+				bamBuffer.pop();
+				pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				pBams->rBam.SaveAlignment( buffer2.al, buffer2.zaString.c_str(), buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				bool buffer1IsMate1 = buffer1.al.IsFirstMate;
+				pMaps->SaveRecord( ( buffer1IsMate1 ? buffer1.al : buffer2.al ), ( buffer1IsMate1 ? buffer2.al : buffer1.al ), alInfo.isPairedEnd, mSettings.SequencingTechnology );
+			}
+			pthread_mutex_unlock(&mSaveReadMutex);
 		}
-		pthread_mutex_unlock(&mSaveReadMutex);
 	} else {
+		AlignmentArchiveBuffer buffer;
 		pthread_mutex_lock(&mSaveReadMutex);
-		while ( !bamBuffer.empty() ) {
-			buffer1 = bamBuffer.front();
-			bamBuffer.pop();
-			buffer2 = bamBuffer.front();
-			bamBuffer.pop();
-			pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
-			pBams->rBam.SaveAlignment( buffer2.al, buffer2.zaString.c_str(), buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
-			bool buffer1IsMate1 = buffer1.al.IsFirstMate;
-			pMaps->SaveRecord( ( buffer1IsMate1 ? buffer1.al : buffer2.al ), ( buffer1IsMate1 ? buffer2.al : buffer1.al ), alInfo.isPairedEnd, mSettings.SequencingTechnology );
+		while ( !archiveBuffer.empty() ) {
+			buffer = archiveBuffer.front();
+			pOut->SaveRead( buffer.mr, buffer.al1, buffer.al2, buffer.isLongRead, true, alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
+			archiveBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveReadMutex);
 	}
+
 
 
 	return true;
@@ -666,7 +679,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		// quit if we've processed all of the reads
 		if ( readBuffer.empty() && !hasMoreReads ) {
-			
+			SaveNClearBuffers( pBams, pMaps, pOut );
 			break;
 		}
 		
@@ -900,26 +913,9 @@ void CAlignmentThread::AlignReadArchive(
 				//CZaTager za1, za2;
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-				//ostringstream buffer1, buffer2;
-				//buffer1 << al1.NumMapped << ";" << al1.SwScore << ";" << al1.NextSwScore;
-				//buffer2 << al2.NumMapped << ";" << al2.SwScore << ";" << al2.NextSwScore;
-				//pthread_mutex_lock(&mSaveReadMutex);
-				//pBams->rBam.SaveAlignment( al1, zaTag1, false, false, mFlags.EnableColorspace );
-				//pBams->rBam.SaveAlignment( al2, zaTag2, false, false, mFlags.EnableColorspace );
-				//pBams->rBam.SaveAlignment( al1, buffer1.str().c_str(), false, false, mFlags.EnableColorspace );
-				//pBams->rBam.SaveAlignment( al2, buffer2.str().c_str(), false, false, mFlags.EnableColorspace );
-				//pthread_mutex_unlock(&mSaveReadMutex);
-				SaveAlignment( al1, zaTag1, false, false );
-				SaveAlignment( al2, zaTag2, false, false );
+				SaveBamAlignment( al1, zaTag1, false, false );
+				SaveBamAlignment( al2, zaTag2, false, false );
 				nAlignmentBuffer += 2;
-
-
-				//if ( ( statMappingQuality <= al1.Quality ) && ( statMappingQuality <= al2.Quality ) ) {
-				//	pthread_mutex_lock(&mStatisticsMapsMutex);
-				//	pMaps->SaveRecord( al1, al2, isPairedEnd, mSettings.SequencingTechnology );
-				//	pthread_mutex_unlock(&mStatisticsMapsMutex);
-				//}
-
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -1014,18 +1010,9 @@ void CAlignmentThread::AlignReadArchive(
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
-					//pthread_mutex_lock(&mSaveReadMutex);
-					//pBams->rBam.SaveAlignment( al, zaTag1, false, false, mFlags.EnableColorspace );
-					//pBams->rBam.SaveAlignment( unmappedAl, zaTag2, true, false, mFlags.EnableColorspace );  // noCigarMdNm
-					//pthread_mutex_unlock(&mSaveReadMutex);
-					SaveAlignment( al, zaTag1, false, false );
-					SaveAlignment( unmappedAl, zaTag2, true, false );
+					SaveBamAlignment( al, zaTag1, false, false );
+					SaveBamAlignment( unmappedAl, zaTag2, true, false );
 					nAlignmentBuffer += 2;
-
-					
-					//pthread_mutex_lock(&mSaveUnmappedBamMutex);
-					//pBams->uBam.SaveAlignment( unmappedAl, 0, true, false, mFlags.EnableColorspace );
-					//pthread_mutex_unlock(&mSaveUnmappedBamMutex);
 				}
 				// single end
 				else {
@@ -1041,10 +1028,7 @@ void CAlignmentThread::AlignReadArchive(
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
 					}
 					
-					//pthread_mutex_lock(&mSaveReadMutex);
-					//pBams->rBam.SaveAlignment( al, zaTag1, false, false, mFlags.EnableColorspace );
-					//pthread_mutex_unlock(&mSaveReadMutex);
-					SaveAlignment( al, zaTag1, false, false );
+					SaveBamAlignment( al, zaTag1, false, false );
 					nAlignmentBuffer++;
 				}
 				
@@ -1107,8 +1091,8 @@ void CAlignmentThread::AlignReadArchive(
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
 					}
 
-					SaveAlignment( unmappedAl1, 0, true, false );
-					SaveAlignment( unmappedAl2, 0, true, false );
+					SaveBamAlignment( unmappedAl1, 0, true, false );
+					SaveBamAlignment( unmappedAl2, 0, true, false );
 					nAlignmentBuffer += 2;
 
 				} else {
@@ -1124,7 +1108,7 @@ void CAlignmentThread::AlignReadArchive(
 						pthread_mutex_unlock(&mSaveSpecialBamMutex);
 					}
 
-					SaveAlignment( unmappedAl1, 0, true, false );
+					SaveBamAlignment( unmappedAl1, 0, true, false );
 					++nAlignmentBuffer;
 				}
 
@@ -1139,7 +1123,7 @@ void CAlignmentThread::AlignReadArchive(
 
 
 		if ( nAlignmentBuffer > alignmentBufferSize ) {
-			WriteAlignmentBufferToFile( pBams, pMaps );
+			WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 			nAlignmentBuffer = 0;
 		}
 

@@ -350,9 +350,19 @@ private:
 		bool      noCigarMdNm;
 		bool      notShowRnamePos;
 
-		AlignmentBamBuffer(void)
+		AlignmentBamBuffer( void )
 			: noCigarMdNm(false)
 			, notShowRnamePos(false)
+		{}
+	};
+	struct AlignmentArchiveBuffer {
+		Mosaik::Read mr;
+		Alignment al1;
+		Alignment al2;
+		bool isLongRead;
+
+		AlignmentArchiveBuffer( void )
+			: isLongRead(false)
 		{}
 	};
 	// data structure for multiply alignment buffer
@@ -406,11 +416,12 @@ private:
 	// if the mate has too many N's, filters it out
 	bool FilterMateOut ( const unsigned int length, char* basePtr );
 	bool SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate );
-	bool SaveAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos );
-	bool WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps );
+	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos );
+	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead );
+	bool WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
 	bool SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr
 		, BamWriters* const pBams, CStatisticsMaps* const pMaps );
-	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps );
+	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
 
 	// ====
 	// data
@@ -472,7 +483,7 @@ private:
 	queue<AlignmentBamBuffer> bamBuffer;         // for bam output; full-memory version
 	queue<AlignmentBamBuffer> bamMultiplyBuffer;
 	queue<SimpleBamRecordBuffer> bamMultiplySimpleBuffer;
-	//queue archiveBuffer; // for archive output; low-memory version
+	queue<AlignmentArchiveBuffer> archiveBuffer; // for archive output; low-memory version
 	// reads/mates buffer
 	queue<Mosaik::Read> readBuffer;
 	AlignmentInfo alInfo;
