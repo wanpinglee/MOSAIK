@@ -504,10 +504,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		cout << "finished." << endl;
 	}
 
-	//if ( !mSReference.found ) {
-	//	string sBamName = mSettings.OutputReadArchiveFilename + ".special.bam";
-	//	rm ( sBamName.c_str() );
-	//}
+	if ( !mSReference.found ) {
+		string sBamName = mSettings.OutputReadArchiveFilename + ".special.bam";
+		rm ( sBamName.c_str() );
+	}
 
 
 	PrintStatistics();
