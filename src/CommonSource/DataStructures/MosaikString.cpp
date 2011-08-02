@@ -498,6 +498,9 @@ void CMosaikString::Prepend(const char c, const unsigned int sLen) {
 // removes all occurrences of the specified character
 void CMosaikString::Remove(const char ch) {
 
+	if ( mLength == 0 )
+		return;
+	
 	unsigned int currentRemovePosition = 0;
 	for(unsigned int i = 0; i < mLength; i++) {
 

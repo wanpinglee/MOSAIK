@@ -533,15 +533,22 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
 	AlignmentBamBuffer buffer;
 	buffer.al              = al;
-	buffer.zaString        = zaString;
 	buffer.noCigarMdNm     = noCigarMdNm;
 	buffer.notShowRnamePos = notShowRnamePos;
-
+	if ( zaString == (char)0 ) 
+		buffer.zaString = (char) 0;
+	else
+		buffer.zaString = zaString;
+	
 	// try to speed up
-	bamMisc.CreatePackedCigar( buffer.al, buffer.al.PackedCigar, buffer.al.NumCigarOperation, alInfo.isUsingSOLiD );
-	mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
+	if ( !noCigarMdNm ) {
+		bamMisc.CreatePackedCigar( buffer.al, buffer.al.PackedCigar, buffer.al.NumCigarOperation, alInfo.isUsingSOLiD );
+		mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
+	}
 	buffer.al.Query.Remove('-');
-	bamMisc.EncodeQuerySequence( buffer.al.Query.CData(), buffer.al.EncodedQuery );
+
+	if ( buffer.al.Query.Length() != 0 )
+		bamMisc.EncodeQuerySequence( buffer.al.Query.CData(), buffer.al.EncodedQuery );
 
 	// after this, Reference and Query should not be used again
 	buffer.al.Reference.clearMemory();
@@ -1057,10 +1064,15 @@ void CAlignmentThread::AlignReadArchive(
 			exit(1);
 		}
 
-
-		if ( bamBuffer.size() > alignmentBufferSize ) {
-			WriteAlignmentBufferToFile( pBams, pMaps, pOut );
+		if ( !mFlags.UseArchiveOutput ) {
+			if ( bamBuffer.size() > alignmentBufferSize )
+				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 		}
+		else { 
+			if ( archiveBuffer.size() > alignmentBufferSize )
+				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
+		}
+		
 
 		if ( bamSpecialBuffer.size() > alignmentBufferSize ) {
 			WriteSpecialAlignmentBufferToFile( pBams );
