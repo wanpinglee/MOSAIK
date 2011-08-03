@@ -434,10 +434,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	Mosaik::Read read;
 
 	string mate1Cs, mate1Cq, mate2Cs, mate2Cq;
+	bool isMate1FilteredOut = false, isMate2FilteredOut = false;
 
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
-		nMate1Alignments += ite->NumMapped;
-		ite->SpecialCode = _specialCode1;
+		nMate1Alignments   += ite->NumMapped;
+		ite->SpecialCode    = _specialCode1;
+		isMate1FilteredOut |= ite->IsFilteredOut;
 		if ( ite->IsMapped ) newMate1Set.push_back( *ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
@@ -452,8 +454,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	}
 	
 	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
-		nMate2Alignments += ite->NumMapped;
-		ite->SpecialCode = _specialCode2;
+		nMate2Alignments   += ite->NumMapped;
+		ite->SpecialCode    = _specialCode2;
+		isMate2FilteredOut |= ite->IsFilteredOut;
 		if ( ite->IsMapped ) newMate2Set.push_back( *ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
@@ -696,6 +699,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			}
 		}
 
+		unmappedAl.IsFilteredOut = isFirstMate ? isMate1FilteredOut : isMate2FilteredOut;
 		// GetStatisticsCounters needs some information
 		r.Mate1Alignments[0] = isFirstMate ? al : unmappedAl;
 		if ( _isPairedEnd )
@@ -770,6 +774,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 
 		// GetStatisticsCounters needs some information
+		unmappedAl1.IsFilteredOut = isMate1FilteredOut;
+		unmappedAl2.IsFilteredOut = isMate2FilteredOut;
+
 		r.Mate1Alignments[0] = unmappedAl1;
 		if ( _isPairedEnd )
 			r.Mate2Alignments[0] = unmappedAl2;
