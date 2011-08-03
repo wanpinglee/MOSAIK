@@ -85,10 +85,6 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		float competitor_finalScore = competitor_swScore + competitor_fragScore + competitor_mqScore;
 		float finalScore            = swScore + fragScore + mqScore;
 
-
-
-//cerr << competitor_swScore << " " << swScore << " " << competitor_fragScore << " " << fragScore << endl;
-
 		return competitor_finalScore >= finalScore;
 
 	} else {

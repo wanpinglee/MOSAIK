@@ -557,8 +557,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			Alignment specialAl = _specialAl.Mate2Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
-			//CZaTager zas1, zas2;
-
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 
@@ -585,9 +583,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_sBam.SaveAlignment( genomicAl, zas1Tag, false, false, _isSolid );
 			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
-
-		//if ( isMate1Multiple ) al1.Quality = 0;
-		//if ( isMate2Multiple ) al2.Quality = 0;
 
 		// GetStatisticsCounters needs some information
 		r.Mate1Alignments[0] = al1;
