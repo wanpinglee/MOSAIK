@@ -322,6 +322,11 @@ inline void CStatisticsMaps::SavePairMultiplicity( const unsigned int nMate1Alig
 	if ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) )
 		FF++;
 
+	// FX pairs
+	if ( ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && mate2FilteredOut ) )
+		|| ( ( ( nMate1Alignments == 0 ) && mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) ) ) 
+		FX++;
+
 	// XX pairs
 	if ( ( ( nMate1Alignments == 0 ) && !mate1FilteredOut ) && ( ( nMate2Alignments == 0 ) && !mate2FilteredOut ) )
 		XX++;
@@ -491,7 +496,7 @@ void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFo
 		fprintf( fOut, "\t4\t4\t%lu\t%lu\tUnmapped (X)\n",         X, U + M + F + X );
 		
 		// print pair multiplicity combinations (RC)
-		total = UU + UM + MM + UF + MF + UX + MX + FF + FX + FF;
+		total = UU + UM + MM + UF + MF + UX + MX + FF + FX + XX;
 		fprintf( fOut, "\nRC pair multiplicity combinations\n");
 		fprintf( fOut, "\tTOT\tMEAN\tSTD\tIN\tOVER\tUNDER\n" );
 		fprintf( fOut, "\t%lu\t0\t0\t%lu\t0\t0\n", total, total );

@@ -1247,7 +1247,7 @@ void CAlignmentThread::SetRequiredInfo (
 			al.MappedLength = 0;
 		} else {
 			
-			string queryString, referenceString, qualityString;
+			//string queryString, referenceString, qualityString;
 			
 			// patch N's
 			--al.QueryEnd;  //CS query end
@@ -1260,46 +1260,46 @@ void CAlignmentThread::SetRequiredInfo (
 				exit(1);
 			}
 			if ( patchStartLen == 0 ) {
-				//al.Query.TrimBegin(1);
-				//al.BaseQualities.TrimBegin(1);
-				//al.Reference.TrimBegin(1);
-				queryString.append( al.Query.CData() + 1 );
-				qualityString.append( al.BaseQualities.CData() + 1 );
-				referenceString.append( al.Reference.CData() + 1 );
+				al.Query.TrimBegin(1);
+				al.BaseQualities.TrimBegin(1);
+				al.Reference.TrimBegin(1);
+				//queryString.append( al.Query.CData() + 1 );
+				//qualityString.append( al.BaseQualities.CData() + 1 );
+				//referenceString.append( al.Reference.CData() + 1 );
 				al.ReferenceBegin++;
 				mate.MateReferenceBegin++;
 			}else if ( patchStartLen > 1 ) {
-				//al.Query.Prepend( 'N', patchStartLen - 1 );
-				//al.BaseQualities.Prepend( (char)0, patchStartLen - 1 );
-				//al.Reference.Prepend( 'Z', patchStartLen - 1 );
-				queryString.append( patchStartLen - 1, 'N' );
-				qualityString.append( patchStartLen - 1, (char)0 );
-				referenceString.append( patchStartLen - 1, 'Z' );
+				al.Query.Prepend( 'N', patchStartLen - 1 );
+				al.BaseQualities.Prepend( (char)0, patchStartLen - 1 );
+				al.Reference.Prepend( 'Z', patchStartLen - 1 );
+				//queryString.append( patchStartLen - 1, 'N' );
+				//qualityString.append( patchStartLen - 1, (char)0 );
+				//referenceString.append( patchStartLen - 1, 'Z' );
 
-				queryString.append( al.Query.CData() );
-				qualityString.append( al.BaseQualities.CData() );
-				referenceString.append( al.Reference.CData() );
-			} else {
-				queryString.append( al.Query.CData() );
-				qualityString.append( al.BaseQualities.CData() );
-				referenceString.append( al.Reference.CData() );
+				//queryString.append( al.Query.CData() );
+				//qualityString.append( al.BaseQualities.CData() );
+				//referenceString.append( al.Reference.CData() );
+			//} else {
+			//	queryString.append( al.Query.CData() );
+			//	qualityString.append( al.BaseQualities.CData() );
+			//	referenceString.append( al.Reference.CData() );
 			}
 
 
 			if ( patchEndLen > 0 ) {
-				//al.Query.Append( 'N', patchEndLen );
-				//al.BaseQualities.Append( (char)0, patchEndLen );
-				//al.Reference.Append( 'Z', patchEndLen );
+				al.Query.Append( 'N', patchEndLen );
+				al.BaseQualities.Append( (char)0, patchEndLen );
+				al.Reference.Append( 'Z', patchEndLen );
 				
-				queryString.append( patchEndLen, 'N' );
-				qualityString.append( patchEndLen, (char)0 );
-				referenceString.append( patchEndLen, 'Z' );
+				//queryString.append( patchEndLen, 'N' );
+				//qualityString.append( patchEndLen, (char)0 );
+				//referenceString.append( patchEndLen, 'Z' );
 
 			}
 
-			al.Query = queryString.c_str();
-			al.BaseQualities = qualityString.c_str();
-			al.Reference = referenceString.c_str();
+			//al.Query = queryString.c_str();
+			//al.BaseQualities = qualityString.c_str();
+			//al.Reference = referenceString.c_str();
 
 			al.QueryBegin  = 0;
 			al.QueryEnd    = readLength - 1;
