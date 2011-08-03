@@ -589,7 +589,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
-		if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
+		//if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
 
@@ -701,7 +701,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( _isPairedEnd )
 			r.Mate2Alignments[0] = isFirstMate ? unmappedAl : al;
 			
-		if ( _statMappingQuality <= al.Quality ) 
+		//if ( _statMappingQuality <= al.Quality ) 
 			_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
 
 	
@@ -774,7 +774,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		if ( _isPairedEnd )
 			r.Mate2Alignments[0] = unmappedAl2;
 
-		//_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
+		_statisticsMaps.SaveRecord( unmappedAl1, unmappedAl2, _isPairedEnd, _sequencingTechnologies );
 	
 	} else {
 		cout << "ERROR: Unknown pairs." << endl;
