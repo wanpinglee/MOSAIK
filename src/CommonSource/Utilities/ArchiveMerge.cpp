@@ -520,8 +520,12 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		bool properPair1 = false, properPair2 = false;
 		al1.IsFirstMate = true;
 		al2.IsFirstMate = false;
-		properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, _sequencingTechnologies );
-		properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, _sequencingTechnologies );
+
+		// MM pair is always an improper pair
+		if ( !isMate1Multiple || !isMate2Multiple ) {
+			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, _sequencingTechnologies );
+			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, _sequencingTechnologies );
+		}
 
 		if ( properPair1 != properPair2 ) {
 			cout << "ERROR: An inconsistent proper pair is found." << endl;
@@ -867,12 +871,6 @@ void CArchiveMerge::Merge() {
 	// initialize MOSAIK readers for all temp files
 	vector< MosaikReadFormat::CAlignmentReader* > readers;
 	SortNMergeUtilities::OpenMosaikReader( readers, _inputFilenames );
-	//MosaikReadFormat::CAlignmentReader* readers;
-	//readers = new MosaikReadFormat::CAlignmentReader [ _inputFilenames.size() ];
-	//for ( unsigned int i = 0; i < _inputFilenames.size(); ++i ) {
-	//	readers[i].Open( _inputFilenames[i] );
-	//}
-
 	
 	Mosaik::AlignedRead mr;
 	unsigned int nDone = 0;
@@ -889,12 +887,6 @@ void CArchiveMerge::Merge() {
 		}
 	}
 
-	
-	// prepare MOSAIK writer
-	//MosaikReadFormat::CAlignmentWriter writer;
-	//writer.Open(_outputFilename, _referenceSequences, _readGroups, _alignmentStatus, ALIGNER_SIGNATURE);
-	//writer.AdjustPartitionSize(1000);
-	
 	// prepare BAM writers
 	_sBam.Open( _outputFilename + ".special.bam", _sHeader );
 	//_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
