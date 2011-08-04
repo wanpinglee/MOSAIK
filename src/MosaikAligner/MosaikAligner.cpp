@@ -295,24 +295,24 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	else {
 /*
-	    outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/1");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/2");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/3");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/4");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/5");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/6");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/7");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/8");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/9");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/10");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/11");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/12");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/13");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/14");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/15");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/16");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/17");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/test/18");
+	    outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/1");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/2");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/3");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/4");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/5");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/6");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/7");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/8");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/9");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/10");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/11");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/12");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/13");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/14");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/15");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/16");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/17");
+            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/18");
             MergeArchives();
 
 	//string tempDir1;
@@ -324,8 +324,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//}
 
             exit(1);
-
 */
+
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
 		

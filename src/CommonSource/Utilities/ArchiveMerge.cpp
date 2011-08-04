@@ -871,20 +871,9 @@ void CArchiveMerge::Merge() {
 	unsigned int nDone = 0;
 	vector< bool > done(nTemp, false);
 	vector< SortNMergeUtilities::AlignedReadPair > reads(nTemp);
-	// first load
-	for ( unsigned int i = 0; i < nTemp; i++ ) {
-		if ( !SortNMergeUtilities::LoadNextReadPair(readers[i], i, reads) ) {
-			done[i] = true;
-			nDone++;
-		} else {
-			UpdateReferenceIndex( reads[i].read, i );
-			*_readNo = *_readNo + 1;
-		}
-	}
 
 	// prepare BAM writers
 	_sBam.Open( _outputFilename + ".special.bam", _sHeader );
-	//_uBam.Open( _outputFilename + ".unaligned.bam", _uHeader );
 	_rBam.Open( _outputFilename + ".bam", _rHeader );
 
 	
@@ -892,165 +881,45 @@ void CArchiveMerge::Merge() {
 	vector< SortNMergeUtilities::AlignedReadPair >::iterator ite;
 	Mosaik::AlignedRead minRead;
 
-	SortNMergeUtilities::FindMinElement(reads, ite);
-	//ite = min_element( reads.begin(), reads.end(), CmpAlignedReadPair );
-	minRead = ite->read;
-	if ( !SortNMergeUtilities::LoadNextReadPair(readers[ite->owner], ite->owner, reads) ) {
-		done[ite->owner] = true;
-		nDone++;
-	} else {
-		UpdateReferenceIndex( reads[ite->owner].read, ite->owner );
-		*_readNo = *_readNo + 1;
-	}
 
-	unsigned int tempNo = UINT_MAX;
-	while ( nDone != nTemp - 1 ) {
-		SortNMergeUtilities::FindMinElement(reads, ite);
-		//ite = min_element( reads.begin(), reads.end(), CmpAlignedReadPair );
+	bool isDone = false;
+	while ( !isDone ) {
+		//SortNMergeUtilities::FindMinElement(reads, ite);
 		
-		if ( ite->read.Name > minRead.Name ) {
+		minRead.Clear();
 
-			//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-			//if ( minRead.Mate1Alignments.size() > _nMaxAlignment )
-			//	minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
-			//if ( minRead.Mate2Alignments.size() > _nMaxAlignment )
-			//	minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
-			
-			//BestNSecondBestSelection::Select( minRead.Mate1Alignments, minRead.Mate2Alignments, _expectedFragmentLength );
-			WriteAlignment( minRead );
+		for ( unsigned int i = 0; i < nTemp; i++ ) {
+			if ( !SortNMergeUtilities::LoadNextReadPair(readers[i], i, reads) ) {
+				done[i] = true;
+				nDone++;
+				isDone = true;
+			} else {
+				UpdateReferenceIndex( reads[i].read, i );
+				*_readNo = *_readNo + 1;
 
-			//writer.SaveAlignedRead(minRead);
-			CalculateStatisticsCounters(minRead);
-			minRead.Clear();
-			minRead = ite->read;
-		} else {
-			// merge their alignments
-			bool isFull = ( ite->read.Mate1Alignments.size() + minRead.Mate1Alignments.size() > minRead.Mate1Alignments.max_size() )
-			            ||( ite->read.Mate2Alignments.size() + minRead.Mate2Alignments.size() > minRead.Mate2Alignments.max_size() );
-			if ( isFull ) {
-				cout << "ERROR: Too many alignments waiting for writing." << endl;
-				exit(1);
+				if ( i == 0 )
+					minRead = reads[i].read;
+				else {
+					minRead.Mate1Alignments.push_back( reads[i].read.Mate1Alignments[0] );
+					if ( _isPairedEnd )
+					minRead.Mate2Alignments.push_back( reads[i].read.Mate2Alignments[0] );
+				}
 			}
-
-			if ( ite->read.Mate1Alignments.size() > 0 )
-				minRead.Mate1Alignments.insert( minRead.Mate1Alignments.begin(), ite->read.Mate1Alignments.begin(), ite->read.Mate1Alignments.end() );
-			if ( ite->read.Mate2Alignments.size() > 0 )
-				minRead.Mate2Alignments.insert( minRead.Mate2Alignments.begin(), ite->read.Mate2Alignments.begin(), ite->read.Mate2Alignments.end() );
-
-			// accordant flag
-			minRead.IsLongRead |= ite->read.IsLongRead;
-
-			// TODO: think this more
-			//if ( minRead.Mate1Alignments.size() > _nMaxAlignment ) {
-			//	random_shuffle(minRead.Mate1Alignments.begin(), minRead.Mate1Alignments.end());
-			//	minRead.Mate1Alignments.erase( minRead.Mate1Alignments.begin() + _nMaxAlignment, minRead.Mate1Alignments.end() );
-			//}
-			//if ( minRead.Mate2Alignments.size() > _nMaxAlignment ) {
-			//	random_shuffle(minRead.Mate2Alignments.begin(), minRead.Mate2Alignments.end());
-			//	minRead.Mate2Alignments.erase( minRead.Mate2Alignments.begin() + _nMaxAlignment, minRead.Mate2Alignments.end() );
-			//}
-
 		}
-		
-		tempNo = ite->owner;
-		
-		if ( tempNo >= nTemp ) {
-			cout << "ERROR: Read ID is wrong." << endl;
+
+		// sanity check
+		if ( isDone && ( nDone != nTemp ) ) {
+			cout << "ERROR: The number of reads in archives do not match." << endl;
 			exit(1);
 		}
-		
-		if ( !SortNMergeUtilities::LoadNextReadPair(readers[tempNo], tempNo, reads) ) {
-			done[tempNo] = true;
-			nDone++;
-		} else {
-			UpdateReferenceIndex( reads[tempNo].read, tempNo );
-			*_readNo = *_readNo + 1;
+
+		if ( !isDone ) {
+			WriteAlignment( minRead );
+			CalculateStatisticsCounters( minRead );
 		}
+
 	}	
 	
-
-	unsigned int owner = UINT_MAX;
-	for ( unsigned int i = 0; i < nTemp; i++ ) {
-		if ( !done[i] ) {
-
-			owner = reads[i].owner;
-			for ( vector<Alignment>::iterator ite = reads[i].read.Mate1Alignments.begin(); ite != reads[i].read.Mate1Alignments.end(); ++ite )
-				ite->Owner = owner;
-
-			for ( vector<Alignment>::iterator ite = reads[i].read.Mate2Alignments.begin(); ite != reads[i].read.Mate2Alignments.end(); ++ite )
-				ite->Owner = owner;
-
-			if ( reads[i].read.Name > minRead.Name ) {
-				//if ( ++nRead % 100000 == 0 )
-				//	cout << "\t" << nRead << " have been merged." << endl;
-
-				//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-				//writer.SaveAlignedRead(minRead);
-				WriteAlignment( minRead );
-				CalculateStatisticsCounters(minRead);
-				minRead.Clear();
-				minRead = reads[i].read;
-			} else {
-				if ( reads[i].read.Mate1Alignments.size() > 0 )
-					minRead.Mate1Alignments.insert( minRead.Mate1Alignments.end(), reads[i].read.Mate1Alignments.begin(), reads[i].read.Mate1Alignments.end() );
-				if ( reads[i].read.Mate2Alignments.size() > 0 )
-					minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), reads[i].read.Mate2Alignments.begin(), reads[i].read.Mate2Alignments.end() );
-				
-				// accordant flag
-				minRead.IsLongRead |= reads[i].read.IsLongRead;
-			}
-
-			while ( true ) {
-				mr.Clear();
-				if ( !readers[i]->LoadNextRead(mr) ) 
-					break;
-				else {
-					UpdateReferenceIndex( mr, owner );
-					*_readNo = *_readNo + 1;
-
-					for ( vector<Alignment>::iterator ite = mr.Mate1Alignments.begin(); ite != mr.Mate1Alignments.end(); ++ite )
-						ite->Owner = owner;
-
-					for ( vector<Alignment>::iterator ite = mr.Mate2Alignments.begin(); ite != mr.Mate2Alignments.end(); ++ite )
-						ite->Owner = owner;
-				}
-				
-				if ( mr.Name > minRead.Name ) {
-					//UpdateReferenceIndex( mr, owner );
-					//if ( ++nRead % 100000 == 0 )
-					//	cout << "\t" << nRead << " have been merged." << endl;
-
-					//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-					//writer.SaveAlignedRead(minRead);
-					WriteAlignment( minRead );
-					CalculateStatisticsCounters(minRead);
-					minRead.Clear();
-					minRead = mr;
-				} else {
-					//UpdateReferenceIndex( mr, owner );
-					if( mr.Mate1Alignments.size() > 0 )
-						minRead.Mate1Alignments.insert( minRead.Mate1Alignments.end(), mr.Mate1Alignments.begin(), mr.Mate1Alignments.end() );
-					if( mr.Mate2Alignments.size() > 0 )
-						minRead.Mate2Alignments.insert( minRead.Mate2Alignments.end(), mr.Mate2Alignments.begin(), mr.Mate2Alignments.end() );
-					
-					// accordant flag
-					minRead.IsLongRead |= reads[i].read.IsLongRead;
-				}
-
-			}
-
-		}
-	}
-
-
-	//UpdateReferenceIndex(minRead, owner);
-	//cout << minRead.Mate1Alignments.size() << "\t" << minRead.Mate2Alignments.size() << endl;
-	//writer.SaveAlignedRead(minRead);
-	WriteAlignment( minRead );
-	CalculateStatisticsCounters(minRead);
-
-
-	//writer.Close();
 	
 	// Close BAMs
 	_sBam.Close();
