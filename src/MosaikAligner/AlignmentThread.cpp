@@ -927,10 +927,17 @@ void CAlignmentThread::AlignReadArchive(
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-				SaveBamAlignment( al1, zaTag1, false, false, false );
-				SaveBamAlignment( al2, zaTag2, false, false, false );
+				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				//SaveBamAlignment( al1, zaTag1, false, false, false );
+				//SaveBamAlignment( al2, zaTag2, false, false, false );
+
+				// for neural network
+				ostringstream zaTag1, zaTag2;
+				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -974,8 +981,11 @@ void CAlignmentThread::AlignReadArchive(
 				al.RecalibratedQuality = al.Quality;
 				
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				ostringstream zaTag1, zaTag2;
+				zaTag1 << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash;
+				zaTag2 << "" << unmappedAl.SwScore << ";" << unmappedAl.NextSwScore << ";" << unmappedAl.NumLongestMatchs << ";" << unmappedAl.Entropy << ";" << unmappedAl.NumMapped << ";" << unmappedAl.NumHash;
 
 				// Note: RecalibratedQuality will be shown in the bam
 				if ( isFirstMate && isMate1Multiple )
@@ -1005,12 +1015,12 @@ void CAlignmentThread::AlignReadArchive(
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
-					SaveBamAlignment( al, zaTag1, false, false, false );
-					SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
+					SaveBamAlignment( al, zaTag1.str().c_str(), false, false, false );
+					SaveBamAlignment( unmappedAl, zaTag2.str().c_str(), true, false, false );
 				}
 				// single end
 				else {
-					SaveBamAlignment( al, zaTag1, false, false, false );
+					SaveBamAlignment( al, zaTag1.str().c_str(), false, false, false );
 				}
 			}
 

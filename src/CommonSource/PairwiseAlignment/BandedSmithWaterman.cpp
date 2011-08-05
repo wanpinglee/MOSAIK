@@ -503,13 +503,14 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 		switch(mPointers[currentPosition].Direction){
 			case Directions_DIAGONAL:
 				nVerticalGap = mPointers[currentPosition].mSizeOfVerticalGaps;
+
+				if ( matchRegion ) {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
+				}
+
 				for(unsigned int i = 0; i < nVerticalGap; i++){
-					
-					if ( matchRegion ) {
-						matchRegion = false;
-						longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
-						currentMatchLength = 0;
-					}
 					
 					mReversedAnchor[gappedAnchorLen++] = GAP;
 					mReversedQuery[gappedQueryLen++]   = s2[currentRow];
@@ -524,6 +525,9 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 				break;
 
 			case Directions_STOP:
+				if ( matchRegion )
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+
 				keepProcessing = false;
 				break;
 
@@ -551,13 +555,13 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 
 			case Directions_LEFT:
 				nHorizontalGap =  mPointers[currentPosition].mSizeOfHorizontalGaps;
+				if ( matchRegion ) {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
+				}
+				
 				for(unsigned int i = 0; i < nHorizontalGap; i++){
-
-					if ( matchRegion ) {
-						matchRegion = false;
-						longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
-						currentMatchLength = 0;
-					}
 
 					mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
 					mReversedQuery[gappedQueryLen++]   = GAP;
