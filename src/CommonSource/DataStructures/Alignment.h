@@ -42,6 +42,7 @@ struct Alignment {
 	unsigned short QueryEnd;
 	unsigned short MappedLength;       // the length of mapped bases
 	unsigned short NumCigarOperation;
+	unsigned short NumLongestMatchs;
 	unsigned char Quality;             // alignment quality
 	unsigned char NextBestQuality;     // the next best alignment quality
 	unsigned char RecalibratedQuality; // recalibrated quality
@@ -93,6 +94,7 @@ struct Alignment {
 		, QueryEnd(0)
 		, MappedLength(0)
 		, NumCigarOperation(0)
+		, NumLongestMatchs(0)
 		, Quality(0)
 		, NextBestQuality(0)
 		, RecalibratedQuality(0)

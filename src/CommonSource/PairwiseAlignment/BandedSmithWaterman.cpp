@@ -492,6 +492,10 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 	unsigned int gappedQueryLen  = 0;
 	unsigned int numMismatches   = 0;
 
+	bool matchRegion = false;
+	unsigned short longestMatch       = 0;
+	unsigned short currentMatchLength = 0;
+
 	bool keepProcessing = true;
 	while(keepProcessing) {
 		unsigned int nVerticalGap = 0;
@@ -500,6 +504,13 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 			case Directions_DIAGONAL:
 				nVerticalGap = mPointers[currentPosition].mSizeOfVerticalGaps;
 				for(unsigned int i = 0; i < nVerticalGap; i++){
+					
+					if ( matchRegion ) {
+						matchRegion = false;
+						longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+						currentMatchLength = 0;
+					}
+					
 					mReversedAnchor[gappedAnchorLen++] = GAP;
 					mReversedQuery[gappedQueryLen++]   = s2[currentRow];
 
@@ -518,6 +529,11 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 
 			case Directions_UP:
 
+				if ( s1[currentColumn] == s2[currentRow] ) {
+					matchRegion = true;
+					currentMatchLength++;
+				}
+				
 				mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
 				mReversedQuery[gappedQueryLen++]   = s2[currentRow];
 
@@ -532,6 +548,12 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 			case Directions_LEFT:
 				nHorizontalGap =  mPointers[currentPosition].mSizeOfHorizontalGaps;
 				for(unsigned int i = 0; i < nHorizontalGap; i++){
+
+					if ( matchRegion ) {
+						matchRegion = false;
+						longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+						currentMatchLength = 0;
+					}
 
 					mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
 					mReversedQuery[gappedQueryLen++]   = GAP;
@@ -571,6 +593,7 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 
 	alignment.QueryLength	= alignment.QueryEnd - alignment.QueryBegin + 1;
 	alignment.NumMismatches = numMismatches;
+	alignment.NumLongestMatchs = longestMatch;
 
 	// correct the homopolymer gap order
 	CorrectHomopolymerGapOrder(alignment);
