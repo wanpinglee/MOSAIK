@@ -1488,6 +1488,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 	const bool useFastAlgorithm = (mAlgorithm == AlignerAlgorithm_FAST ? true : false);
 
 	bool ret = true; // assume we will align the read
+	unsigned int numHash = 0;
 
 	try {
 
@@ -1561,6 +1562,8 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 			GetReadCandidates(forwardRegions, mForwardRead, queryLength, alignments.GetFwdMhpOccupancyList());
 			GetReadCandidates(reverseRegions, mReverseRead, queryLength, alignments.GetRevMhpOccupancyList());
 
+			numHash = forwardRegions.size() + reverseRegions.size();
+
 			// detect failed hashes
 			if(forwardRegions.empty() && reverseRegions.empty()) {
 				status = ALIGNMENTSTATUS_FAILEDHASH;
@@ -1615,6 +1618,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// the base qualities of SOLiD reads are attached in ApplyReadFilters
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
+					al.NumHash = numHash;
 					alignments.Add(al);
 				}
 
@@ -1660,6 +1664,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Copy( qualities, queryLength);
 						//	al.BaseQualities.Reverse();
 						//}
+						al.NumHash = numHash;
 						alignments.Add(al);
 					}
 

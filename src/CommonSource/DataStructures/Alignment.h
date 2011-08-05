@@ -35,6 +35,7 @@ struct Alignment {
 	unsigned int NumMapped;            // the total number of mapped alignments
 	unsigned int SwScore;
 	unsigned int NextSwScore;
+	unsigned int NumHash;
 	int FragmentLength;                // the fragment length with its pair
 	unsigned short QueryLength;        // used during filtering (temp)
 	unsigned short NumMismatches;      // number of mismatches
@@ -88,6 +89,7 @@ struct Alignment {
 		, NumMapped(1)
 		, SwScore(0)
 		, NextSwScore(0)
+		, NumHash(0)
 		, FragmentLength(0)
 		, QueryLength(0)
 		, NumMismatches(0)
