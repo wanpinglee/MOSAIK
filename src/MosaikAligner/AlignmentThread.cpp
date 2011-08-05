@@ -1139,6 +1139,11 @@ void CAlignmentThread::SetRequiredInfo (
 	else 
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
+	// calculate entropy
+	if ( isItselfMapped ) {
+		al.Entropy = shannon_H( (char*) m.Bases.CData(), m.Bases.Length() );
+	}
+
 	// fill out the alignment
 	// not SOLiD
 	if ( !mFlags.EnableColorspace ) {

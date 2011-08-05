@@ -36,6 +36,10 @@
 #include "StatisticsMaps.h"
 #include "ZaTager.h"
 
+extern "C" {
+	#include "disorder.h"
+}
+
 using namespace std;
 
 #define ALLOCATION_EXTENSION 10

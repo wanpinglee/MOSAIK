@@ -46,6 +46,7 @@ struct Alignment {
 	unsigned char Quality;             // alignment quality
 	unsigned char NextBestQuality;     // the next best alignment quality
 	unsigned char RecalibratedQuality; // recalibrated quality
+	float Entropy;
 	bool CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
 	bool IsFilteredOut;                // is mapped to somewhere but cannot pass the filters
 	bool IsFirstMate;                  // is this alignment from the first mate in a paired-end read
@@ -98,6 +99,7 @@ struct Alignment {
 		, Quality(0)
 		, NextBestQuality(0)
 		, RecalibratedQuality(0)
+		, Entropy(0)
 		, CanBeMappedToSpecialReference(false)
 		, IsFilteredOut(false)
 		, IsFirstMate(false)
