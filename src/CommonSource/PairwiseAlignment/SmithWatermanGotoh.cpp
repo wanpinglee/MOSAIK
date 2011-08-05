@@ -233,6 +233,10 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 	bool keepProcessing = true;
 	bool hasGap = false;
 
+	bool matchRegion = false;
+	unsigned short longestMatch       = 0;
+	unsigned short currentMatchLength = 0;
+
 	while(keepProcessing) {
 
 		// diagonal (445364713) > stop (238960195) > up (214378647) > left (166504495)
@@ -243,6 +247,15 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 				c2 = s2[--cj];
 				ck -= queryLen;
 
+				if ( s1[ci] == s2[cj] ) {
+					matchRegion = true;
+					++currentMatchLength;
+				} else {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
+				}
+
 				mReversedAnchor[gappedAnchorLen++] = c1;
 				mReversedQuery[gappedQueryLen++]   = c2;
 
@@ -251,10 +264,19 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 				break;
 
 			case Directions_STOP:
+				if ( matchRegion )
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+
 				keepProcessing = false;
 				break;
 
 			case Directions_UP:
+				if ( matchRegion ) {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
+				}
+
 				for(unsigned int l = 0, len = mSizesOfVerticalGaps[ck + cj]; l < len; l++) {
 					mReversedAnchor[gappedAnchorLen++] = s1[--ci];
 					mReversedQuery[gappedQueryLen++]   = GAP;
@@ -265,6 +287,12 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 				break;
 
 			case Directions_LEFT:
+				if ( matchRegion ) {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
+				}
+
 				for(unsigned int l = 0, len = mSizesOfHorizontalGaps[ck + cj]; l < len; l++) {
 					mReversedAnchor[gappedAnchorLen++] = GAP;
 					mReversedQuery[gappedQueryLen++]   = s2[--cj];
@@ -306,8 +334,10 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 	}
 
 	// set the query length and number of mismatches
-	alignment.QueryLength = alignment.QueryEnd - alignment.QueryBegin + 1;
-	alignment.NumMismatches  = numMismatches;
+	alignment.QueryLength      = alignment.QueryEnd - alignment.QueryBegin + 1;
+	alignment.NumMismatches    = numMismatches;
+	alignment.NumLongestMatchs = longestMatch;
+
 
 	// fix the gap order
 	if(hasGap) CorrectHomopolymerGapOrder(alignment);

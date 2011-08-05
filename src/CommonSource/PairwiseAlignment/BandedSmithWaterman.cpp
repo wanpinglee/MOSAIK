@@ -531,7 +531,11 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 
 				if ( s1[currentColumn] == s2[currentRow] ) {
 					matchRegion = true;
-					currentMatchLength++;
+					++currentMatchLength;
+				} else {
+					matchRegion = false;
+					longestMatch = ( currentMatchLength > longestMatch ) ? currentMatchLength : longestMatch;
+					currentMatchLength = 0;
 				}
 				
 				mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
@@ -591,8 +595,8 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 		alignment.QueryEnd   = bestRow;
 	}
 
-	alignment.QueryLength	= alignment.QueryEnd - alignment.QueryBegin + 1;
-	alignment.NumMismatches = numMismatches;
+	alignment.QueryLength	   = alignment.QueryEnd - alignment.QueryBegin + 1;
+	alignment.NumMismatches    = numMismatches;
 	alignment.NumLongestMatchs = longestMatch;
 
 	// correct the homopolymer gap order
