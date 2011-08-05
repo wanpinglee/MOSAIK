@@ -543,7 +543,7 @@ inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char*
 	// try to speed up
 	if ( !noCigarMdNm ) {
 		bamMisc.CreatePackedCigar( buffer.al, buffer.al.PackedCigar, buffer.al.NumCigarOperation, alInfo.isUsingSOLiD );
-		mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
+		buffer.al.MdString = mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
 	}
 	buffer.al.Query.Remove('-');
 
