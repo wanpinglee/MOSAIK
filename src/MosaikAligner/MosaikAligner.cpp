@@ -777,6 +777,7 @@ void CMosaikAligner::AlignReadArchive(
 	td.SpecialReference    = mSReference;
 	td.pReadGroups         = &readGroupsMap;
 	td.ReferenceOffset     = referenceOffset;
+	td.NeuralNetworkFilename = mNeuralNetworkFilename;
 
 
 	pthread_attr_t attr;
@@ -1037,45 +1038,6 @@ void CMosaikAligner::PrintStatistics () {
 
 	fflush(stdout);
 
-/*
-cout << mStatisticsCounters.FailedHashMates << endl;
-cout << mStatisticsCounters.FailedHashMates_Rescue << endl;
-cout << mStatisticsCounters.FilteredOutMates << endl;
-cout << mStatisticsCounters.FilteredOutMates_Rescue << endl;
-cout << mStatisticsCounters.ShortMates << endl;
-cout << mStatisticsCounters.ShortMates_Rescue << endl;
-cout << mStatisticsCounters.TooManyNsMates << endl;
-cout << mStatisticsCounters.TooManyNsMates_Rescue << endl;
-cout << mStatisticsCounters.MultipleMates << endl;
-cout << mStatisticsCounters.MultipleMates_Rescue << endl;
-cout << mStatisticsCounters.UniqueMates << endl;
-cout << mStatisticsCounters.UniqueMates_Rescue << endl;
-cout << mStatisticsCounters.UU << endl;
-cout << mStatisticsCounters.UM << endl;
-cout << mStatisticsCounters.MM << endl;
-cout << mStatisticsCounters.UX << endl;
-cout << mStatisticsCounters.MX << endl;
-//cout << mStatisticsCounters.UU_MM << endl;
-//cout << mStatisticsCounters.UU_UM << endl;
-//cout << mStatisticsCounters.UX_UU << endl;
-cout << mStatisticsCounters.UU_localRescue << endl;
-cout << mStatisticsCounters.UU_localConsistance << endl;
-cout << mStatisticsCounters.UM_localRescue << endl;
-cout << mStatisticsCounters.UM_localConsistance << endl;
-cout << mStatisticsCounters.MM_localRescue << endl;
-cout << mStatisticsCounters.MM_localConsistance << endl;
-*/
-
-	//if ( !mFlags.UseLowMemory ) {
-	//	printf("\n");
-	//	CConsole::Heading(); printf("Miscellaneous statistics:\n"); CConsole::Reset();
-	//	printf("==================================\n");
-	//	printf("aligned mate bp:        %10llu\n", (unsigned long long)mStatisticsCounters.MateBasesAligned);
-	//	printf("alignment candidates/s: %10.1f\n", mStatisticsCounters.AlignmentCandidates / alignmentBench.GetElapsedWallTime());
-	//}
-	
-	
-	
 }
 
 
@@ -1111,6 +1073,10 @@ unsigned char CMosaikAligner::CalculateHashTableSize(const unsigned int referenc
 	if(bitSize < 21) bitSize = 21;
 
 	return bitSize;
+}
+
+void CMosaikAligner::SetNeuralNetworkFilename( const string& neuralNetworkFilename ) {
+	mNeuralNetworkFilename = neuralNetworkFilename;
 }
 
 // enables special references checker

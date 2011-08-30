@@ -266,7 +266,8 @@ public:
 		char**                      pBsRefSeqs, 
 		const SReference&           SpecialReference,
 		map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
-		const unsigned int          referenceOffset
+		const unsigned int          referenceOffset,
+		const string&               NeuralNetworkFilename
 	);
 
 	// destructor
@@ -296,6 +297,7 @@ public:
 		SReference    SpecialReference;
 		map< unsigned int, MosaikReadFormat::ReadGroup >* pReadGroups;
 		unsigned int  ReferenceOffset;
+		string        NeuralNetworkFilename;
 	};
 	// aligns the read archive
 	void AlignReadArchive(
@@ -478,6 +480,8 @@ private:
 	map<unsigned int, MosaikReadFormat::ReadGroup>* mReadGroupsMap;
 	// reference offset used for low-memory multiply-mapped bam
 	unsigned int mReferenceOffset;
+	// NeuralNetworkFilename
+	string mNeuralNetworkFilename;
 	// ZA tagers
 	CZaTager za1, za2;
 	// MD tager

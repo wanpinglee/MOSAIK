@@ -65,6 +65,7 @@ struct ConfigurationSettings {
 	bool HasMatchScore;
 	bool HasMismatchScore;
 	bool HasMode;
+	bool HasNeuralNetworkFilename;
 	bool HasNumThreads;
 	bool HasReadsFilename;
 	bool HasReferencesFilename;
@@ -88,6 +89,7 @@ struct ConfigurationSettings {
 	string JumpFilenameStub;
 	string ReadsFilename;
 	string ReferencesFilename;
+	string NeuralNetworkFilename;
 	//string UnalignedReadsFilename;
 
 	// parameters
@@ -205,6 +207,7 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-in",  "MOSAIK read filename",      "the input read file",       "An input MOSAIK read file",       settings.HasReadsFilename,      settings.ReadsFilename,      pIoOpts);
 	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output alignment file", "An output MOSAIK alignment file", settings.HasAlignmentsFilename, settings.AlignmentsFilename, pIoOpts);
 	COptions::AddValueOption("-ibs", "MOSAIK reference filename", "enables colorspace to basespace conversion using the supplied BASESPACE reference archive",  "",  settings.HasBasespaceReferencesFilename, settings.BasespaceReferencesFilename, pIoOpts);
+	COptions::AddValueOption("-ann", "Neural network filename", "", "", settings.HasNeuralNetworkFilename, settings.NeuralNetworkFilename, pIoOpts);
 
 	// add the essential options
 	OptionGroup* pEssentialOpts = COptions::CreateOptionGroup("Essential parameters");
@@ -658,11 +661,14 @@ int main(int argc, char* argv[]) {
 	// enable features
 	// ===============
 
+	// set neural network filename
+	if (settings.HasNeuralNetworkFilename) ma.SetNeuralNetworkFilename(settings.NeuralNetworkFilename);
+
 	// output multiply mapped alignments
-	if ( settings.OutputMultiply ) ma.OutputMultiply();
+	if (settings.OutputMultiply) ma.OutputMultiply();
 	
 	// enable quiet mode
-	if( settings.IsQuietMode ) ma.SetQuietMode();
+	if (settings.IsQuietMode) ma.SetQuietMode();
 
 	// enable the hash positions threshold
 	if(settings.LimitHashPositions) ma.EnableHashPositionThreshold(settings.HashPositionThreshold);

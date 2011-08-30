@@ -85,6 +85,7 @@ public:
 	void SetQuietMode( void );
 	// outputs multiply mapped alignments
 	void OutputMultiply( void );
+	void SetNeuralNetworkFilename( const string& neuralNetworkFilename );
 
 private:
 	// copy constructor
@@ -128,6 +129,8 @@ private:
 	vector< pair <unsigned int, unsigned int> > referenceGroups;
 	// command line
 	string commandLine;
+	// neuralNetworkFilename
+	string mNeuralNetworkFilename;
 	// read groups
 	vector<MosaikReadFormat::ReadGroup> readGroups;
 	map< unsigned int, MosaikReadFormat::ReadGroup > readGroupsMap;

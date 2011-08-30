@@ -50,7 +50,8 @@ CAlignmentThread::CAlignmentThread(
 	char**                      pBsRefSeqs, 
 	const SReference&           SpecialReference, 
 	map<unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
-	const unsigned int          referenceOffset)
+	const unsigned int          referenceOffset,
+	const string&               NeuralNetworkFilename)
 	: mAlgorithm(algorithmType)
 	, mMode(algorithmMode)
 	, mSettings(settings)
@@ -70,7 +71,8 @@ CAlignmentThread::CAlignmentThread(
 	, mReferenceSpecial(pRefSpecial)
 //	, softClippedIdentifierLength(2048)
 	, mReadGroupsMap(pReadGroupsMap)
-	, mReferenceOffset( referenceOffset )
+	, mReferenceOffset(referenceOffset)
+	, mNeuralNetworkFilename(NeuralNetworkFilename)
 {
 	// calculate our base quality LUT
 	for(unsigned char i = 0; i < 100; i++) mBaseQualityLUT[i] = pow(10.0, -i / 10.0);
@@ -127,7 +129,8 @@ void* CAlignmentThread::StartThread(void* arg) {
 		pTD->pBsRefSeqs, 
 		pTD->SpecialReference, 
 		pTD->pReadGroups,
-		pTD->ReferenceOffset);
+		pTD->ReferenceOffset,
+		pTD->NeuralNetworkFilename);
 
 	at.AlignReadArchive(
 		pTD->pIn, 
