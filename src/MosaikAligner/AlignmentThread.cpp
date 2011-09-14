@@ -33,6 +33,20 @@ const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
 //const double CAlignmentThread::MM_COEFFICIENT = 0.327358673;
 //const double CAlignmentThread::MM_INTERCEPT   = 4.350331532;
 
+const unsigned char PHRED_MAX = 255;
+
+unsigned char float2phred(long double prob) {
+    if (prob == 1)
+    return PHRED_MAX;  // guards against "-0"
+    long double p = -10 * (long double) log10(prob);
+    if (p < 0 || p > PHRED_MAX) // int overflow guard
+      return 255;
+    else
+      return floor(p + 0.5);
+
+}
+
+
 // constructor
 CAlignmentThread::CAlignmentThread(
 	const AlignerAlgorithmType& algorithmType, 
@@ -101,6 +115,8 @@ CAlignmentThread::~CAlignmentThread(void) {
 		delete [] mReverseRead; 
 		mReverseRead = NULL;
 	}
+
+	fann_destroy(ann);
 
 //	if ( softClippedIdentifier ) {
 //		delete [] softClippedIdentifier; 
@@ -665,6 +681,9 @@ void CAlignmentThread::AlignReadArchive(
 		exit(1);
 	}
 
+	// create neural network for mapping quality calculation
+	ann = fann_create_from_file(mNeuralNetworkFilename.c_str());
+
 	// initialize our status variables
 	enum AlignmentStatusType mate1Status, mate2Status;
 
@@ -872,10 +891,10 @@ void CAlignmentThread::AlignReadArchive(
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
 			// MM pair is always an improper pair
-			if ( !isMate1Multiple || !isMate2Multiple ) {
+			//if ( !isMate1Multiple || !isMate2Multiple ) {
 				properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
 				properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
-			}
+			//}
 
 			// sanity checker
 			if ( properPair1 != properPair2 ) {
@@ -935,6 +954,66 @@ void CAlignmentThread::AlignReadArchive(
 				//SaveBamAlignment( al1, zaTag1, false, false, false );
 				//SaveBamAlignment( al2, zaTag2, false, false, false );
 
+				// try new MQ
+				//if (isMate1Multiple && isMate2Multiple) {
+				//	al1.RecalibratedQuality = 0;
+				//	al2.RecalibratedQuality = 0;
+				//} else {
+				fann_type *calc_out;
+				vector<fann_type> din;
+				float temp1 = al1.Query.Length();
+				float temp2 = al2.Query.Length();
+				int fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
+				fl = abs(fl) + 1;
+
+				int sw = (int)al1.SwScore - (int)al1.NextSwScore;
+				temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
+				din.push_back(temp1);
+				din.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
+				din.push_back(al1.Entropy);
+				din.push_back(log10(al1.NumMapped + 1));
+				din.push_back(log10(al1.NumHash + 1));
+
+				sw = (int) al2.SwScore - (int)al2.NextSwScore;
+				temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
+				din.push_back(temp2);
+				din.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
+				din.push_back(al2.Entropy);
+				din.push_back(log10(al2.NumMapped + 1));
+				din.push_back(log10(al2.NumHash + 1));
+
+				din.push_back(log10(fl));
+
+				calc_out = fann_run(ann, &din[0]);
+				al1.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
+
+				din.clear();
+				temp1 = al1.Query.Length();
+				temp2 = al2.Query.Length();
+
+				sw = (int) al2.SwScore - (int)al2.NextSwScore;
+				temp2 = (temp2 == 0) ? -1.0 : sw / (float)(al2.Query.Length() * 10);
+				din.push_back(temp2);
+				din.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
+				din.push_back(al2.Entropy);
+				din.push_back(log10(al2.NumMapped + 1));
+				din.push_back(log10(al2.NumHash + 1));
+				
+				sw = (int)al1.SwScore - (int)al1.NextSwScore;
+				temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
+				din.push_back(temp1);
+				din.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
+				din.push_back(al1.Entropy);
+				din.push_back(log10(al1.NumMapped + 1));
+				din.push_back(log10(al1.NumHash + 1));
+
+				din.push_back(log10(fl));
+
+				calc_out = fann_run(ann, &din[0]);
+				al2.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
+				
+				//}
+
 				// for neural network
 				ostringstream zaTag1, zaTag2;
 				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
@@ -980,8 +1059,23 @@ void CAlignmentThread::AlignReadArchive(
 				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
-			
-				al.RecalibratedQuality = al.Quality;
+				
+				fann_type *calc_out;
+				vector<fann_type> din;
+				float temp = al.Query.Length();
+				temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
+				din.push_back(temp);
+				temp = al.NumLongestMatchs / (float)al.Query.Length();
+				din.push_back(temp);
+				din.push_back(al.Entropy);
+				din.push_back(log10(al.NumMapped + 1));
+				din.push_back(log10(al.NumHash + 1));
+				calc_out = fann_run(ann, &din[0]);
+				al.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
+				
+				
+				//al.RecalibratedQuality = al.Quality;
+				//al.RecalibratedQuality = 0;
 				
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
@@ -991,10 +1085,10 @@ void CAlignmentThread::AlignReadArchive(
 				zaTag2 << "" << unmappedAl.SwScore << ";" << unmappedAl.NextSwScore << ";" << unmappedAl.NumLongestMatchs << ";" << unmappedAl.Entropy << ";" << unmappedAl.NumMapped << ";" << unmappedAl.NumHash;
 
 				// Note: RecalibratedQuality will be shown in the bam
-				if ( isFirstMate && isMate1Multiple )
-					al.RecalibratedQuality = 0;
-				else if ( !isFirstMate && isMate2Multiple )
-					al.RecalibratedQuality = 0;
+				//if ( isFirstMate && isMate1Multiple )
+				//	al.RecalibratedQuality = 0;
+				//else if ( !isFirstMate && isMate2Multiple )
+				//	al.RecalibratedQuality = 0;
 
 				// store special hits
 				if ( isMate1Special ) {

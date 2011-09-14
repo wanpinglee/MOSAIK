@@ -7,14 +7,14 @@
 # define our includes
 # -------------------
 TD = ../
-INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(PAIRWISE_DIR) -I$(TD)$(UTILITIES_DIR) -I$(TD)$(EXTERNAL_DIR)
+INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(PAIRWISE_DIR) -I$(TD)$(UTILITIES_DIR) -I$(TD)$(EXTERNAL_DIR) -I/home/wanping/tools/fann-2.1.0/src/include/
 
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
 SOURCES= AlignerMain.cpp AlignmentThread.cpp MosaikAligner.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
-_EXT_OBJECTS= AbstractDnaHash.o AlignmentQuality.o AlignmentReader.o AlignmentWriter.o ArchiveMerge.o ArchiveSort.o BamWriter.o BandedSmithWaterman.o Benchmark.o BestNSecondBestSelection.o CigarTager.o ColorspaceUtilities.o ConsoleUtilities.o disorder.o DnaHash.o fastlz.o FastLZIO.o FileUtilities.o HashRegionTree.o JumpDnaHash.o MdTager.o MosaikString.o MemoryUtilities.o MultiDnaHash.o NaiveAlignmentSet.o Options.o PairwiseUtilities.o ReadReader.o ReferenceSequenceReader.o RegexUtilities.o SequenceUtilities.o SHA1.o SmithWatermanGotoh.o SortThread.o StatisticsMaps.o TimeSupport.o UbiqDnaHash.o ZaTager.o
+_EXT_OBJECTS= AbstractDnaHash.o AlignmentQuality.o AlignmentReader.o AlignmentWriter.o ArchiveMerge.o ArchiveSort.o BamWriter.o BandedSmithWaterman.o Benchmark.o BestNSecondBestSelection.o CigarTager.o ColorspaceUtilities.o ConsoleUtilities.o disorder.o DnaHash.o fastlz.o FastLZIO.o FileUtilities.o HashRegionTree.o JumpDnaHash.o MdTager.o MosaikString.o MemoryUtilities.o MultiDnaHash.o NaiveAlignmentSet.o Options.o PairwiseUtilities.o ReadReader.o ReferenceSequenceReader.o RegexUtilities.o SequenceUtilities.o SHA1.o SmithWatermanGotoh.o SortThread.o StatisticsMaps.o TimeSupport.o UbiqDnaHash.o ZaTager.o floatfann.o
 EXT_OBJECTS=$(patsubst %,$(TD)$(OBJ_DIR)/%,$(_EXT_OBJECTS))
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 PROGRAM= MosaikAligner

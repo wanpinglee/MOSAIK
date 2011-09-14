@@ -25,6 +25,7 @@
 #include "BestNSecondBestSelection.h"
 #include "CigarTager.h"
 #include "ColorspaceUtilities.h"
+#include "fann.h"
 #include "MdTager.h"
 #include "NaiveAlignmentSet.h"
 #include "PairwiseUtilities.h"
@@ -482,6 +483,7 @@ private:
 	unsigned int mReferenceOffset;
 	// NeuralNetworkFilename
 	string mNeuralNetworkFilename;
+	struct fann* ann;
 	// ZA tagers
 	CZaTager za1, za2;
 	// MD tager
