@@ -20,16 +20,16 @@ using namespace std;
 
 namespace CSequenceUtilities {
 	// Performs an in-place reverse complement conversion
-	static void GetReverseComplement(char* seqBases, const unsigned int seqLength);
+	void GetReverseComplement(char* seqBases, const unsigned int seqLength);
 	// Performs an in-place sequence reversal using a C string
-	static void ReverseSequence(char* seqBases, const unsigned int seqLength);
+	void ReverseSequence(char* seqBases, const unsigned int seqLength);
 	// Converts an STL string to uppercase
-	static void UppercaseSequence(string& s);
+	void UppercaseSequence(string& s);
 	// Converts an STL string to lowercase
-	static void LowercaseSequence(string& s);
+	void LowercaseSequence(string& s);
 	// Trims the carriage return at the end of a string
-	static void Chomp(char* s);
-	static void ChompQuality(char* s);
-};
+	void Chomp(char* s);
+	void ChompQuality(char* s);
+}
 
 #endif // SEQUENCEUTILITIES_H_

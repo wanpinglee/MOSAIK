@@ -183,7 +183,7 @@ inline void CStatisticsMaps::SaveModel( const Alignment& al1, const Alignment& a
 		r2_r1++;
 }
 
-inline void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech ) {
+void CStatisticsMaps::SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech ) {
 	// true: +; false: -.
 	bool strand1 = !al1.IsReverseStrand;
 	bool strand2 = !al2.IsReverseStrand;
@@ -273,7 +273,7 @@ inline void CStatisticsMaps::SaveMultiplicity( const unsigned int nAlignment ) {
 	}
 }
 
-inline void CStatisticsMaps::SavePairMultiplicity( const unsigned int nMate1Alignments, const unsigned int nMate2Alignments, const bool mate1Rescued, const bool mate2Rescued, const bool mate1FilteredOut, const bool mate2FilteredOut, const bool isProperPair ) {
+void CStatisticsMaps::SavePairMultiplicity( const unsigned int nMate1Alignments, const unsigned int nMate2Alignments, const bool mate1Rescued, const bool mate2Rescued, const bool mate1FilteredOut, const bool mate2FilteredOut, const bool isProperPair ) {
 	
 	// MM pairs
 	if ( nMate1Alignments > 1 && nMate2Alignments > 1 ) {
@@ -373,7 +373,7 @@ inline void CStatisticsMaps::SaveMismatch( const unsigned short mm ) {
 	//}
 }
 
-inline void CStatisticsMaps::PrintMap( 
+void CStatisticsMaps::PrintMap( 
 	FILE *const fOut, 
 	const char* title,
 	const uint64_t& size, 

@@ -530,7 +530,7 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 }
 
 // Save alignment in buffer
-inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
+void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
 	AlignmentBamBuffer buffer;
 	buffer.al              = al;
 	buffer.noCigarMdNm     = noCigarMdNm;

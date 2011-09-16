@@ -390,7 +390,7 @@ inline void CFastq::PrintRead ( Mosaik::Read& read, ofstream& file ) {
 }
 
 // given a vector containing reads, find the min read and return the vector id
-inline unsigned int CFastq::FindMinRead ( vector<Mosaik::Read>& tops ) {
+unsigned int CFastq::FindMinRead ( vector<Mosaik::Read>& tops ) {
 	unsigned int minId = 0;
 	for ( unsigned int i = 1; i < tops.size(); i++ ) {
 		if ( tops[i].Name.empty() )

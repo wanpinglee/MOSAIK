@@ -247,7 +247,7 @@ void CArchiveMerge::CopyReferenceString( vector<ReferenceSequence>& refVec ){
 }
 
 // update the reference index
-inline void CArchiveMerge::UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner ) {
+void CArchiveMerge::UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner ) {
 
 	if ( owner >= _refIndex.size() ) {
 		cout << "ERROR: The ID of the temporary file " << owner << " is unexpected." << endl;
@@ -790,7 +790,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 }
 
-inline void CArchiveMerge::SetAlignmentFlags( 
+void CArchiveMerge::SetAlignmentFlags( 
 	Alignment& al,
 	const Alignment& mate,
 	const bool& isPair,
