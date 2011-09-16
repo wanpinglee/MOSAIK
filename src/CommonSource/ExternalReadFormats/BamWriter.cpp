@@ -642,7 +642,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	unsigned int zaTagLen = 0;
 	string zaTag;
 	char* pZaTag;
-	if ( zaString != 0 ) {
+	if ((zaString != 0) && (zaString != (char)0)) {
 		zaTagLen = 3 + strlen( zaString ) + 1;
 		zaTag.resize( zaTagLen );
 		pZaTag = (char*)zaTag.data();
@@ -724,7 +724,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	BgzfWrite(mdTag.data(), mdTagLen);
 
 	// write the ZA tag
-	if ( zaString != 0 )
+	if ( zaString != 0 && (zaString != (char)0))
 		BgzfWrite(zaTag.data(), zaTagLen);
 
 	// write the cs tag

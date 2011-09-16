@@ -745,7 +745,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 		if ( _isPairedEnd ) {
 			unmappedAl2 = r.Mate2Alignments[0];
-			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
+			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, false, _isPairedEnd, false, false, r );
 			unmappedAl2.NumMapped = nMate2Alignments;
 			
 			unmappedAl2.Query           = read.Mate2.Bases;
@@ -772,7 +772,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			}
 		}
 
-		// GetStatisticsCounters needs some information
+		// GetStatisticsCounters need some information
 		unmappedAl1.IsFilteredOut = isMate1FilteredOut;
 		unmappedAl2.IsFilteredOut = isMate2FilteredOut;
 
