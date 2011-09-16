@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef MRUCACHE_H_
+#define MRUCACHE_H_
 
 #include <iostream>
 #include "DoubleLinkedList.h"
@@ -127,3 +128,5 @@ void CMruCache<K,V>::Insert(const K& key, const V& val) {
 
 	pthread_mutex_unlock(&mMruCacheMutex);
 }
+
+#endif // MRUCACHE_H_

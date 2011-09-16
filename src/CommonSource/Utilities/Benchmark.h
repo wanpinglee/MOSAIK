@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef BENCHMARK_H_
+#define BENCHMARK_H_
 
 #include <string>
 #include <ctime>
@@ -65,3 +66,5 @@ private:
 	struct timeval mWallTotal;
 #endif
 };
+
+#endif // BENCHMARK_H_

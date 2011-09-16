@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef CONSOLEUTILITIES_H_
+#define CONSOLEUTILITIES_H_
 
 #ifdef WIN32
 #include <windows.h>
@@ -42,3 +43,5 @@ private:
 	static bool mShowColors;
 #endif
 };
+
+#endif // CONSOLEUTILITIES_H_

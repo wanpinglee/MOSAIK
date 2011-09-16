@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef HASHREGIONTREE_H_
+#define HASHREGIONTREE_H_
 
 #include <iostream>
 #include "HashRegion.h"
@@ -87,3 +88,5 @@ namespace AVLTree {
 		void MoveToPreviousEntry();
 	};
 }
+
+#endif // HASHREGIONTREE_H_

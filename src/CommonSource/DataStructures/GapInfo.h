@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef GAPINFO_H_
+#define GAPINFO_H_
 
 struct GapInfo {
 	unsigned int Position;
@@ -18,3 +19,5 @@ struct GapInfo {
 		return Position < gi.Position; 
 	}
 };
+
+#endif // GAPINFO_H_

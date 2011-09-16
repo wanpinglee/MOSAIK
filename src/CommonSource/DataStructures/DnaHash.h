@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef DNAHASH_H_
+#define DNAHASH_H_
 
 #include <iostream>
 #include <memory>
@@ -51,3 +52,5 @@ private:
 	// defines the code for a non-unique key
 	const static unsigned int DNA_HASH_NON_UNIQUE_KEY;
 };
+
+#endif // DNAHASH_H_

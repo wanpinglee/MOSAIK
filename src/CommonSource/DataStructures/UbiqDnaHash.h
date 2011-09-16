@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef UBIQDNAHASH_H_
+#define UBIQDNAHASH_H_
 
 #include <algorithm>
 #include <fstream>
@@ -52,3 +53,5 @@ private:
 	// stores the number of positions in the hash table
 	unsigned int mPositions;
 };
+
+#endif // UBIQDNAHASH_H_

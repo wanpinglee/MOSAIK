@@ -5,7 +5,8 @@
 // Dr. Dobb's (http://www.ddj.com/cpp/184401293)
 // ***************************************************************************
 
-#pragma once
+#ifndef VARIANT_H_
+#define VARIANT_H_
 
 #include <stdexcept>
 #include <typeinfo>
@@ -101,3 +102,5 @@ private:
 
 	ImplBase* data;
 };
+
+#endif // VARIANT_H_

@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef READ_H_
+#define READ_H_
 
 #include "MosaikString.h"
 
@@ -51,3 +52,5 @@ namespace Mosaik {
 		}
 	};
 }
+
+#endif // READ_H_

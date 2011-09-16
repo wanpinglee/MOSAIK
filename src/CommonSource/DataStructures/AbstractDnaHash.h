@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef ABSTRACTDNAHASH_H_
+#define ABSTRACTDNAHASH_H_
 
 #include <iostream>
 #include "Mosaik.h"
@@ -68,6 +69,7 @@ protected:
 	unsigned char mHashSize;
 };
 
+
 // translates the supplied hash to a position in the hash table
 inline unsigned int CAbstractDnaHash::IndexFor(uint64_t index) const {
 	index = (~index) + (index << 21);
@@ -80,3 +82,4 @@ inline unsigned int CAbstractDnaHash::IndexFor(uint64_t index) const {
 	return index & mMask;
 }
 
+#endif // ABSTRACTDNAHASH_H

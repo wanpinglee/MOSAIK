@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef BANDEDSMITHWATERMAN_H_
+#define BANDEDSMITHWATERMAN_H_
 
 #include <iostream>
 #include <algorithm>
@@ -115,3 +116,5 @@ inline void CBandedSmithWaterman::UpdateBestScore(unsigned int& bestRow, unsigne
 		bestScore  = score;
 	}
 }
+
+#endif // BANDEDSMITHWATERMAN_H_

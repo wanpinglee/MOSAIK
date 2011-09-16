@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef HASHREGION_H_
+#define HASHREGION_H_
 
 struct HashRegion {
 	unsigned int Begin;
@@ -35,3 +36,5 @@ struct HashRegion {
 		return false;
 	}
 };
+
+#endif // HASHREGION_H_

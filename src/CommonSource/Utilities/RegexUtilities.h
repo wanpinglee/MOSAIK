@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef REGEXUTILITIES_H_
+#define REGEXUTILITIES_H_
 
 #include <iostream>
 #ifdef WIN32
@@ -38,7 +39,7 @@ public:
 
 private:
 	// Trims the carriage return at the end of a string
-	static inline void Chomp(char* s);
+	static void Chomp(char* s);
 #ifdef WIN32
 	// specifies our genome assembly ID regular expression
 	static regex mGenomeAssemblyIDRegex;
@@ -87,15 +88,4 @@ void SplitStringEmpty(I& inserter, const string& delimiter, const string& s) {
 	}
 }
 
-// Trims the carriage return at the end of a string
-inline void CRegexUtilities::Chomp(char* s) {
-	size_t sLen = strlen(s);
-	if(sLen == 0) return;
-	sLen--;
-
-	while((s[sLen] == 10) || (s[sLen] == 13)) {
-		s[sLen] = 0;
-		sLen--;
-		if(sLen < 0) break;
-	}
-}
+#endif // REGEXUTILITIES_H_
