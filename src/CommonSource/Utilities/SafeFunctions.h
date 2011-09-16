@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef SAFEFUNCTIONS_H_
+#define SAFEFUNCTIONS_H_
 
 #ifndef WIN32
 
@@ -77,3 +78,5 @@ inline char* strtok_s(char* strToken, const char *strDelimit, char **context) {
 }
 
 #endif
+
+#endif // SAFEFUNCTIONS_H_

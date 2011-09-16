@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef COLORSPACEUTILITIES_H_
+#define COLORSPACEUTILITIES_H_
 
 #include <cstdio>
 #include <cstdlib>
@@ -209,3 +210,5 @@ inline char CColorspaceUtilities::GetComplementBase(char c) {
 
 	return c;
 }
+
+#endif // COLORSPACEUTILITIES_H_

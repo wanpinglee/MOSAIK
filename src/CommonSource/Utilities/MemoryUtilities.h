@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef MEMORYUTILITIES_H_
+#define MEMORYUTILITIES_H_
 
 #include <cstdio>
 #include <cstdlib>
@@ -50,3 +51,5 @@ public:
 	// checks if the buffer is large enough to accomodate the requested size
 	static void CheckBufferSize(unsigned char* &pBuffer, unsigned int& bufferLen, const unsigned int requestedBytes);
 };
+
+#endif // MEMORYUTILITIES_H_

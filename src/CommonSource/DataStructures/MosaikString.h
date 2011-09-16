@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef MOSAIKSTRING_H_
+#define MOSAIKSTRING_H_
 
 #include <ostream>
 #include <cstdio>
@@ -129,3 +130,5 @@ private:
 	// the unpacking vector
 	static const char* FOUR_BIT_UNPACKING;
 };
+
+#endif // MOSAIKSTRING_H_

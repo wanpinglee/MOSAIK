@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef FASTA_H_
+#define FASTA_H_
 
 #include <iostream>
 #include <string>
@@ -19,7 +20,6 @@
 #include "MosaikString.h"
 #include "MemoryUtilities.h"
 #include "Read.h"
-#include "SequenceUtilities.h"
 #include "RegexUtilities.h"
 
 using namespace std;
@@ -78,3 +78,5 @@ private:
 	// our assigned base quality
 	unsigned char mAssignedBaseQuality;
 };
+
+#endif // FASTA_H_

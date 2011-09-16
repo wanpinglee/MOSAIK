@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef ALIGNMENTQUALITY_H_
+#define ALIGNMENTQUALITY_H_
 
 #include <cmath>
 #include <vector>
@@ -99,3 +100,5 @@ inline void CAlignmentQuality::Normalize(float& bits, float& mmPercent, float& r
 		refLen    = 2.0f * (refLen    - MIN_LN_REF_LEN_454)    / RANGE_LN_REF_LEN_454    - 1.0f;
 	}
 }
+
+#endif // ALIGNMENTQUALITY_H_

@@ -136,11 +136,17 @@ struct Alignment {
 	// return true when they are a proper pair; otherwise return false
 	// Note: please check IsFirstMate and IsReverseStrand are set before applying this function
 	bool SetPairFlagsAndFragmentLength ( const Alignment& pairMate, const int& minFragmentLength, const int& maxFragmentLength, const SequencingTechnologies& tech ) {
-		unsigned int queryPosition5Prime = ( IsReverseStrand ) ? ReferenceEnd : ReferenceBegin;
-		unsigned int matePosition5Prime  = ( pairMate.IsReverseStrand ) ? pairMate.ReferenceEnd : pairMate.ReferenceBegin;
-		FragmentLength = ( ReferenceIndex != pairMate.ReferenceIndex ) ? 0 : matePosition5Prime - queryPosition5Prime;
+		bool isLeft = (ReferenceBegin <= pairMate.ReferenceBegin) ? true : false;
+		unsigned int leftmost  = isLeft ? ReferenceBegin : pairMate.ReferenceBegin;
+		unsigned int rightmost = isLeft ? pairMate.ReferenceEnd : ReferenceEnd;
+		if (ReferenceIndex == pairMate.ReferenceIndex) {
+			if (isLeft) FragmentLength = rightmost - leftmost;
+			else        FragmentLength = leftmost - rightmost;
+		} else {
+			FragmentLength = 0;
+		}
 		
-		if ( !isProperOrientation( IsReverseStrand, pairMate.IsReverseStrand, ReferenceBegin, pairMate.ReferenceBegin, IsFirstMate, tech ) )
+		if ( !StrandChecker::isProperOrientation( IsReverseStrand, pairMate.IsReverseStrand, ReferenceBegin, pairMate.ReferenceBegin, IsFirstMate, tech ) )
 			IsResolvedAsProperPair = false;
 		else if ( ReferenceIndex != pairMate.ReferenceIndex )
 			IsResolvedAsProperPair = false;

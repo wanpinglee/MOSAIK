@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef OPTIONS_H_
+#define OPTIONS_H_
 
 #include <iomanip>
 #include <map>
@@ -150,3 +151,5 @@ void COptions::AddValueOption(const string& argument, const string& valueDescrip
 	ov.ValueTypeDescription = valueTypeDescription;
 	mOptionsMap[argument] = ov;
 }
+
+#endif // OPTIONS_H_

@@ -9,6 +9,7 @@
 // ***************************************************************************
 
 #include "Fasta.h"
+#include "SequenceUtilities.h"
 
 // define our uncompressed/compressed macros
 #define READ_FILE_CLOSE          (mAreBasesCompressed ? gzclose(mInZStream)                               : fclose(mInStream))
