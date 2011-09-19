@@ -14,7 +14,6 @@
 // constructor
 CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina) 
 : mHasLongAlignment(false)
-, mAlignmentQuality(usingIllumina, refLen)
 {}
 
 // destructor
@@ -96,6 +95,7 @@ bool CNaiveAlignmentSet::Add(Alignment& al) {
 	return false;
 }
 
+/*
 // calculates the alignment qualities for each alignment in the set
 void CNaiveAlignmentSet::CalculateAlignmentQualities(const bool calculateCorrectionCoefficient, const unsigned short minSpanLength) {
 
@@ -109,7 +109,7 @@ void CNaiveAlignmentSet::CalculateAlignmentQualities(const bool calculateCorrect
 	AlignmentSet::iterator setIter;
 	
 	for(setIter = mAlignments.begin(); setIter != mAlignments.end(); ++setIter) {
-		
+
 		mAlignmentQuality.CalculateQuality(setIter);
 		if(calculateCorrectionCoefficient) {
 			const double correctionCoefficient = CalculateCorrectionCoefficient(setIter->QueryBegin, setIter->QueryEnd, 
@@ -124,6 +124,7 @@ void CNaiveAlignmentSet::CalculateAlignmentQualities(const bool calculateCorrect
 
 	}
 }
+*/
 
 // calculates the correction coefficient
 double CNaiveAlignmentSet::CalculateCorrectionCoefficient(const unsigned short queryBegin, const unsigned short queryEnd, const MhpOccupancyList& mhpOccupancyList, const unsigned short minSpanLength) {

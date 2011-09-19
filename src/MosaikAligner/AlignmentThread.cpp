@@ -693,7 +693,7 @@ void CAlignmentThread::AlignReadArchive(
 		minSpanLength = mSettings.AlignmentCandidateThreshold;
 
 	// decide if we need to calculate the correction coefficient
-	const bool calculateCorrectionCoefficient = mFlags.IsUsingJumpDB && mFlags.IsUsingHashPositionThreshold;
+	//const bool calculateCorrectionCoefficient = mFlags.IsUsingJumpDB && mFlags.IsUsingHashPositionThreshold;
 
 	// keep reading until no reads remain
 	Mosaik::Read mr;
@@ -767,11 +767,9 @@ void CAlignmentThread::AlignReadArchive(
 		mate1Alignments.Clear();
 		if( numMate1Bases != 0 && !isTooManyNMate1 ) {
 			// align the read
-			if( AlignRead( mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status ) ) {
-				// calculate the alignment qualities
-				mate1Alignments.CalculateAlignmentQualities( calculateCorrectionCoefficient, minSpanLength );
+			if( AlignRead( mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status ) ) 
 				isMate1Aligned = true;
-			} 
+			 
 		}
 
 		// =====================
@@ -782,11 +780,9 @@ void CAlignmentThread::AlignReadArchive(
 		mate2Alignments.Clear();
 		if( numMate2Bases != 0 && !isTooManyNMate2 ) {
 			// align the read
-			if( AlignRead( mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status ) ) {
-				// calculate the alignment qualities
-				mate2Alignments.CalculateAlignmentQualities( calculateCorrectionCoefficient, minSpanLength );
+			if( AlignRead( mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status ) ) 
 				isMate2Aligned = true;
-			} 
+			 
 		}
 
 		// ======================

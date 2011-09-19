@@ -17,7 +17,6 @@
 #include <vector>
 #include <cmath>
 #include "Alignment.h"
-#include "AlignmentQuality.h"
 
 using namespace std;
 
@@ -96,7 +95,5 @@ private:
 	MhpOccupancyList mRevMhpOccupancyList;
 	// sets the flag when we have long alignments
 	bool mHasLongAlignment;
-	// our alignment quality object
-	CAlignmentQuality mAlignmentQuality;
 	unsigned int highestSmithWatermanScore;
 };
