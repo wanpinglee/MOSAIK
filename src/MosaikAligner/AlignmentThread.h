@@ -430,6 +430,8 @@ private:
 	void SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr
 		, BamWriters* const pBams, CStatisticsMaps* const pMaps );
 	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
+	unsigned char GetMappingQuality(const Alignment& al);
+	unsigned char GetMappingQuality(const Alignment& al1, const Alignment& al2);
 
 	// ====
 	// data
@@ -483,7 +485,6 @@ private:
 	unsigned int mReferenceOffset;
 	// NeuralNetworkFilename
 	string mNeuralNetworkFilename;
-	struct fann* ann;
 	// ZA tagers
 	CZaTager za1, za2;
 	// MD tager
@@ -499,4 +500,9 @@ private:
 	// reads/mates buffer
 	queue<Mosaik::Read> readBuffer;
 	AlignmentInfo alInfo;
+
+	// neural-net
+	struct fann* ann;
+	fann_type *calc_out;
+	vector<fann_type> fann_inputs;
 };

@@ -35,7 +35,7 @@ const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
 
 const unsigned char PHRED_MAX = 255;
 
-unsigned char float2phred(long double prob) {
+inline unsigned char float2phred(long double prob) {
     if (prob == 1)
     return PHRED_MAX;  // guards against "-0"
     long double p = -10 * (long double) log10(prob);
@@ -83,24 +83,15 @@ CAlignmentThread::CAlignmentThread(
 	, mReferenceEnd(pRefEnd)
 	, mReferenceSpecies(pRefSpecies)
 	, mReferenceSpecial(pRefSpecial)
-//	, softClippedIdentifierLength(2048)
 	, mReadGroupsMap(pReadGroupsMap)
 	, mReferenceOffset(referenceOffset)
 	, mNeuralNetworkFilename(NeuralNetworkFilename)
 {
-	// calculate our base quality LUT
-	for(unsigned char i = 0; i < 100; i++) mBaseQualityLUT[i] = pow(10.0, -i / 10.0);
-
 	// set our flags
 	if(algorithmMode == AlignerMode_ALL) mFlags.IsAligningAllReads = true;
 
 	// assign the reference sequences to the colorspace utilities object
 	mCS.SetReferenceSequences(pBsRefSeqs);
-
-	// initialize our soft clip identifier
-//	softClippedIdentifier = new char [ softClippedIdentifierLength + 1 ];
-//	memset(softClippedIdentifier, 'Z', softClippedIdentifierLength);
-//	softClippedIdentifier[ softClippedIdentifierLength ] = 0;
 
 }
 
@@ -117,11 +108,6 @@ CAlignmentThread::~CAlignmentThread(void) {
 	}
 
 	fann_destroy(ann);
-
-//	if ( softClippedIdentifier ) {
-//		delete [] softClippedIdentifier; 
-//		softClippedIdentifier = NULL;
-//	}
 }
 
 // activates the current alignment thread
@@ -898,12 +884,11 @@ void CAlignmentThread::AlignReadArchive(
 				exit(1);
 			}
 
-			bool isUU = isMate1Unique && isMate2Unique;
-			bool isMM = isMate1Multiple && isMate2Multiple;
-
-
 			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
+
+			al1.RecalibratedQuality = GetMappingQuality(al1, al2);
+			al2.RecalibratedQuality = GetMappingQuality(al2, al1);
 
 			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
 			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
@@ -916,12 +901,6 @@ void CAlignmentThread::AlignReadArchive(
 				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, al1, al2, isLongRead );
 			} else {
-
-				
-				//Note: the following function will set RecalibratedQuality, and RecalibratedQuality will be shown in the bam
-				al1.RecalibrateQuality(isUU, isMM);
-				al2.RecalibrateQuality(isUU, isMM);
-				
 				if (  isMate2Special  ) {
 					Alignment genomicAl = al1;
 					Alignment specialAl = mate2SpecialAl;
@@ -945,77 +924,18 @@ void CAlignmentThread::AlignReadArchive(
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-				//SaveBamAlignment( al1, zaTag1, false, false, false );
-				//SaveBamAlignment( al2, zaTag2, false, false, false );
+				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-				// try new MQ
-				//if (isMate1Multiple && isMate2Multiple) {
-				//	al1.RecalibratedQuality = 0;
-				//	al2.RecalibratedQuality = 0;
-				//} else {
-				fann_type *calc_out;
-				vector<fann_type> din;
-				float temp1 = al1.Query.Length();
-				float temp2 = al2.Query.Length();
-				int fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
-				fl = abs(fl) + 1;
-
-				int sw = (int)al1.SwScore - (int)al1.NextSwScore;
-				temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
-				din.push_back(temp1);
-				din.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
-				din.push_back(al1.Entropy);
-				din.push_back(log10(al1.NumMapped + 1));
-				din.push_back(log10(al1.NumHash + 1));
-
-				sw = (int) al2.SwScore - (int)al2.NextSwScore;
-				temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
-				din.push_back(temp2);
-				din.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
-				din.push_back(al2.Entropy);
-				din.push_back(log10(al2.NumMapped + 1));
-				din.push_back(log10(al2.NumHash + 1));
-
-				din.push_back(log10(fl));
-
-				calc_out = fann_run(ann, &din[0]);
-				al1.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
-
-				din.clear();
-				temp1 = al1.Query.Length();
-				temp2 = al2.Query.Length();
-
-				sw = (int) al2.SwScore - (int)al2.NextSwScore;
-				temp2 = (temp2 == 0) ? -1.0 : sw / (float)(al2.Query.Length() * 10);
-				din.push_back(temp2);
-				din.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
-				din.push_back(al2.Entropy);
-				din.push_back(log10(al2.NumMapped + 1));
-				din.push_back(log10(al2.NumHash + 1));
-				
-				sw = (int)al1.SwScore - (int)al1.NextSwScore;
-				temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
-				din.push_back(temp1);
-				din.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
-				din.push_back(al1.Entropy);
-				din.push_back(log10(al1.NumMapped + 1));
-				din.push_back(log10(al1.NumHash + 1));
-
-				din.push_back(log10(fl));
-
-				calc_out = fann_run(ann, &din[0]);
-				al2.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
-				
-				//}
+				SaveBamAlignment( al1, zaTag1, false, false, false );
+				SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
-				ostringstream zaTag1, zaTag2;
-				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
+				//ostringstream zaTag1, zaTag2;
+				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -1047,44 +967,23 @@ void CAlignmentThread::AlignReadArchive(
 
 			SetRequiredInfo( al, ( isFirstMate ? mate1Status : mate2Status ), unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 )
 				, mr, false, false, isFirstMate, isPairedEnd, true, false );
-			SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status )
-				, al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
+			if ( isPairedEnd )
+				SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status ),
+				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
+
+			al.RecalibratedQuality = GetMappingQuality(al);
 
 
 			if ( mFlags.UseArchiveOutput ) {
 				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
-				
-				fann_type *calc_out;
-				vector<fann_type> din;
-				float temp = al.Query.Length();
-				temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
-				din.push_back(temp);
-				temp = al.NumLongestMatchs / (float)al.Query.Length();
-				din.push_back(temp);
-				din.push_back(al.Entropy);
-				din.push_back(log10(al.NumMapped + 1));
-				din.push_back(log10(al.NumHash + 1));
-				calc_out = fann_run(ann, &din[0]);
-				al.RecalibratedQuality = float2phred(1 - (1 + calc_out[0]) / 2);
-				
-				
-				//al.RecalibratedQuality = al.Quality;
-				//al.RecalibratedQuality = 0;
-				
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
-				ostringstream zaTag1, zaTag2;
-				zaTag1 << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash;
-				zaTag2 << "" << unmappedAl.SwScore << ";" << unmappedAl.NextSwScore << ";" << unmappedAl.NumLongestMatchs << ";" << unmappedAl.Entropy << ";" << unmappedAl.NumMapped << ";" << unmappedAl.NumHash;
-
-				// Note: RecalibratedQuality will be shown in the bam
-				//if ( isFirstMate && isMate1Multiple )
-				//	al.RecalibratedQuality = 0;
-				//else if ( !isFirstMate && isMate2Multiple )
-				//	al.RecalibratedQuality = 0;
+				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				//ostringstream zaTag1, zaTag2;
+				//zaTag1 << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash;
+				//zaTag2 << "" << unmappedAl.SwScore << ";" << unmappedAl.NextSwScore << ";" << unmappedAl.NumLongestMatchs << ";" << unmappedAl.Entropy << ";" << unmappedAl.NumMapped << ";" << unmappedAl.NumHash;
 
 				// store special hits
 				if ( isMate1Special ) {
@@ -1108,12 +1007,12 @@ void CAlignmentThread::AlignReadArchive(
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
-					SaveBamAlignment( al, zaTag1.str().c_str(), false, false, false );
-					SaveBamAlignment( unmappedAl, zaTag2.str().c_str(), true, false, false );
+					SaveBamAlignment( al, zaTag1, false, false, false );
+					SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
 				}
 				// single end
 				else {
-					SaveBamAlignment( al, zaTag1.str().c_str(), false, false, false );
+					SaveBamAlignment( al, zaTag1, false, false, false );
 				}
 			}
 
@@ -1182,6 +1081,54 @@ void CAlignmentThread::AlignReadArchive(
 		}
 
 	}
+}
+
+unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
+
+	fann_inputs.clear();
+	
+	float temp = al.Query.Length();
+	temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
+	fann_inputs.push_back(temp);
+	temp = al.NumLongestMatchs / (float)al.Query.Length();
+	fann_inputs.push_back(temp);
+	fann_inputs.push_back(al.Entropy);
+	fann_inputs.push_back(log10(al.NumMapped + 1));
+	fann_inputs.push_back(log10(al.NumHash + 1));
+	calc_out = fann_run(ann, &fann_inputs[0]);
+	return float2phred(1 - (1 + calc_out[0]) / 2);
+}
+
+unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
+  
+	fann_inputs.clear();
+
+	float temp1 = al1.Query.Length();
+	float temp2 = al2.Query.Length();
+	int fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
+	fl = abs(fl) + 1;
+
+	int sw = (int)al1.SwScore - (int)al1.NextSwScore;
+	temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
+	fann_inputs.push_back(temp1);
+	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
+	fann_inputs.push_back(al1.Entropy);
+	fann_inputs.push_back(log10(al1.NumMapped + 1));
+	fann_inputs.push_back(log10(al1.NumHash + 1));
+
+	sw = (int) al2.SwScore - (int)al2.NextSwScore;
+	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
+	fann_inputs.push_back(temp2);
+	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
+	fann_inputs.push_back(al2.Entropy);
+	fann_inputs.push_back(log10(al2.NumMapped + 1));
+	fann_inputs.push_back(log10(al2.NumHash + 1));
+
+	fann_inputs.push_back(log10(fl));
+
+	calc_out = fann_run(ann, &fann_inputs[0]);
+	return float2phred(1 - (1 + calc_out[0]) / 2);
+
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
@@ -1371,26 +1318,12 @@ void CAlignmentThread::SetRequiredInfo (
 				al.Query.TrimBegin(1);
 				al.BaseQualities.TrimBegin(1);
 				al.Reference.TrimBegin(1);
-				//queryString.append( al.Query.CData() + 1 );
-				//qualityString.append( al.BaseQualities.CData() + 1 );
-				//referenceString.append( al.Reference.CData() + 1 );
 				al.ReferenceBegin++;
 				mate.MateReferenceBegin++;
 			}else if ( patchStartLen > 1 ) {
 				al.Query.Prepend( 'N', patchStartLen - 1 );
 				al.BaseQualities.Prepend( (char)0, patchStartLen - 1 );
 				al.Reference.Prepend( 'Z', patchStartLen - 1 );
-				//queryString.append( patchStartLen - 1, 'N' );
-				//qualityString.append( patchStartLen - 1, (char)0 );
-				//referenceString.append( patchStartLen - 1, 'Z' );
-
-				//queryString.append( al.Query.CData() );
-				//qualityString.append( al.BaseQualities.CData() );
-				//referenceString.append( al.Reference.CData() );
-			//} else {
-			//	queryString.append( al.Query.CData() );
-			//	qualityString.append( al.BaseQualities.CData() );
-			//	referenceString.append( al.Reference.CData() );
 			}
 
 
@@ -1398,21 +1331,11 @@ void CAlignmentThread::SetRequiredInfo (
 				al.Query.Append( 'N', patchEndLen );
 				al.BaseQualities.Append( (char)0, patchEndLen );
 				al.Reference.Append( 'Z', patchEndLen );
-				
-				//queryString.append( patchEndLen, 'N' );
-				//qualityString.append( patchEndLen, (char)0 );
-				//referenceString.append( patchEndLen, 'Z' );
-
 			}
-
-			//al.Query = queryString.c_str();
-			//al.BaseQualities = qualityString.c_str();
-			//al.Reference = referenceString.c_str();
 
 			al.QueryBegin  = 0;
 			al.QueryEnd    = readLength - 1;
 			al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
-
 
 			char* qPtr = al.Query.Data();;
 			char* rPtr = al.Reference.Data();
@@ -1423,8 +1346,6 @@ void CAlignmentThread::SetRequiredInfo (
 				++qPtr;
 				++rPtr;
 			}
-
-
 		}
 	}
 
@@ -2122,52 +2043,6 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 
 // attempts to rescue the mate paired with a unique mate
 bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int begin, const unsigned int end, const unsigned int refIndex, Alignment& al) {
-
-/*
-	// calculate the target regions using the local alignment models
-	const unsigned int refBegin = mReferenceBegin[refIndex];
-	const unsigned int refEnd   = mReferenceEnd[refIndex];
-	unsigned int begin = uniqueBegin;
-	unsigned int end   = uniqueEnd;
-
-	if(lam.IsTargetBeforeUniqueMate) {
-
-		if(begin >= mSettings.MedianFragmentLength)       begin -= mSettings.MedianFragmentLength;
-		else begin = 0;
-
-		if(begin >= mSettings.LocalAlignmentSearchRadius) begin -= mSettings.LocalAlignmentSearchRadius;
-		else begin = 0;
-
-		if(end   >= mSettings.MedianFragmentLength)       end   -= mSettings.MedianFragmentLength;
-		else end = 0;
-
-		end += mSettings.LocalAlignmentSearchRadius;
-
-	} else {
-
-		begin += mSettings.MedianFragmentLength;
-
-		if(begin >= mSettings.LocalAlignmentSearchRadius) begin -= mSettings.LocalAlignmentSearchRadius;
-		else begin = 0;
-
-		end  += mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
-	}
-
-	// make sure the endpoints are within the reference sequence
-	if(begin < refBegin) begin = refBegin;
-	if(end   < refBegin) end   = refBegin;
-	if(begin > refEnd)   begin = refEnd;
-	if(end   > refEnd)   end   = refEnd;
-
-	// adjust the start position if the reference starts with a J nucleotide
-	while(mReference[begin] == 'X') begin++;
-
-	// adjust the stop position if the reference ends with a J nucleotide
-	while(mReference[end] == 'X')   end--;
-
-	// quit if we don't have a region to align against
-	if(begin == end) return false;
-*/
 	// prepare for alignment (borrow the forward read buffer)
 	const char* query              = bases.CData();
 	const unsigned int queryLength = bases.Length();
