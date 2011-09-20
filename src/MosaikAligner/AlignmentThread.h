@@ -466,11 +466,6 @@ private:
 	unsigned int* mReferenceEnd;
 	char** mReferenceSpecies;
 	bool*  mReferenceSpecial;
-	// our alignment quality constants
-	static const double P_ERR_REF;
-	static const double P_CORR_REF;
-	static const double ONE_THIRD;
-	static const double TWO_NINTHS;
 	// for soft clips
 	//const unsigned int softClippedIdentifierLength;
 	char* softClippedIdentifier;

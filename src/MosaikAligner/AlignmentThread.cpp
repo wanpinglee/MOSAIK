@@ -12,26 +12,12 @@
 
 // register our thread mutexes
 pthread_mutex_t CAlignmentThread::mGetReadMutex;
-//pthread_mutex_t CAlignmentThread::mReportUnalignedMate1Mutex;
-//pthread_mutex_t CAlignmentThread::mReportUnalignedMate2Mutex;
 pthread_mutex_t CAlignmentThread::mSaveReadMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMutex;
 pthread_mutex_t CAlignmentThread::mStatisticsMapsMutex;
 pthread_mutex_t CAlignmentThread::mSaveMultipleBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveSpecialBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveUnmappedBamMutex;
-
-// define our constants
-const double CAlignmentThread::P_ERR_REF  = pow(10.0, -REFERENCE_SEQUENCE_QUALITY / 10.0);
-const double CAlignmentThread::P_CORR_REF = 1.0 - CAlignmentThread::P_ERR_REF;
-const double CAlignmentThread::ONE_THIRD  = 1.0 / 3.0;
-const double CAlignmentThread::TWO_NINTHS = 2.0 / 9.0;
-//const double CAlignmentThread::UU_COEFFICIENT = 0.486796848;
-//const double CAlignmentThread::UU_INTERCEPT   = 35.45967112;
-//const double CAlignmentThread::UM_COEFFICIENT = 0.426395518;
-//const double CAlignmentThread::UM_INTERCEPT   = 19.29236958;
-//const double CAlignmentThread::MM_COEFFICIENT = 0.327358673;
-//const double CAlignmentThread::MM_INTERCEPT   = 4.350331532;
 
 const unsigned char PHRED_MAX = 255;
 
@@ -46,6 +32,29 @@ inline unsigned char float2phred(long double prob) {
 
 }
 
+bool FilterMateOut ( const unsigned int length, char* basePtr ) {
+
+	unsigned int count = 0;
+	for ( unsigned int i = 0; i < length; ++i ) {
+		if ( *basePtr == 'N' )
+			++count;
+
+		++basePtr;
+	}
+
+	return ( ( count / (float) length ) > 0.7 );
+}
+
+uint64_t GetReferenceLength(const unsigned int* mReferenceBegin, 
+                            const unsigned int* mReferenceEnd) {
+  int nRef = sizeof(mReferenceBegin) / sizeof(mReferenceBegin[0]);
+
+  uint64_t length = 0;
+  for (int i = 0; i < nRef; ++i)
+    length += mReferenceEnd[i] - mReferenceBegin[i];
+  
+  return length;
+}
 
 // constructor
 CAlignmentThread::CAlignmentThread(
@@ -185,30 +194,6 @@ void* CAlignmentThread::StartThread(void* arg) {
 	// exit the thread
 	pthread_exit((void*)0);
 	return 0;
-}
-
-bool FilterMateOut ( const unsigned int length, char* basePtr ) {
-
-	unsigned int count = 0;
-	for ( unsigned int i = 0; i < length; ++i ) {
-		if ( *basePtr == 'N' )
-			++count;
-
-		++basePtr;
-	}
-
-	return ( ( count / (float) length ) > 0.7 );
-}
-
-uint64_t GetReferenceLength(const unsigned int* mReferenceBegin, 
-                            const unsigned int* mReferenceEnd) {
-  int nRef = sizeof(mReferenceBegin) / sizeof(mReferenceBegin[0]);
-
-  uint64_t length = 0;
-  for (int i = 0; i < nRef; ++i)
-    length += mReferenceEnd[i] - mReferenceBegin[i];
-  
-  return length;
 }
 
 bool CAlignmentThread::SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate ) {
@@ -1198,14 +1183,14 @@ void CAlignmentThread::SetRequiredInfo (
 
 	// calculate entropy
 	if ( isItselfMapped ) {
-		al.Entropy = shannon_H( (char*) m.Bases.CData(), m.Bases.Length() );
+		al.Entropy = shannon_H((char*) m.Bases.CData(), m.Bases.Length());
 	}
 
 	// fill out the alignment
 	// not SOLiD
 	if ( !mFlags.EnableColorspace ) {
 		// copy qualities
-		al.BaseQualities    = m.Qualities;
+		al.BaseQualities = m.Qualities;
 
 		// handle bases
 		CMosaikString patchBases   = m.Bases;
