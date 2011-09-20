@@ -268,7 +268,8 @@ public:
 		const SReference&           SpecialReference,
 		map <unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
 		const unsigned int          referenceOffset,
-		const string&               NeuralNetworkFilename
+		string                      i_paired_end_ann_file,
+		string                      i_single_end_ann_file
 	);
 
 	// destructor
@@ -298,7 +299,8 @@ public:
 		SReference    SpecialReference;
 		map< unsigned int, MosaikReadFormat::ReadGroup >* pReadGroups;
 		unsigned int  ReferenceOffset;
-		string        NeuralNetworkFilename;
+		string        paired_end_ann_file;
+		string        single_end_ann_file;
 	};
 	// aligns the read archive
 	void AlignReadArchive(
@@ -461,8 +463,6 @@ private:
 	// our Smith-Waterman-Gotoh local alignment algorithms
 	CSmithWatermanGotoh mSW;
 	CBandedSmithWaterman mBSW;
-	// our base quality LUT
-	double mBaseQualityLUT[100];
 	// our reference sequence LUTs
 	unsigned int* mReferenceBegin;
 	unsigned int* mReferenceEnd;
@@ -483,8 +483,6 @@ private:
 	map<unsigned int, MosaikReadFormat::ReadGroup>* mReadGroupsMap;
 	// reference offset used for low-memory multiply-mapped bam
 	unsigned int mReferenceOffset;
-	// NeuralNetworkFilename
-	string mNeuralNetworkFilename;
 	// ZA tagers
 	CZaTager za1, za2;
 	// MD tager
@@ -502,7 +500,10 @@ private:
 	AlignmentInfo alInfo;
 
 	// neural-net
-	struct fann* ann;
+	string paired_end_ann_file;
+	string single_end_ann_file;
+	fann* paired_end_ann;
+	fann* single_end_ann;
 	fann_type *calc_out;
 	vector<fann_type> fann_inputs;
 };

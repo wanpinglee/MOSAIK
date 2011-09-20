@@ -65,7 +65,8 @@ CAlignmentThread::CAlignmentThread(
 	const SReference&           SpecialReference, 
 	map<unsigned int, MosaikReadFormat::ReadGroup>* pReadGroupsMap,
 	const unsigned int          referenceOffset,
-	const string&               NeuralNetworkFilename)
+	string                      i_paired_end_ann_file,
+	string                      i_single_end_ann_file)
 	: mAlgorithm(algorithmType)
 	, mMode(algorithmMode)
 	, mSettings(settings)
@@ -85,7 +86,8 @@ CAlignmentThread::CAlignmentThread(
 	, mReferenceSpecial(pRefSpecial)
 	, mReadGroupsMap(pReadGroupsMap)
 	, mReferenceOffset(referenceOffset)
-	, mNeuralNetworkFilename(NeuralNetworkFilename)
+	, paired_end_ann_file(i_paired_end_ann_file)
+	, single_end_ann_file(i_single_end_ann_file)
 {
 	// set our flags
 	if(algorithmMode == AlignerMode_ALL) mFlags.IsAligningAllReads = true;
@@ -107,7 +109,8 @@ CAlignmentThread::~CAlignmentThread(void) {
 		mReverseRead = NULL;
 	}
 
-	fann_destroy(ann);
+	fann_destroy(single_end_ann);
+	fann_destroy(paired_end_ann);
 }
 
 // activates the current alignment thread
@@ -132,7 +135,8 @@ void* CAlignmentThread::StartThread(void* arg) {
 		pTD->SpecialReference, 
 		pTD->pReadGroups,
 		pTD->ReferenceOffset,
-		pTD->NeuralNetworkFilename);
+		pTD->paired_end_ann_file,
+		pTD->single_end_ann_file);
 
 	at.AlignReadArchive(
 		pTD->pIn, 
@@ -651,14 +655,6 @@ void CAlignmentThread::AlignReadArchive(
 	alInfo.isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
 	alInfo.isPairedEnd         = isPairedEnd;
 
-	// create our local alignment models
-	//const bool isUsing454          = (mSettings.SequencingTechnology == ST_454      ? true : false);
-	//const bool isUsingIllumina     = (mSettings.SequencingTechnology == ST_ILLUMINA ? true : false);
-	//const bool isUsingSOLiD        = (mSettings.SequencingTechnology == ST_SOLID    ? true : false);
-	//const bool isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
-	
-	//_isSolid = isUsingSOLiD;
-	//_isPairedEnd = isPairedEnd;
 	_bufferSize = 1000;
 
 	// catch unsupported local alignment search sequencing technologies
@@ -666,9 +662,6 @@ void CAlignmentThread::AlignReadArchive(
 		cout << "ERROR: This sequencing technology is not currently supported for local alignment search." << endl;
 		exit(1);
 	}
-
-	// create neural network for mapping quality calculation
-	ann = fann_create_from_file(mNeuralNetworkFilename.c_str());
 
 	// initialize our status variables
 	enum AlignmentStatusType mate1Status, mate2Status;
@@ -678,8 +671,9 @@ void CAlignmentThread::AlignReadArchive(
 	if(mFlags.IsUsingAlignmentCandidateThreshold && (mSettings.AlignmentCandidateThreshold > minSpanLength)) 
 		minSpanLength = mSettings.AlignmentCandidateThreshold;
 
-	// decide if we need to calculate the correction coefficient
-	//const bool calculateCorrectionCoefficient = mFlags.IsUsingJumpDB && mFlags.IsUsingHashPositionThreshold;
+	// create neural networks
+	paired_end_ann = fann_create_from_file(paired_end_ann_file.c_str());
+	single_end_ann = fann_create_from_file(single_end_ann_file.c_str());
 
 	// keep reading until no reads remain
 	Mosaik::Read mr;
@@ -1095,7 +1089,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 	fann_inputs.push_back(al.Entropy);
 	fann_inputs.push_back(log10(al.NumMapped + 1));
 	fann_inputs.push_back(log10(al.NumHash + 1));
-	calc_out = fann_run(ann, &fann_inputs[0]);
+	calc_out = fann_run(single_end_ann, &fann_inputs[0]);
 	return float2phred(1 - (1 + calc_out[0]) / 2);
 }
 
@@ -1105,7 +1099,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 
 	float temp1 = al1.Query.Length();
 	float temp2 = al2.Query.Length();
-	int fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
+	float fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 	fl = abs(fl) + 1;
 
 	int sw = (int)al1.SwScore - (int)al1.NextSwScore;
@@ -1126,7 +1120,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 
 	fann_inputs.push_back(log10(fl));
 
-	calc_out = fann_run(ann, &fann_inputs[0]);
+	calc_out = fann_run(paired_end_ann, &fann_inputs[0]);
 	return float2phred(1 - (1 + calc_out[0]) / 2);
 
 }

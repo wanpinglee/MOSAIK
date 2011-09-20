@@ -777,7 +777,8 @@ void CMosaikAligner::AlignReadArchive(
 	td.SpecialReference    = mSReference;
 	td.pReadGroups         = &readGroupsMap;
 	td.ReferenceOffset     = referenceOffset;
-	td.NeuralNetworkFilename = mNeuralNetworkFilename;
+	td.paired_end_ann_file = mPeNeuralNetworkFilename;
+	td.single_end_ann_file = mSeNeuralNetworkFilename;
 
 
 	pthread_attr_t attr;
@@ -1075,9 +1076,14 @@ unsigned char CMosaikAligner::CalculateHashTableSize(const unsigned int referenc
 	return bitSize;
 }
 
-void CMosaikAligner::SetNeuralNetworkFilename( const string& neuralNetworkFilename ) {
-	mNeuralNetworkFilename = neuralNetworkFilename;
+void CMosaikAligner::SetPeNeuralNetworkFilename( const string& neuralNetworkFilename ) {
+	mPeNeuralNetworkFilename = neuralNetworkFilename;
 }
+
+void CMosaikAligner::SetSeNeuralNetworkFilename( const string& neuralNetworkFilename ) {
+	mSeNeuralNetworkFilename = neuralNetworkFilename;
+}
+
 
 // enables special references checker
 void CMosaikAligner::EnableSpecialReference ( const string referencePrefix ) {
