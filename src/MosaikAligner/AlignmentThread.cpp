@@ -1099,21 +1099,23 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	float fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 	fl = abs(fl) + 1;
 
+	float normalizedRefLen = 3101846239 / mReferenceLength;
+
 	int sw = (int)al1.SwScore - (int)al1.NextSwScore;
 	temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
 	fann_inputs.push_back(temp1);
 	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
 	fann_inputs.push_back(al1.Entropy);
-	fann_inputs.push_back(log10(al1.NumMapped + 1) / (float)log10(mReferenceLength));
-	fann_inputs.push_back(log10(al1.NumHash + 1) / (float)log10(mReferenceLength));
+	fann_inputs.push_back(log10(al1.NumMapped * normalizedRefLen + 1));
+	fann_inputs.push_back(log10(al1.NumHash * normalizedRefLen + 1));
 
 	sw = (int) al2.SwScore - (int)al2.NextSwScore;
 	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
 	fann_inputs.push_back(temp2);
 	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
 	fann_inputs.push_back(al2.Entropy);
-	fann_inputs.push_back(log10(al2.NumMapped + 1) / (float)log10(mReferenceLength));
-	fann_inputs.push_back(log10(al2.NumHash + 1) / (float)log10(mReferenceLength));
+	fann_inputs.push_back(log10(al2.NumMapped * normalizedRefLen + 1));
+	fann_inputs.push_back(log10(al2.NumHash * normalizedRefLen + 1));
 
 	fann_inputs.push_back(log10(fl));
 
