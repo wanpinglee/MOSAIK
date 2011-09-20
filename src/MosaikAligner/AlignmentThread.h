@@ -422,8 +422,6 @@ private:
 	void UpdateStatistics ( const enum AlignmentStatusType& mate1Status, const enum AlignmentStatusType& mate2Status
 		, const Alignment al1, const Alignment al2, const bool isProperPair );
 	void UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al );
-	// if the mate has too many N's, filters it out
-	bool FilterMateOut ( const unsigned int length, char* basePtr );
 	bool SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate );
 	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial );
 	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead );
@@ -506,4 +504,5 @@ private:
 	fann* single_end_ann;
 	fann_type *calc_out;
 	vector<fann_type> fann_inputs;
+	uint64_t reference_length_;
 };

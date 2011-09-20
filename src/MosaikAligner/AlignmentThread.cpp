@@ -187,7 +187,7 @@ void* CAlignmentThread::StartThread(void* arg) {
 	return 0;
 }
 
-bool CAlignmentThread::FilterMateOut ( const unsigned int length, char* basePtr ) {
+bool FilterMateOut ( const unsigned int length, char* basePtr ) {
 
 	unsigned int count = 0;
 	for ( unsigned int i = 0; i < length; ++i ) {
@@ -198,6 +198,17 @@ bool CAlignmentThread::FilterMateOut ( const unsigned int length, char* basePtr 
 	}
 
 	return ( ( count / (float) length ) > 0.7 );
+}
+
+uint64_t GetReferenceLength(const unsigned int* mReferenceBegin, 
+                            const unsigned int* mReferenceEnd) {
+  int nRef = sizeof(mReferenceBegin) / sizeof(mReferenceBegin[0]);
+
+  uint64_t length = 0;
+  for (int i = 0; i < nRef; ++i)
+    length += mReferenceEnd[i] - mReferenceBegin[i];
+  
+  return length;
 }
 
 bool CAlignmentThread::SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate ) {
@@ -686,6 +697,8 @@ void CAlignmentThread::AlignReadArchive(
 	int minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
 	int maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 
+	reference_length_ = GetReferenceLength(mReferenceBegin, mReferenceEnd);
+
 	while(true) {
 
 		// =============================
@@ -1107,16 +1120,16 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	fann_inputs.push_back(temp1);
 	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
 	fann_inputs.push_back(al1.Entropy);
-	fann_inputs.push_back(log10(al1.NumMapped + 1));
-	fann_inputs.push_back(log10(al1.NumHash + 1));
+	fann_inputs.push_back(log10(al1.NumMapped + 1) / (float)log10(reference_length_));
+	fann_inputs.push_back(log10(al1.NumHash + 1) / (float)log10(reference_length_));
 
 	sw = (int) al2.SwScore - (int)al2.NextSwScore;
 	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
 	fann_inputs.push_back(temp2);
 	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
 	fann_inputs.push_back(al2.Entropy);
-	fann_inputs.push_back(log10(al2.NumMapped + 1));
-	fann_inputs.push_back(log10(al2.NumHash + 1));
+	fann_inputs.push_back(log10(al2.NumMapped + 1) / (float)log10(reference_length_));
+	fann_inputs.push_back(log10(al2.NumHash + 1) / (float)log10(reference_length_));
 
 	fann_inputs.push_back(log10(fl));
 
