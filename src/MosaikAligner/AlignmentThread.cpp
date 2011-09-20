@@ -26,7 +26,7 @@ inline unsigned char float2phred(long double prob) {
     return PHRED_MAX;  // guards against "-0"
     long double p = -10 * (long double) log10(prob);
     if (p < 0 || p > PHRED_MAX) // int overflow guard
-      return 255;
+      return 0;
     else
       return floor(p + 0.5);
 
@@ -43,17 +43,6 @@ bool FilterMateOut ( const unsigned int length, char* basePtr ) {
 	}
 
 	return ( ( count / (float) length ) > 0.7 );
-}
-
-uint64_t GetReferenceLength(const unsigned int* mReferenceBegin, 
-                            const unsigned int* mReferenceEnd) {
-  int nRef = sizeof(mReferenceBegin) / sizeof(mReferenceBegin[0]);
-
-  uint64_t length = 0;
-  for (int i = 0; i < nRef; ++i)
-    length += mReferenceEnd[i] - mReferenceBegin[i];
-  
-  return length;
 }
 
 // constructor
@@ -690,8 +679,6 @@ void CAlignmentThread::AlignReadArchive(
 	int minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
 	int maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 
-	reference_length_ = GetReferenceLength(mReferenceBegin, mReferenceEnd);
-
 	while(true) {
 
 		// =============================
@@ -1117,16 +1104,16 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	fann_inputs.push_back(temp1);
 	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
 	fann_inputs.push_back(al1.Entropy);
-	fann_inputs.push_back(log10(al1.NumMapped + 1) / (float)log10(reference_length_));
-	fann_inputs.push_back(log10(al1.NumHash + 1) / (float)log10(reference_length_));
+	fann_inputs.push_back(log10(al1.NumMapped + 1) / (float)log10(mReferenceLength));
+	fann_inputs.push_back(log10(al1.NumHash + 1) / (float)log10(mReferenceLength));
 
 	sw = (int) al2.SwScore - (int)al2.NextSwScore;
 	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
 	fann_inputs.push_back(temp2);
 	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
 	fann_inputs.push_back(al2.Entropy);
-	fann_inputs.push_back(log10(al2.NumMapped + 1) / (float)log10(reference_length_));
-	fann_inputs.push_back(log10(al2.NumHash + 1) / (float)log10(reference_length_));
+	fann_inputs.push_back(log10(al2.NumMapped + 1) / (float)log10(mReferenceLength));
+	fann_inputs.push_back(log10(al2.NumHash + 1) / (float)log10(mReferenceLength));
 
 	fann_inputs.push_back(log10(fl));
 
@@ -1565,7 +1552,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				// the base qualities of SOLiD reads are attached in ApplyReadFilters
 				//if( mFlags.EnableColorspace )
 				//	al.BaseQualities.Copy(qualities, queryLength);
-				al.Quality = GetMappingQuality(al);
+				//al.Quality = GetMappingQuality(al);
 				alignments.Add(al);
 			}
 
@@ -1593,7 +1580,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// the base qualities of SOLiD reads are attached in ApplyReadFilters
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
-					al.Quality = GetMappingQuality(al);
+					//al.Quality = GetMappingQuality(al);
 					al.NumHash = numHash;
 					alignments.Add(al);
 				}
@@ -1640,7 +1627,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Copy( qualities, queryLength);
 						//	al.BaseQualities.Reverse();
 						//}
-						al.Quality = GetMappingQuality(al);
+						//al.Quality = GetMappingQuality(al);
 						al.NumHash = numHash;
 						alignments.Add(al);
 					}
