@@ -195,13 +195,9 @@ void BestNSecondBestSelection::Select (
 				//if ( ( ite2->SwScore / (float) highestSwScoreMate2 ) < 0.9 ) continue;
 
 				// fragment length
-				//unsigned int length = ( ite->ReferenceBegin > ite2->ReferenceBegin )
-				//	? ite->ReferenceEnd - ite2->ReferenceBegin 
-				//	: ite2->ReferenceEnd - ite->ReferenceBegin;
 				unsigned int length = 0;
 				CalculateFragmentLength( **ite, **ite2, tech, length );
 				
-//cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->ReferenceEnd << " " << ite->SwScore <<  " " << (int)ite->Quality << " " << ite2->ReferenceIndex << " " << ite2->ReferenceBegin << " " << ite2->ReferenceEnd << " " << ite2->SwScore << " " << (int)ite2->Quality << " " << length << endl;
 
 				if ( (*ite)->ReferenceIndex == (*ite2)->ReferenceIndex ) {
 					if ( length > ( 2 * expectedFragmentLength ) ) {

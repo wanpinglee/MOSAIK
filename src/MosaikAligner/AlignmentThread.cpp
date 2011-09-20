@@ -755,6 +755,7 @@ void CAlignmentThread::AlignReadArchive(
 			// align the read
 			if( AlignRead( mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status ) ) 
 				isMate1Aligned = true;
+			
 			 
 		}
 
@@ -810,8 +811,8 @@ void CAlignmentThread::AlignReadArchive(
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 		//const unsigned int highestSwScoreMate1 = mate1Alignments.GetHighestSwScore();
 		//const unsigned int highestSwScoreMate2 = mate2Alignments.GetHighestSwScore();
-		mate1Alignments.Clear();
-		mate2Alignments.Clear();
+		//mate1Alignments.Clear();
+		//mate2Alignments.Clear();
 
 
 		Alignment mate1SpecialAl, mate2SpecialAl;
@@ -870,7 +871,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			// patch the information for reporting
-			Alignment al1 = mate1Set[0], al2 = mate2Set[0];
+			Alignment al1 = *(mate1Set[0]), al2 = *(mate2Set[0]);
 			
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
@@ -965,7 +966,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 		
 			// patch the information for reporting
-			Alignment al = isFirstMate ? mate1Set[0] : mate2Set[0];
+			Alignment al = isFirstMate ? *(mate1Set[0]) : *(mate2Set[0]);
 			Alignment unmappedAl;
 
 			SetRequiredInfo( al, ( isFirstMate ? mate1Status : mate2Status ), unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 )
@@ -1139,11 +1140,11 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 	sort(mateSet->begin(), mateSet->end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
-	vector<Alignment>::reverse_iterator rit = mateSet->rbegin();
-	unsigned short mq1     = rit->Quality;
-	unsigned int   swScore = rit->SwScore;
+	vector<Alignment*>::reverse_iterator rit = mateSet->rbegin();
+	unsigned short mq1     = (*rit)->Quality;
+	unsigned int   swScore = (*rit)->SwScore;
 	rit++;
-	unsigned short mq2 = rit->Quality;
+	unsigned short mq2 = (*rit)->Quality;
 
 	if ( swScore > ( readLength * 9 ) )
 		return true;
@@ -1564,6 +1565,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				// the base qualities of SOLiD reads are attached in ApplyReadFilters
 				//if( mFlags.EnableColorspace )
 				//	al.BaseQualities.Copy(qualities, queryLength);
+				al.Quality = GetMappingQuality(al);
 				alignments.Add(al);
 			}
 
@@ -1591,6 +1593,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// the base qualities of SOLiD reads are attached in ApplyReadFilters
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
+					al.Quality = GetMappingQuality(al);
 					al.NumHash = numHash;
 					alignments.Add(al);
 				}
@@ -1637,6 +1640,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Copy( qualities, queryLength);
 						//	al.BaseQualities.Reverse();
 						//}
+						al.Quality = GetMappingQuality(al);
 						al.NumHash = numHash;
 						alignments.Add(al);
 					}
