@@ -259,6 +259,13 @@ AlignmentSet* CNaiveAlignmentSet::GetSet(void) {
 	return &mAlignments;
 }
 
+void CNaiveAlignmentSet::GetSet(vector<const Alignment*> alSet) {
+	alSet.resize(mAlignments.size());
+	for (unsigned int i = 0; i < mAlignments.size(); ++i) {
+	  alSet[i] = &mAlignments[i];
+	}
+}
+
 // retrieves the long alignment flag
 bool CNaiveAlignmentSet::HasLongAlignment(void) const {
 	return mHasLongAlignment;

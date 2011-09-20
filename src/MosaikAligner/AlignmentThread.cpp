@@ -770,8 +770,10 @@ void CAlignmentThread::AlignReadArchive(
 		bool isMate1Unique = mate1Alignments.IsUnique();
 		bool isMate2Unique = mate2Alignments.IsUnique();
 
-		vector<Alignment> mate1Set = *mate1Alignments.GetSet();
-		vector<Alignment> mate2Set = *mate2Alignments.GetSet();
+		vector<Alignment*> mate1Set;
+		vector<Alignment*> mate2Set;
+		mate1Alignments.GetSet(mate1Set);
+		mate2Alignments.GetSet(mate2Set);
 
 		bool isMate1Rescued = false;
 		bool isMate2Rescued = false;
@@ -809,7 +811,7 @@ void CAlignmentThread::AlignReadArchive(
 		Alignment mate1SpecialAl, mate2SpecialAl;
 		bool isMate1Special = false, isMate2Special = false;
 
-		// we don't remove special alignment here,
+		// For low-memory, we don't remove special alignment here,
 		// the special alignments will be considered when merging archives
 		if ( mSReference.found && !mFlags.UseArchiveOutput )
 			ProcessSpecialAlignment( mate1Set, mate2Set, mate1SpecialAl, mate2SpecialAl, isMate1Special, isMate2Special );
@@ -1125,8 +1127,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 
 // treat the best alignment as an unique mapping and than turn on local search
 bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet, const unsigned int readLength ) {
-	sort( mateSet.begin(), mateSet.end(), Alignment_LessThanMq() );
-
+	sort(mateSet.begin(), mateSet.end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
 	vector<Alignment>::reverse_iterator rit = mateSet.rbegin();
@@ -1345,56 +1346,53 @@ void CAlignmentThread::SetRequiredInfo (
 
 // handle and then delete special alignments
 // also assign two special characters for the general alignments
-void CAlignmentThread::ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set, 
-	Alignment& mate1SpecialAl, Alignment& mate2SpecialAl,
-	bool& isMate1Special, bool& isMate2Special ) {
+void CAlignmentThread::ProcessSpecialAlignment ( 
+    vector<Alignment>& mate1Set, 
+    vector<Alignment>& mate2Set, 
+    Alignment& mate1SpecialAl, 
+    Alignment& mate2SpecialAl,
+    bool& isMate1Special, 
+    bool& isMate2Special ) {
 
-	unsigned int nMobAl = 0;
-	string specialCode;
-	specialCode.resize(3);
-	for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+  unsigned int nMobAl = 0;
+  string specialCode;
+  specialCode.resize(3);
+  for (vector<Alignment>::const_iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite) {
+    if (ite->IsMappedSpecialReference) {
+      nMobAl++;
+      char* tempCode = mReferenceSpecies[ite->ReferenceIndex];
+      specialCode[0] = *tempCode;
+      tempCode++;
+      specialCode[1] = *tempCode;
+      specialCode[2] = 0;
+    } // end if
+  } // end for
 
-		if ( ite->IsMappedSpecialReference ) {
-			
-			nMobAl++;
-			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
-			specialCode[0] = *tempCode;
-			tempCode++;
-			specialCode[1] = *tempCode;
-			specialCode[2] = 0;
+  if ((nMobAl == mate1Set.size()) && (mate1Set.size() != 0)) { // all alignments are special
+    isMate1Special = true;
+    sort(mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq());
+    mate1SpecialAl = *mate1Set.rbegin();
+    mate1SpecialAl.SpecialCode = specialCode;
+    mate1SpecialAl.NumMapped   = nMobAl;
+    mate1Set.clear();
 
-		}
-
-	}
-
-	if ( ( nMobAl == mate1Set.size() ) && ( mate1Set.size() != 0 ) ) {
-
-		isMate1Special = true;
-		sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
-		mate1SpecialAl = *mate1Set.rbegin();
-		mate1SpecialAl.SpecialCode = specialCode;
-		mate1SpecialAl.NumMapped   = nMobAl;
-		mate1Set.clear();
-
-	} else if ( nMobAl > 0 ) {
-		vector<Alignment> newMate1Set;
-		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-
-			if ( !ite->IsMappedSpecialReference ) {
-				ite->CanBeMappedToSpecialReference = true;
-				ite->SpecialCode = specialCode;
-				newMate1Set.push_back( *ite );
-			} else {
-				isMate1Special = true;
-				mate1SpecialAl = ( ite->Quality >= mate1SpecialAl.Quality ) ? *ite : mate1SpecialAl;
-				mate1SpecialAl.SpecialCode = specialCode;
-				mate1SpecialAl.NumMapped   = nMobAl;
-			}
-		
-		}
-		mate1Set.clear();
-		mate1Set = newMate1Set;
-	}
+  } else if ( nMobAl > 0 ) { // some alignments are special
+    vector<Alignment> newMate1Set;
+    for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+      if ( !ite->IsMappedSpecialReference ) {
+        ite->CanBeMappedToSpecialReference = true;
+	ite->SpecialCode = specialCode;
+	newMate1Set.push_back( *ite );
+      } else {
+        isMate1Special = true;
+	mate1SpecialAl = ( ite->Quality >= mate1SpecialAl.Quality ) ? *ite : mate1SpecialAl;
+	mate1SpecialAl.SpecialCode = specialCode;
+	mate1SpecialAl.NumMapped   = nMobAl;
+      } // end if-else
+    } // end for
+    mate1Set.clear();
+    mate1Set = newMate1Set;
+  } // end if-else-if
 
 	unsigned int nMobAl2 = 0;
 	string specialCode2;

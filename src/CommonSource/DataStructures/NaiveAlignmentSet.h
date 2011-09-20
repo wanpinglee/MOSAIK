@@ -73,6 +73,7 @@ public:
 	MhpOccupancyList* GetRevMhpOccupancyList(void);
 	// retrieves the alignment set
 	AlignmentSet* GetSet(void);
+	void GetSet(vector<const Alignment*> alSet);
 	// retrieves the long alignment flag
 	bool HasLongAlignment(void) const;
 	// returns true if the alignment set is empty
