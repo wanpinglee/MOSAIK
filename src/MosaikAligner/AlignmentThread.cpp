@@ -770,10 +770,10 @@ void CAlignmentThread::AlignReadArchive(
 		bool isMate1Unique = mate1Alignments.IsUnique();
 		bool isMate2Unique = mate2Alignments.IsUnique();
 
-		vector<Alignment*> mate1Set;
-		vector<Alignment*> mate2Set;
-		mate1Alignments.GetSet(mate1Set);
-		mate2Alignments.GetSet(mate2Set);
+		vector<const Alignment*> mate1Set;
+		vector<const Alignment*> mate2Set;
+		mate1Alignments.GetSet(&mate1Set);
+		mate2Alignments.GetSet(&mate2Set);
 
 		bool isMate1Rescued = false;
 		bool isMate2Rescued = false;
@@ -782,14 +782,14 @@ void CAlignmentThread::AlignReadArchive(
 
 			// do local search for some good multiply mappings
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) )
-				isMate1Unique = TreatBestAsUnique( mate1Set, numMate1Bases );
+				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
 			// search local region
 			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
 				isMate2Rescued = SearchLocalRegion( mate1Set, mate2Alignments, mr.Mate2 );
 			
 			// do local search for some good multiply mappings
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) )
-				isMate2Unique = TreatBestAsUnique( mate2Set, numMate2Bases );
+				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
 			// search local region
 			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
 				isMate1Rescued = SearchLocalRegion( mate2Set, mate1Alignments, mr.Mate1 );
@@ -1126,12 +1126,12 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
-bool CAlignmentThread::TreatBestAsUnique ( vector<Alignment>& mateSet, const unsigned int readLength ) {
-	sort(mateSet.begin(), mateSet.end(), Alignment_LessThanMq());
+bool CAlignmentThread::TreatBestAsUnique (vector<const Alignment*>* mateSet, const unsigned int readLength) {
+	sort(mateSet->begin(), mateSet->end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
-	vector<Alignment>::reverse_iterator rit = mateSet.rbegin();
-	unsigned short mq1 = rit->Quality;
+	vector<Alignment>::reverse_iterator rit = mateSet->rbegin();
+	unsigned short mq1     = rit->Quality;
 	unsigned int   swScore = rit->SwScore;
 	rit++;
 	unsigned short mq2 = rit->Quality;

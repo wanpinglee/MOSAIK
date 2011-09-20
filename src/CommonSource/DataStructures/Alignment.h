@@ -180,13 +180,19 @@ struct Alignment {
 };
 
 struct Alignment_LessThanMq {
-	bool operator() ( const Alignment& al1, const Alignment& al2 ) {
+	bool operator() (const Alignment& al1, const Alignment& al2) {
 		if ( al1.SwScore == al2.SwScore )
 			return al1.Quality < al2.Quality;
 		return al1.SwScore < al2.SwScore;
 		//if ( al1.Quality == al2.Quality )
 		//	return al1.SwScore < al2.SwScore;
 		//return al1.Quality < al2.Quality;
+	}
+
+	bool operator() (const Alignment* al1, const Alignment* al2) {
+		if ( al1->SwScore == al2->SwScore )
+			return al1->Quality < al2->Quality;
+		return al1->SwScore < al2->SwScore;
 	}
 };
 

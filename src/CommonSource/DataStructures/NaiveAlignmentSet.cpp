@@ -259,10 +259,10 @@ AlignmentSet* CNaiveAlignmentSet::GetSet(void) {
 	return &mAlignments;
 }
 
-void CNaiveAlignmentSet::GetSet(vector<const Alignment*> alSet) {
-	alSet.resize(mAlignments.size());
+void CNaiveAlignmentSet::GetSet(vector<const Alignment*>* alSet) const{
+	alSet->resize(mAlignments.size());
 	for (unsigned int i = 0; i < mAlignments.size(); ++i) {
-	  alSet[i] = &mAlignments[i];
+	  (*alSet)[i] = &mAlignments[i];
 	}
 }
 

@@ -417,7 +417,7 @@ private:
 	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set
 		, Alignment& mate1SpecialAl, Alignment& mate2SpecialAl, bool& mate1Special, bool& mate2Special );
 	// treat the best alignment as an unique mapping and than turn on local search
-	bool TreatBestAsUnique( vector<Alignment>& mateSet, const unsigned int readLength );
+	bool TreatBestAsUnique(vector<const Alignment*>* mateSet, const unsigned int readLength);
 	// update statistics
 	void UpdateStatistics ( const enum AlignmentStatusType& mate1Status, const enum AlignmentStatusType& mate2Status
 		, const Alignment al1, const Alignment al2, const bool isProperPair );
