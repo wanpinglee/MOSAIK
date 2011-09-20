@@ -197,13 +197,13 @@ void* CAlignmentThread::StartThread(void* arg) {
 }
 
 bool CAlignmentThread::SearchLocalRegion(
-    const vector<const Alignment*>& anchorVector,
+    const vector<Alignment*>& anchorVector,
     const Mosaik::Mate& mate,
     CNaiveAlignmentSet* mateVector) {
 	// extract the unique begin and end coordinates
 	// Note that for multiply mappings, 
 	// the best one alignment is at the end of the vector
-	vector<const Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
+	vector<Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
 
 	const unsigned int refIndex    = (*uniqueIter)->ReferenceIndex;
 	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceBegin;
@@ -386,7 +386,12 @@ void CAlignmentThread::UpdateStatistics (
 }
 
 // save multiply alignment in buffer
-void CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr, BamWriters* const pBams, CStatisticsMaps* const pMaps ) {
+void CAlignmentThread::SaveMultiplyAlignment(
+    const vector<Alignment*>& mate1Set, 
+    const vector<Alignment*>& mate2Set, 
+    const Mosaik::Read& mr, 
+    BamWriters* const pBams, 
+    CStatisticsMaps* const pMaps ) {
 	
 	bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true : false;
 	bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true : false;
@@ -399,21 +404,21 @@ void CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 		if ( isMate1Multiple ) {
 			Alignment mateAl;
 			if ( !isMate2Empty ) {
-				mateAl = mate2Set[0];
+				mateAl = *(mate2Set[0]);
 				mateAl.ReferenceIndex += mReferenceOffset;
 			}
-			vector<Alignment> mate1SetTemp = mate1Set;
-			for(vector<Alignment>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
+			vector<Alignment*> mate1SetTemp = mate1Set;
+			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
 				
 				if ( !isMate2Empty )
-					alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
 
-				alIter->ReferenceIndex += mReferenceOffset;
-				alIter->RecalibratedQuality = alIter->Quality;
-				SetRequiredInfo( *alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
+				(*alIter)->ReferenceIndex += mReferenceOffset;
+				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+				SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
 
 				AlignmentBamBuffer buffer;
-				buffer.al = *alIter;
+				buffer.al = **alIter;
 				buffer.zaString        = (char) 0;
 				buffer.noCigarMdNm     = false;
 				buffer.notShowRnamePos = false;
@@ -424,21 +429,21 @@ void CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 		if ( alInfo.isPairedEnd && isMate2Multiple ) {
 			Alignment mateAl;
 			if ( !isMate1Empty ) {
-				mateAl = mate1Set[0];
+				mateAl = *(mate1Set[0]);
 				mateAl.ReferenceIndex += mReferenceOffset;
 			}
 
-			vector<Alignment> mate2SetTemp = mate2Set;
-			for(vector<Alignment>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
+			vector<Alignment*> mate2SetTemp = mate2Set;
+			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
 				if ( !isMate1Empty )
-					alIter->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
 				
-				alIter->ReferenceIndex += mReferenceOffset;
-				alIter->RecalibratedQuality = alIter->Quality;
-				SetRequiredInfo( *alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
+				(*alIter)->ReferenceIndex += mReferenceOffset;
+				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+				SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
 
 				AlignmentBamBuffer buffer;
-				buffer.al = *alIter;
+				buffer.al = **alIter;
 				buffer.zaString        = (char) 0;
 				buffer.noCigarMdNm     = false;
 				buffer.notShowRnamePos = false;
@@ -461,19 +466,19 @@ void CAlignmentThread::SaveMultiplyAlignment( const vector<Alignment>& mate1Set,
 	}else {
 		if ( isMate1Multiple ) {
 			SimpleBamRecordBuffer buffer;
-			for(vector<Alignment>::const_iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
-				buffer.refIndex = alIter->ReferenceIndex + mReferenceOffset;
-				buffer.refBegin = alIter->ReferenceBegin;
-				buffer.refEnd   = alIter->ReferenceEnd;
+			for(vector<Alignment*>::const_iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
+				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
+				buffer.refBegin = (*alIter)->ReferenceBegin;
+				buffer.refEnd   = (*alIter)->ReferenceEnd;
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
 		if ( alInfo.isPairedEnd && isMate2Multiple ) {
 			SimpleBamRecordBuffer buffer;
-			for(vector<Alignment>::const_iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter) {
-				buffer.refIndex = alIter->ReferenceIndex + mReferenceOffset;
-				buffer.refBegin = alIter->ReferenceBegin;
-				buffer.refEnd   = alIter->ReferenceEnd;
+			for(vector<Alignment*>::const_iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter) {
+				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
+				buffer.refBegin = (*alIter)->ReferenceBegin;
+				buffer.refEnd   = (*alIter)->ReferenceEnd;
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
@@ -773,8 +778,8 @@ void CAlignmentThread::AlignReadArchive(
 		bool isMate1Unique = mate1Alignments.IsUnique();
 		bool isMate2Unique = mate2Alignments.IsUnique();
 
-		vector<const Alignment*> mate1Set;
-		vector<const Alignment*> mate2Set;
+		vector<Alignment*> mate1Set;
+		vector<Alignment*> mate2Set;
 		mate1Alignments.GetSet(&mate1Set);
 		mate2Alignments.GetSet(&mate2Set);
 
@@ -800,10 +805,8 @@ void CAlignmentThread::AlignReadArchive(
 		}
 
 		// process alignments mapped in special references and delete them in vectors
-		mate1Set.clear();
-		mate2Set.clear();
-		mate1Set = *mate1Alignments.GetSet();
-		mate2Set = *mate2Alignments.GetSet();
+		mate1Alignments.GetSet(&mate1Set);
+		mate2Alignments.GetSet(&mate2Set);
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 		//const unsigned int highestSwScoreMate1 = mate1Alignments.GetHighestSwScore();
 		//const unsigned int highestSwScoreMate2 = mate2Alignments.GetHighestSwScore();
@@ -816,8 +819,11 @@ void CAlignmentThread::AlignReadArchive(
 
 		// For low-memory, we don't remove special alignment here,
 		// the special alignments will be considered when merging archives
-		if ( mSReference.found && !mFlags.UseArchiveOutput )
-			ProcessSpecialAlignment( mate1Set, mate2Set, mate1SpecialAl, mate2SpecialAl, isMate1Special, isMate2Special );
+		if ( mSReference.found && !mFlags.UseArchiveOutput ) {
+			ProcessSpecialAlignment(&mate1Set, &mate1SpecialAl, &isMate1Special);
+			if (isPairedEnd)
+			  ProcessSpecialAlignment(&mate2Set, &mate2SpecialAl, &isMate2Special);
+		}
 		
 		// deleting special alignments may let mate1Alignments or mate2Alignments become empty
 		// so we have to check them again
@@ -1129,7 +1135,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
-bool CAlignmentThread::TreatBestAsUnique (vector<const Alignment*>* mateSet, const unsigned int readLength) {
+bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const unsigned int readLength) {
 	sort(mateSet->begin(), mateSet->end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
@@ -1350,20 +1356,17 @@ void CAlignmentThread::SetRequiredInfo (
 // handle and then delete special alignments
 // also assign two special characters for the general alignments
 void CAlignmentThread::ProcessSpecialAlignment ( 
-    vector<Alignment>& mate1Set, 
-    vector<Alignment>& mate2Set, 
-    Alignment& mate1SpecialAl, 
-    Alignment& mate2SpecialAl,
-    bool& isMate1Special, 
-    bool& isMate2Special ) {
+    vector<Alignment*>* mate1Set, 
+    Alignment* mate1SpecialAl, 
+    bool* isMate1Special ) {
 
   unsigned int nMobAl = 0;
   string specialCode;
   specialCode.resize(3);
-  for (vector<Alignment>::const_iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite) {
-    if (ite->IsMappedSpecialReference) {
+  for (vector<Alignment*>::const_iterator ite = mate1Set->begin(); ite != mate1Set->end(); ++ite) {
+    if ((*ite)->IsMappedSpecialReference) {
       nMobAl++;
-      char* tempCode = mReferenceSpecies[ite->ReferenceIndex];
+      char* tempCode = mReferenceSpecies[(*ite)->ReferenceIndex];
       specialCode[0] = *tempCode;
       tempCode++;
       specialCode[1] = *tempCode;
@@ -1371,81 +1374,34 @@ void CAlignmentThread::ProcessSpecialAlignment (
     } // end if
   } // end for
 
-  if ((nMobAl == mate1Set.size()) && (mate1Set.size() != 0)) { // all alignments are special
-    isMate1Special = true;
-    sort(mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq());
-    mate1SpecialAl = *mate1Set.rbegin();
-    mate1SpecialAl.SpecialCode = specialCode;
-    mate1SpecialAl.NumMapped   = nMobAl;
-    mate1Set.clear();
+  if ((nMobAl == mate1Set->size()) && (mate1Set->size() != 0)) { // all alignments are special
+    *isMate1Special = true;
+    sort(mate1Set->begin(), mate1Set->end(), Alignment_LessThanMq());
+    mate1SpecialAl = *(mate1Set->rbegin());
+    mate1SpecialAl->SpecialCode = specialCode;
+    mate1SpecialAl->NumMapped   = nMobAl;
+    mate1Set->clear();
 
   } else if ( nMobAl > 0 ) { // some alignments are special
-    vector<Alignment> newMate1Set;
-    for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
-      if ( !ite->IsMappedSpecialReference ) {
-        ite->CanBeMappedToSpecialReference = true;
-	ite->SpecialCode = specialCode;
+    vector<Alignment*> newMate1Set;
+    for ( vector<Alignment*>::iterator ite = mate1Set->begin(); ite != mate1Set->end(); ++ite ) {
+      if ( !(*ite)->IsMappedSpecialReference ) { 
+	(*ite)->CanBeMappedToSpecialReference = true;
+	(*ite)->SpecialCode = specialCode;
 	newMate1Set.push_back( *ite );
       } else {
-        isMate1Special = true;
-	mate1SpecialAl = ( ite->Quality >= mate1SpecialAl.Quality ) ? *ite : mate1SpecialAl;
-	mate1SpecialAl.SpecialCode = specialCode;
-	mate1SpecialAl.NumMapped   = nMobAl;
+        *isMate1Special = true;
+	if ((*ite)->Quality >= mate1SpecialAl->Quality)
+	  *mate1SpecialAl = *(*ite);
+	mate1SpecialAl->SpecialCode = specialCode;
+	mate1SpecialAl->NumMapped   = nMobAl;
       } // end if-else
     } // end for
-    mate1Set.clear();
-    mate1Set = newMate1Set;
+    mate1Set->clear();
+    *mate1Set = newMate1Set;
   } // end if-else-if
 
-	unsigned int nMobAl2 = 0;
-	string specialCode2;
-	specialCode2.resize(3);
-
-	for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
-		
-		if ( ite->IsMappedSpecialReference ) {
-			
-			nMobAl2++;
-			char* tempCode = mReferenceSpecies[ ite->ReferenceIndex ];
-			specialCode2[0] = *tempCode;
-			tempCode++;
-			specialCode2[1] = *tempCode;
-			specialCode2[2] = 0;
-
-		}
-	}
-
-	if ( ( nMobAl2 == mate2Set.size() ) && ( mate2Set.size() != 0 ) ) {
-
-		isMate2Special = true;
-		sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
-		mate2SpecialAl = *mate2Set.rbegin();
-		mate2SpecialAl.SpecialCode = specialCode2;
-		mate2SpecialAl.NumMapped   = nMobAl2;
-		mate2Set.clear();
-	
-	} else if ( nMobAl2 > 0 ) {
-		vector<Alignment> newMate2Set;
-		for ( vector<Alignment>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite ) {
-			
-			if ( !ite->IsMappedSpecialReference ) {
-				ite->CanBeMappedToSpecialReference = true;
-				ite->SpecialCode = specialCode2;
-				newMate2Set.push_back( *ite );
-			} else {
-				isMate2Special = true;
-				mate2SpecialAl = ( ite->Quality >= mate2SpecialAl.Quality ) ? *ite : mate2SpecialAl;
-				mate2SpecialAl.SpecialCode = specialCode2;
-				mate2SpecialAl.NumMapped   = nMobAl2;
-			}
-
-		}
-		mate2Set.clear();
-		mate2Set = newMate2Set;
-	}
 }
-
-
 
 // aligns the read against the reference sequence and returns true if the read was aligned
 bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* query, const char* qualities, const unsigned int queryLength, AlignmentStatusType& status) {

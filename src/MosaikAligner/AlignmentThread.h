@@ -414,21 +414,21 @@ private:
 	// Prepare bam required info
 	void SetRequiredInfo ( Alignment& al, const AlignmentStatusType& status, Alignment& mate, const Mosaik::Mate& m, const Mosaik::Read& r
 		, const bool& isPair, const bool& isProperPair, const bool& isFirstMate, const bool& isPairTech, const bool& isItselfMapped, const bool& isMateMapped);
-	void ProcessSpecialAlignment ( vector<Alignment>& mate1Set, vector<Alignment>& mate2Set
-		, Alignment& mate1SpecialAl, Alignment& mate2SpecialAl, bool& mate1Special, bool& mate2Special );
+	void ProcessSpecialAlignment (vector<Alignment*>* mate1Set 
+		, Alignment* mate1SpecialAl, bool* mate1Special);
 	// treat the best alignment as an unique mapping and than turn on local search
-	bool TreatBestAsUnique(vector<const Alignment*>* mateSet, const unsigned int readLength);
+	bool TreatBestAsUnique(vector<Alignment*>* mateSet, const unsigned int readLength);
 	// update statistics
 	void UpdateStatistics ( const enum AlignmentStatusType& mate1Status, const enum AlignmentStatusType& mate2Status
 		, const Alignment al1, const Alignment al2, const bool isProperPair );
 	void UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al );
-	bool SearchLocalRegion(const vector<const Alignment*>& anchorVector, const Mosaik::Mate& mate, CNaiveAlignmentSet* mateVector);
+	bool SearchLocalRegion(const vector<Alignment*>& anchorVector, const Mosaik::Mate& mate, CNaiveAlignmentSet* mateVector);
 	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial );
 	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead );
 	void WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
 	void WriteSpecialAlignmentBufferToFile( BamWriters* const pBams );
-	void SaveMultiplyAlignment( const vector<Alignment>& mate1Set, const vector<Alignment>& mate2Set, const Mosaik::Read& mr
-		, BamWriters* const pBams, CStatisticsMaps* const pMaps );
+	void SaveMultiplyAlignment(const vector<Alignment*>& mate1Set, const vector<Alignment*>& mate2Set, const Mosaik::Read& mr
+		, BamWriters* const pBams, CStatisticsMaps* const pMaps);
 	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
 	unsigned char GetMappingQuality(const Alignment& al);
 	unsigned char GetMappingQuality(const Alignment& al1, const Alignment& al2);
