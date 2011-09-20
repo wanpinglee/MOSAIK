@@ -422,7 +422,7 @@ private:
 	void UpdateStatistics ( const enum AlignmentStatusType& mate1Status, const enum AlignmentStatusType& mate2Status
 		, const Alignment al1, const Alignment al2, const bool isProperPair );
 	void UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al );
-	bool SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate );
+	bool SearchLocalRegion(const vector<const Alignment*>& anchorVector, const Mosaik::Mate& mate, CNaiveAlignmentSet* mateVector);
 	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial );
 	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead );
 	void WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );

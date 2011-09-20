@@ -196,20 +196,23 @@ void* CAlignmentThread::StartThread(void* arg) {
 	return 0;
 }
 
-bool CAlignmentThread::SearchLocalRegion( const vector<Alignment>& anchorVector, CNaiveAlignmentSet& mateVector, const Mosaik::Mate& mate ) {
+bool CAlignmentThread::SearchLocalRegion(
+    const vector<const Alignment*>& anchorVector,
+    const Mosaik::Mate& mate,
+    CNaiveAlignmentSet* mateVector) {
 	// extract the unique begin and end coordinates
 	// Note that for multiply mappings, 
 	// the best one alignment is at the end of the vector
-	AlignmentSet::const_iterator uniqueIter = anchorVector.end() - 1;
+	vector<const Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
 
-	const unsigned int refIndex    = uniqueIter->ReferenceIndex;
-	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + uniqueIter->ReferenceBegin;
-	const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + uniqueIter->ReferenceEnd;
+	const unsigned int refIndex    = (*uniqueIter)->ReferenceIndex;
+	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceBegin;
+	const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceEnd;
 
 	// create the appropriate local alignment search model
 	// NB: we caught other technologies during initialization
 	LocalAlignmentModel lam;
-	if(uniqueIter->IsReverseStrand) {
+	if((*uniqueIter)->IsReverseStrand) {
 		if( alInfo.isUsingIllumina )
 			lam.IsTargetBeforeUniqueMate = true;
 		else if ( alInfo.isUsing454 )
@@ -238,7 +241,7 @@ bool CAlignmentThread::SearchLocalRegion( const vector<Alignment>& anchorVector,
 	// check if the mate is already sitting in the local region
 	bool isAlExisting = false;
 	if ( settleLocalSearchWindow )
-		isAlExisting = mateVector.CheckExistence( refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex] );
+		isAlExisting = mateVector->CheckExistence(refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex]);
 
 	bool rescued = false;
 	if ( !isAlExisting ) {
@@ -253,7 +256,7 @@ bool CAlignmentThread::SearchLocalRegion( const vector<Alignment>& anchorVector,
 			if( ApplyReadFilters( al, pBases, pQualities, mate.Bases.Length() ) ) {
 				al.WasRescued = true;
 				rescued       = true;
-				mateVector.Add( al ); 
+				mateVector->Add( al ); 
 				
 			}
 		}
@@ -785,14 +788,14 @@ void CAlignmentThread::AlignReadArchive(
 				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
 			// search local region
 			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
-				isMate2Rescued = SearchLocalRegion( mate1Set, mate2Alignments, mr.Mate2 );
+				isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 			
 			// do local search for some good multiply mappings
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) )
 				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
 			// search local region
 			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
-				isMate1Rescued = SearchLocalRegion( mate2Set, mate1Alignments, mr.Mate1 );
+				isMate1Rescued = SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 
 		}
 
