@@ -185,8 +185,8 @@ void BestNSecondBestSelection::Select (
 
 
 		vector<Alignment*>::iterator lastMinM2 = mate2Set.begin();
-		bestMate1 = *mate1Set.begin();
-		bestMate2 = *mate2Set.begin();
+		bestMate1 = **mate1Set.begin();
+		bestMate2 = **mate2Set.begin();
 
 		for ( vector<Alignment*>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 			//if ( ( ite->SwScore / (float) highestSwScoreMate1 ) < 0.9 ) continue;
@@ -258,8 +258,8 @@ void BestNSecondBestSelection::Select (
 			// pick up mates having highest MQ
 			sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
 			sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
-			newMate1Set.push_back( *mate1Set.rbegin() );
-			newMate2Set.push_back( *mate2Set.rbegin() );
+			newMate1Set.push_back( **(mate1Set.rbegin()) );
+			newMate2Set.push_back( **(mate2Set.rbegin()) );
 		}
 
 		
@@ -277,21 +277,24 @@ void BestNSecondBestSelection::Select (
 			if ( nMate1 == 1 )
 				newMate1Set.begin()->NextBestQuality = 0;
 			else
-				newMate1Set.begin()->NextBestQuality = ( mate1Set.rbegin() + 1 )->Quality;
+				newMate1Set.begin()->NextBestQuality = (*(mate1Set.rbegin() + 1))->Quality;
 
 			if ( nMate2 == 1 )
 				newMate2Set.begin()->NextBestQuality = 0;
 			else
-				newMate2Set.begin()->NextBestQuality = ( mate2Set.rbegin() + 1 )->Quality;
+				newMate2Set.begin()->NextBestQuality = (*(mate2Set.rbegin() + 1))->Quality;
 		}
 
 		newMate1Set.begin()->NumMapped = nMate1;
 		newMate2Set.begin()->NumMapped = nMate2;
 		
-		mate1Set.clear();
-		mate2Set.clear();
-		mate1Set = newMate1Set;
-		mate2Set = newMate2Set;
+		//mate1Set.clear();
+		//mate2Set.clear();
+		for (unsigned int i = 0; i < newMate1Set.size(); ++i)
+		  *mate1Set[i] = newMate1Set[i];
+		
+		for (unsigned int i = 0; i < newMate2Set.size(); ++i)
+		  *mate2Set[i] = newMate2Set[i];
 		
 		
 	} else if ( isMate1Aligned ) {
@@ -299,31 +302,34 @@ void BestNSecondBestSelection::Select (
 
 		sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
 		// note: the size of mate1Set must be larger than one
-		vector<Alignment>::reverse_iterator ite = mate1Set.rbegin();
+		vector<Alignment*>::reverse_iterator ite = mate1Set.rbegin();
 		// the one having the highest MQ
-		newMate1Set.push_back( *ite );
+		newMate1Set.push_back( **ite );
 		ite++;
-		newMate1Set.begin()->NextBestQuality = ite->Quality;
+		newMate1Set.begin()->NextBestQuality = (*ite)->Quality;
 		newMate1Set.begin()->NumMapped = nMate1;
 
-		mate1Set.clear();
-		mate1Set = newMate1Set;
+		//mate1Set.clear();
+		//mate1Set = newMate1Set;
+		for (unsigned int i = 0; i < newMate1Set.size(); ++i)
+		  *mate1Set[i] = newMate1Set[i];
 
 	} else if ( isMate2Aligned ) {
 		nMate2 = mate2Set.size();
 		
 		sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 		// note: the size of mate2Set must be larger than one
-		vector<Alignment>::reverse_iterator ite = mate2Set.rbegin();
+		vector<Alignment*>::reverse_iterator ite = mate2Set.rbegin();
 		// the one having the highest MQ
-		newMate2Set.push_back( *ite );
+		newMate2Set.push_back( **ite );
 		ite++;
-		newMate2Set.begin()->NextBestQuality = ite->Quality;
+		newMate2Set.begin()->NextBestQuality = (*ite)->Quality;
 		newMate2Set.begin()->NumMapped = nMate2;
 
-		mate2Set.clear();
-		mate2Set = newMate2Set;
-
+		//mate2Set.clear();
+		//mate2Set = newMate2Set;
+		for (unsigned int i = 0; i < newMate2Set.size(); ++i)
+		  *mate2Set[i] = newMate2Set[i];
 	}
 }
 
