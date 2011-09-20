@@ -196,5 +196,12 @@ struct Alignment_LessThanMq {
 	}
 };
 
+struct Alignment_LessThanPosition {
+  bool operator() (const Alignment* al1, const Alignment* al2) {
+    if(al1->ReferenceIndex == al2->ReferenceIndex) return al1->ReferenceBegin < al2->ReferenceBegin;
+    return al1->ReferenceIndex < al2->ReferenceIndex;
+  }
+};
+
 
 #endif

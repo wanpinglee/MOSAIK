@@ -146,8 +146,8 @@ void BestNSecondBestSelection::CalculateFragmentLength( const Alignment& al1, co
 
 // Select and only keep best and 2nd best
 void BestNSecondBestSelection::Select ( 
-	vector<Alignment>& mate1Set, 
-	vector<Alignment>& mate2Set, 
+	vector<Alignment*>& mate1Set, 
+	vector<Alignment*>& mate2Set, 
 	const unsigned int expectedFragmentLength,
 	const SequencingTechnologies& tech,
 	const unsigned int numMate1Bases,
@@ -180,18 +180,18 @@ void BestNSecondBestSelection::Select (
 		nMate2 = mate2Set.size();
 
 		// sort by positions
-		sort( mate1Set.begin(), mate1Set.end() );
-		sort( mate2Set.begin(), mate2Set.end() );
+		sort( mate1Set.begin(), mate1Set.end(), Alignment_LessThanPosition() );
+		sort( mate2Set.begin(), mate2Set.end(), Alignment_LessThanPosition() );
 
 
-		vector<Alignment>::iterator lastMinM2 = mate2Set.begin();
+		vector<Alignment*>::iterator lastMinM2 = mate2Set.begin();
 		bestMate1 = *mate1Set.begin();
 		bestMate2 = *mate2Set.begin();
 
-		for ( vector<Alignment>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
+		for ( vector<Alignment*>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite ) {
 			//if ( ( ite->SwScore / (float) highestSwScoreMate1 ) < 0.9 ) continue;
 
-			for ( vector<Alignment>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
+			for ( vector<Alignment*>::iterator ite2 = lastMinM2; ite2 != mate2Set.end(); ++ite2 ) {
 				//if ( ( ite2->SwScore / (float) highestSwScoreMate2 ) < 0.9 ) continue;
 
 				// fragment length
@@ -199,13 +199,13 @@ void BestNSecondBestSelection::Select (
 				//	? ite->ReferenceEnd - ite2->ReferenceBegin 
 				//	: ite2->ReferenceEnd - ite->ReferenceBegin;
 				unsigned int length = 0;
-				CalculateFragmentLength( *ite, *ite2, tech, length );
+				CalculateFragmentLength( **ite, **ite2, tech, length );
 				
 //cerr << ite->ReferenceIndex << " " << ite->ReferenceBegin << " " << ite->ReferenceEnd << " " << ite->SwScore <<  " " << (int)ite->Quality << " " << ite2->ReferenceIndex << " " << ite2->ReferenceBegin << " " << ite2->ReferenceEnd << " " << ite2->SwScore << " " << (int)ite2->Quality << " " << length << endl;
 
-				if ( ite->ReferenceIndex == ite2->ReferenceIndex ) {
+				if ( (*ite)->ReferenceIndex == (*ite2)->ReferenceIndex ) {
 					if ( length > ( 2 * expectedFragmentLength ) ) {
-						if ( ite->ReferenceBegin > ite2->ReferenceBegin ) {
+						if ( (*ite)->ReferenceBegin > (*ite2)->ReferenceBegin ) {
 							lastMinM2 = ite2;
 							continue;
 						} else {
@@ -214,7 +214,7 @@ void BestNSecondBestSelection::Select (
 					
 				// in the fragment length threshold
 					} else {
-						if ( IsBetterPair( *ite, *ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
+						if ( IsBetterPair( **ite, **ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
 							// store the current best as second best
 							if ( best ) {
 								secondBest = true;
@@ -223,15 +223,15 @@ void BestNSecondBestSelection::Select (
 								secondBestFl    = bestFl;
 							}
 							best = true;
-							bestMate1 = *ite;
-							bestMate2 = *ite2;
+							bestMate1 = **ite;
+							bestMate2 = **ite2;
 							bestFl    = length;
 	
 						} else {
-							if ( best && IsBetterPair( *ite, *ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
+							if ( best && IsBetterPair( **ite, **ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
 								secondBest = true;
-								secondBestMate1 = *ite;
-								secondBestMate2 = *ite2;
+								secondBestMate1 = **ite;
+								secondBestMate2 = **ite2;
 								secondBestFl    = length;
 							}
 						}
@@ -239,7 +239,7 @@ void BestNSecondBestSelection::Select (
 
 				// located at different chromosomes
 				} else {
-					if ( ite->ReferenceIndex > ite2->ReferenceIndex ) {
+					if ( (*ite)->ReferenceIndex > (*ite2)->ReferenceIndex ) {
 						lastMinM2 = ite2;
 						continue;
 					} else {
