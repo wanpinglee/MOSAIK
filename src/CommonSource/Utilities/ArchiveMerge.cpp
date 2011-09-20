@@ -430,7 +430,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	unsigned int nMate1Alignments = 0;
 	unsigned int nMate2Alignments = 0;
 
-	vector<Alignment> newMate1Set, newMate2Set;
+	vector<Alignment*> newMate1Set, newMate2Set;
 	Mosaik::Read read;
 
 	string mate1Cs, mate1Cq, mate2Cs, mate2Cq;
@@ -440,7 +440,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		nMate1Alignments   += ite->NumMapped;
 		ite->SpecialCode    = _specialCode1;
 		isMate1FilteredOut |= ite->IsFilteredOut;
-		if ( ite->IsMapped ) newMate1Set.push_back( *ite );
+		if ( ite->IsMapped ) newMate1Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
 			read.Mate1.Bases     = ite->Query;
@@ -457,7 +457,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		nMate2Alignments   += ite->NumMapped;
 		ite->SpecialCode    = _specialCode2;
 		isMate2FilteredOut |= ite->IsFilteredOut;
-		if ( ite->IsMapped ) newMate2Set.push_back( *ite );
+		if ( ite->IsMapped ) newMate2Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
 			read.Mate2.Bases     = ite->Query;
@@ -475,13 +475,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			cout << "ERROR: The vector is empty." << endl;
 			exit(1);
 		}
-		r.Mate1Alignments.clear();
-		r.Mate1Alignments = newMate1Set;
+		//r.Mate1Alignments.clear();
+		//r.Mate1Alignments = newMate1Set;
 	}
 
 	if ( nMate2Alignments > 0 ) {
-		r.Mate2Alignments.clear();
-		r.Mate2Alignments = newMate2Set;
+		//r.Mate2Alignments.clear();
+		//r.Mate2Alignments = newMate2Set;
 	}
 
 	const bool isMate1Unique   = ( nMate1Alignments == 1 ) ? true : false;
@@ -500,10 +500,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 			
 		if ( isMate1Unique && isMate2Multiple )
-				BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
+				BestNSecondBestSelection::Select( newMate1Set, newMate2Set, _expectedFragmentLength, _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
 
-		isMate1Empty = r.Mate1Alignments.empty();
-		isMate2Empty = r.Mate2Alignments.empty();
+		isMate1Empty = newMate1Set.empty();
+		isMate2Empty = newMate2Set.empty();
 			
 		// sanity check
 		if ( isMate1Empty | isMate2Empty ) {
@@ -512,7 +512,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 
 		// patch the information for reporting
-		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
+		Alignment al1 = *(newMate1Set[0]), al2 = *(newMate2Set[0]);
 		
 		// TODO: handle fragment length for others sequencing techs
 		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
@@ -601,7 +601,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		
 
 		if ( isMate1Multiple || isMate2Multiple ) 
-			BestNSecondBestSelection::Select( r.Mate1Alignments, r.Mate2Alignments, _expectedFragmentLength, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
+			BestNSecondBestSelection::Select( newMate1Set, newMate2Set, _expectedFragmentLength, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
 
 		//isMate1Empty = r.Mate1Alignments.empty();
 		//isMate2Empty = r.Mate2Alignments.empty();
@@ -617,7 +617,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 	
 		// patch the information for reporting
-		Alignment al         = isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+		Alignment al         = isFirstMate ? *(newMate1Set[0]) : *(newMate2Set[0]);
 		al.CsQuery           = isFirstMate ? mate1Cs : mate2Cs;
 		al.CsBaseQualities   = isFirstMate ? mate1Cq : mate2Cq;
 
@@ -625,7 +625,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		Alignment unmappedAl;
 
 		if ( _isPairedEnd ) {
-			unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
+			unmappedAl = !isFirstMate ? *(newMate1Set[0]) : *(newMate2Set[0]);
 			unmappedAl.Query           = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
 			unmappedAl.BaseQualities   = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
 			unmappedAl.ReferenceIndex  = al.ReferenceIndex;
