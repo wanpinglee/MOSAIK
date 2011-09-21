@@ -556,7 +556,7 @@ inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char*
 	buffer.al.Reference.clearMemory();
 	buffer.al.Query.clearMemory();
 
-	if ( isSpecial)
+	if (isSpecial)
 		bamSpecialBuffer.push( buffer );
 	else
 		bamBuffer.push( buffer );
