@@ -844,7 +844,7 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
 		
-			Alignment al1, al2;
+			Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
 				|| ( isMate1Multiple && isMate2Multiple ) )
