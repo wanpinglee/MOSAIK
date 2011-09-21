@@ -844,21 +844,22 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
 		
+			Alignment al1, al2;
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
 				|| ( isMate1Multiple && isMate2Multiple ) )
 				// After selecting, only best and second best (if there) will be kept in mate1Set and mate2Set
 				// The function also sets NumMapped of alignments
-				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
+				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
 
 			// sanity check
-			if ( mate1Set.empty() || mate2Set.empty() ) {
-				cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
-				exit(1);
-			}
+			//if ( mate1Set.empty() || mate2Set.empty() ) {
+			//	cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
+			//	exit(1);
+			//}
 
 			// patch the information for reporting
-			Alignment al1 = *(mate1Set[0]), al2 = *(mate2Set[0]);
+			//Alignment al1 = *(mate1Set[0]), al2 = *(mate2Set[0]);
 			
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
@@ -880,6 +881,8 @@ void CAlignmentThread::AlignReadArchive(
 
 			al1.RecalibratedQuality = GetMappingQuality(al1, al2);
 			al2.RecalibratedQuality = GetMappingQuality(al2, al1);
+			al1.Quality = al1.RecalibratedQuality;
+			al2.Quality = al2.RecalibratedQuality;
 
 			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
 			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
@@ -935,8 +938,10 @@ void CAlignmentThread::AlignReadArchive(
 		} else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
 
+			Alignment al1, al2, unmappedAl;
 			if ( isMate1Multiple || isMate2Multiple ) 
-				BestNSecondBestSelection::Select( mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
+				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
+				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
 
 			bool isFirstMate;
 			if ( !mate1Set.empty() ) {
@@ -951,10 +956,12 @@ void CAlignmentThread::AlignReadArchive(
 				cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
 				exit(1);
 			}
+
+			Alignment al = isFirstMate ? al1 : al2;
 		
 			// patch the information for reporting
-			Alignment al = isFirstMate ? *(mate1Set[0]) : *(mate2Set[0]);
-			Alignment unmappedAl;
+			//Alignment al = isFirstMate ? *(mate1Set[0]) : *(mate2Set[0]);
+			//Alignment unmappedAl;
 
 			SetRequiredInfo( al, ( isFirstMate ? mate1Status : mate2Status ), unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 )
 				, mr, false, false, isFirstMate, isPairedEnd, true, false );
@@ -963,6 +970,7 @@ void CAlignmentThread::AlignReadArchive(
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
 			al.RecalibratedQuality = GetMappingQuality(al);
+			al.Quality = al.RecalibratedQuality;
 
 
 			if ( mFlags.UseArchiveOutput ) {
@@ -1077,6 +1085,8 @@ void CAlignmentThread::AlignReadArchive(
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
 	fann_inputs.clear();
+
+	float normalizedRefLen = 3101846239 / mReferenceLength;
 	
 	float temp = al.Query.Length();
 	temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
@@ -1084,8 +1094,8 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 	temp = al.NumLongestMatchs / (float)al.Query.Length();
 	fann_inputs.push_back(temp);
 	fann_inputs.push_back(al.Entropy);
-	fann_inputs.push_back(log10(al.NumMapped + 1));
-	fann_inputs.push_back(log10(al.NumHash + 1));
+	fann_inputs.push_back(log10(al.NumMapped * normalizedRefLen + 1));
+	fann_inputs.push_back(log10(al.NumHash * normalizedRefLen + 1));
 	calc_out = fann_run(single_end_ann, &fann_inputs[0]);
 	return float2phred(1 - (1 + calc_out[0]) / 2);
 }

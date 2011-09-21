@@ -470,26 +470,26 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 	}
 
-	if ( nMate1Alignments > 0 ) {
-		if ( newMate1Set.empty() ) {
-			cout << "ERROR: The vector is empty." << endl;
-			exit(1);
-		}
+	//if ( nMate1Alignments > 0 ) {
+	//	if ( newMate1Set.empty() ) {
+	//		cout << "ERROR: The vector is empty." << endl;
+	//		exit(1);
+	//	}
 		//r.Mate1Alignments.clear();
 		//r.Mate1Alignments = newMate1Set;
-	}
+	//}
 
-	if ( nMate2Alignments > 0 ) {
+	//if ( nMate2Alignments > 0 ) {
 		//r.Mate2Alignments.clear();
 		//r.Mate2Alignments = newMate2Set;
-	}
+	//}
 
-	const bool isMate1Unique   = ( nMate1Alignments == 1 ) ? true : false;
-	const bool isMate2Unique   = ( nMate2Alignments == 1 ) ? true : false;
-	const bool isMate1Multiple = ( nMate1Alignments > 1 ) ? true : false;
-	const bool isMate2Multiple = ( nMate2Alignments > 1 ) ? true : false;
-	bool isMate1Empty    = ( nMate1Alignments == 0 ) ? true : false;
-	bool isMate2Empty    = ( nMate2Alignments == 0 ) ? true : false;
+	const bool isMate1Unique   = ( newMate1Set.size() == 1 ) ? true : false;
+	const bool isMate2Unique   = ( newMate2Set.size() == 1 ) ? true : false;
+	const bool isMate1Multiple = ( newMate1Set.size() > 1 ) ? true : false;
+	const bool isMate2Multiple = ( newMate2Set.size() > 1 ) ? true : false;
+	bool isMate1Empty    = ( newMate1Set.size() == 0 ) ? true : false;
+	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
 
 	// UU, UM, and MM pair
@@ -498,21 +498,22 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		|| ( isMate1Multiple && isMate2Unique )
 		|| ( isMate1Multiple && isMate2Multiple ) ) {
 
-			
-		if ( isMate1Unique && isMate2Multiple )
-				BestNSecondBestSelection::Select( newMate1Set, newMate2Set, _expectedFragmentLength, _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
+		Alignment al1, al2;	
+		if ( isMate1Multiple && isMate2Multiple )
+			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
+			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
 
-		isMate1Empty = newMate1Set.empty();
-		isMate2Empty = newMate2Set.empty();
+		//isMate1Empty = newMate1Set.empty();
+		//isMate2Empty = newMate2Set.empty();
 			
 		// sanity check
-		if ( isMate1Empty | isMate2Empty ) {
-			cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
-			exit(1);
-		}
+		//if ( isMate1Empty | isMate2Empty ) {
+		//	cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
+		//	exit(1);
+		//}
 
 		// patch the information for reporting
-		Alignment al1 = *(newMate1Set[0]), al2 = *(newMate2Set[0]);
+		//Alignment al1 = *(newMate1Set[0]), al2 = *(newMate2Set[0]);
 		
 		// TODO: handle fragment length for others sequencing techs
 		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
@@ -522,10 +523,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		al2.IsFirstMate = false;
 
 		// MM pair is always an improper pair
-		if ( !isMate1Multiple || !isMate2Multiple ) {
+		//if ( !isMate1Multiple || !isMate2Multiple ) {
 			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, _sequencingTechnologies );
 			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, _sequencingTechnologies );
-		}
+		//}
 
 		if ( properPair1 != properPair2 ) {
 			cout << "ERROR: An inconsistent proper pair is found." << endl;
@@ -533,8 +534,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 		
 		//Note: the following function will set RecalibratedQuality and RecalibratedQuality will be shown in the bam
-		al1.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
-		al2.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
+		//al1.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
+		//al2.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
+		al1.RecalibratedQuality = al1.Quality;
+		al2.RecalibratedQuality = al2.Quality;
 
 		SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
 		SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
@@ -599,9 +602,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	} else if ( ( isMate1Empty || isMate2Empty )
 		&&  !( isMate1Empty && isMate2Empty ) ) {
 		
-
+		Alignment al1, al2, unmappedAl;
 		if ( isMate1Multiple || isMate2Multiple ) 
-			BestNSecondBestSelection::Select( newMate1Set, newMate2Set, _expectedFragmentLength, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true) );
+			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
+			    read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true));
 
 		//isMate1Empty = r.Mate1Alignments.empty();
 		//isMate2Empty = r.Mate2Alignments.empty();
@@ -617,15 +621,14 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		}
 	
 		// patch the information for reporting
-		Alignment al         = isFirstMate ? *(newMate1Set[0]) : *(newMate2Set[0]);
+		Alignment al         = isFirstMate ? al1 : al2;
 		al.CsQuery           = isFirstMate ? mate1Cs : mate2Cs;
 		al.CsBaseQualities   = isFirstMate ? mate1Cq : mate2Cq;
 
 		//Alignment unmappedAl = !isFirstMate ? r.Mate1Alignments[0] : r.Mate2Alignments[0];
-		Alignment unmappedAl;
 
 		if ( _isPairedEnd ) {
-			unmappedAl = !isFirstMate ? *(newMate1Set[0]) : *(newMate2Set[0]);
+			unmappedAl = !isFirstMate ? r.Mate1Alignments[0]: r.Mate2Alignments[0];
 			unmappedAl.Query           = isFirstMate ? read.Mate1.Bases : read.Mate2.Bases;
 			unmappedAl.BaseQualities   = isFirstMate ? read.Mate1.Qualities : read.Mate2.Qualities;
 			unmappedAl.ReferenceIndex  = al.ReferenceIndex;
@@ -647,10 +650,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 		// Note: RecalibratedQuality will be shown in the bam
 		al.RecalibratedQuality = al.Quality;
-		if ( isFirstMate && isMate1Multiple )
-			al.RecalibratedQuality = 0;
-		else if ( !isFirstMate && isMate2Multiple )
-			al.RecalibratedQuality = 0;
+		//if ( isFirstMate && isMate1Multiple )
+		//	al.RecalibratedQuality = 0;
+		//else if ( !isFirstMate && isMate2Multiple )
+		//	al.RecalibratedQuality = 0;
 		
 		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
