@@ -547,7 +547,6 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 		if ( !al.IsMateMapped )
 			flag |= BAM_MATE_UNMAPPED;
 	} else {
-		flag |= BAM_QUERY_FIRST_MATE;
 		if ( !al.IsMapped )
 			flag |= BAM_QUERY_UNMAPPED;
 	}
