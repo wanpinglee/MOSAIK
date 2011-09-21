@@ -498,8 +498,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		|| ( isMate1Multiple && isMate2Unique )
 		|| ( isMate1Multiple && isMate2Multiple ) ) {
 
-		Alignment al1, al2;	
-		if ( isMate1Multiple && isMate2Multiple )
+		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
+		if ( ( isMate1Unique && isMate2Multiple )
+	          || ( isMate1Multiple && isMate2Unique )
+	          || ( isMate1Multiple && isMate2Multiple ) )
 			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
 			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
 
@@ -602,7 +604,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	} else if ( ( isMate1Empty || isMate2Empty )
 		&&  !( isMate1Empty && isMate2Empty ) ) {
 		
-		Alignment al1, al2, unmappedAl;
+		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0], unmappedAl;
 		if ( isMate1Multiple || isMate2Multiple ) 
 			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
 			    read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true));
