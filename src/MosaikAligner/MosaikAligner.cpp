@@ -294,12 +294,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-/*
-<<<<<<< Updated upstream
-	    outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/1");
-=======
+
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/1");
->>>>>>> Stashed changes
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/2");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/3");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/4");
@@ -328,7 +324,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//}
             PrintStatistics();
             exit(1);
-*/
+
 		
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
