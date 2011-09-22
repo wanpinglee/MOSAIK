@@ -1116,16 +1116,26 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	fann_inputs.push_back(temp1);
 	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
 	fann_inputs.push_back(al1.Entropy);
-	fann_inputs.push_back(log10(al1.NumMapped * normalizedRefLen + 1));
-	fann_inputs.push_back(log10(al1.NumHash * normalizedRefLen + 1));
+	if (!al1.WasRescued) {
+	  fann_inputs.push_back(log10(al1.NumMapped * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al1.NumHash * normalizedRefLen + 1));
+	} else {
+	  fann_inputs.push_back(log10(al2.NumMapped * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al2.NumHash * normalizedRefLen + 1));
+	}
 
 	sw = (int) al2.SwScore - (int)al2.NextSwScore;
 	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
 	fann_inputs.push_back(temp2);
 	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
 	fann_inputs.push_back(al2.Entropy);
-	fann_inputs.push_back(log10(al2.NumMapped * normalizedRefLen + 1));
-	fann_inputs.push_back(log10(al2.NumHash * normalizedRefLen + 1));
+	if (!al2.WasRescued) {
+	  fann_inputs.push_back(log10(al2.NumMapped * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al2.NumHash * normalizedRefLen + 1));
+	} else {
+	  fann_inputs.push_back(log10(al1.NumMapped * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al1.NumHash * normalizedRefLen + 1));
+	}
 
 	fann_inputs.push_back(log10(fl));
 
@@ -1140,18 +1150,19 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 
 	// Note that there are at least two alignments
 	vector<Alignment*>::reverse_iterator rit = mateSet->rbegin();
-	unsigned short mq1     = (*rit)->Quality;
+	//unsigned short mq1     = (*rit)->Quality;
 	unsigned int   swScore = (*rit)->SwScore;
 	rit++;
-	unsigned short mq2 = (*rit)->Quality;
+	//unsigned short mq2 = (*rit)->Quality;
 
 	if ( swScore > ( readLength * 9 ) )
 		return true;
 	
-	if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
-		return true;
-	else
-		return false;
+	//if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
+	//	return true;
+	//else
+	//	return false;
+	return false;
 }
 
 // Set the required information and flag for alignments

@@ -492,13 +492,25 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
 
+//if (r.Name == "X_82797449_82798471_1:0:0_6:0:0_1c40") {
+//  cerr << "mate1" << endl;
+//  for (vector<Alignment*>::iterator ite = newMate1Set.begin(); ite != newMate1Set.end(); ++ite) {
+//    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (*ite)->Quality+33 << "\t" << (*ite)->NumMapped << endl;
+//  }
+  
+//  cerr << "mate2" << endl;
+//  for (vector<Alignment*>::iterator ite = newMate2Set.begin(); ite != newMate2Set.end(); ++ite) {
+//    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (*ite)->Quality+33 << "\t" << (*ite)->NumMapped << endl;
+//  }
+//}
+
 	// UU, UM, and MM pair
 	if ( ( isMate1Unique && isMate2Unique )
 		|| ( isMate1Unique && isMate2Multiple )
 		|| ( isMate1Multiple && isMate2Unique )
 		|| ( isMate1Multiple && isMate2Multiple ) ) {
 
-		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0];
+		Alignment al1 = *newMate1Set[0], al2 = *newMate2Set[0];
 		if ( ( isMate1Unique && isMate2Multiple )
 	          || ( isMate1Multiple && isMate2Unique )
 	          || ( isMate1Multiple && isMate2Multiple ) )
@@ -548,14 +560,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		al2.CsQuery         = mate2Cs;
 		al1.CsBaseQualities = mate1Cq;
 		al2.CsBaseQualities = mate2Cq;
-
+		
+		al1.NumMapped = nMate1Alignments;
+		al2.NumMapped = nMate2Alignments;
 
 		//CZaTager za1, za2;
 		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-
-		al1.NumMapped = nMate1Alignments;
-		al2.NumMapped = nMate2Alignments;
 
 		if ( isMate2Special ) {
 			Alignment genomicAl = al1;
@@ -593,6 +604,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
 
+//if (r.Name == "X_82797449_82798471_1:0:0_6:0:0_1c40") {
+//  Alignment* al = &al1;
+//  cerr << al->ReferenceBegin << "\t" << al->NumMapped << endl;
+//  al = &al2;
+//  cerr << al->ReferenceBegin << "\t" << al->NumMapped << endl;
+//}
+
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
@@ -604,7 +622,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	} else if ( ( isMate1Empty || isMate2Empty )
 		&&  !( isMate1Empty && isMate2Empty ) ) {
 		
-		Alignment al1 = r.Mate1Alignments[0], al2 = r.Mate2Alignments[0], unmappedAl;
+		Alignment al1, al2, unmappedAl;
+		if (!isMate1Empty) al1 = *newMate1Set[0];
+		if (!isMate2Empty) al2 = *newMate2Set[0];
 		if ( isMate1Multiple || isMate2Multiple ) 
 			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
 			    read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true));

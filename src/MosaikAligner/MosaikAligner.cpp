@@ -294,7 +294,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-
+/*
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/1");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/2");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/3");
@@ -324,7 +324,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//}
             PrintStatistics();
             exit(1);
-
+*/
 		
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -546,8 +546,10 @@ void CMosaikAligner::GetHashStatistics(
 		unsigned int startRef = referenceGroups[i].first;
 		unsigned int endRef   = referenceGroups[i].first + referenceGroups[i].second - 1;
 		pair<unsigned int, unsigned int> temp(referenceSequences[startRef].Begin, referenceSequences[endRef].End);
+//cerr << referenceGroups[i].first << "\t" << referenceGroups[i].second << "\t" << referenceSequences[endRef].End - referenceSequences[startRef].Begin + 1 << endl;
 		references.push_back(temp);
 	}
+	//exit(1);
 
 	nHashs.resize(length, 0);
 	expectedMemories.resize(length, 0);
