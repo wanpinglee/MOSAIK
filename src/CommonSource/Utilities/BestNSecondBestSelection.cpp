@@ -74,13 +74,15 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		competitor_swScore *= 1.5;
 		swScore *= 1.5;
 
-		//float competitor_fragScore = ( expectedFragmentLength - competitor_diff ) / (float) ( expectedFragmentLength );
-		//float fragScore            = ( expectedFragmentLength - diff ) / (float) ( expectedFragmentLength );
-		float competitor_fragScore = 0;
-		float fragScore = 0;
+		float competitor_fragScore = ( expectedFragmentLength - competitor_diff ) / (float) ( expectedFragmentLength );
+		float fragScore            = ( expectedFragmentLength - diff ) / (float) ( expectedFragmentLength );
+		//float competitor_fragScore = 0;
+		//float fragScore = 0;
 
 		float competitor_mqScore   = ( competitor_mate1.Quality + competitor_mate2.Quality ) / 200.0;
 		float mqScore              = ( mate1.Quality + mate2.Quality ) / 200.0;
+		//float competitor_mqScore   = 0;
+		//float mqScore              = 0;
 
 		float competitor_finalScore = competitor_swScore + competitor_fragScore + competitor_mqScore;
 		float finalScore            = swScore + fragScore + mqScore;

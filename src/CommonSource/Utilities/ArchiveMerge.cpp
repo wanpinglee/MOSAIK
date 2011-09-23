@@ -492,17 +492,17 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
 
-//if (r.Name == "X_82797449_82798471_1:0:0_6:0:0_1c40") {
-//  cerr << "mate1" << endl;
-//  for (vector<Alignment*>::iterator ite = newMate1Set.begin(); ite != newMate1Set.end(); ++ite) {
-//    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (*ite)->Quality+33 << "\t" << (*ite)->NumMapped << endl;
-//  }
+if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
+  cerr << "mate1" << endl;
+  for (vector<Alignment*>::iterator ite = newMate1Set.begin(); ite != newMate1Set.end(); ++ite) {
+    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->NumMapped << endl;
+  }
   
-//  cerr << "mate2" << endl;
-//  for (vector<Alignment*>::iterator ite = newMate2Set.begin(); ite != newMate2Set.end(); ++ite) {
-//    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (*ite)->Quality+33 << "\t" << (*ite)->NumMapped << endl;
-//  }
-//}
+  cerr << "mate2" << endl;
+  for (vector<Alignment*>::iterator ite = newMate2Set.begin(); ite != newMate2Set.end(); ++ite) {
+    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->NumMapped << endl;
+  }
+}
 
 	// UU, UM, and MM pair
 	if ( ( isMate1Unique && isMate2Unique )
@@ -603,13 +603,6 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		// GetStatisticsCounters needs some information
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
-
-//if (r.Name == "X_82797449_82798471_1:0:0_6:0:0_1c40") {
-//  Alignment* al = &al1;
-//  cerr << al->ReferenceBegin << "\t" << al->NumMapped << endl;
-//  al = &al2;
-//  cerr << al->ReferenceBegin << "\t" << al->NumMapped << endl;
-//}
 
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
