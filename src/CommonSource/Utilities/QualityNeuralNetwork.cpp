@@ -53,7 +53,7 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
 
   int swDiff1 = annInputs1.swScore - annInputs1.nextSwScore;
   fann_inputs.push_back(swDiff1 / (float)(annInputs1.read_length * SwMatchScore));
-  fann_inputs.push_back((float)annInputs1.longest_match);
+  fann_inputs.push_back(annInputs1.longest_match / (float)annInputs1.read_length);
   fann_inputs.push_back(annInputs1.entropy);
   if (annInputs1.numHashes == 0) { // the mate is rescued by mate2
     fann_inputs.push_back(log10((float)(annInputs2.numMappings + 1)));
@@ -65,7 +65,7 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
 
   int swDiff2 = annInputs2.swScore - annInputs2.nextSwScore;
   fann_inputs.push_back(swDiff2 / (float)(annInputs2.read_length * SwMatchScore));
-  fann_inputs.push_back((float)annInputs2.longest_match);
+  fann_inputs.push_back(annInputs2.longest_match / (float)annInputs2.read_length);
   fann_inputs.push_back(annInputs2.entropy);
   if (annInputs2.numHashes == 0) { // the mate is rescued by mate1
     fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
