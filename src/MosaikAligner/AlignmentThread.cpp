@@ -590,7 +590,7 @@ void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBam
 // write alignment buffer to bam/archive
 void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut ) {
 	// bam output
-	if ( !mFlags.UseArchiveOutput ) {
+	if (!alInfo.isUsingLowMemory) {
 		AlignmentBamBuffer buffer1, buffer2;
 		Alignment dumpAl;
 
@@ -647,6 +647,7 @@ void CAlignmentThread::AlignReadArchive(
 	alInfo.isUsingSOLiD        = (mSettings.SequencingTechnology == ST_SOLID    ? true : false);
 	alInfo.isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
 	alInfo.isPairedEnd         = isPairedEnd;
+	alInfo.isUsingLowMemory    = mFlags.UseArchiveOutput;
 
 	_bufferSize = 1000;
 
@@ -807,7 +808,7 @@ void CAlignmentThread::AlignReadArchive(
 
 		// For low-memory, we don't remove special alignment here,
 		// the special alignments will be considered when merging archives
-		if ( mSReference.found && !mFlags.UseArchiveOutput ) {
+		if (mSReference.found && !alInfo.isUsingLowMemory) {
 			ProcessSpecialAlignment(&mate1Set, &mate1SpecialAl, &isMate1Special);
 			if (isPairedEnd)
 			  ProcessSpecialAlignment(&mate2Set, &mate2SpecialAl, &isMate2Special);
@@ -890,7 +891,7 @@ void CAlignmentThread::AlignReadArchive(
 				al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
 			}
 
-			if ( mFlags.UseArchiveOutput ) {
+			if (alInfo.isUsingLowMemory) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, al1, al2, isLongRead );
@@ -973,7 +974,7 @@ void CAlignmentThread::AlignReadArchive(
 			al.Quality = al.RecalibratedQuality;
 
 
-			if ( mFlags.UseArchiveOutput ) {
+			if (alInfo.isUsingLowMemory) {
 				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
@@ -1023,7 +1024,7 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( unmappedAl1, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, false, false );
 			SetRequiredInfo( unmappedAl2, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
 
-			if ( mFlags.UseArchiveOutput ) {
+			if (alInfo.isUsingLowMemory) {
 
 				bool isLongReadXX = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
 				isLongReadXX |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
@@ -1065,7 +1066,7 @@ void CAlignmentThread::AlignReadArchive(
 			exit(1);
 		}
 
-		if ( !mFlags.UseArchiveOutput ) {
+		if (!alInfo.isUsingLowMemory) {
 			if ( bamBuffer.size() > alignmentBufferSize )
 				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 		}
@@ -1229,7 +1230,8 @@ void CAlignmentThread::SetRequiredInfo (
 		if ( !isItselfMapped ) {
 			al.NumMapped = 0;
 			al.MappedLength = 0;
-			if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
+			if ((!alInfo.isUsingLowMemory) 
+			    || (alInfo.isUsingLowMemory && mFlags.SaveUnmappedBasesInArchive)) {
 				al.Query = m.Bases;
 				al.Reference.Copy( 'Z', al.Query.Length() );
 				al.IsJunk = false;
@@ -1289,7 +1291,8 @@ void CAlignmentThread::SetRequiredInfo (
 		// fill out Colorspace raw bases and qualites
 		al.CsQuery.clear();
 		al.CsBaseQualities.clear();
-		if ( ( !mFlags.UseArchiveOutput ) || ( mFlags.UseArchiveOutput && mFlags.SaveUnmappedBasesInArchive ) ) {
+		if ( (!alInfo.isUsingLowMemory) 
+		    || (alInfo.isUsingLowMemory && mFlags.SaveUnmappedBasesInArchive)) {
 			// raw sequence
 			CMosaikString rawCS = m.Bases;
 			mCS.ConvertReadPseudoColorspaceToColorspace( rawCS );

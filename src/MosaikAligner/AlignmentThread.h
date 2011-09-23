@@ -387,6 +387,7 @@ private:
 		bool isUsingSOLiD;
 		bool isUsingIlluminaLong;
 		bool isPairedEnd;
+		bool isUsingLowMemory;
 	};
 
 	// =========
