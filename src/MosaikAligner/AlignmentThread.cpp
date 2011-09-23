@@ -1952,7 +1952,7 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 
 
 	// quit if we don't have a region to align against
-	if(begin <= end) {
+	if(begin >= end) {
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;

@@ -572,6 +572,16 @@ int main(int argc, char* argv[]) {
 		//}
 	}
 
+	// files for neural network for mapping quality calculation
+	if (!settings.HasPeNeuralNetworkFilename) {
+		errorBuilder << ERROR_SPACER << "An input paired-end neural-network file was not specified. Please use the -annpe parameter." << endl;
+		foundError = true;
+	}
+	if (!settings.HasSeNeuralNetworkFilename) {
+		errorBuilder << ERROR_SPACER << "An input single-end neural-network file was not specified. Please use the -annse parameter." << endl;
+		foundError = true;
+	}
+
 	// print the errors if any were found
 	if(foundError) {
 
