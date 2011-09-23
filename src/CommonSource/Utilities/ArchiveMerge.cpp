@@ -491,7 +491,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate1Empty    = ( newMate1Set.size() == 0 ) ? true : false;
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
-
+/*
 if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
   cerr << "mate1" << endl;
   for (vector<Alignment*>::iterator ite = newMate1Set.begin(); ite != newMate1Set.end(); ++ite) {
@@ -503,7 +503,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
     cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->NumMapped << endl;
   }
 }
-
+*/
 	// UU, UM, and MM pair
 	if ( ( isMate1Unique && isMate2Unique )
 		|| ( isMate1Unique && isMate2Multiple )

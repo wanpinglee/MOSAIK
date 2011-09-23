@@ -1072,12 +1072,13 @@ void CAlignmentThread::AlignReadArchive(
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
-	mate1Ann.read_length = al.Query.Length();
-	mate1Ann.swScore     = al.SwScore;
-	mate1Ann.nextSwScore = al.NextSwScore;
-	mate1Ann.entropy     = al.Entropy;
-	mate1Ann.numMappings = al.NumMapped;
-	mate1Ann.numHashes   = al.NumHash;
+	mate1Ann.read_length   = al.Query.Length();
+	mate1Ann.swScore       = al.SwScore;
+	mate1Ann.nextSwScore   = al.NextSwScore;
+	mate1Ann.longest_match = al.NumLongestMatchs;
+	mate1Ann.entropy       = al.Entropy;
+	mate1Ann.numMappings   = al.NumMapped;
+	mate1Ann.numHashes     = al.NumHash;
 	
 	return mqCalculator.GetQualitySe(mate1Ann);
 }
@@ -1085,19 +1086,21 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
  	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 
-	mate1Ann.read_length = al1.Query.Length();
-	mate1Ann.swScore     = al1.SwScore;
-	mate1Ann.nextSwScore = al1.NextSwScore;
-	mate1Ann.entropy     = al1.Entropy;
-	mate1Ann.numMappings = al1.NumMapped;
-	mate1Ann.numHashes   = al1.NumHash;
+	mate1Ann.read_length   = al1.Query.Length();
+	mate1Ann.swScore       = al1.SwScore;
+	mate1Ann.nextSwScore   = al1.NextSwScore;
+	mate1Ann.longest_match = al1.NumLongestMatchs;
+	mate1Ann.entropy       = al1.Entropy;
+	mate1Ann.numMappings   = al1.NumMapped;
+	mate1Ann.numHashes     = al1.NumHash;
 
-	mate2Ann.read_length = al2.Query.Length();
-	mate2Ann.swScore     = al2.SwScore;
-	mate2Ann.nextSwScore = al2.NextSwScore;
-	mate2Ann.entropy     = al2.Entropy;
-	mate2Ann.numMappings = al2.NumMapped;
-	mate2Ann.numHashes   = al2.NumHash;
+	mate2Ann.read_length   = al2.Query.Length();
+	mate2Ann.swScore       = al2.SwScore;
+	mate2Ann.nextSwScore   = al2.NextSwScore;
+	mate1Ann.longest_match = al2.NumLongestMatchs;
+	mate2Ann.entropy       = al2.Entropy;
+	mate2Ann.numMappings   = al2.NumMapped;
+	mate2Ann.numHashes     = al2.NumHash;
 
 	return mqCalculator.GetQualityPe(mate1Ann, mate2Ann, flDiff);
 }

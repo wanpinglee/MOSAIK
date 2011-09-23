@@ -15,6 +15,7 @@ class QualityNeuralNetwork {
     int read_length;
     int swScore;
     int nextSwScore;
+    int longest_match;
     float entropy;
     int numMappings;
     int numHashes;
