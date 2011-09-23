@@ -863,10 +863,12 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
-			al1.RecalibratedQuality = GetMappingQuality(al1, al2);
-			al2.RecalibratedQuality = GetMappingQuality(al2, al1);
-			al1.Quality = al1.RecalibratedQuality;
-			al2.Quality = al2.RecalibratedQuality;
+			if (!alInfo.isUsingLowMemory) {
+				al1.RecalibratedQuality = GetMappingQuality(al1, al2);
+				al2.RecalibratedQuality = GetMappingQuality(al2, al1);
+				al1.Quality = al1.RecalibratedQuality;
+				al2.Quality = al2.RecalibratedQuality;
+			}
 
 			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
 			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
@@ -953,8 +955,10 @@ void CAlignmentThread::AlignReadArchive(
 				SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status ),
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
-			al.RecalibratedQuality = GetMappingQuality(al);
-			al.Quality = al.RecalibratedQuality;
+			if (!alInfo.isUsingLowMemory) {
+				al.RecalibratedQuality = GetMappingQuality(al);
+				al.Quality = al.RecalibratedQuality;
+			}
 
 
 			if (alInfo.isUsingLowMemory) {
@@ -1941,14 +1945,14 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 	if(end   > refEnd)   end   = refEnd;
 
 	// adjust the start position if the reference starts with a J nucleotide
-	while(mReference[begin] == 'X') begin++;
+	while(mReference[begin] == 'X') ++begin;
 
 	// adjust the stop position if the reference ends with a J nucleotide
-	while(mReference[end] == 'X')   end--;
+	while(mReference[end] == 'X')   --end;
 
 
 	// quit if we don't have a region to align against
-	if(begin == end) {
+	if(begin <= end) {
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;

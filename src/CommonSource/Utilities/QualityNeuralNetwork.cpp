@@ -22,8 +22,8 @@ QualityNeuralNetwork::~QualityNeuralNetwork() {
 
 void QualityNeuralNetwork::Open(const string& pe_file, 
                                 const string& se_file) {
-  pe_ann = fann_create_from_file(pe_ann_file.c_str());
-  se_ann = fann_create_from_file(se_ann_file.c_str());
+  pe_ann = fann_create_from_file(pe_file.c_str());
+  se_ann = fann_create_from_file(se_file.c_str());
   ann_open = true;
 }
 
@@ -35,8 +35,8 @@ unsigned char QualityNeuralNetwork::GetQualitySe(const FannInputs& annInputs) {
   int swDiff = annInputs.swScore - annInputs.nextSwScore;
   fann_inputs.push_back(swDiff / (float)(annInputs.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs.entropy);
-  fann_inputs.push_back(log10(annInputs.numMappings + 1));
-  fann_inputs.push_back(log10(annInputs.numHashes + 1));
+  fann_inputs.push_back(log10((float)(annInputs.numMappings + 1)));
+  fann_inputs.push_back(log10((float)(annInputs.numHashes + 1)));
   
   calc_out = fann_run(se_ann, &fann_inputs[0]);
   return float2phred(1 - (1 + calc_out[0]) / 2);
@@ -53,16 +53,16 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
   int swDiff1 = annInputs1.swScore - annInputs1.nextSwScore;
   fann_inputs.push_back(swDiff1 / (float)(annInputs1.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs1.entropy);
-  fann_inputs.push_back(log10(annInputs1.numMappings + 1));
-  fann_inputs.push_back(log10(annInputs1.numHashes + 1));
+  fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
+  fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
 
   int swDiff2 = annInputs2.swScore - annInputs2.nextSwScore;
   fann_inputs.push_back(swDiff2 / (float)(annInputs2.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs2.entropy);
-  fann_inputs.push_back(log10(annInputs2.numMappings + 1));
-  fann_inputs.push_back(log10(annInputs2.numHashes + 1));
+  fann_inputs.push_back(log10((float)(annInputs2.numMappings + 1)));
+  fann_inputs.push_back(log10((float)(annInputs2.numHashes + 1)));
 
-  fann_inputs.push_back(log10(fragment_length_diff + 1));
+  fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
 
   calc_out = fann_run(pe_ann, &fann_inputs[0]);
   return float2phred(1 - (1 + calc_out[0]) / 2);

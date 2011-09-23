@@ -28,8 +28,6 @@ class QualityNeuralNetwork {
 			     const int& fragment_length_diff);
  private:
   // variables
-  string pe_ann_file; // filename of paired-end network
-  string se_ann_file; // filename of single-end network
   fann*  pe_ann;
   fann*  se_ann;
   bool   ann_open;

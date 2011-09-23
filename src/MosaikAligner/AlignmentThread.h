@@ -497,8 +497,8 @@ private:
 	QualityNeuralNetwork mqCalculator;
 	QualityNeuralNetwork::FannInputs mate1Ann;
 	QualityNeuralNetwork::FannInputs mate2Ann;
-	//string paired_end_ann_file;
-	//string single_end_ann_file;
+	string paired_end_ann_file;
+	string single_end_ann_file;
 	//fann* paired_end_ann;
 	//fann* single_end_ann;
 	//fann_type *calc_out;
