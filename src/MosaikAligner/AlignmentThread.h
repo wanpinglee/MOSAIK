@@ -25,11 +25,11 @@
 #include "BestNSecondBestSelection.h"
 #include "CigarTager.h"
 #include "ColorspaceUtilities.h"
-#include "fann.h"
 #include "MdTager.h"
 #include "NaiveAlignmentSet.h"
 #include "PairwiseUtilities.h"
 #include "PosixThreads.h"
+#include "QualityNeuralNetwork.h"
 #include "ReadReader.h"
 #include "ReferenceSequence.h"
 #include "SequenceUtilities.h"
@@ -494,11 +494,13 @@ private:
 	AlignmentInfo alInfo;
 
 	// neural-net
-	string paired_end_ann_file;
-	string single_end_ann_file;
-	fann* paired_end_ann;
-	fann* single_end_ann;
-	fann_type *calc_out;
-	vector<fann_type> fann_inputs;
-	uint64_t reference_length_;
+	QualityNeuralNetwork mqCalculator;
+	QualityNeuralNetwork::FannInputs mate1Ann;
+	QualityNeuralNetwork::FannInputs mate2Ann;
+	//string paired_end_ann_file;
+	//string single_end_ann_file;
+	//fann* paired_end_ann;
+	//fann* single_end_ann;
+	//fann_type *calc_out;
+	//vector<fann_type> fann_inputs;
 };

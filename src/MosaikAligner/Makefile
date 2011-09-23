@@ -7,7 +7,7 @@
 # define our includes
 # -------------------
 TD = ../
-INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(PAIRWISE_DIR) -I$(TD)$(UTILITIES_DIR) -I$(TD)$(EXTERNAL_DIR) -I/home/wanping/tools/fann-2.1.0/src/include/
+INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(PAIRWISE_DIR) -I$(TD)$(UTILITIES_DIR) -I$(TD)$(EXTERNAL_DIR)
 
 # ----------------------------------
 # define our source and object files

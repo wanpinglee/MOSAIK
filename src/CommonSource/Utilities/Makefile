@@ -7,12 +7,12 @@
 # define our includes
 # -------------------
 TD = ../../
-INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(EXTERNAL_DIR) -I.
+INCLUDES = -I$(TD)$(CONFIG_DIR) -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(MOSAIKREAD_DIR) -I$(TD)$(EXTERNAL_DIR) -I$(TD)/fann-2.1.0/include/ -I.
 
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
-SOURCES= ArchiveMerge.cpp ArchiveSort.cpp Benchmark.cpp BestNSecondBestSelection.cpp CigarTager.cpp ColorspaceUtilities.cpp ConsoleUtilities.cpp FastLZIO.cpp FileUtilities.cpp MdTager.cpp MemoryUtilities.cpp Options.cpp PairwiseUtilities.cpp RegexUtilities.cpp SequenceUtilities.cpp SHA1.cpp SortThread.cpp StatisticsMaps.cpp TimeSupport.cpp ZaTager.cpp
+SOURCES= ArchiveMerge.cpp ArchiveSort.cpp Benchmark.cpp BestNSecondBestSelection.cpp CigarTager.cpp ColorspaceUtilities.cpp ConsoleUtilities.cpp FastLZIO.cpp FileUtilities.cpp MdTager.cpp MemoryUtilities.cpp Options.cpp PairwiseUtilities.cpp QualityNeuralNetwork.cpp RegexUtilities.cpp SequenceUtilities.cpp SHA1.cpp SortThread.cpp StatisticsMaps.cpp TimeSupport.cpp ZaTager.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 

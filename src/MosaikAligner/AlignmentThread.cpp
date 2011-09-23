@@ -19,19 +19,6 @@ pthread_mutex_t CAlignmentThread::mSaveMultipleBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveSpecialBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveUnmappedBamMutex;
 
-const unsigned char PHRED_MAX = 255;
-
-inline unsigned char float2phred(long double prob) {
-    if (prob == 1)
-    return PHRED_MAX;  // guards against "-0"
-    long double p = -10 * (long double) log10(prob);
-    if (p < 0 || p > PHRED_MAX) // int overflow guard
-      return 0;
-    else
-      return floor(p + 0.5);
-
-}
-
 bool FilterMateOut ( const unsigned int length, char* basePtr ) {
 
 	unsigned int count = 0;
@@ -106,9 +93,6 @@ CAlignmentThread::~CAlignmentThread(void) {
 		delete [] mReverseRead; 
 		mReverseRead = NULL;
 	}
-
-	fann_destroy(single_end_ann);
-	fann_destroy(paired_end_ann);
 }
 
 // activates the current alignment thread
@@ -666,8 +650,7 @@ void CAlignmentThread::AlignReadArchive(
 		minSpanLength = mSettings.AlignmentCandidateThreshold;
 
 	// create neural networks
-	paired_end_ann = fann_create_from_file(paired_end_ann_file.c_str());
-	single_end_ann = fann_create_from_file(single_end_ann_file.c_str());
+	mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
 
 	// keep reading until no reads remain
 	Mosaik::Read mr;
@@ -1085,60 +1068,34 @@ void CAlignmentThread::AlignReadArchive(
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
-	fann_inputs.clear();
-
-	float temp = al.Query.Length();
-	temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
-	fann_inputs.push_back(temp);
-	temp = al.NumLongestMatchs / (float)al.Query.Length();
-	fann_inputs.push_back(temp);
-	fann_inputs.push_back(al.Entropy);
-	fann_inputs.push_back(log10(al.NumMapped + 1));
-	fann_inputs.push_back(log10(al.NumHash + 1));
-	calc_out = fann_run(single_end_ann, &fann_inputs[0]);
-	return float2phred(1 - (1 + calc_out[0]) / 2);
+	mate1Ann.read_length = al.Query.Length();
+	mate1Ann.swScore     = al.SwScore;
+	mate1Ann.nextSwScore = al.NextSwScore;
+	mate1Ann.entropy     = al.Entropy;
+	mate1Ann.numMappings = al.NumMapped;
+	mate1Ann.numHashes   = al.NumHash;
+	
+	return mqCalculator.GetQualitySe(mate1Ann);
 }
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
-  
-	fann_inputs.clear();
+ 	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 
-	float temp1 = al1.Query.Length();
-	float temp2 = al2.Query.Length();
-	float fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
-	fl = abs(fl) + 1;
+	mate1Ann.read_length = al1.Query.Length();
+	mate1Ann.swScore     = al1.SwScore;
+	mate1Ann.nextSwScore = al1.NextSwScore;
+	mate1Ann.entropy     = al1.Entropy;
+	mate1Ann.numMappings = al1.NumMapped;
+	mate1Ann.numHashes   = al1.NumHash;
 
-	int sw = (int)al1.SwScore - (int)al1.NextSwScore;
-	temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
-	fann_inputs.push_back(temp1);
-	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
-	fann_inputs.push_back(al1.Entropy);
-	if (!al1.WasRescued) {
-	  fann_inputs.push_back(log10(al1.NumMapped + 1));
-	  fann_inputs.push_back(log10(al1.NumHash + 1));
-	} else {
-	  fann_inputs.push_back(log10(al2.NumMapped + 1));
-	  fann_inputs.push_back(log10(al2.NumHash + 1));
-	}
+	mate2Ann.read_length = al2.Query.Length();
+	mate2Ann.swScore     = al2.SwScore;
+	mate2Ann.nextSwScore = al2.NextSwScore;
+	mate2Ann.entropy     = al2.Entropy;
+	mate2Ann.numMappings = al2.NumMapped;
+	mate2Ann.numHashes   = al2.NumHash;
 
-	sw = (int) al2.SwScore - (int)al2.NextSwScore;
-	temp2 = (temp2 == 0) ? -1.0 : sw/ (float)(al2.Query.Length() * 10);
-	fann_inputs.push_back(temp2);
-	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
-	fann_inputs.push_back(al2.Entropy);
-	if (!al2.WasRescued) {
-	  fann_inputs.push_back(log10(al2.NumMapped + 1));
-	  fann_inputs.push_back(log10(al2.NumHash + 1));
-	} else {
-	  fann_inputs.push_back(log10(al1.NumMapped + 1));
-	  fann_inputs.push_back(log10(al1.NumHash + 1));
-	}
-
-	fann_inputs.push_back(log10(fl));
-
-	calc_out = fann_run(paired_end_ann, &fann_inputs[0]);
-	return float2phred(1 - (1 + calc_out[0]) / 2);
-
+	return mqCalculator.GetQualityPe(mate1Ann, mate2Ann, flDiff);
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
