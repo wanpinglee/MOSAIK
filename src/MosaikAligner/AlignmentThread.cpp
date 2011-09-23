@@ -1086,16 +1086,14 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
 	fann_inputs.clear();
 
-	float normalizedRefLen = 3101846239 / mReferenceLength;
-	
 	float temp = al.Query.Length();
 	temp = (temp == 0) ? -1.0 : ( al.SwScore - al.NextSwScore ) / (float)(temp * 10);
 	fann_inputs.push_back(temp);
 	temp = al.NumLongestMatchs / (float)al.Query.Length();
 	fann_inputs.push_back(temp);
 	fann_inputs.push_back(al.Entropy);
-	fann_inputs.push_back(log10((al.NumMapped + 1) * normalizedRefLen + 1));
-	fann_inputs.push_back(log10((al.NumHash + 1) * normalizedRefLen + 1));
+	fann_inputs.push_back(log10(al.NumMapped + 1));
+	fann_inputs.push_back(log10(al.NumHash + 1));
 	calc_out = fann_run(single_end_ann, &fann_inputs[0]);
 	return float2phred(1 - (1 + calc_out[0]) / 2);
 }
@@ -1109,19 +1107,17 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	float fl = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 	fl = abs(fl) + 1;
 
-	float normalizedRefLen = 3101846239 / mReferenceLength;
-
 	int sw = (int)al1.SwScore - (int)al1.NextSwScore;
 	temp1 = (temp1 == 0) ? -1.0 : sw / (float)(al1.Query.Length() * 10);
 	fann_inputs.push_back(temp1);
 	fann_inputs.push_back(al1.NumLongestMatchs / (float)al1.Query.Length());
 	fann_inputs.push_back(al1.Entropy);
 	if (!al1.WasRescued) {
-	  fann_inputs.push_back(log10((al1.NumMapped + 1) * normalizedRefLen + 1));
-	  fann_inputs.push_back(log10((al1.NumHash + 1) * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al1.NumMapped + 1));
+	  fann_inputs.push_back(log10(al1.NumHash + 1));
 	} else {
-	  fann_inputs.push_back(log10((al2.NumMapped + 1) * normalizedRefLen + 1));
-	  fann_inputs.push_back(log10((al2.NumHash + 1) * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al2.NumMapped + 1));
+	  fann_inputs.push_back(log10(al2.NumHash + 1));
 	}
 
 	sw = (int) al2.SwScore - (int)al2.NextSwScore;
@@ -1130,11 +1126,11 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	fann_inputs.push_back(al2.NumLongestMatchs / (float)al2.Query.Length());
 	fann_inputs.push_back(al2.Entropy);
 	if (!al2.WasRescued) {
-	  fann_inputs.push_back(log10((al2.NumMapped + 1) * normalizedRefLen + 1));
-	  fann_inputs.push_back(log10((al2.NumHash + 1) * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al2.NumMapped + 1));
+	  fann_inputs.push_back(log10(al2.NumHash + 1));
 	} else {
-	  fann_inputs.push_back(log10((al1.NumMapped + 1) * normalizedRefLen + 1));
-	  fann_inputs.push_back(log10((al1.NumHash + 1) * normalizedRefLen + 1));
+	  fann_inputs.push_back(log10(al1.NumMapped + 1));
+	  fann_inputs.push_back(log10(al1.NumHash + 1));
 	}
 
 	fann_inputs.push_back(log10(fl));
