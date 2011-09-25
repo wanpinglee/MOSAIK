@@ -829,7 +829,7 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
 	
 
-if (mr.Name == "10_100693585_100694521_0:0:0_4:1:0_8a67") {
+if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
   cerr << "mate1" << endl;
   for (vector<Alignment*>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite) {
     cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->SwScore << endl;
@@ -1566,7 +1566,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				// the base qualities of SOLiD reads are attached in ApplyReadFilters
 				//if( mFlags.EnableColorspace )
 				//	al.BaseQualities.Copy(qualities, queryLength);
-				al.Quality = GetMappingQuality(al);
+				//al.Quality = GetMappingQuality(al);
 				alignments.Add(al);
 			}
 
@@ -1594,7 +1594,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// the base qualities of SOLiD reads are attached in ApplyReadFilters
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
-					al.Quality = GetMappingQuality(al);
+					//al.Quality = GetMappingQuality(al);
 					al.NumHash = numHash;
 					alignments.Add(al);
 				}
@@ -1641,7 +1641,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Copy( qualities, queryLength);
 						//	al.BaseQualities.Reverse();
 						//}
-						al.Quality = GetMappingQuality(al);
+						//al.Quality = GetMappingQuality(al);
 						al.NumHash = numHash;
 						alignments.Add(al);
 					}
