@@ -827,7 +827,19 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
-		
+	
+
+if (mr.Name == "10_100693585_100694521_0:0:0_4:1:0_8a67") {
+  cerr << "mate1" << endl;
+  for (vector<Alignment*>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite) {
+    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->SwScore << endl;
+  }
+  cerr << "mate2" << endl;
+  for (vector<Alignment*>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite) {
+    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->SwScore << endl;
+  }
+}
+
 			Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
@@ -863,7 +875,7 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
-			if (!alInfo.isUsingLowMemory) {
+			if (!alInfo.isUsingLowMemory && properPair1) {
 				al1.RecalibratedQuality = GetMappingQuality(al1, al2);
 				al2.RecalibratedQuality = GetMappingQuality(al2, al1);
 				al1.Quality = al1.RecalibratedQuality;
@@ -904,18 +916,18 @@ void CAlignmentThread::AlignReadArchive(
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-				SaveBamAlignment( al1, zaTag1, false, false, false );
-				SaveBamAlignment( al2, zaTag2, false, false, false );
+				//SaveBamAlignment( al1, zaTag1, false, false, false );
+				//SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
-				//ostringstream zaTag1, zaTag2;
-				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
+				ostringstream zaTag1, zaTag2;
+				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -930,10 +942,13 @@ void CAlignmentThread::AlignReadArchive(
 				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
 
 			bool isFirstMate;
+			Alignment al;
 			if ( !mate1Set.empty() ) {
 				isFirstMate = true;
+				al = isMate1Multiple ? al1 : *mate1Set[0];
 			} else if ( !mate2Set.empty() ) {
 				isFirstMate = false;
+				al = isMate2Multiple ? al2 : *mate2Set[0];
 				if ( !isPairedEnd ) {
 					cout << "ERROR: The sequence technology is single-end, but second mate is aligned." << endl;
 					exit(1);
@@ -943,7 +958,7 @@ void CAlignmentThread::AlignReadArchive(
 				exit(1);
 			}
 
-			Alignment al = isFirstMate ? al1 : al2;
+			//Alignment al = isFirstMate ? al1 : al2;
 		
 			// patch the information for reporting
 			//Alignment al = isFirstMate ? *(mate1Set[0]) : *(mate2Set[0]);
@@ -955,10 +970,11 @@ void CAlignmentThread::AlignReadArchive(
 				SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status ),
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
-			if (!alInfo.isUsingLowMemory) {
-				al.RecalibratedQuality = GetMappingQuality(al);
-				al.Quality = al.RecalibratedQuality;
-			}
+			//if (!alInfo.isUsingLowMemory) {
+			//	al.RecalibratedQuality = GetMappingQuality(al);
+			//	al.Quality = al.RecalibratedQuality;
+			//}
+			al.RecalibratedQuality = al.Quality;
 
 
 			if (alInfo.isUsingLowMemory) {
@@ -966,11 +982,23 @@ void CAlignmentThread::AlignReadArchive(
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
-				//ostringstream zaTag1, zaTag2;
-				//zaTag1 << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash;
-				//zaTag2 << "" << unmappedAl.SwScore << ";" << unmappedAl.NextSwScore << ";" << unmappedAl.NumLongestMatchs << ";" << unmappedAl.Entropy << ";" << unmappedAl.NumMapped << ";" << unmappedAl.NumHash;
+				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				ostringstream zaTag1Stream, zaTag2Stream;
+				zaTag1Stream << "" << al.SwScore << ";" 
+				             << al.NextSwScore << ";" 
+					     << al.NumLongestMatchs << ";" 
+					     << al.Entropy << ";" 
+					     << al.NumMapped << ";" 
+					     << al.NumHash;
+				zaTag2Stream << "" << unmappedAl.SwScore << ";" 
+				             << unmappedAl.NextSwScore << ";" 
+					     << unmappedAl.NumLongestMatchs << ";" 
+					     << unmappedAl.Entropy << ";" 
+					     << unmappedAl.NumMapped << ";" 
+					     << unmappedAl.NumHash;
+				const char* zaTag1 = zaTag1Stream.str().c_str();
+				const char* zaTag2 = zaTag2Stream.str().c_str();
 
 				// store special hits
 				if ( isMate1Special ) {
@@ -1111,18 +1139,18 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 
 	// Note that there are at least two alignments
 	vector<Alignment*>::reverse_iterator rit = mateSet->rbegin();
-	//unsigned short mq1     = (*rit)->Quality;
+	unsigned short mq1     = (*rit)->Quality;
 	unsigned int   swScore = (*rit)->SwScore;
 	rit++;
-	//unsigned short mq2 = (*rit)->Quality;
+	unsigned short mq2 = (*rit)->Quality;
 
 	if ( swScore > ( readLength * 9 ) )
 		return true;
 	
-	//if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
-	//	return true;
-	//else
-	//	return false;
+	if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
+		return true;
+	else
+		return false;
 	return false;
 }
 
@@ -1538,7 +1566,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 				// the base qualities of SOLiD reads are attached in ApplyReadFilters
 				//if( mFlags.EnableColorspace )
 				//	al.BaseQualities.Copy(qualities, queryLength);
-				//al.Quality = GetMappingQuality(al);
+				al.Quality = GetMappingQuality(al);
 				alignments.Add(al);
 			}
 
@@ -1566,7 +1594,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					// the base qualities of SOLiD reads are attached in ApplyReadFilters
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
-					//al.Quality = GetMappingQuality(al);
+					al.Quality = GetMappingQuality(al);
 					al.NumHash = numHash;
 					alignments.Add(al);
 				}
@@ -1613,7 +1641,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Copy( qualities, queryLength);
 						//	al.BaseQualities.Reverse();
 						//}
-						//al.Quality = GetMappingQuality(al);
+						al.Quality = GetMappingQuality(al);
 						al.NumHash = numHash;
 						alignments.Add(al);
 					}

@@ -8,7 +8,7 @@ inline unsigned char float2phred(long double prob) {
     return PHRED_MAX;  // guards against "-0"
     long double p = -10 * (long double) log10(prob);
     if (p < 0 || p > PHRED_MAX) // int overflow guard
-      return 0;
+      return PHRED_MAX;
     else
       return floor(p + 0.5);
 
@@ -34,7 +34,7 @@ unsigned char QualityNeuralNetwork::GetQualitySe(const FannInputs& annInputs) {
   
   int swDiff = annInputs.swScore - annInputs.nextSwScore;
   fann_inputs.push_back(swDiff / (float)(annInputs.read_length * SwMatchScore));
-  fann_inputs.push_back((float)annInputs.longest_match);
+  fann_inputs.push_back(annInputs.longest_match / (float)annInputs.read_length);
   fann_inputs.push_back(annInputs.entropy);
   fann_inputs.push_back(log10((float)(annInputs.numMappings + 1)));
   fann_inputs.push_back(log10((float)(annInputs.numHashes + 1)));

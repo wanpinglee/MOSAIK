@@ -282,19 +282,25 @@ void BestNSecondBestSelection::Select (
 				sort (mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq());
 			}
 
-			if (nMate1 == 1)
+			if (nMate1 == 1) {
 				bestMate1.NextBestQuality = 0;
+				bestMate1.NextSwScore     = 0;
 				//newMate1Set.begin()->NextBestQuality = 0;
-			else
+			} else {
 				bestMate1.NextBestQuality = (*(mate1Set.rbegin() + 1))->Quality;
+				bestMate1.NextSwScore     = (*(mate1Set.rbegin() + 1))->SwScore;
 				//newMate1Set.begin()->NextBestQuality = (*(mate1Set.rbegin() + 1))->Quality;
+			}
 
-			if (nMate2 == 1)
+			if (nMate2 == 1) {
 				bestMate2.NextBestQuality = 0;
+				bestMate2.NextSwScore     = 0;
 				//newMate2Set.begin()->NextBestQuality = 0;
-			else
+			} else {
 				bestMate2.NextBestQuality = (*(mate2Set.rbegin() + 1))->Quality;
+				bestMate2.NextSwScore     = (*(mate2Set.rbegin() + 1))->SwScore;
 				//newMate2Set.begin()->NextBestQuality = (*(mate2Set.rbegin() + 1))->Quality;
+			}
 		}
 
 		bestMate1.NumMapped = nMate1;
@@ -324,6 +330,7 @@ void BestNSecondBestSelection::Select (
 		//newMate1Set.begin()->NextBestQuality = (*ite)->Quality;
 		//newMate1Set.begin()->NumMapped = nMate1;
 		bestMate1.NextBestQuality = (*ite)->Quality;
+		bestMate1.NextSwScore     = (*ite)->SwScore;
 		bestMate1.NumMapped = nMate1;
 
 		//mate1Set.clear();
@@ -344,6 +351,7 @@ void BestNSecondBestSelection::Select (
 		//newMate2Set.begin()->NextBestQuality = (*ite)->Quality;
 		//newMate2Set.begin()->NumMapped = nMate2;
 		bestMate2.NextBestQuality = (*ite)->Quality;
+		bestMate2.NextSwScore     = (*ite)->SwScore;
 		bestMate2.NumMapped = nMate2;
 
 		//mate2Set.clear();

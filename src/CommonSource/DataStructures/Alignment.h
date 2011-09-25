@@ -181,18 +181,37 @@ struct Alignment {
 
 struct Alignment_LessThanMq {
 	bool operator() (const Alignment& al1, const Alignment& al2) {
-		if ( al1.SwScore == al2.SwScore )
-			return al1.Quality < al2.Quality;
-		return al1.SwScore < al2.SwScore;
+		if (al1.SwScore == al2.SwScore) {
+			if (al1.Quality == al2.Quality) {
+				if (al1.NumLongestMatchs == al2.NumLongestMatchs)
+					return al1.ReferenceIndex > al2.ReferenceIndex;
+				else
+					return al1.NumLongestMatchs < al2.NumLongestMatchs;
+			} else { 
+				return al1.Quality < al2.Quality;
+			}
+		} else { 
+			return al1.SwScore < al2.SwScore;
+		}
+			
 		//if ( al1.Quality == al2.Quality )
 		//	return al1.SwScore < al2.SwScore;
 		//return al1.Quality < al2.Quality;
 	}
 
 	bool operator() (const Alignment* al1, const Alignment* al2) {
-		if ( al1->SwScore == al2->SwScore )
-			return al1->Quality < al2->Quality;
-		return al1->SwScore < al2->SwScore;
+		if (al1->SwScore == al2->SwScore) {
+			if (al1->Quality == al2->Quality) {
+				if (al1->NumLongestMatchs == al2->NumLongestMatchs)	
+					return al1->ReferenceIndex > al2->ReferenceIndex;
+				else
+					return al1->NumLongestMatchs < al2->NumLongestMatchs;
+			} else {
+				return al1->Quality < al2->Quality;
+			}
+		} else {
+			return al1->SwScore < al2->SwScore;
+		}
 	}
 };
 
