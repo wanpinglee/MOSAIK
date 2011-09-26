@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef LARGEFILESUPPORT_H_
+#define LARGEFILESUPPORT_H_
 
 #define SIZEOF_OFF_TYPE    8
 
@@ -32,3 +33,5 @@ typedef off64_t off_type;
 #define fseek64(a,b,c) fseeko(a,b,c)
 typedef off_t off_type;
 #endif
+
+#endif // LARGEFILESUPPORT_H_

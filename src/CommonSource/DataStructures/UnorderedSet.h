@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef UNORDEREDSET_H_
+#define UNORDEREDSET_H_
 
 #ifdef __APPLE__
 
@@ -50,3 +51,5 @@ using namespace __gnu_cxx;
 using namespace std::tr1;
 
 #endif
+
+#endif // UNORDEREDSET_H_

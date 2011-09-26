@@ -37,7 +37,7 @@ class CStatisticsMaps {
 		// assing operator
 		CStatisticsMaps& operator= ( const CStatisticsMaps& copy );
 
-		inline void SavePairMultiplicity( 
+		void SavePairMultiplicity( 
 			  const unsigned int nMate1Alignments
 			, const unsigned int nMate2Alignments
 			, const bool mate1Rescued
@@ -47,13 +47,13 @@ class CStatisticsMaps {
 			, const bool isProperPair );
 		inline void SaveMateMultiplicity( const unsigned int nAlignment, const bool isFilteredOut );
 		inline void SaveModel( const Alignment& al1, const Alignment& al2 );
-		inline void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
+		void SaveFragment( const Alignment& al1, const Alignment& al2, const SequencingTechnologies& tech );
 		inline void SaveIsize( const Alignment& al1, const Alignment& al2 );
 		inline void SaveReadLength( const unsigned int length );
 		inline void SaveMultiplicity( const unsigned int nAlignment );
 		inline void SaveMappingQuality( const unsigned char mq );
 		inline void SaveMismatch( const unsigned short mm );
-		inline void PrintMap( 
+		void PrintMap( 
 			  FILE *const fOut 
 			, const char* title 
 			, const uint64_t& size

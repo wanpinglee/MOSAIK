@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef FILEUTILITIES_H_
+#define FILEUTILITIES_H_
 
 #ifdef WIN32
 #include <windows.h>
@@ -75,3 +76,5 @@ public:
 	static bool CheckTempFile( const char* filename, bool showError );
 
 };
+
+#endif // FILEUTILITIES_H_

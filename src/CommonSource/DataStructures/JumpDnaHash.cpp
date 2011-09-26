@@ -773,7 +773,7 @@ void CJumpDnaHash::LoadPositions(void) {
 }
 
 // store the positions in the memory
-inline void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffset) {
+void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffset) {
 	
 	//if ( mLimitPositions && (positions.size() > mMaxHashPositions) ) {
 	//	cout << "ERROR: The amount of hash positions is incorrect." << endl;

@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef PROGRESSCOUNTER_H_
+#define PROGRESSCOUNTER_H_
 
 #include <iostream>
 #include <sstream>
@@ -375,3 +376,5 @@ string CProgressCounter<K>::AddDigitGroupingFloat(const float value) {
 	// return our string
 	return sb.str();
 }
+
+#endif // PROGRESSCOUNTER_H_

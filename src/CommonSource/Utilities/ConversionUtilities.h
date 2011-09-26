@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef CONVERTIONUTILITIES_H_
+#define CONVERTIONUTILITIES_H_
 
 #include <cstdio>
 
@@ -83,3 +84,5 @@ inline float GetFloat(char* s) {
 
 	return f;
 }
+
+#endif //CONVERTIONUTILITIES_H_

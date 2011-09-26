@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef ALIGNEDREAD_H_
+#define ALIGNEDREAD_H_
 
 #include <iostream>
 #include <vector>
@@ -88,3 +89,5 @@ namespace Mosaik {
 
 	};
 }
+
+#endif // ALIGNEDREAD_H_

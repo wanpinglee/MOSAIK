@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef TIMESUPPORT_H_
+#define TIMESUPPORT_H_
 
 #include <cstdlib>
 #include <ctime>
@@ -46,3 +47,5 @@ private:
 	//
 	static const uint64_t SECS_TO_100NS;
 };
+
+#endif // TIMESUPPORT_H_

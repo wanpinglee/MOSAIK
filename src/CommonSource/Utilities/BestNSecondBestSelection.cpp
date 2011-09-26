@@ -1,5 +1,5 @@
 #include "BestNSecondBestSelection.h"
-
+#include "StrandChecker.h"
 
 // compare the given proper pairs
 inline bool BestNSecondBestSelection::IsBetterPair ( 
@@ -28,7 +28,7 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 	// proper pair always wins improper pair
 	//bool competitor_model = ( competitor_mate1.IsReverseStrand != competitor_mate2.IsReverseStrand ) ? true : false;
 	//bool current_model    = ( mate1.IsReverseStrand != mate2.IsReverseStrand ) ? true : false;
-	bool competitor_model = isProperOrientation ( 
+	bool competitor_model = StrandChecker::isProperOrientation ( 
 		competitor_mate1.IsReverseStrand, 
 		competitor_mate2.IsReverseStrand, 
 		competitor_mate1.ReferenceBegin, 
@@ -36,7 +36,7 @@ inline bool BestNSecondBestSelection::IsBetterPair (
 		true,
 		tech);
 	
-	bool current_model    = isProperOrientation (
+	bool current_model    = StrandChecker::isProperOrientation (
 		mate1.IsReverseStrand,
 		mate2.IsReverseStrand,
 		mate1.ReferenceBegin,

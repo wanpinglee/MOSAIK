@@ -2,11 +2,13 @@
 #ifndef _STRANDCHECKER_H_
 #define _STRANDCHECKER_H_
 
-#include "stdio.h"
+#include <stdio.h>
 #include "Alignment.h"
 #include "SequencingTechnologies.h"
 
-inline bool isProperOrientation ( 
+namespace StrandChecker{ 
+
+static bool isProperOrientation ( 
 	const bool& reverseStrandQuery,
 	const bool& reverseStrandMate,
 	const unsigned int& referenceBeginQuery,
@@ -76,5 +78,5 @@ inline bool isProperOrientation (
 	//return proper;
 
 }
-
+} //namespace StrandChecker
 #endif

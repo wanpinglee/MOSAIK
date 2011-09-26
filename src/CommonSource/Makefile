@@ -4,7 +4,7 @@
 # =============================
 
 # define our build subdirectories
-SUBDIRS = AssemblyFormats DataStructures ExternalReadFormats MosaikReadFormat PairwiseAlignment Utilities
+SUBDIRS = DataStructures ExternalReadFormats MosaikReadFormat PairwiseAlignment Utilities
 
 all:
 	@for dir in $(SUBDIRS); do \

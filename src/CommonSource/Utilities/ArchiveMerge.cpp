@@ -247,7 +247,7 @@ void CArchiveMerge::CopyReferenceString( vector<ReferenceSequence>& refVec ){
 }
 
 // update the reference index
-inline void CArchiveMerge::UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner ) {
+void CArchiveMerge::UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner ) {
 
 	if ( owner >= _refIndex.size() ) {
 		cout << "ERROR: The ID of the temporary file " << owner << " is unexpected." << endl;
@@ -763,7 +763,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 
 		if ( _isPairedEnd ) {
 			unmappedAl2 = r.Mate2Alignments[0];
-			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, true, _isPairedEnd, false, false, r );
+			SetAlignmentFlags( unmappedAl2, unmappedAl1, false, false, false, _isPairedEnd, false, false, r );
 			unmappedAl2.NumMapped = nMate2Alignments;
 			
 			unmappedAl2.Query           = read.Mate2.Bases;
@@ -790,7 +790,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 			}
 		}
 
-		// GetStatisticsCounters needs some information
+		// GetStatisticsCounters need some information
 		unmappedAl1.IsFilteredOut = isMate1FilteredOut;
 		unmappedAl2.IsFilteredOut = isMate2FilteredOut;
 
@@ -808,7 +808,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 
 }
 
-inline void CArchiveMerge::SetAlignmentFlags( 
+void CArchiveMerge::SetAlignmentFlags( 
 	Alignment& al,
 	const Alignment& mate,
 	const bool& isPair,

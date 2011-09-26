@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef AVLTREE_H_
+#define AVLTREE_H_
 
 #include <iostream>
 
@@ -454,3 +455,5 @@ namespace AVLTree {
 		l->Balance = l->Balance + (1 + MAX(n->Balance, 0));
 	}
 }
+
+#endif // AVLTREE_H_

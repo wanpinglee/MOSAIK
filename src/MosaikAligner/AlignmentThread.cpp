@@ -516,17 +516,16 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 }
 
 // Save alignment in buffer
-inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
+void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
 	AlignmentBamBuffer buffer;
 	buffer.al              = al;
 	buffer.noCigarMdNm     = noCigarMdNm;
 	buffer.notShowRnamePos = notShowRnamePos;
 	if ( zaString == (char)0 ) 
-		buffer.zaString = (char) 0;
+		buffer.zaString.clear();
 	else
 		buffer.zaString = zaString;
 	
-	// try to speed up
 	if ( !noCigarMdNm ) {
 		bamMisc.CreatePackedCigar( buffer.al, buffer.al.PackedCigar, buffer.al.NumCigarOperation, alInfo.isUsingSOLiD );
 		buffer.al.MdString = mdTager.GetMdTag( buffer.al.Reference.CData(), buffer.al.Query.CData(),  buffer.al.Reference.Length() );
@@ -537,6 +536,7 @@ inline void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char*
 		bamMisc.EncodeQuerySequence( buffer.al.Query.CData(), buffer.al.EncodedQuery );
 
 	// after this, Reference and Query should not be used again
+	//   since they are already free.
 	buffer.al.Reference.clearMemory();
 	buffer.al.Query.clearMemory();
 
@@ -565,7 +565,8 @@ void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBam
 	while( !bamSpecialBuffer.empty() ) {
 		buffer = bamSpecialBuffer.front();
 		bamSpecialBuffer.pop();
-		pBams->sBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+		const char* za = buffer.zaString.empty() ? 0 : buffer.zaString.c_str();
+		pBams->sBam.SaveAlignment( buffer.al, za, buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 	}
 	pthread_mutex_unlock(&mSaveSpecialBamMutex);
 
@@ -585,7 +586,8 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 			while ( !bamBuffer.empty() ) {
 				buffer1 = bamBuffer.front();
 				bamBuffer.pop();
-				pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				const char* za = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
+				pBams->rBam.SaveAlignment( buffer1.al, za, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 				pMaps->SaveRecord( buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology );
 			}
 			pthread_mutex_unlock(&mSaveReadMutex);
@@ -596,8 +598,10 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 				bamBuffer.pop();
 				buffer2 = bamBuffer.front();
 				bamBuffer.pop();
-				pBams->rBam.SaveAlignment( buffer1.al, buffer1.zaString.c_str(), buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
-				pBams->rBam.SaveAlignment( buffer2.al, buffer2.zaString.c_str(), buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				const char* za1 = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
+				pBams->rBam.SaveAlignment( buffer1.al, za1, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				const char* za2 = buffer2.zaString.empty() ? 0 : buffer2.zaString.c_str();
+				pBams->rBam.SaveAlignment( buffer2.al, za2, buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 				bool buffer1IsMate1 = buffer1.al.IsFirstMate;
 				pMaps->SaveRecord( ( buffer1IsMate1 ? buffer1.al : buffer2.al ), ( buffer1IsMate1 ? buffer2.al : buffer1.al ), alInfo.isPairedEnd, mSettings.SequencingTechnology );
 			}

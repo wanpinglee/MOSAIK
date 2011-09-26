@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef DDOUBLELINKEDLIST_H_
+#define DDOUBLELINKEDLIST_H_
 
 #include <iostream>
 
@@ -175,3 +176,5 @@ void CDoubleLinkedList<K,V>::MoveToHead(LinkedListNode<K,V>* pNode) {
 	mpHead->pPrev = pNode;
 	mpHead        = pNode;
 }
+
+#endif // DDOUBLELINKEDLIST_H_

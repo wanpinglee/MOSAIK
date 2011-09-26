@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef MOSAIKBUILD_H_ 
+#define MOSAIKBUILD_H_
 
 #include <algorithm>
 #include <iostream>
@@ -228,3 +229,5 @@ private:
 	// specifies the lanes that are allowed
 	bool mAllowedLanes[8];
 };
+
+#endif // MOSAIKBUILD_H_

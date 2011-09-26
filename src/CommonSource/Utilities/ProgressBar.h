@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef PROGRESSBAR_H_
+#define PROGRESSBAR_H_
 
 #include <iostream>
 #include <sstream>
@@ -635,3 +636,5 @@ void CProgressBar<K>::ResetHistory(void) {
 	mHistory.Position         = 0;
 	uninitialized_fill(mHistory.Rates, mHistory.Rates + PROGRESS_BAR_HISTORY_LENGTH, 0.0f);
 }
+
+#endif // PROGRESSBAR_H_

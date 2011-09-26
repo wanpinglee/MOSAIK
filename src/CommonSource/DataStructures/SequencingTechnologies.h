@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef SEQUENCETECHNOLOGIES_H_
+#define SEQUENCETECHNOLOGIES_H_
 
 typedef unsigned short SequencingTechnologies;
 
@@ -22,3 +23,5 @@ typedef unsigned short SequencingTechnologies;
 #define ST_SOLID                16
 #define ST_SANGER               32
 #define ST_ILLUMINA_LONG        64
+
+#endif // SEQUENCETECHNOLOGIES_H_

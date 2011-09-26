@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef PAIRWISEUTILITIES_H_
+#define PAIRWISEUTILITIES_H_
 
 class CPairwiseUtilities {
 public:
@@ -48,3 +49,5 @@ public:
 	// sets the Smith-Waterman homo-polymer gap open penalty
 	static float HomoPolymerGapOpenPenalty;
 };
+
+#endif // PAIRWISEUTILITIES_H_

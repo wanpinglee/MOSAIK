@@ -531,48 +531,27 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 
 	// define our flags
 	unsigned int flag                = 0;
-	//unsigned int queryPosition5Prime = 0;
-	//unsigned int matePosition5Prime  = 0;
 	int insertSize                   = 0;
-
 	if(al.IsPairedEnd) {
-
 		flag |= BAM_SEQUENCED_AS_PAIRS;
-
 		// first or second mate?
 		flag |= (al.IsFirstMate ? BAM_QUERY_FIRST_MATE : BAM_QUERY_SECOND_MATE);
-
 		if(al.IsResolvedAsPair) {
-
 			if ( al.IsResolvedAsProperPair ) 
 				flag |= BAM_PROPER_PAIR;
-				
-			if(al.IsMateReverseStrand) flag |= BAM_MATE_REVERSE_COMPLEMENT;
-
-			// sanity check
-			//if(alIter->ReferenceIndex != alIter->MateReferenceIndex) {
-			//	printf("ERROR: The resolved paired-end reads occur on different reference sequences.\n");
-			//	exit(1);
-			//}
-
-			// set the 5' coordinates
-			//queryPosition5Prime = (alIter->IsReverseStrand     ? alIter->ReferenceEnd     : alIter->ReferenceBegin);
-			//matePosition5Prime  = (alIter->IsMateReverseStrand ? alIter->MateReferenceEnd : alIter->MateReferenceBegin);
-
-			// calculate the insert size
-			//insertSize = matePosition5Prime - queryPosition5Prime;
+			if(al.IsMateMapped && al.IsMateReverseStrand) flag |= BAM_MATE_REVERSE_COMPLEMENT;
 			insertSize = al.FragmentLength;
-
 		}
-
 		if ( !al.IsMapped )
 			flag |= BAM_QUERY_UNMAPPED;
 		if ( !al.IsMateMapped )
 			flag |= BAM_MATE_UNMAPPED;
-			
+	} else {
+		if ( !al.IsMapped )
+			flag |= BAM_QUERY_UNMAPPED;
 	}
 
-	if(al.IsReverseStrand) flag |= BAM_QUERY_REVERSE_COMPLEMENT;
+	if(al.IsMapped && al.IsReverseStrand) flag |= BAM_QUERY_REVERSE_COMPLEMENT;
 
 	// ==========================
 	// construct the cigar string
@@ -662,7 +641,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	unsigned int zaTagLen = 0;
 	string zaTag;
 	char* pZaTag;
-	if ( zaString != 0 ) {
+	if ((zaString != 0) && (zaString != (char)0)) {
 		zaTagLen = 3 + strlen( zaString ) + 1;
 		zaTag.resize( zaTagLen );
 		pZaTag = (char*)zaTag.data();
@@ -696,15 +675,15 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 
 	// assign the BAM core data
 	unsigned int buffer[8] = {0};
-	buffer[0] = notShowRnamePos ? 0xffffffff : al.ReferenceIndex;
-	buffer[1] = notShowRnamePos ? 0xffffffff : al.ReferenceBegin;
+	buffer[0] = (notShowRnamePos || !al.IsMapped) ? 0xffffffff : al.ReferenceIndex;
+	buffer[1] = (notShowRnamePos || !al.IsMapped) ? 0xffffffff : al.ReferenceBegin;
 	buffer[2] = (bin << 16) | (al.RecalibratedQuality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;
 
 	if(al.IsResolvedAsPair) {
-		buffer[5] = al.IsMateMapped ? al.MateReferenceIndex : 0xffffffff;
-		buffer[6] = al.IsMateMapped ? al.MateReferenceBegin : 0xffffffff;
+		buffer[5] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceIndex;
+		buffer[6] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceBegin;
 		buffer[7] = insertSize;
 	} else {
 		buffer[5] = 0xffffffff;
@@ -744,7 +723,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 	BgzfWrite(mdTag.data(), mdTagLen);
 
 	// write the ZA tag
-	if ( zaString != 0 )
+	if ( zaString != 0 && (zaString != (char)0))
 		BgzfWrite(zaTag.data(), zaTagLen);
 
 	// write the cs tag

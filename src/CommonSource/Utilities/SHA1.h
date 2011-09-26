@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef SHA1_H_
+#define SHA1_H_
 
 #include <cmath>
 #include <cstdio>
@@ -82,3 +83,5 @@ private:
 	// our passphrase key
 	unsigned char mKey[SHA_KEY_LENGTH];
 };
+
+#endif // SHA1_H_

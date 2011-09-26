@@ -168,13 +168,13 @@ class CArchiveMerge
 		// ZA tagers
 		CZaTager za1, za2;
 
-		inline void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );
+		void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );
 		void CopyReferenceString( vector<ReferenceSequence>& refVec );
 		void PrintReferenceSequence( vector<ReferenceSequence>& refVec );
 		void CalculateStatisticsCounters( const Mosaik::AlignedRead& alignedRead );
 
 		void WriteAlignment( Mosaik::AlignedRead& r );
-		inline void SetAlignmentFlags(
+		void SetAlignmentFlags(
 		        Alignment& al,
 		        const Alignment& mate,
 		        const bool& isPair,

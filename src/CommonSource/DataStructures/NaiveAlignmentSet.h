@@ -9,7 +9,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef NAIVEALIGNMENTSET_H_
+#define NAIVEALIGNMENTSET_H_
 
 #include <algorithm>
 #include <iostream>
@@ -98,3 +99,5 @@ private:
 	bool mHasLongAlignment;
 	unsigned int highestSmithWatermanScore;
 };
+
+#endif // NAIVEALIGNMENTSET_H_

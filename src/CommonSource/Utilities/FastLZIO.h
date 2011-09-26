@@ -8,7 +8,8 @@
 // a commercial license with the Marth Lab.
 // ***************************************************************************
 
-#pragma once
+#ifndef FASTLZTO_H_
+#define FASTLZTO_H_
 
 #include <new>
 #include <string>
@@ -46,3 +47,5 @@ private:
 	char* mBuffer;
 	unsigned int mBufferLen;
 };
+
+#endif // FASTLZTO_H_

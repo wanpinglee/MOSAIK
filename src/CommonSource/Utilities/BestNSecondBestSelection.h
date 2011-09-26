@@ -5,11 +5,11 @@
 #include <limits.h>
 
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 #include "Alignment.h"
 #include "SequencingTechnologies.h"
-#include "iostream"
 
 
 using namespace std;
