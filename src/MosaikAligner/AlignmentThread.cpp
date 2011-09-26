@@ -1112,9 +1112,9 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
  	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
-	if (al1.ReferenceIndex != al2.ReferenceIndex)
-		flDiff = INT_MAX - 1;
-	else
+	//if (al1.ReferenceIndex != al2.ReferenceIndex)
+	//	flDiff = INT_MAX - 1;
+	//else
 		flDiff = abs(flDiff);
 
 	mate1Ann.read_length   = al1.Query.Length();
