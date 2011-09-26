@@ -971,7 +971,6 @@ void CAlignmentThread::AlignReadArchive(
 				al.Quality = al.RecalibratedQuality;
 			//}
 			//al.RecalibratedQuality = al.Quality;
-			al.RecalibratedQuality = 0;
 
 
 			if (alInfo.isUsingLowMemory) {
