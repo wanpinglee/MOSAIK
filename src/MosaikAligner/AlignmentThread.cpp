@@ -169,14 +169,17 @@ void* CAlignmentThread::StartThread(void* arg) {
 	return 0;
 }
 
-bool CAlignmentThread::SearchLocalRegion(
+void CAlignmentThread::SearchLocalRegion(
     const vector<Alignment*>& anchorVector,
     const Mosaik::Mate& mate,
     CNaiveAlignmentSet* mateVector) {
+	
+	for (vector<Alignment*>::const_iterator uniqueIter = anchorVector.begin();
+	    uniqueIter != anchorVector.end(); ++uniqueIter) {
 	// extract the unique begin and end coordinates
 	// Note that for multiply mappings, 
 	// the best one alignment is at the end of the vector
-	vector<Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
+	//vector<Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
 
 	const unsigned int refIndex    = (*uniqueIter)->ReferenceIndex;
 	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceBegin;
@@ -216,7 +219,6 @@ bool CAlignmentThread::SearchLocalRegion(
 	if ( settleLocalSearchWindow )
 		isAlExisting = mateVector->CheckExistence(refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex]);
 
-	bool rescued = false;
 	if ( !isAlExisting ) {
 		Alignment al;
 
@@ -228,14 +230,12 @@ bool CAlignmentThread::SearchLocalRegion(
 			// add the alignment to the alignment set if it passes the filters
 			if( ApplyReadFilters( al, pBases, pQualities, mate.Bases.Length() ) ) {
 				al.WasRescued = true;
-				rescued       = true;
 				mateVector->Add( al ); 
-				
 			}
 		}
 	}
+	} // end for
 
-	return rescued;
 
 }
 
@@ -755,8 +755,8 @@ void CAlignmentThread::AlignReadArchive(
 		mate1Alignments.GetSet(&mate1Set);
 		mate2Alignments.GetSet(&mate2Set);
 
-		bool isMate1Rescued = false;
-		bool isMate2Rescued = false;
+		//bool isMate1Rescued = false;
+		//bool isMate2Rescued = false;
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
 
@@ -764,15 +764,17 @@ void CAlignmentThread::AlignReadArchive(
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) )
 				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
 			// search local region
-			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
-				isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
+			//if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
+				SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
+				//isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 			
 			// do local search for some good multiply mappings
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) )
 				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
 			// search local region
-			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
-				isMate1Rescued = SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
+			//if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
+				SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
+				//isMate1Rescued = SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 
 		}
 
@@ -828,18 +830,6 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
 	
-
-if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
-  cerr << "mate1" << endl;
-  for (vector<Alignment*>::iterator ite = mate1Set.begin(); ite != mate1Set.end(); ++ite) {
-    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->SwScore << endl;
-  }
-  cerr << "mate2" << endl;
-  for (vector<Alignment*>::iterator ite = mate2Set.begin(); ite != mate2Set.end(); ++ite) {
-    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->SwScore << endl;
-  }
-}
-
 			Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
@@ -875,12 +865,12 @@ if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
 			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
-			if (!alInfo.isUsingLowMemory && properPair1) {
+			//if (!alInfo.isUsingLowMemory && properPair1) {
 				al1.RecalibratedQuality = GetMappingQuality(al1, al2);
 				al2.RecalibratedQuality = GetMappingQuality(al2, al1);
 				al1.Quality = al1.RecalibratedQuality;
 				al2.Quality = al2.RecalibratedQuality;
-			}
+			//}
 
 			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
 			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
@@ -916,18 +906,20 @@ if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-				//SaveBamAlignment( al1, zaTag1, false, false, false );
-				//SaveBamAlignment( al2, zaTag2, false, false, false );
+				SaveBamAlignment( al1, zaTag1, false, false, false );
+				SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
+				/*
 				ostringstream zaTag1, zaTag2;
 				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
 				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
 				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
+				*/
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -971,10 +963,11 @@ if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
 			//if (!alInfo.isUsingLowMemory) {
-			//	al.RecalibratedQuality = GetMappingQuality(al);
-			//	al.Quality = al.RecalibratedQuality;
+				al.RecalibratedQuality = GetMappingQuality(al);
+				al.Quality = al.RecalibratedQuality;
 			//}
-			al.RecalibratedQuality = al.Quality;
+			//al.RecalibratedQuality = al.Quality;
+			al.RecalibratedQuality = 0;
 
 
 			if (alInfo.isUsingLowMemory) {
@@ -982,8 +975,9 @@ if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				/*
 				ostringstream zaTag1Stream, zaTag2Stream;
 				zaTag1Stream << "" << al.SwScore << ";" 
 				             << al.NextSwScore << ";" 
@@ -999,6 +993,7 @@ if (mr.Name == "10_101721481_101722440_3:0:0_4:0:0_92fa") {
 					     << unmappedAl.NumHash;
 				const char* zaTag1 = zaTag1Stream.str().c_str();
 				const char* zaTag2 = zaTag2Stream.str().c_str();
+				*/
 
 				// store special hits
 				if ( isMate1Special ) {
@@ -1113,6 +1108,10 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
  	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
+	if (al1.ReferenceIndex != al2.ReferenceIndex)
+		flDiff = INT_MAX - 1;
+	else
+		flDiff = abs(flDiff);
 
 	mate1Ann.read_length   = al1.Query.Length();
 	mate1Ann.swScore       = al1.SwScore;
@@ -1125,11 +1124,10 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	mate2Ann.read_length   = al2.Query.Length();
 	mate2Ann.swScore       = al2.SwScore;
 	mate2Ann.nextSwScore   = al2.NextSwScore;
-	mate1Ann.longest_match = al2.NumLongestMatchs;
+	mate2Ann.longest_match = al2.NumLongestMatchs;
 	mate2Ann.entropy       = al2.Entropy;
 	mate2Ann.numMappings   = al2.NumMapped;
 	mate2Ann.numHashes     = al2.NumHash;
-
 	return mqCalculator.GetQualityPe(mate1Ann, mate2Ann, flDiff);
 }
 
@@ -1139,19 +1137,32 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 
 	// Note that there are at least two alignments
 	vector<Alignment*>::reverse_iterator rit = mateSet->rbegin();
-	unsigned short mq1     = (*rit)->Quality;
-	unsigned int   swScore = (*rit)->SwScore;
+	Alignment* bestAl       = *rit;
+	unsigned short mq1      = (*rit)->Quality;
+	unsigned int   swScore1 = (*rit)->SwScore;
 	rit++;
-	unsigned short mq2 = (*rit)->Quality;
+	Alignment* secondBestAl = *rit;
+	unsigned short mq2      = (*rit)->Quality;
+	unsigned int   swScore2 = (*rit)->SwScore;
 
-	if ( swScore > ( readLength * 9 ) )
+	mateSet->clear();
+
+	if ( swScore1 > ( readLength * 9 ) ) {
+		if (swScore1 == swScore2) {
+			mateSet->push_back(bestAl);
+			mateSet->push_back(secondBestAl);
+		} else {
+			mateSet->push_back(bestAl);
+		}
 		return true;
-	
-	if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) )
+	}
+
+	if ( ( mq1 > mFilters.LocalAlignmentSearchHighMqThreshold ) && ( mq2 < mFilters.LocalAlignmentSearchLowMqThreshold ) ) {
+		mateSet->push_back(bestAl);
 		return true;
-	else
+	} else {
 		return false;
-	return false;
+	}
 }
 
 // Set the required information and flag for alignments

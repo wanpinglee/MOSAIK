@@ -11,6 +11,7 @@
 
 #include "MosaikAligner.h"
 
+#include "QualityNeuralNetwork.h"
 
 // constructor
 CMosaikAligner::CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads, const string inputCommandLine )
@@ -36,7 +37,6 @@ CMosaikAligner::~CMosaikAligner(void) {
 }
 
 void CMosaikAligner::AlignReadArchiveLowMemory(void) {
-
 	// ==============
 	// initialization
 	// ==============
