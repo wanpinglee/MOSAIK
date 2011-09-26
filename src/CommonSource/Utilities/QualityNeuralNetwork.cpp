@@ -79,28 +79,9 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
     fann_inputs.push_back(log10((float)(annInputs2.numHashes + 1)));
   }
 
- /* 
-  cout << annInputs1.read_length << "\t"
-       << annInputs1.swScore << "\t"
-       << annInputs1.nextSwScore << "\t"
-       << annInputs1.longest_match << "\t"
-       << annInputs1.entropy << "\t"
-       << annInputs1.numMappings << "\t"
-       << annInputs1.numHashes << endl;
-
-  cout << annInputs2.read_length << "\t"
-       << annInputs2.swScore << "\t"
-       << annInputs2.nextSwScore << "\t"
-       << annInputs2.longest_match << "\t"
-       << annInputs2.entropy << "\t"
-       << annInputs2.numMappings << "\t"
-       << annInputs2.numHashes << endl;
-  cout << fragment_length_diff << endl;
-*/
   fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
 
   calc_out = fann_run(pe_ann, &fann_inputs[0]);
-  //cout << 1 - (1 + calc_out[0]) / 2 << endl;
   return float2phred(1 - (1 + calc_out[0]) / 2);
 }
 
