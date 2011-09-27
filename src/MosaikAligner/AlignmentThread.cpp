@@ -827,7 +827,6 @@ void CAlignmentThread::AlignReadArchive(
 			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps );
 		}
 
-		
 		// UU, UM, and MM pair
 		if ( ( isMate1Unique && isMate2Unique )
 			|| ( isMate1Unique && isMate2Multiple )
@@ -910,20 +909,20 @@ void CAlignmentThread::AlignReadArchive(
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-				SaveBamAlignment( al1, zaTag1, false, false, false );
-				SaveBamAlignment( al2, zaTag2, false, false, false );
+				//SaveBamAlignment( al1, zaTag1, false, false, false );
+				//SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
-				/*
+			
 				ostringstream zaTag1, zaTag2;
 				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
 				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
 				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
-				*/
+				
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -978,9 +977,9 @@ void CAlignmentThread::AlignReadArchive(
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
-				/*
+				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				
 				ostringstream zaTag1Stream, zaTag2Stream;
 				zaTag1Stream << "" << al.SwScore << ";" 
 				             << al.NextSwScore << ";" 
@@ -996,7 +995,7 @@ void CAlignmentThread::AlignReadArchive(
 					     << unmappedAl.NumHash;
 				const char* zaTag1 = zaTag1Stream.str().c_str();
 				const char* zaTag2 = zaTag2Stream.str().c_str();
-				*/
+				
 
 				// store special hits
 				if ( isMate1Special ) {
@@ -1093,7 +1092,9 @@ void CAlignmentThread::AlignReadArchive(
 			WriteSpecialAlignmentBufferToFile( pBams );
 		}
 
-	}
+	} // end while
+	
+	SaveNClearBuffers(pBams, pMaps, pOut);
 }
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
@@ -1110,7 +1111,10 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 }
 
 unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
- 	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
+ 	//int fl = (al1.ReferenceBegin > al2.ReferenceBegin) ? (al1.ReferenceBegin - al2.ReferenceBegin) : (al2.ReferenceBegin - al1.ReferenceBegin);
+	//fl += al1.Query.Length();
+	//fl = abs(mSettings.MedianFragmentLength - fl);
+	int flDiff = mSettings.MedianFragmentLength - abs(al1.FragmentLength);
 	//if (al1.ReferenceIndex != al2.ReferenceIndex)
 	//	flDiff = INT_MAX - 1;
 	//else
@@ -1208,6 +1212,11 @@ void CAlignmentThread::SetRequiredInfo (
 	// calculate entropy
 	if ( isItselfMapped ) {
 		al.Entropy = shannon_H((char*) m.Bases.CData(), m.Bases.Length());
+		if (al.Entropy != al.Entropy) {
+			cerr << r.Name << endl;
+			cerr << m.Bases.CData() << endl;
+			cerr << m.Bases.Length() << endl;
+		}
 	}
 
 	// fill out the alignment

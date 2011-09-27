@@ -12,6 +12,7 @@
 #include "MosaikAligner.h"
 
 #include "QualityNeuralNetwork.h"
+#include "disorder.h"
 
 // constructor
 CMosaikAligner::CMosaikAligner(unsigned char hashSize, CAlignmentThread::AlignerAlgorithmType algorithmType, CAlignmentThread::AlignerModeType algorithmMode, unsigned char numThreads, const string inputCommandLine )
@@ -36,7 +37,41 @@ CMosaikAligner::~CMosaikAligner(void) {
 	//delete mpDNAHash;
 }
 
+void testMq(const string& paired_end_ann_file, const string& single_end_ann_file) {
+  QualityNeuralNetwork mqCalculator;
+  mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
+  QualityNeuralNetwork::FannInputs mate1Ann;
+  QualityNeuralNetwork::FannInputs mate2Ann;
+
+  mate1Ann.read_length   = 100;
+  mate1Ann.swScore       = 1000;
+  mate1Ann.nextSwScore   = 0;
+  mate1Ann.longest_match = 100;
+  mate1Ann.entropy       = 0;
+  mate1Ann.numMappings   = 1;
+  mate1Ann.numHashes     = 4324;
+
+  mate2Ann.read_length   = 100;
+  mate2Ann.swScore       = 981;
+  mate2Ann.nextSwScore   = 723;
+  mate2Ann.longest_match = 86;
+  mate2Ann.entropy       = -0;
+  mate2Ann.numMappings   = 3;
+  mate2Ann.numHashes     = 5514;
+
+  cout << (int)mqCalculator.GetQualityPe(mate1Ann, mate2Ann, 47) << endl;
+}
+
+void testEntropy () {
+  string str = "CTGACTGGTGTTGAGACAGTATCTGATTATTGTTTTGATTTGTGTTTTTCTAATGATTAGTGATGTTAACCATTTTTTTATATGCTTTGCTTGTTGGCTG";
+  int length = 100;
+  cout << shannon_H((char*)str.c_str(), length) << endl;
+}
+
 void CMosaikAligner::AlignReadArchiveLowMemory(void) {
+//testMq(mPeNeuralNetworkFilename, mSeNeuralNetworkFilename);
+//testEntropy();
+//exit(1);
 	// ==============
 	// initialization
 	// ==============

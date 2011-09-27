@@ -7,14 +7,14 @@ using std::endl;
 const int SwMatchScore = 10;
 const unsigned char PHRED_MAX = 255;
 
-inline unsigned char float2phred(long double prob) {
+inline unsigned char float2phred(float prob) {
     if (prob == 1)
     return PHRED_MAX;  // guards against "-0"
-    long double p = -10 * (long double) log10(prob);
+    float p = -10 * (float) log10(prob);
     if (p < 0 || p > PHRED_MAX) // int overflow guard
       return PHRED_MAX;
     else
-      return p;
+      return floor(p + 0.5);
 
 }
 
@@ -81,6 +81,21 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
 
   fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
 
+/*
+  for (unsigned int i = 0; i < fann_inputs.size(); ++i)
+  	cout << fann_inputs[i] << "\t";
+  cout << endl;
+  
+  cout << annInputs1.swScore << " " << annInputs1.nextSwScore << " "
+  << annInputs1.read_length << " " << annInputs1.longest_match << " "
+  << annInputs1.entropy << " "
+  << annInputs1.numMappings << " " << annInputs1.numHashes << " "
+  << annInputs2.swScore << " " << annInputs2.nextSwScore << " "
+  << annInputs2.read_length << " " << annInputs2.longest_match << " "
+  << annInputs2.entropy << " "
+  << annInputs2.numMappings << " " << annInputs2.numHashes << " "
+  << fragment_length_diff << endl;
+*/
   calc_out = fann_run(pe_ann, &fann_inputs[0]);
   return float2phred(1 - (1 + calc_out[0]) / 2);
 }
