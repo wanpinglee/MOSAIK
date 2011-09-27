@@ -25,6 +25,7 @@
 #include "BestNSecondBestSelection.h"
 #include "CigarTager.h"
 #include "ColorspaceUtilities.h"
+#include "Entropy.h"
 #include "MdTager.h"
 #include "NaiveAlignmentSet.h"
 #include "PairwiseUtilities.h"
@@ -36,10 +37,6 @@
 #include "SmithWatermanGotoh.h"
 #include "StatisticsMaps.h"
 #include "ZaTager.h"
-
-extern "C" {
-	#include "disorder.h"
-}
 
 using namespace std;
 
@@ -503,4 +500,7 @@ private:
 	//fann* single_end_ann;
 	//fann_type *calc_out;
 	//vector<fann_type> fann_inputs;
+	
+	//Entropy
+	Entropy entropy_;
 };

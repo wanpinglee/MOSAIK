@@ -1211,7 +1211,7 @@ void CAlignmentThread::SetRequiredInfo (
 
 	// calculate entropy
 	if ( isItselfMapped ) {
-		al.Entropy = shannon_H((char*) m.Bases.CData(), m.Bases.Length());
+		al.Entropy = entropy_.shannon_H((char*) m.Bases.CData(), m.Bases.Length());
 		if (al.Entropy != al.Entropy) {
 			cerr << r.Name << endl;
 			cerr << m.Bases.CData() << endl;

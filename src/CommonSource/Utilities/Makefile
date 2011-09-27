@@ -19,6 +19,7 @@ SOURCES= ArchiveMerge.cpp \
 		CigarTager.cpp \
 		ColorspaceUtilities.cpp \
 		ConsoleUtilities.cpp \
+		Entropy.cpp \
 		FastLZIO.cpp \
 		FileUtilities.cpp \
 		MdTager.cpp \
@@ -37,7 +38,7 @@ SOURCES= ArchiveMerge.cpp \
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 
-CSOURCES = fastlz.c md5.c disorder.c
+CSOURCES = fastlz.c md5.c
 COBJECTS= $(CSOURCES:.c=.o)
 CBUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(COBJECTS))
 

@@ -26,8 +26,8 @@ _EXT_OBJECTS = AbstractDnaHash.o \
 		CigarTager.o \
 		ColorspaceUtilities.o \
 		ConsoleUtilities.o \
-		disorder.o \
 		DnaHash.o \
+		Entropy.o \
 		fastlz.o \
 		FastLZIO.o \
 		FileUtilities.o \
