@@ -74,6 +74,8 @@ class Entropy {
   void initialize_lib();
   void count_num_tokens();
   void get_token_frequencies(char* buf, long long length);
+  Entropy (const Entropy&);
+  Entropy& operator= (const Entropy&);
 
 };
 #endif // Entropy
