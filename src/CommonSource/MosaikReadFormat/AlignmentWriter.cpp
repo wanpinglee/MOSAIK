@@ -504,19 +504,29 @@ namespace MosaikReadFormat {
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
 
 		// initialize
+		// Since we only report best one, the numbers here should be zero or one.
 		const unsigned int numMate1Alignments = (unsigned int)ar.Mate1Alignments.size();
 		const unsigned int numMate2Alignments = (unsigned int)ar.Mate2Alignments.size();
 
 		const bool haveMate1 = (numMate1Alignments != 0 ? true : false);
 		const bool haveMate2 = (numMate2Alignments != 0 ? true : false);
 
-		unsigned int numMate1OriginalAlignments = 0;
-		unsigned int numMate2OriginalAlignments = 0;
+		// The numbers indicate how many alignments we found
+		// If numMate1Alignments is zero,
+		//   numMate1OriginalAlignments should be zero too.
+		int numMate1OriginalAlignments = 0;
+		int numMate2OriginalAlignments = 0;
+		int numMate1Hashes = 0;
+		int numMate2Hashes = 0;
 
-		if ( haveMate1 )
+		if (haveMate1) {
 			numMate1OriginalAlignments = ar.Mate1Alignments[0].NumMapped;
-		if ( haveMate2 )
+			numMate1Hashes = ar.Mate1Alignments[0].NumHash;
+		}
+		if (haveMate2) {
 			numMate2OriginalAlignments = ar.Mate2Alignments[0].NumMapped;
+			numMate2Hashes = ar.Mate2Alignments[0].NumHash;
+		}
 		
 		// check if this is a long read
 		const bool isLongRead = ar.IsLongRead;
@@ -532,7 +542,8 @@ namespace MosaikReadFormat {
 		if(ar.hasCsString)      readStatus |= RF_HAS_CS_STRING;
 
 		// write the read header
-		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments);
+		WriteReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, 
+		    numMate1OriginalAlignments, numMate2OriginalAlignments, numMate1Hashes, numMate2Hashes);
 
 		// ===============================
 		// serialize each mate 1 alignment
@@ -690,16 +701,22 @@ namespace MosaikReadFormat {
 		// initialize
 		const unsigned int numMate1Alignments = isSaveMate1 ? 1 : 0;
 		const unsigned int numMate2Alignments = isSaveMate2 ? 1 : 0;
-		unsigned int numMate1OriginalAlignments = 0;
-		unsigned int numMate2OriginalAlignments = 0;
+		int numMate1OriginalAlignments = 0;
+		int numMate2OriginalAlignments = 0;
+		int numMate1Hashes = 0;
+		int numMate2Hashes = 0;
 
 		const bool haveMate1 = isSaveMate1;
 		const bool haveMate2 = isSaveMate2;
 
-		if ( haveMate1 )
+		if (haveMate1) {
 			numMate1OriginalAlignments = mate1Alignment.NumMapped;
-		if ( haveMate2 )
+			numMate1Hashes = mate1Alignment.NumHash;
+		}
+		if (haveMate2) {
 			numMate2OriginalAlignments = mate2Alignment.NumMapped;
+			numMate2Hashes = mate2Alignment.NumHash;
+		}
 
 		// check if this is a long read
 		//bool isLongRead = false;
@@ -716,7 +733,9 @@ namespace MosaikReadFormat {
 
 
 		// write the read header
-		WriteReadHeader( mr.Name, mr.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments );
+		WriteReadHeader(mr.Name, mr.ReadGroupCode, readStatus, numMate1Alignments,
+		    numMate2Alignments, numMate1OriginalAlignments, 
+		    numMate2OriginalAlignments, numMate1Hashes, numMate2Hashes);
 
 		// ===============================
 		// serialize each mate 1 alignment
@@ -918,8 +937,10 @@ namespace MosaikReadFormat {
 		const unsigned char  readStatus, 
 		const unsigned int   numMate1Alignments, 
 		const unsigned int   numMate2Alignments, 
-		const unsigned int   numMate1OriginalAlignments,
-		const unsigned int   numMate2OriginalAlignments
+		const int            numMate1OriginalAlignments,
+		const int            numMate2OriginalAlignments,
+		const int            numMate1Hashes,
+		const int            numMate2Hashes
 		) {
 
 		// store the read name

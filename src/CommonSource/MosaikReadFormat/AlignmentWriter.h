@@ -105,8 +105,11 @@ namespace MosaikReadFormat {
 			const unsigned char readStatus, 
 			const unsigned int numMate1Alignments, 
 			const unsigned int numMate2Alignments,
-			const unsigned int   numMate1OriginalAlignments = 0,
-			const unsigned int   numMate2OriginalAlignments = 0);
+			const int          numMate1OriginalAlignments,
+			const int          numMate2OriginalAlignments,
+			const int          numMate1Hashes,
+			const int          numMate2Hashes
+			);
 
 		// writes the tag to disk
 		void WriteTag(const map<unsigned char, Tag>::const_iterator& htIter);

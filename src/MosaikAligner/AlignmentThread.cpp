@@ -212,7 +212,9 @@ void CAlignmentThread::SearchLocalRegion(
 	unsigned int localSearchEnd   = 0;
 
 	// settle the local search region
-	bool settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );;
+	bool settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
+	cerr << endl << refIndex << "\t" << uniqueBegin << "\t" << uniqueEnd << "\t"
+	     << localSearchBegin << "\t" << localSearchEnd << endl;
 	
 	// check if the mate is already sitting in the local region
 	bool isAlExisting = false;
