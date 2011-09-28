@@ -654,7 +654,8 @@ void CAlignmentThread::AlignReadArchive(
 		minSpanLength = mSettings.AlignmentCandidateThreshold;
 
 	// create neural networks
-	mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
+	if (!alInfo.IsUsingLowMemory)
+		mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
 
 	// keep reading until no reads remain
 	Mosaik::Read mr;
@@ -868,12 +869,10 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
-			//if (!alInfo.isUsingLowMemory && properPair1) {
+			if (!alInfo.isUsingLowMemory) {
 				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 				al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
-				al1.Quality = al1.RecalibratedQuality;
-				al2.Quality = al2.RecalibratedQuality;
-			//}
+			}
 
 			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
 			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
@@ -965,10 +964,9 @@ void CAlignmentThread::AlignReadArchive(
 				SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status ),
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
-			//if (!alInfo.isUsingLowMemory) {
+			if (!alInfo.isUsingLowMemory) {
 				al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
-				al.Quality = al.RecalibratedQuality;
-			//}
+			}
 			//al.RecalibratedQuality = al.Quality;
 
 
