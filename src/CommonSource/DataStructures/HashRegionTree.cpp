@@ -401,12 +401,14 @@ namespace AVLTree {
 			if(foundCandidate) {
 
 				// reset the parent's links
-				if(isLeftChild) p->Left = NULL;
-					else p->Right = NULL;
+				if (isLeftChild) p->Left = NULL;
+				else p->Right = NULL;
 
 				// delete the candidate node
-				if ( n ) delete n;
-				n = NULL;
+				if (n) { 
+					delete n;
+					n = NULL;
+				}
 
 				// decrement the count
 				mCount--;

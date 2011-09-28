@@ -769,7 +769,7 @@ void CAlignmentThread::AlignReadArchive(
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) )
 				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
 			// search local region
-			//if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
+			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
 				SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 				//isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 			
@@ -777,7 +777,7 @@ void CAlignmentThread::AlignReadArchive(
 			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) )
 				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
 			// search local region
-			//if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
+			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
 				SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 				//isMate1Rescued = SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 
