@@ -50,24 +50,26 @@ CArchiveMerge::CArchiveMerge (vector < string > inputFilenames, string outputFil
 */
 
 CArchiveMerge::CArchiveMerge ( 
-	vector < string > inputFilenames, 
-	string outputFilename, 
+	const vector <string>& inputFilenames, 
+	const string& outputFilename, 
 	uint64_t           *readNo,
-	const bool          isSolid,
-	const string        commandLine,
-	const unsigned int  fragmentLength,
-	const unsigned int  localAlignmentSearchRadius,
-	const bool          hasSpecial,
-	const unsigned char statMappingQuality)
+	const bool&          isSolid,
+	const string&        commandLine,
+	const string&        paired_end_ann_file,
+	const string&        single_end_ann_file,
+	const unsigned int&  fragmentLength,
+	const unsigned int&  localAlignmentSearchRadius,
+	const bool&          hasSpecial,
+	const unsigned char& statMappingQuality)
 	
-	: _inputFilenames( inputFilenames )
-	, _outputFilename( outputFilename )
-	, _readNo                    ( readNo )
-	, _isSolid                   ( isSolid )
-	, _expectedFragmentLength    ( fragmentLength )
-	, _localAlignmentSearchRadius( localAlignmentSearchRadius )
-	, _hasSpecial                ( hasSpecial )
-	, _statMappingQuality        ( statMappingQuality )
+	: _inputFilenames(inputFilenames)
+	, _outputFilename(outputFilename)
+	, _readNo                    (readNo)
+	, _isSolid                   (isSolid)
+	, _expectedFragmentLength    (fragmentLength)
+	, _localAlignmentSearchRadius(localAlignmentSearchRadius)
+	, _hasSpecial                (hasSpecial)
+	, _statMappingQuality        (statMappingQuality)
 {
 	//_statisticsMaps = mStatisticsMaps;
 	
@@ -137,14 +139,13 @@ CArchiveMerge::CArchiveMerge (
 	pg.CL = commandLine;
 
 	_sHeader.pg.ID = "MosaikAligner";
-	//_uHeader.pg.ID = "MosaikAligner";
 	_rHeader.pg.ID = "MosaikAligner";
 	_sHeader.pg.VN = ss.str();
-	//_uHeader.pg.VN = ss.str();
 	_rHeader.pg.VN = ss.str();
 	_sHeader.pg.CL = commandLine;
-	//_uHeader.pg.CL = commandLine;
 	_rHeader.pg.CL = commandLine;
+
+	_mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
 
 }
 

@@ -28,25 +28,19 @@
 #include "AlignmentWriter.h"
 #include "BamWriter.h"
 #include "BestNSecondBestSelection.h"
+#include "Entropy.h"
 #include "FileUtilities.h"
 #include "MosaikString.h"
+#include "QualityNeuralNetwork.h"
 #include "ReadGroup.h"
 #include "ReadStatus.h"
 #include "SortNMergeUtilities.h"
 #include "StatisticsMaps.h"
 #include "ZaTager.h"
 
-
-/*
- * =====================================================================================
- *        Class:  CArchiveMerge
- *  Description:  
- * =====================================================================================
- */
 class CArchiveMerge
 {
 	public:
-
 		struct StatisticsCounters {
 	                // reads
 			uint64_t UU;
@@ -102,29 +96,28 @@ class CArchiveMerge
 		/* ====================  LIFECYCLE     ======================================= */
 		//CArchiveMerge (vector < string > inputFilenames, string outputFilename, unsigned int *readNo);                             /* constructor */
 		CArchiveMerge (
-			vector < string > inputFilenames, 
-			string outputFilename, 
-			uint64_t           *readNo, 
-			const bool          isSolid,
-			const string        commandLine,
-			const unsigned int  fragmentLength = 0,
-			const unsigned int  localAlignmentSearchRadius = 0,
-			const bool          hasSpecial = false,
-			const unsigned char statMappingQuality = 20 );
+			const vector <string>& inputFilenames, 
+			const string& outputFilename, 
+			uint64_t            *readNo, 
+			const bool&          isSolid,
+			const string&        commandLine,
+			const string&        paired_end_ann_file,
+			const string&        single_end_ann_file,
+			const unsigned int&  fragmentLength = 0,
+			const unsigned int&  localAlignmentSearchRadius = 0,
+			const bool&          hasSpecial = false,
+			const unsigned char& statMappingQuality = 20 );
 
 
 		void Merge();
 
 		void GetStatisticsCounters ( StatisticsCounters& counter );
-		void PrintStatisticsMaps( const string filename, const vector<MosaikReadFormat::ReadGroup>& readGroup, const uint8_t fragmentLength, const uint8_t localSearchRadius, const float allowedMismatch );
-		/* ====================  ACCESSORS     ======================================= */
-		/* ====================  MUTATORS      ======================================= */
-
-		/* ====================  OPERATORS     ======================================= */
-
-	protected:
-		/* ====================  DATA MEMBERS  ======================================= */
-
+		void PrintStatisticsMaps( 
+		    const string filename, 
+		    const vector<MosaikReadFormat::ReadGroup>& readGroup, 
+		    const uint8_t fragmentLength, 
+		    const uint8_t localSearchRadius, 
+		    const float allowedMismatch );
 	private:
 		/* ====================  DATA MEMBERS  ======================================= */
 		vector < string > _inputFilenames;
@@ -158,15 +151,19 @@ class CArchiveMerge
 		CStatisticsMaps    _statisticsMaps;
 
 		BamHeader _sHeader; // special reads
-		//BamHeader _uHeader; // unaligned reads
 		BamHeader _rHeader; // regular bam
 
 		CBamWriter _sBam; // multiply alignments
-		//CBamWriter _uBam; // unaligned reads
 		CBamWriter _rBam;
 
 		// ZA tagers
 		CZaTager za1, za2;
+
+		// Entropy
+		Entropy _entropy;
+
+		// neural-net
+		QualityNeuralNetwork _mqCalculator;
 
 		void UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsigned int& owner );
 		void CopyReferenceString( vector<ReferenceSequence>& refVec );
@@ -184,6 +181,8 @@ class CArchiveMerge
 		        const bool& isItselfMapped,
 		        const bool& isMateMapped,
 		        const Mosaik::AlignedRead& r);
+		CArchiveMerge (const CArchiveMerge&);
+		CArchiveMerge& operator= (const CArchiveMerge&);
 
 }; /* -----  end of class CArchiveMerge  ----- */
 

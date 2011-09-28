@@ -654,7 +654,7 @@ void CAlignmentThread::AlignReadArchive(
 		minSpanLength = mSettings.AlignmentCandidateThreshold;
 
 	// create neural networks
-	if (!alInfo.IsUsingLowMemory)
+	if (!alInfo.isUsingLowMemory)
 		mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
 
 	// keep reading until no reads remain
