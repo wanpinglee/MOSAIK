@@ -548,11 +548,6 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 			exit(1);
 		}
 		
-		//Note: the following function will set RecalibratedQuality and RecalibratedQuality will be shown in the bam
-		
-		al1.RecalibratedQuality = al1.Quality;
-		al2.RecalibratedQuality = al2.Quality;
-
 		SetAlignmentFlags( al1, al2, true, properPair1, true, _isPairedEnd, true, true, r );
 		SetAlignmentFlags( al2, al1, true, properPair2, false, _isPairedEnd, true, true, r );
 
@@ -563,6 +558,9 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		
 		al1.NumMapped = nMate1Alignments;
 		al2.NumMapped = nMate2Alignments;
+
+		al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
+		al2.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 
 		//CZaTager za1, za2;
 		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
@@ -654,22 +652,15 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
 		unmappedAl.NumMapped = 0;
-
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
 		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
 
-		// Note: RecalibratedQuality will be shown in the bam
-		al.RecalibratedQuality = al.Quality;
-		//if ( isFirstMate && isMate1Multiple )
-		//	al.RecalibratedQuality = 0;
-		//else if ( !isFirstMate && isMate2Multiple )
-		//	al.RecalibratedQuality = 0;
-		
 		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
 	
