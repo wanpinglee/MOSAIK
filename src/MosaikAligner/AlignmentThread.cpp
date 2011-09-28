@@ -1213,7 +1213,7 @@ void CAlignmentThread::SetRequiredInfo (
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
 	// calculate entropy
-	if (isItselfMapped) 
+	if (isItselfMapped && !alInfo.isUsingLowMemory) 
 		al.Entropy = entropy_.shannon_H((char*) m.Bases.CData(), m.Bases.Length());
 	if (isItselfMapped && al.WasRescued)
 		al.NextSwScore = 0;

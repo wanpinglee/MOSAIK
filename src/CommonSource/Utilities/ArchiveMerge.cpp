@@ -559,6 +559,9 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		al1.NumMapped = nMate1Alignments;
 		al2.NumMapped = nMate2Alignments;
 
+		al1.Entropy = _entropy.shannon_H(al1.Query.Data(), al1.QueryLength);
+		al2.Entropy = _entropy.shannon_H(al2.Query.Data(), al2.QueryLength);
+
 		al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 		al2.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 
@@ -652,6 +655,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+		al.Entropy = _entropy.shannon_H(al.Query.Data(), al.QueryLength);
 		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
