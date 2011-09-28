@@ -549,8 +549,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		}
 		
 		//Note: the following function will set RecalibratedQuality and RecalibratedQuality will be shown in the bam
-		//al1.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
-		//al2.RecalibrateQuality( ( isMate1Unique && isMate2Unique ), ( isMate1Multiple && isMate2Multiple ) );
+		
 		al1.RecalibratedQuality = al1.Quality;
 		al2.RecalibratedQuality = al2.Quality;
 
@@ -807,6 +806,56 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		exit(1);
 	}
 
+}
+
+unsigned char CArchiveMerge::GetMappingQuality (const Alignment& al, 
+                                                const int& al_length) {
+
+	QualityNeuralNetwork::FannInputs mate1Ann;
+
+	mate1Ann.read_length   = al_length;
+	mate1Ann.swScore       = al.SwScore;
+	mate1Ann.nextSwScore   = al.NextSwScore;
+	mate1Ann.longest_match = al.NumLongestMatchs;
+	mate1Ann.entropy       = al.Entropy;
+	mate1Ann.numMappings   = al.NumMapped;
+	mate1Ann.numHashes     = al.NumHash;
+	
+	return _mqCalculator.GetQualitySe(mate1Ann);
+}
+
+unsigned char CArchiveMerge::GetMappingQuality (const Alignment& al1, 
+                                                const int& al1_length, 
+					        const Alignment& al2,
+						const int& al2_length) {
+ 	//int fl = (al1.ReferenceBegin > al2.ReferenceBegin) ? (al1.ReferenceBegin - al2.ReferenceBegin) : (al2.ReferenceBegin - al1.ReferenceBegin);
+	//fl += al1.Query.Length();
+	//fl = abs(mSettings.MedianFragmentLength - fl);
+	int flDiff = _expectedFragmentLength - abs(al1.FragmentLength);
+	//if (al1.ReferenceIndex != al2.ReferenceIndex)
+	//	flDiff = INT_MAX - 1;
+	//else
+		flDiff = abs(flDiff);
+
+	QualityNeuralNetwork::FannInputs mate1Ann;
+	QualityNeuralNetwork::FannInputs mate2Ann;
+	
+	mate1Ann.read_length   = al1_length;
+	mate1Ann.swScore       = al1.SwScore;
+	mate1Ann.nextSwScore   = al1.NextSwScore;
+	mate1Ann.longest_match = al1.NumLongestMatchs;
+	mate1Ann.entropy       = al1.Entropy;
+	mate1Ann.numMappings   = al1.NumMapped;
+	mate1Ann.numHashes     = al1.NumHash;
+
+	mate2Ann.read_length   = al2_length;
+	mate2Ann.swScore       = al2.SwScore;
+	mate2Ann.nextSwScore   = al2.NextSwScore;
+	mate2Ann.longest_match = al2.NumLongestMatchs;
+	mate2Ann.entropy       = al2.Entropy;
+	mate2Ann.numMappings   = al2.NumMapped;
+	mate2Ann.numHashes     = al2.NumHash;
+	return _mqCalculator.GetQualityPe(mate1Ann, mate2Ann, flDiff);
 }
 
 void CArchiveMerge::SetAlignmentFlags( 

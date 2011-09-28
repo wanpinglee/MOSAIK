@@ -171,6 +171,11 @@ class CArchiveMerge
 		void CalculateStatisticsCounters( const Mosaik::AlignedRead& alignedRead );
 
 		void WriteAlignment( Mosaik::AlignedRead& r );
+		unsigned char GetMappingQuality (const Alignment& al, const int& al_length);
+		unsigned char GetMappingQuality (const Alignment& al1, 
+		                                 const int& al1_length,
+						 const Alignment& al2,
+						 const int& al2_length);
 		void SetAlignmentFlags(
 		        Alignment& al,
 		        const Alignment& mate,
