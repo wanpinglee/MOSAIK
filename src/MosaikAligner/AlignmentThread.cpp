@@ -869,8 +869,8 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
 
 			//if (!alInfo.isUsingLowMemory && properPair1) {
-				al1.RecalibratedQuality = GetMappingQuality(al1, al2);
-				al2.RecalibratedQuality = GetMappingQuality(al2, al1);
+				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
+				al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
 				al1.Quality = al1.RecalibratedQuality;
 				al2.Quality = al2.RecalibratedQuality;
 			//}
@@ -966,7 +966,7 @@ void CAlignmentThread::AlignReadArchive(
 				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
 			//if (!alInfo.isUsingLowMemory) {
-				al.RecalibratedQuality = GetMappingQuality(al);
+				al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 				al.Quality = al.RecalibratedQuality;
 			//}
 			//al.RecalibratedQuality = al.Quality;
@@ -1097,9 +1097,10 @@ void CAlignmentThread::AlignReadArchive(
 	SaveNClearBuffers(pBams, pMaps, pOut);
 }
 
-unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
+unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al, 
+                                                   const int& al_length) {
 
-	mate1Ann.read_length   = al.Query.Length();
+	mate1Ann.read_length   = al_length;
 	mate1Ann.swScore       = al.SwScore;
 	mate1Ann.nextSwScore   = al.NextSwScore;
 	mate1Ann.longest_match = al.NumLongestMatchs;
@@ -1110,7 +1111,10 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al) {
 	return mqCalculator.GetQualitySe(mate1Ann);
 }
 
-unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const Alignment& al2) {
+unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, 
+                                                   const int& al1_length, 
+						   const Alignment& al2,
+						   const int& al2_length) {
  	//int fl = (al1.ReferenceBegin > al2.ReferenceBegin) ? (al1.ReferenceBegin - al2.ReferenceBegin) : (al2.ReferenceBegin - al1.ReferenceBegin);
 	//fl += al1.Query.Length();
 	//fl = abs(mSettings.MedianFragmentLength - fl);
@@ -1120,7 +1124,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	//else
 		flDiff = abs(flDiff);
 
-	mate1Ann.read_length   = al1.Query.Length();
+	mate1Ann.read_length   = al1_length;
 	mate1Ann.swScore       = al1.SwScore;
 	mate1Ann.nextSwScore   = al1.NextSwScore;
 	mate1Ann.longest_match = al1.NumLongestMatchs;
@@ -1128,7 +1132,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1, const A
 	mate1Ann.numMappings   = al1.NumMapped;
 	mate1Ann.numHashes     = al1.NumHash;
 
-	mate2Ann.read_length   = al2.Query.Length();
+	mate2Ann.read_length   = al2_length;
 	mate2Ann.swScore       = al2.SwScore;
 	mate2Ann.nextSwScore   = al2.NextSwScore;
 	mate2Ann.longest_match = al2.NumLongestMatchs;
@@ -1210,14 +1214,10 @@ void CAlignmentThread::SetRequiredInfo (
 		al.ReadGroup = rgIte->second.ReadGroupID;
 
 	// calculate entropy
-	if ( isItselfMapped ) {
+	if (isItselfMapped) 
 		al.Entropy = entropy_.shannon_H((char*) m.Bases.CData(), m.Bases.Length());
-		if (al.Entropy != al.Entropy) {
-			cerr << r.Name << endl;
-			cerr << m.Bases.CData() << endl;
-			cerr << m.Bases.Length() << endl;
-		}
-	}
+	if (isItselfMapped && al.WasRescued)
+		al.NextSwScore = 0;
 
 	// fill out the alignment
 	// not SOLiD

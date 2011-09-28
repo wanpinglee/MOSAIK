@@ -40,6 +40,7 @@
 
 class Entropy {
  public:
+  Entropy();
   /** 
    * Given a pointer to an array of bytes, return a float indicating the
    * level of entropy in bits (a number between zero and eight),
@@ -54,13 +55,13 @@ class Entropy {
       number of individual events seen. For example, if the library sees
       the string `aaab', the number of events is 4 and the number of
       tokens is 2. */
-  int      get_num_tokens(void);
+  int      get_num_tokens(void){ return m_num_tokens; };
 
   /** Returns maximum entropy for byte distributions log2(256)=8 bits*/
-  float    get_max_entropy(void);
+  float    get_max_entropy(void){ return m_maxent; };
 
   /** Returns the ratio of entropy to maxentropy */
-  float    get_entropy_ratio(void);
+  float    get_entropy_ratio(void){ return m_ratio; };
  
  private:
   /** Frequecies for each byte */

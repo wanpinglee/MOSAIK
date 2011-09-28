@@ -428,8 +428,12 @@ private:
 	void SaveMultiplyAlignment(const vector<Alignment*>& mate1Set, const vector<Alignment*>& mate2Set, const Mosaik::Read& mr
 		, BamWriters* const pBams, CStatisticsMaps* const pMaps);
 	void SaveNClearBuffers( BamWriters* const pBams, CStatisticsMaps* const pMaps, MosaikReadFormat::CAlignmentWriter* const pOut );
-	unsigned char GetMappingQuality(const Alignment& al);
-	unsigned char GetMappingQuality(const Alignment& al1, const Alignment& al2);
+	unsigned char GetMappingQuality(const Alignment& al, const int& al_length);
+	unsigned char GetMappingQuality(
+	    const Alignment& al1, 
+	    const int& al1_length, 
+	    const Alignment& al2, 
+	    const int& al2_length);
 
 	// ====
 	// data
@@ -496,10 +500,6 @@ private:
 	QualityNeuralNetwork::FannInputs mate2Ann;
 	string paired_end_ann_file;
 	string single_end_ann_file;
-	//fann* paired_end_ann;
-	//fann* single_end_ann;
-	//fann_type *calc_out;
-	//vector<fann_type> fann_inputs;
 	
 	//Entropy
 	Entropy entropy_;

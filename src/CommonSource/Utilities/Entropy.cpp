@@ -29,6 +29,13 @@
 #define        log2(x) (log((x)) * (1./M_LN2))
 #endif
 
+Entropy::Entropy() {
+  m_num_tokens = 0;
+  m_maxent     = 0.0;
+  m_ratio      = 0.0;
+  LIBDISORDER_INITIALIZED = 0;
+}
+
 /** Frequecies for each byte */
 //static int m_token_freqs[LIBDO_MAX_BYTES]; //frequency of each token in sample
 //static float m_token_probs[LIBDO_MAX_BYTES]; //P(each token appearing)
@@ -171,22 +178,4 @@ Entropy::shannon_H(char* buf,
   m_ratio = bits / m_maxent;
 
   return bits;
-}
-
-int 
-Entropy::get_num_tokens()
-{
-  return m_num_tokens;
-}
-
-float 
-Entropy::get_max_entropy()
-{
-  return m_maxent;
-}
-
-float 
-Entropy::get_entropy_ratio()
-{
-  return m_ratio;
 }

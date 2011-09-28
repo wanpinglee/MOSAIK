@@ -81,22 +81,25 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
 
   fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
 
-/*
+  calc_out = fann_run(pe_ann, &fann_inputs[0]);
+
+ /* 
   for (unsigned int i = 0; i < fann_inputs.size(); ++i)
   	cout << fann_inputs[i] << "\t";
   cout << endl;
   
   cout << annInputs1.swScore << " " << annInputs1.nextSwScore << " "
-  << annInputs1.read_length << " " << annInputs1.longest_match << " "
-  << annInputs1.entropy << " "
-  << annInputs1.numMappings << " " << annInputs1.numHashes << " "
-  << annInputs2.swScore << " " << annInputs2.nextSwScore << " "
-  << annInputs2.read_length << " " << annInputs2.longest_match << " "
-  << annInputs2.entropy << " "
-  << annInputs2.numMappings << " " << annInputs2.numHashes << " "
-  << fragment_length_diff << endl;
-*/
-  calc_out = fann_run(pe_ann, &fann_inputs[0]);
+       << annInputs1.read_length << " " << annInputs1.longest_match << " "
+       << annInputs1.entropy << " "
+       << annInputs1.numMappings << " " << annInputs1.numHashes << " "
+       << annInputs2.swScore << " " << annInputs2.nextSwScore << " "
+       << annInputs2.read_length << " " << annInputs2.longest_match << " "
+       << annInputs2.entropy << " "
+       << annInputs2.numMappings << " " << annInputs2.numHashes << " "
+       << fragment_length_diff << endl;
+  cout << 1 - (1 + calc_out[0]) / 2 << endl;
+ */
+
   return float2phred(1 - (1 + calc_out[0]) / 2);
 }
 

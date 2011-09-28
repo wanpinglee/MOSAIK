@@ -43,22 +43,22 @@ void testMq(const string& paired_end_ann_file, const string& single_end_ann_file
   QualityNeuralNetwork::FannInputs mate2Ann;
 
   mate1Ann.read_length   = 100;
-  mate1Ann.swScore       = 1000;
+  mate1Ann.swScore       = 914;
   mate1Ann.nextSwScore   = 0;
-  mate1Ann.longest_match = 100;
-  mate1Ann.entropy       = 0;
+  mate1Ann.longest_match = 53;
+  mate1Ann.entropy       = 1.94578;
   mate1Ann.numMappings   = 1;
-  mate1Ann.numHashes     = 4324;
+  mate1Ann.numHashes     = 1295;
 
   mate2Ann.read_length   = 100;
-  mate2Ann.swScore       = 981;
-  mate2Ann.nextSwScore   = 723;
-  mate2Ann.longest_match = 86;
-  mate2Ann.entropy       = -0;
-  mate2Ann.numMappings   = 3;
-  mate2Ann.numHashes     = 5514;
+  mate2Ann.swScore       = 924;
+  mate2Ann.nextSwScore   = 0;
+  mate2Ann.longest_match = 40;
+  mate2Ann.entropy       = 1.97024;
+  mate2Ann.numMappings   = 1;
+  mate2Ann.numHashes     = 464;
 
-  cout << (int)mqCalculator.GetQualityPe(mate1Ann, mate2Ann, 47) << endl;
+  cout << (int)mqCalculator.GetQualityPe(mate1Ann, mate2Ann, 27) << endl;
 }
 
 /*
