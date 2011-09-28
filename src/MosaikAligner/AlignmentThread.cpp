@@ -909,19 +909,19 @@ void CAlignmentThread::AlignReadArchive(
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
-				//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 
-				//SaveBamAlignment( al1, zaTag1, false, false, false );
-				//SaveBamAlignment( al2, zaTag2, false, false, false );
+				SaveBamAlignment( al1, zaTag1, false, false, false );
+				SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
 			
-				ostringstream zaTag1, zaTag2;
-				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
+				//ostringstream zaTag1, zaTag2;
+				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 				
 			}
 
@@ -977,9 +977,9 @@ void CAlignmentThread::AlignReadArchive(
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
-				
+				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				/*
 				ostringstream zaTag1Stream, zaTag2Stream;
 				zaTag1Stream << "" << al.SwScore << ";" 
 				             << al.NextSwScore << ";" 
@@ -995,6 +995,7 @@ void CAlignmentThread::AlignReadArchive(
 					     << unmappedAl.NumHash;
 				const char* zaTag1 = zaTag1Stream.str().c_str();
 				const char* zaTag2 = zaTag2Stream.str().c_str();
+				*/
 				
 
 				// store special hits
