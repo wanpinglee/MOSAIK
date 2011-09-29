@@ -108,7 +108,7 @@ namespace MosaikReadFormat {
 	}
 
 	// adjust the size of partition; the default is 20000
-	void CAlignmentWriter::AdjustPartitionSize(unsigned short size) {
+	void CAlignmentWriter::AdjustPartitionSize(const unsigned short& size) {
                 mPartitionSize = size;
 	}
 
@@ -746,7 +746,7 @@ namespace MosaikReadFormat {
 			//for(vector<Alignment>::const_iterator alIter = mate1Alignments.begin(); alIter != mate1Alignments.end(); ++alIter) {
 			//	WriteAlignment(&(*alIter), isLongRead, mIsPairedEndArchive, true, false);
 			//}
-			WriteAlignment( &mate1Alignment, isLongRead, mIsPairedEndArchive, true, false, hasCsString );
+			WriteAlignment(&mate1Alignment, isLongRead, mIsPairedEndArchive, true, false, hasCsString);
 		}
 
 		// ===============================
@@ -758,7 +758,7 @@ namespace MosaikReadFormat {
 			//for(vector<Alignment>::const_iterator alIter = mate2Alignments.begin(); alIter != mate2Alignments.end(); ++alIter) {
 			//	WriteAlignment(&(*alIter), isLongRead, mIsPairedEndArchive, false, false);
 			//}
-			WriteAlignment( &mate2Alignment, isLongRead, mIsPairedEndArchive, false, false, hasCsString );
+			WriteAlignment(&mate2Alignment, isLongRead, mIsPairedEndArchive, false, false, hasCsString);
 		}
 
 		// flush the buffer
@@ -770,8 +770,13 @@ namespace MosaikReadFormat {
 	}
 
 	// serializes the specified alignment
-	void CAlignmentWriter::WriteAlignment(const Alignment* pAl, const bool isLongRead, const bool isPairedEnd, const bool isFirstMate, const bool isResolvedAsPair, const bool hasCsString) {
-
+	void CAlignmentWriter::WriteAlignment(
+			const Alignment* pAl, 
+			const bool& isLongRead, 
+			const bool& isPairedEnd, 
+			const bool& isFirstMate, 
+			const bool& isResolvedAsPair, 
+			const bool& hasCsString) {
 		// check the memory buffer
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
 
@@ -933,14 +938,14 @@ namespace MosaikReadFormat {
 	// write the read header to disk
 	void CAlignmentWriter::WriteReadHeader(
 		const CMosaikString& readName, 
-		const unsigned int   readGroupCode, 
-		const unsigned char  readStatus, 
-		const unsigned int   numMate1Alignments, 
-		const unsigned int   numMate2Alignments, 
-		const int            numMate1OriginalAlignments,
-		const int            numMate2OriginalAlignments,
-		const int            numMate1Hashes,
-		const int            numMate2Hashes
+		const unsigned int&  readGroupCode, 
+		const unsigned char& readStatus, 
+		const unsigned int&  numMate1Alignments, 
+		const unsigned int&  numMate2Alignments, 
+		const int&           numMate1OriginalAlignments,
+		const int&           numMate2OriginalAlignments,
+		const int&           numMate1Hashes,
+		const int&           numMate2Hashes
 		) {
 
 		// store the read name
@@ -962,6 +967,8 @@ namespace MosaikReadFormat {
 			mBufferPosition += SIZEOF_INT;
 			memcpy(mBuffer + mBufferPosition, (char*)&numMate1OriginalAlignments, SIZEOF_INT);
 			mBufferPosition += SIZEOF_INT;
+			memcpy(mBuffer + mBufferPosition, (char*)&numMate1Hashes, SIZEOF_INT);
+			mBufferPosition += SIZEOF_INT;
 		}
 
 		// store the number of mate 2 alignments
@@ -969,6 +976,8 @@ namespace MosaikReadFormat {
 			memcpy(mBuffer + mBufferPosition, (char*)&numMate2Alignments, SIZEOF_INT);
 			mBufferPosition += SIZEOF_INT;
 			memcpy(mBuffer + mBufferPosition, (char*)&numMate2OriginalAlignments, SIZEOF_INT);
+			mBufferPosition += SIZEOF_INT;
+			memcpy(mBuffer + mBufferPosition, (char*)&numMate2Hashes, SIZEOF_INT);
 			mBufferPosition += SIZEOF_INT;
 		}
 	}

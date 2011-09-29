@@ -213,8 +213,6 @@ void CAlignmentThread::SearchLocalRegion(
 
 	// settle the local search region
 	bool settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
-	cerr << endl << refIndex << "\t" << uniqueBegin << "\t" << uniqueEnd << "\t"
-	     << localSearchBegin << "\t" << localSearchEnd << endl;
 	
 	// check if the mate is already sitting in the local region
 	bool isAlExisting = false;
@@ -759,8 +757,6 @@ void CAlignmentThread::AlignReadArchive(
 
 		vector<Alignment*> mate1Set;
 		vector<Alignment*> mate2Set;
-		mate1Alignments.GetSet(&mate1Set);
-		mate2Alignments.GetSet(&mate2Set);
 
 		//bool isMate1Rescued = false;
 		//bool isMate2Rescued = false;
@@ -768,16 +764,20 @@ void CAlignmentThread::AlignReadArchive(
 		if(areBothMatesPresent) {
 
 			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) )
+			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) ) {
+				mate1Alignments.GetSet(&mate1Set);
 				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
+			}
 			// search local region
 			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
 				SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 				//isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 			
 			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) )
+			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) ) {
+				mate2Alignments.GetSet(&mate2Set);
 				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
+			}
 			// search local region
 			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
 				SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
@@ -2007,7 +2007,11 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 
 
 	// quit if we don't have a region to align against
-	if(begin >= end) {
+	if (begin >= end) {
+		localSearchBegin = 0;
+		localSearchEnd   = 0;
+		return false;
+	} else if ((end - begin) > 10 * mSettings.LocalAlignmentSearchRadius) {
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;
@@ -2020,7 +2024,12 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 }
 
 // attempts to rescue the mate paired with a unique mate
-bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int begin, const unsigned int end, const unsigned int refIndex, Alignment& al) {
+bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, 
+                                  const CMosaikString& bases, 
+				  const unsigned int& begin, 
+				  const unsigned int& end, 
+				  const unsigned int& refIndex, 
+				  Alignment& al) {
 	// prepare for alignment (borrow the forward read buffer)
 	const char* query              = bases.CData();
 	const unsigned int queryLength = bases.Length();
@@ -2029,8 +2038,10 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam, const CMosaikS
 	mForwardRead[queryLength] = 0;
 
 	if(lam.IsTargetReverseStrand) {
-		if(mFlags.EnableColorspace) CSequenceUtilities::ReverseSequence(mForwardRead, queryLength);
-		else CSequenceUtilities::GetReverseComplement(mForwardRead, queryLength);
+		if(mFlags.EnableColorspace) 
+			CSequenceUtilities::ReverseSequence(mForwardRead, queryLength);
+		else 
+			CSequenceUtilities::GetReverseComplement(mForwardRead, queryLength);
 	}
 
 	// align according to the model
