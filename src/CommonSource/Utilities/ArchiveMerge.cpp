@@ -579,6 +579,9 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 		zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+cerr << "paired" << endl;
+cerr << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash << endl;
+cerr << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash << endl;
 		const char* zaTag1 = zaTag1Stream.str().c_str();
 		const char* zaTag2 = zaTag2Stream.str().c_str();
 
@@ -696,7 +699,8 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 			     << unmappedAl.NumHash;
 		const char* zaTag1 = zaTag1Stream.str().c_str();
 		const char* zaTag2 = zaTag2Stream.str().c_str();
-
+cerr << "single" << endl;
+cerr << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash << endl;
 		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
 

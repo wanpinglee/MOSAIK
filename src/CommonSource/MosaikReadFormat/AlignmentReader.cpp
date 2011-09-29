@@ -859,9 +859,9 @@ namespace MosaikReadFormat {
 		//strcpy( al.ReferenceName, mRefSeqLUT[al.ReferenceIndex].c_str() );
 
 		// get the alignment's best and 2nd best Smith-Waterman scores
-		al.SwScore = (float) *mBufferPtr;
+		memcpy((char*)&al.SwScore, mBufferPtr, SIZEOF_FLOAT);
 		mBufferPtr += SIZEOF_FLOAT;
-		al.NextSwScore = (float) *mBufferPtr;
+		memcpy((char*)&al.NextSwScore, mBufferPtr, SIZEOF_FLOAT);
 		mBufferPtr += SIZEOF_FLOAT;
 
 		// get the alignment status flag
