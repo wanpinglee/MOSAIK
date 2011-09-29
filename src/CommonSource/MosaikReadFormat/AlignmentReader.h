@@ -99,7 +99,9 @@ namespace MosaikReadFormat {
 				    const bool&         isResolvedAsPair, 
 				    const unsigned int& readGroupCode,
 			            const int&          numMate1OriginalAlignments, 
-				    const int&          numMate2OriginalAlignments, 
+				    const int&          numMate2OriginalAlignments,
+				    const int&          numMate1Hashes,
+				    const int&          numMate2Hashes,
 				    const bool&         hasCsString);
 		// deserialize the alignment
 		void ReadAlignment(Alignment& al, 
@@ -107,7 +109,9 @@ namespace MosaikReadFormat {
 				   const bool& isPairedInSequencing, 
 				   const bool& isResolvedAsPair,
 			           const int&  numMate1OriginalAlignments, 
-				   const int&  numMate2OriginalAlignments, 
+				   const int&  numMate2OriginalAlignments,
+				   const int&          numMate1Hashes,
+				   const int&          numMate2Hashes,
 				   const bool& hasCsString);
 		// reads a new compressed partition (returns false if EOF occurs)
 		bool ReadPartition(void);
