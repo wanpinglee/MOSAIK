@@ -505,8 +505,8 @@ namespace MosaikReadFormat {
 
 		// initialize
 		// Since we only report best one, the numbers here should be zero or one.
-		const unsigned int numMate1Alignments = (unsigned int)ar.Mate1Alignments.size();
-		const unsigned int numMate2Alignments = (unsigned int)ar.Mate2Alignments.size();
+		const int numMate1Alignments = (unsigned int)ar.Mate1Alignments.size();
+		const int numMate2Alignments = (unsigned int)ar.Mate2Alignments.size();
 
 		const bool haveMate1 = (numMate1Alignments != 0 ? true : false);
 		const bool haveMate2 = (numMate2Alignments != 0 ? true : false);
@@ -699,8 +699,8 @@ namespace MosaikReadFormat {
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
 
 		// initialize
-		const unsigned int numMate1Alignments = isSaveMate1 ? 1 : 0;
-		const unsigned int numMate2Alignments = isSaveMate2 ? 1 : 0;
+		const int numMate1Alignments = isSaveMate1 ? 1 : 0;
+		const int numMate2Alignments = isSaveMate2 ? 1 : 0;
 		int numMate1OriginalAlignments = 0;
 		int numMate2OriginalAlignments = 0;
 		int numMate1Hashes = 0;
@@ -940,8 +940,8 @@ namespace MosaikReadFormat {
 		const CMosaikString& readName, 
 		const unsigned int&  readGroupCode, 
 		const unsigned char& readStatus, 
-		const unsigned int&  numMate1Alignments, 
-		const unsigned int&  numMate2Alignments, 
+		const int&           numMate1Alignments, 
+		const int&           numMate2Alignments, 
 		const int&           numMate1OriginalAlignments,
 		const int&           numMate2OriginalAlignments,
 		const int&           numMate1Hashes,

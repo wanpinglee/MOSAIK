@@ -83,14 +83,32 @@ namespace MosaikReadFormat {
 		// assing operator
 		CAlignmentReader& operator= ( CAlignmentReader const & copy );
 		// load the read header from disk
-		void LoadReadHeader(CMosaikString& readName, unsigned int& readGroupCode, unsigned char& readStatus, unsigned int& numMate1Alignments, unsigned int& numMate2Alignments,
-			unsigned int& numMate1OriginalAlignments, unsigned int& numMate2OriginalAlignments);
+		void LoadReadHeader(CMosaikString& readName, 
+		                    unsigned int& readGroupCode, 
+			            unsigned char& readStatus, 
+				    int& numMate1Alignments, 
+			            int& numMate2Alignments, 
+				    int& numMate1OriginalAlignments, 
+			            int& numMate2OriginalAlignments, 
+				    int& numMate1Hashes, 
+				    int& numMate2Hashes);
 		// deserializes each alignment and stores them in the supplied vector
-		void ReadAlignments(vector<Alignment>& alignments, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair, const unsigned int readGroupCode,
-			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments, const bool hasCsString);
+		void ReadAlignments(vector<Alignment>&  alignments, 
+		                    const bool&         isLongRead, 
+				    const bool&         isPairedInSequencing, 
+				    const bool&         isResolvedAsPair, 
+				    const unsigned int& readGroupCode,
+			            const int&          numMate1OriginalAlignments, 
+				    const int&          numMate2OriginalAlignments, 
+				    const bool&         hasCsString);
 		// deserialize the alignment
-		void ReadAlignment(Alignment& al, const bool isLongRead, const bool isPairedInSequencing, const bool isResolvedAsPair,
-			const unsigned int numMate1OriginalAlignments, const unsigned int numMate2OriginalAlignments, const bool hasCsString);
+		void ReadAlignment(Alignment& al, 
+		                   const bool& isLongRead, 
+				   const bool& isPairedInSequencing, 
+				   const bool& isResolvedAsPair,
+			           const int&  numMate1OriginalAlignments, 
+				   const int&  numMate2OriginalAlignments, 
+				   const bool& hasCsString);
 		// reads a new compressed partition (returns false if EOF occurs)
 		bool ReadPartition(void);
 		// reads the tag from disk

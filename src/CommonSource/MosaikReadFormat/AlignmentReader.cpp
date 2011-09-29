@@ -377,13 +377,16 @@ namespace MosaikReadFormat {
 		// initialize
 		unsigned char readStatus = RF_UNKNOWN;
 
-		unsigned int numMate1Alignments = 0;
-		unsigned int numMate2Alignments = 0;
-		unsigned int numMate1OriginalAlignments = 0;
-		unsigned int numMate2OriginalAlignments = 0;
+		int numMate1Alignments = 0;
+		int numMate2Alignments = 0;
+		int numMate1OriginalAlignments = 0;
+		int numMate2OriginalAlignments = 0;
+		int numMate1Hashs = 0;
+		int numMate2Hashs = 0;
 		
 		// load the read header
-		LoadReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, numMate1OriginalAlignments, numMate2OriginalAlignments);
+		LoadReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, 
+		    numMate1OriginalAlignments, numMate2OriginalAlignments, numMate1Hashs, numMate2Hashs);
 
 		// interpret the read status
 		const bool haveMate1        = ((readStatus & RF_HAVE_MATE1)              != 0 ? true : false);
@@ -400,14 +403,20 @@ namespace MosaikReadFormat {
 		// =================================
 
 		ar.Mate1Alignments.resize(numMate1Alignments);
-		if(haveMate1) ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, ar.hasCsString);
+		if (haveMate1) 
+			ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, 
+				isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, 
+				numMate2OriginalAlignments, ar.hasCsString);
 
 		// =================================
 		// deserialize each mate 2 alignment
 		// =================================
 
 		ar.Mate2Alignments.resize(numMate2Alignments);
-		if(haveMate2) ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, numMate2OriginalAlignments, ar.hasCsString);
+		if (haveMate2) 
+			ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, 
+				isResolvedAsPair, ar.ReadGroupCode, numMate1OriginalAlignments, 
+				numMate2OriginalAlignments, ar.hasCsString);
 
 		// increment the read counter
 		++mCurrentRead;
@@ -421,10 +430,12 @@ namespace MosaikReadFormat {
 		CMosaikString& readName, 
 		unsigned int&  readGroupCode, 
 		unsigned char& readStatus, 
-		unsigned int&  numMate1Alignments, 
-		unsigned int&  numMate2Alignments,
-		unsigned int&  numMate1OriginalAlignments,
-		unsigned int&  numMate2OriginalAlignments) {
+		int&  numMate1Alignments, 
+		int&  numMate2Alignments,
+		int&  numMate1OriginalAlignments,
+		int&  numMate2OriginalAlignments,
+		int&  numMate1Hashes,
+		int&  numMate2Hashes) {
 
 		// get the read name
 		const unsigned char readNameLength = (unsigned char)*mBufferPtr;
@@ -450,6 +461,8 @@ namespace MosaikReadFormat {
 			mBufferPtr += SIZEOF_INT;
 			memcpy((char*)&numMate1OriginalAlignments, mBufferPtr, SIZEOF_INT);
 			mBufferPtr += SIZEOF_INT;
+			memcpy((char*)&numMate1Hashes, mBufferPtr, SIZEOF_INT);
+			mBufferPtr += SIZEOF_INT;
 		}
 
 		// get the number of mate 2 alignments
@@ -457,6 +470,8 @@ namespace MosaikReadFormat {
 			memcpy((char*)&numMate2Alignments, mBufferPtr, SIZEOF_INT);
 			mBufferPtr += SIZEOF_INT;
 			memcpy((char*)&numMate2OriginalAlignments, mBufferPtr, SIZEOF_INT);
+			mBufferPtr += SIZEOF_INT;
+			memcpy((char*)&numMate2Hashes, mBufferPtr, SIZEOF_INT);
 			mBufferPtr += SIZEOF_INT;
 		}
 	}
@@ -803,14 +818,14 @@ namespace MosaikReadFormat {
 
 	// deserializes each alignment and stores them in the supplied vector
 	void CAlignmentReader::ReadAlignments(
-		vector<Alignment>& alignments, 
-		const bool isLongRead, 
-		const bool isPairedInSequencing, 
-		const bool isResolvedAsPair, 
-		const unsigned int readGroupCode,
-		const unsigned int numMate1OriginalAlignments,
-		const unsigned int numMate2OriginalAlignments,
-		const bool hasCsString) {
+		vector<Alignment>&   alignments, 
+		const bool&          isLongRead, 
+		const bool&          isPairedInSequencing, 
+		const bool&          isResolvedAsPair, 
+		const unsigned int&  readGroupCode,
+		const int&           numMate1OriginalAlignments,
+		const int&           numMate2OriginalAlignments,
+		const bool&          hasCsString) {
 		
 		vector<Alignment>::iterator alIter;
 		for(alIter = alignments.begin(); alIter != alignments.end(); ++alIter) {
@@ -822,12 +837,12 @@ namespace MosaikReadFormat {
 	// deserialize the alignment
 	void CAlignmentReader::ReadAlignment(
 		Alignment& al, 
-		const bool isLongRead, 
-		const bool isPairedInSequencing, 
-		const bool isResolvedAsPair,
-		const unsigned int numMate1OriginalAlignments,
-		const unsigned int numMate2OriginalAlignments,
-		const bool hasCsString) {
+		const bool& isLongRead, 
+		const bool& isPairedInSequencing, 
+		const bool& isResolvedAsPair,
+		const int&  numMate1OriginalAlignments,
+		const int&  numMate2OriginalAlignments,
+		const bool& hasCsString) {
 
 		// get the reference sequence start position
 		memcpy((char*)&al.ReferenceBegin, mBufferPtr, SIZEOF_INT);
@@ -872,8 +887,9 @@ namespace MosaikReadFormat {
 		if((status & AF_IS_JUNK)           != 0) al.IsJunk          = true;
 		if((status & AF_IS_FILTEREDOUT)    != 0) al.IsFilteredOut   = true;
 
-		if ( ( isPairedInSequencing && al.IsFirstMate ) || !isPairedInSequencing )
+		if ( ( isPairedInSequencing && al.IsFirstMate ) || !isPairedInSequencing ) {
 			al.NumMapped = numMate1OriginalAlignments;
+		}
 		else
 			al.NumMapped = numMate2OriginalAlignments;
 
