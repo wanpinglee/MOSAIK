@@ -858,9 +858,11 @@ namespace MosaikReadFormat {
 		al.ReferenceName = (char*)mRefSeqLUT[al.ReferenceIndex].c_str();
 		//strcpy( al.ReferenceName, mRefSeqLUT[al.ReferenceIndex].c_str() );
 
-		// get the alignment quality
-		al.Quality = (unsigned char)*mBufferPtr;
-		++mBufferPtr;
+		// get the alignment's best and 2nd best Smith-Waterman scores
+		al.SwScore = (float) *mBufferPtr;
+		mBufferPtr += SIZEOF_FLOAT;
+		al.NextSwScore = (float) *mBufferPtr;
+		mBufferPtr += SIZEOF_FLOAT;
 
 		// get the alignment status flag
 		const unsigned char status = (unsigned char)*mBufferPtr;

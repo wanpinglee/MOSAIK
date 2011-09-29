@@ -36,7 +36,7 @@ unsigned char QualityNeuralNetwork::GetQualitySe(const FannInputs& annInputs) {
 
   fann_inputs.clear();
   
-  int swDiff = annInputs.swScore - annInputs.nextSwScore;
+  float swDiff = annInputs.swScore - annInputs.nextSwScore;
   fann_inputs.push_back(swDiff / (float)(annInputs.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs.longest_match / (float)annInputs.read_length);
   fann_inputs.push_back(annInputs.entropy);
@@ -55,7 +55,7 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
 
   fann_inputs.clear();
 
-  int swDiff1 = annInputs1.swScore - annInputs1.nextSwScore;
+  float swDiff1 = annInputs1.swScore - annInputs1.nextSwScore;
   fann_inputs.push_back(swDiff1 / (float)(annInputs1.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs1.longest_match / (float)annInputs1.read_length);
   fann_inputs.push_back(annInputs1.entropy);

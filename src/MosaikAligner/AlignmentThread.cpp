@@ -599,11 +599,14 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 				buffer2 = bamBuffer.front();
 				bamBuffer.pop();
 				const char* za1 = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
-				pBams->rBam.SaveAlignment( buffer1.al, za1, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				pBams->rBam.SaveAlignment(buffer1.al, za1, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData);
 				const char* za2 = buffer2.zaString.empty() ? 0 : buffer2.zaString.c_str();
-				pBams->rBam.SaveAlignment( buffer2.al, za2, buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+				pBams->rBam.SaveAlignment(buffer2.al, za2, buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData);
 				bool buffer1IsMate1 = buffer1.al.IsFirstMate;
-				pMaps->SaveRecord( ( buffer1IsMate1 ? buffer1.al : buffer2.al ), ( buffer1IsMate1 ? buffer2.al : buffer1.al ), alInfo.isPairedEnd, mSettings.SequencingTechnology );
+				pMaps->SaveRecord((buffer1IsMate1 ? buffer1.al : buffer2.al), 
+				                  (buffer1IsMate1 ? buffer2.al : buffer1.al), 
+						  alInfo.isPairedEnd, 
+						  mSettings.SequencingTechnology );
 			}
 			pthread_mutex_unlock(&mSaveReadMutex);
 		}
@@ -612,7 +615,7 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 		pthread_mutex_lock(&mSaveReadMutex);
 		while ( !archiveBuffer.empty() ) {
 			buffer = archiveBuffer.front();
-			pOut->SaveRead( buffer.mr, buffer.al1, buffer.al2, buffer.isLongRead, true, alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive );
+			pOut->SaveRead(buffer.mr, buffer.al1, buffer.al2, buffer.isLongRead, true, alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive);
 			archiveBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveReadMutex);
@@ -1149,13 +1152,13 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 
 	// Note that there are at least two alignments
 	vector<Alignment*>::reverse_iterator rit = mateSet->rbegin();
-	Alignment* bestAl       = *rit;
-	unsigned short mq1      = (*rit)->Quality;
-	unsigned int   swScore1 = (*rit)->SwScore;
+	Alignment* bestAl  = *rit;
+	unsigned short mq1 = (*rit)->Quality;
+	float swScore1     = (*rit)->SwScore;
 	rit++;
 	Alignment* secondBestAl = *rit;
 	unsigned short mq2      = (*rit)->Quality;
-	unsigned int   swScore2 = (*rit)->SwScore;
+	float swScore2          = (*rit)->SwScore;
 
 	mateSet->clear();
 

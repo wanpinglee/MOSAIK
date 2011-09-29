@@ -799,8 +799,11 @@ namespace MosaikReadFormat {
 		memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceIndex, SIZEOF_INT);
 		mBufferPosition += SIZEOF_INT;
 
-		// store the alignment quality
-		mBuffer[mBufferPosition++] = pAl->Quality;
+		// store the alignment's best and 2nd best Smith-Waterman scores
+		memcpy(mBuffer + mBufferPosition, (char*)&pAl->SwScore, SIZEOF_FLOAT);
+		mBufferPosition += SIZEOF_FLOAT;
+		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NextSwScore, SIZEOF_FLOAT);
+		mBufferPosition += SIZEOF_FLOAT;
 
 		// store the alignment status flag
 		unsigned char status = AF_UNKNOWN;

@@ -274,6 +274,7 @@ void CArchiveMerge::CalculateStatisticsCounters( const Mosaik::AlignedRead& alig
 	unsigned int nMate1Alignments = 0;
 	unsigned int nMate2Alignments = 0;
 
+
 	bool mate1FilteredOut = false;
 	bool mate2FilteredOut = false;
 	bool mate1Rescued     = false;
@@ -430,6 +431,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 	unsigned int nMate1Alignments = 0;
 	unsigned int nMate2Alignments = 0;
+	unsigned int nMate1Hashes     = 0;
+	unsigned int nMate2Hashes     = 0;
 
 	vector<Alignment*> newMate1Set, newMate2Set;
 	Mosaik::Read read;
@@ -439,6 +442,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
 		nMate1Alignments   += ite->NumMapped;
+		nMate1Hashes       += ite->NumHash;
 		ite->SpecialCode    = _specialCode1;
 		isMate1FilteredOut |= ite->IsFilteredOut;
 		if ( ite->IsMapped ) newMate1Set.push_back( &*ite );
@@ -456,6 +460,7 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	
 	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
 		nMate2Alignments   += ite->NumMapped;
+		nMate2Hashes       += ite->NumHash;
 		ite->SpecialCode    = _specialCode2;
 		isMate2FilteredOut |= ite->IsFilteredOut;
 		if ( ite->IsMapped ) newMate2Set.push_back( &*ite );
@@ -558,6 +563,8 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		
 		al1.NumMapped = nMate1Alignments;
 		al2.NumMapped = nMate2Alignments;
+		al1.NumHash   = nMate1Hashes;
+		al2.NumHash   = nMate2Hashes;
 
 		al1.Entropy = _entropy.shannon_H(al1.Query.Data(), al1.QueryLength);
 		al2.Entropy = _entropy.shannon_H(al2.Query.Data(), al2.QueryLength);
@@ -566,8 +573,15 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		al2.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 
 		//CZaTager za1, za2;
-		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+		//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+		//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+
+		ostringstream zaTag1Stream, zaTag2Stream;
+		zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+		zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+		const char* zaTag1 = zaTag1Stream.str().c_str();
+		const char* zaTag2 = zaTag2Stream.str().c_str();
+
 
 		if ( isMate2Special ) {
 			Alignment genomicAl = al1;
@@ -655,19 +669,36 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
+		al.NumHash   = isFirstMate ? nMate1Hashes : nMate2Hashes;
 		al.Entropy = _entropy.shannon_H(al.Query.Data(), al.QueryLength);
 		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );
 		unmappedAl.NumMapped = 0;
+		unmappedAl.NumHash   = 0;
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
-		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
+		//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
+		//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
+
+		ostringstream zaTag1Stream, zaTag2Stream;
+		zaTag1Stream << "" << al.SwScore << ";" 
+		             << al.NextSwScore << ";" 
+			     << al.NumLongestMatchs << ";" 
+			     << al.Entropy << ";" 
+			     << al.NumMapped << ";" 
+			     << al.NumHash;
+		zaTag2Stream << "" << unmappedAl.SwScore << ";" 
+		             << unmappedAl.NextSwScore << ";" 
+			     << unmappedAl.NumLongestMatchs << ";" 
+			     << unmappedAl.Entropy << ";" 
+			     << unmappedAl.NumMapped << ";" 
+			     << unmappedAl.NumHash;
+		const char* zaTag1 = zaTag1Stream.str().c_str();
+		const char* zaTag2 = zaTag2Stream.str().c_str();
 
 		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
-	
 
 		// store mate1 special hits
 		// NOTE: we consider mate2 special hits in the next block

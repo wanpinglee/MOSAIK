@@ -13,8 +13,8 @@ class QualityNeuralNetwork {
  public:
   struct FannInputs {
     int read_length;
-    int swScore;
-    int nextSwScore;
+    float swScore;
+    float nextSwScore;
     int longest_match;
     float entropy;
     int numMappings;

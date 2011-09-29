@@ -33,8 +33,6 @@ struct Alignment {
 	unsigned int Owner;                // the temporary file that contains the alignment
 	unsigned int ReadGroupCode;        // the read group code (temp)
 	unsigned int NumMapped;            // the total number of mapped alignments
-	unsigned int SwScore;
-	unsigned int NextSwScore;
 	unsigned int NumHash;
 	int FragmentLength;                // the fragment length with its pair
 	unsigned short QueryLength;        // used during filtering (temp)
@@ -48,6 +46,8 @@ struct Alignment {
 	unsigned char NextBestQuality;     // the next best alignment quality
 	unsigned char RecalibratedQuality; // recalibrated quality
 	float Entropy;
+	float SwScore;
+	float NextSwScore;
 	bool CanBeMappedToSpecialReference;// can the sequence be mapped to special references?`
 	bool IsFilteredOut;                // is mapped to somewhere but cannot pass the filters
 	bool IsFirstMate;                  // is this alignment from the first mate in a paired-end read
@@ -87,8 +87,6 @@ struct Alignment {
 		, ReferenceIndex(0)
 		, ReadGroupCode(0)
 		, NumMapped(1)
-		, SwScore(0)
-		, NextSwScore(0)
 		, NumHash(0)
 		, FragmentLength(0)
 		, QueryLength(0)
@@ -102,6 +100,8 @@ struct Alignment {
 		, NextBestQuality(0)
 		, RecalibratedQuality(0)
 		, Entropy(0)
+		, SwScore(0)
+		, NextSwScore(0)
 		, CanBeMappedToSpecialReference(false)
 		, IsFilteredOut(false)
 		, IsFirstMate(false)
