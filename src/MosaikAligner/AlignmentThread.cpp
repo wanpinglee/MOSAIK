@@ -2014,7 +2014,7 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;
-	} else if ((end - begin) > 10 * mSettings.LocalAlignmentSearchRadius) {
+	} else if ((end - begin) > (10 * mSettings.LocalAlignmentSearchRadius)) {
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;

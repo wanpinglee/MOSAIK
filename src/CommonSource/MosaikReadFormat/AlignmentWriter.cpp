@@ -805,6 +805,10 @@ namespace MosaikReadFormat {
 		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NextSwScore, SIZEOF_FLOAT);
 		mBufferPosition += SIZEOF_FLOAT;
 
+		// store the alignment's longest perfect match
+		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumLongestMatchs, SIZEOF_SHORT);
+		mBufferPosition += SIZEOF_SHORT;
+
 		// store the alignment status flag
 		unsigned char status = AF_UNKNOWN;
 

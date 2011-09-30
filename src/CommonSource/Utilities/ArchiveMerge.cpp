@@ -440,12 +440,22 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	string mate1Cs, mate1Cq, mate2Cs, mate2Cq;
 	bool isMate1FilteredOut = false, isMate2FilteredOut = false;
 
+if (r.Name == "X_85564824_85565798_1:0:0_5:0:0_900f") {
+  cerr << "mate1" << endl;
+  for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
+    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << "\t" << (*ite).NumMapped << endl;
+  }
+  for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
+    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << "\t" << (*ite).NumMapped << endl;
+  }
+}
+
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
 		nMate1Alignments   += ite->NumMapped;
 		nMate1Hashes       += ite->NumHash;
 		ite->SpecialCode    = _specialCode1;
 		isMate1FilteredOut |= ite->IsFilteredOut;
-		if ( ite->IsMapped ) newMate1Set.push_back( &*ite );
+		if (ite->IsMapped) newMate1Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
 			read.Mate1.Bases     = ite->Query;
@@ -463,9 +473,9 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 		nMate2Hashes       += ite->NumHash;
 		ite->SpecialCode    = _specialCode2;
 		isMate2FilteredOut |= ite->IsFilteredOut;
-		if ( ite->IsMapped ) newMate2Set.push_back( &*ite );
+		if (ite->IsMapped) newMate2Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
-		if ( ite->Owner == 0 ) {
+		if (ite->Owner == 0) {
 			read.Mate2.Bases     = ite->Query;
 			read.Mate2.Qualities = ite->BaseQualities;
 			if ( read.Mate2.Bases.Length() > 0 ) read.Mate2.Bases.Remove('-');
@@ -511,10 +521,10 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 }
 */
 	// UU, UM, and MM pair
-	if ( ( isMate1Unique && isMate2Unique )
-		|| ( isMate1Unique && isMate2Multiple )
-		|| ( isMate1Multiple && isMate2Unique )
-		|| ( isMate1Multiple && isMate2Multiple ) ) {
+	if ( (isMate1Unique && isMate2Unique)
+		|| (isMate1Unique && isMate2Multiple)
+		|| (isMate1Multiple && isMate2Unique)
+		|| (isMate1Multiple && isMate2Multiple) ) {
 
 		Alignment al1 = *newMate1Set[0], al2 = *newMate2Set[0];
 		if ( ( isMate1Unique && isMate2Multiple )
@@ -565,6 +575,8 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		al2.NumMapped = nMate2Alignments;
 		al1.NumHash   = nMate1Hashes;
 		al2.NumHash   = nMate2Hashes;
+		al1.QueryLength = al1.Query.Length();
+		al2.QueryLength = al2.Query.Length();
 
 		al1.Entropy = _entropy.shannon_H(al1.Query.Data(), al1.QueryLength);
 		al2.Entropy = _entropy.shannon_H(al2.Query.Data(), al2.QueryLength);
@@ -579,12 +591,8 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 		zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-cerr << "paired" << endl;
-cerr << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash << endl;
-cerr << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash << endl;
-		const char* zaTag1 = zaTag1Stream.str().c_str();
-		const char* zaTag2 = zaTag2Stream.str().c_str();
-
+		//const char* zaTag1 = zaTag1Stream.str().c_str();
+		//const char* zaTag2 = zaTag2Stream.str().c_str();
 
 		if ( isMate2Special ) {
 			Alignment genomicAl = al1;
@@ -622,16 +630,16 @@ cerr << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatc
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
 
-		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
-		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
+		_rBam.SaveAlignment( al1, zaTag1Stream.str().c_str(), false, false, _isSolid );
+		_rBam.SaveAlignment( al2, zaTag2Stream.str().c_str(), false, false, _isSolid );
 
 		//if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
 
 	// UX and MX pair
-	} else if ( ( isMate1Empty || isMate2Empty )
-		&&  !( isMate1Empty && isMate2Empty ) ) {
+	} else if ( (isMate1Empty || isMate2Empty)
+		&& !(isMate1Empty && isMate2Empty) ) {
 		
 		Alignment al1, al2, unmappedAl;
 		if (!isMate1Empty) al1 = *newMate1Set[0];
@@ -673,6 +681,7 @@ cerr << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatc
 		SetAlignmentFlags( al, unmappedAl, false, false, isFirstMate, _isPairedEnd, true, false, r );
 		al.NumMapped = isFirstMate ? nMate1Alignments : nMate2Alignments;
 		al.NumHash   = isFirstMate ? nMate1Hashes : nMate2Hashes;
+		al.QueryLength = al.Query.Length();
 		al.Entropy = _entropy.shannon_H(al.Query.Data(), al.QueryLength);
 		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 
@@ -697,12 +706,11 @@ cerr << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatc
 			     << unmappedAl.Entropy << ";" 
 			     << unmappedAl.NumMapped << ";" 
 			     << unmappedAl.NumHash;
-		const char* zaTag1 = zaTag1Stream.str().c_str();
-		const char* zaTag2 = zaTag2Stream.str().c_str();
-cerr << "single" << endl;
-cerr << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs << ";" << al.Entropy << ";" << al.NumMapped << ";" << al.NumHash << endl;
+		//const char* zaTag1 = zaTag1Stream.str().c_str();
+		//const char* zaTag2 = zaTag2Stream.str().c_str();
+		
 		// store the alignment
-		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
+		_rBam.SaveAlignment( al, zaTag1Stream.str().c_str(), false, false, _isSolid );
 
 		// store mate1 special hits
 		// NOTE: we consider mate2 special hits in the next block
@@ -725,7 +733,7 @@ cerr << "" << al.SwScore << ";" << al.NextSwScore << ";" << al.NumLongestMatchs 
 		
 		if ( _isPairedEnd ) {
 			// store mate2 alignment in regular and unmapped bams
-			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
+			_rBam.SaveAlignment( unmappedAl, zaTag2Stream.str().c_str(), true, false, _isSolid );
 			//_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
 
 			// store special hits

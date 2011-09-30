@@ -647,7 +647,7 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 		pZaTag = (char*)zaTag.data();
 		sprintf(pZaTag, "ZAZ%s",zaString);
 	}
-
+	
 	// create our cs tag
 	unsigned int csTagLen = 0;
 	string csTag;
