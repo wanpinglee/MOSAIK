@@ -23,9 +23,9 @@ CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina)
 //	mRevMhpOccupancyList.clear();
 //}
 
-unsigned int CNaiveAlignmentSet::GetHighestSwScore( void ) {
-	return highestSmithWatermanScore;
-}
+//unsigned int CNaiveAlignmentSet::GetHighestSwScore( void ) {
+//	return highestSmithWatermanScore;
+//}
 
 // check if there are any alignments sitting in the given region
 bool CNaiveAlignmentSet::CheckExistence ( const unsigned int& refIndex, const unsigned int& begin, const unsigned int& end ) {
@@ -240,9 +240,9 @@ void CNaiveAlignmentSet::Dump(void) const {
 }
 
 // returns the number of alignments in the set
-unsigned int CNaiveAlignmentSet::GetCount(void) const {
-	return (unsigned int)mAlignments.size();
-}
+//unsigned int CNaiveAlignmentSet::GetCount(void) const {
+//	return (unsigned int)mAlignments.size();
+//}
 
 // retrieves the mhp occupancy list for the forward read
 MhpOccupancyList* CNaiveAlignmentSet::GetFwdMhpOccupancyList(void) {
@@ -267,6 +267,7 @@ void CNaiveAlignmentSet::GetSet(vector<Alignment*>* alSet) {
 	}
 }
 
+/*
 // retrieves the long alignment flag
 bool CNaiveAlignmentSet::HasLongAlignment(void) const {
 	return mHasLongAlignment;
@@ -286,3 +287,4 @@ bool CNaiveAlignmentSet::IsUnique(void) const {
 bool CNaiveAlignmentSet::IsMultiple( void ) const {
 	return (mAlignments.size() > 1 ? true : false);
 }
+*/

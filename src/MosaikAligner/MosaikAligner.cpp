@@ -649,6 +649,7 @@ void CMosaikAligner::GroupReferences( const vector<ReferenceSequence>& reference
 
 
 void CMosaikAligner::MergeArchives(void) {
+//exit(1);
 	// set active threads
 	unsigned int nThread = ( mSettings.NumThreads < outputFilenames.size() ) ? mSettings.NumThreads : outputFilenames.size();
 	

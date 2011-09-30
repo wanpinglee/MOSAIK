@@ -392,7 +392,7 @@ private:
 	// =========
 
 	// aligns the read against the reference sequence and returns true if the read was aligned
-	bool AlignRead(CNaiveAlignmentSet& alignments, const char* query, const char* qualities, const unsigned int queryLength, AlignmentStatusType& status);
+	bool AlignRead(CNaiveAlignmentSet& alignments, const char* query, const char* qualities, const unsigned int& queryLength, AlignmentStatusType& status, int* numHashes);
 	// aligns the read against a specified hash region using Smith-Waterman-Gotoh
 	void AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int queryLength, unsigned int extensionBases);
 	// returns true if the alignment passes all of the user-specified filters

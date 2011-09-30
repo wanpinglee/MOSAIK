@@ -729,13 +729,12 @@ void CAlignmentThread::AlignReadArchive(
 		// ====================
 
 		bool isMate1Aligned = false;
+		int numMate1Hashes  = 0;
 		mate1Alignments.Clear();
 		if( numMate1Bases != 0 && !isTooManyNMate1 ) {
 			// align the read
-			if( AlignRead( mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status ) ) 
+			if (AlignRead(mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status, &numMate1Hashes)) 
 				isMate1Aligned = true;
-			
-			 
 		}
 
 		// =====================
@@ -743,12 +742,12 @@ void CAlignmentThread::AlignReadArchive(
 		// =====================
 
 		bool isMate2Aligned = false;
+		int numMate2Hashes  = 0;
 		mate2Alignments.Clear();
 		if( numMate2Bases != 0 && !isTooManyNMate2 ) {
 			// align the read
-			if( AlignRead( mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status ) ) 
+			if (AlignRead(mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status, &numMate2Hashes)) 
 				isMate2Aligned = true;
-			 
 		}
 
 		// ======================
@@ -765,44 +764,35 @@ void CAlignmentThread::AlignReadArchive(
 		//bool isMate2Rescued = false;
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
-
 			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate1Set.size() > 1 ) ) {
+			if ( ( mFlags.UseLocalAlignmentSearch ) && (mate1Alignments.IsMultiple()) ) {
 				mate1Alignments.GetSet(&mate1Set);
 				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
 			}
 			// search local region
 			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
 				SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
-				//isMate2Rescued = SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 			
 			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && ( mate2Set.size() > 1 ) ) {
+			if ( ( mFlags.UseLocalAlignmentSearch ) && (mate2Alignments.IsMultiple()) ) {
 				mate2Alignments.GetSet(&mate2Set);
 				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
 			}
 			// search local region
 			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
 				SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
-				//isMate1Rescued = SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
-
 		}
 
 		// process alignments mapped in special references and delete them in vectors
 		mate1Alignments.GetSet(&mate1Set);
 		mate2Alignments.GetSet(&mate2Set);
 		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
-		//const unsigned int highestSwScoreMate1 = mate1Alignments.GetHighestSwScore();
-		//const unsigned int highestSwScoreMate2 = mate2Alignments.GetHighestSwScore();
-		//mate1Alignments.Clear();
-		//mate2Alignments.Clear();
 
-
-		Alignment mate1SpecialAl, mate2SpecialAl;
-		bool isMate1Special = false, isMate2Special = false;
 
 		// For low-memory, we don't remove special alignment here,
 		// the special alignments will be considered when merging archives
+		Alignment mate1SpecialAl, mate2SpecialAl;
+		bool isMate1Special = false, isMate2Special = false;
 		if (mSReference.found && !alInfo.isUsingLowMemory) {
 			ProcessSpecialAlignment(&mate1Set, &mate1SpecialAl, &isMate1Special);
 			if (isPairedEnd)
@@ -871,8 +861,10 @@ void CAlignmentThread::AlignReadArchive(
 				exit(1);
 			}
 
-			SetRequiredInfo( al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true );
-			SetRequiredInfo( al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true );
+			al1.NumHash = numMate1Hashes;
+			al2.NumHash = numMate2Hashes;
+			SetRequiredInfo(al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true);
+			SetRequiredInfo(al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true);
 
 			if (!alInfo.isUsingLowMemory) {
 				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
@@ -957,17 +949,13 @@ void CAlignmentThread::AlignReadArchive(
 				exit(1);
 			}
 
-			//Alignment al = isFirstMate ? al1 : al2;
-		
-			// patch the information for reporting
-			//Alignment al = isFirstMate ? *(mate1Set[0]) : *(mate2Set[0]);
-			//Alignment unmappedAl;
-
-			SetRequiredInfo( al, ( isFirstMate ? mate1Status : mate2Status ), unmappedAl, ( isFirstMate ? mr.Mate1 : mr.Mate2 )
-				, mr, false, false, isFirstMate, isPairedEnd, true, false );
-			if ( isPairedEnd )
-				SetRequiredInfo( unmappedAl, ( isFirstMate ? mate2Status : mate1Status ),
-				    al, ( isFirstMate ? mr.Mate2 : mr.Mate1 ), mr, true, false, !isFirstMate, isPairedEnd, false, true );
+			al.NumHash         = isFirstMate ? numMate1Hashes : numMate2Hashes;
+			unmappedAl.NumHash = !isFirstMate ? numMate1Hashes : numMate2Hashes;
+			SetRequiredInfo( al, (isFirstMate ? mate1Status : mate2Status), unmappedAl, (isFirstMate ? mr.Mate1 : mr.Mate2)
+				, mr, false, false, isFirstMate, isPairedEnd, true, false);
+			if (isPairedEnd)
+				SetRequiredInfo(unmappedAl, (isFirstMate ? mate2Status : mate1Status ),
+				    al, (isFirstMate ? mr.Mate2 : mr.Mate1), mr, true, false, !isFirstMate, isPairedEnd, false, true );
 
 			if (!alInfo.isUsingLowMemory) {
 				al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
@@ -1037,6 +1025,8 @@ void CAlignmentThread::AlignReadArchive(
 		} else if ( isMate1Empty && isMate2Empty ) {
 			
 			Alignment unmappedAl1, unmappedAl2;
+			unmappedAl1.NumHash = numMate1Hashes;
+			unmappedAl2.NumHash = numMate2Hashes;
 			SetRequiredInfo( unmappedAl1, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, false, false );
 			SetRequiredInfo( unmappedAl2, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
 
@@ -1433,7 +1423,12 @@ void CAlignmentThread::ProcessSpecialAlignment (
 }
 
 // aligns the read against the reference sequence and returns true if the read was aligned
-bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* query, const char* qualities, const unsigned int queryLength, AlignmentStatusType& status) {
+bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, 
+                                 const char* query, 
+				 const char* qualities, 
+				 const unsigned int& queryLength,
+				 AlignmentStatusType& status,
+				 int* numHash) {
 
 	// set the alignment status to be INITIAL
 	status = ALIGNMENTSTATUS_INITIAL;
@@ -1490,7 +1485,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 	const bool useFastAlgorithm = (mAlgorithm == AlignerAlgorithm_FAST ? true : false);
 
 	bool ret = true; // assume we will align the read
-	unsigned int numHash = 0;
+	//unsigned int numHash = 0;
 
 	try {
 
@@ -1564,7 +1559,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 			GetReadCandidates(forwardRegions, mForwardRead, queryLength, alignments.GetFwdMhpOccupancyList());
 			GetReadCandidates(reverseRegions, mReverseRead, queryLength, alignments.GetRevMhpOccupancyList());
 
-			numHash = forwardRegions.size() + reverseRegions.size();
+			*numHash = forwardRegions.size() + reverseRegions.size();
 
 			// detect failed hashes
 			if(forwardRegions.empty() && reverseRegions.empty()) {
@@ -1622,7 +1617,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 					//if( mFlags.EnableColorspace )
 					//	al.BaseQualities.Copy(qualities, queryLength);
 					//al.Quality = GetMappingQuality(al);
-					al.NumHash = numHash;
+					//al.NumHash = numHash;
 					alignments.Add(al);
 				}
 
@@ -1669,7 +1664,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments, const char* que
 						//	al.BaseQualities.Reverse();
 						//}
 						//al.Quality = GetMappingQuality(al);
-						al.NumHash = numHash;
+						//al.NumHash = numHash;
 						alignments.Add(al);
 					}
 
@@ -2014,7 +2009,7 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;
-	} else if ((end - begin) > (10 * mSettings.LocalAlignmentSearchRadius)) {
+	} else if ((end - begin) > (mSettings.LocalAlignmentSearchRadius * 10)) {
 		localSearchBegin = 0;
 		localSearchEnd   = 0;
 		return false;

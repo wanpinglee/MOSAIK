@@ -440,13 +440,13 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	string mate1Cs, mate1Cq, mate2Cs, mate2Cq;
 	bool isMate1FilteredOut = false, isMate2FilteredOut = false;
 
-if (r.Name == "X_85564824_85565798_1:0:0_5:0:0_900f") {
+if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
   cerr << "mate1" << endl;
   for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
-    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << "\t" << (*ite).NumMapped << endl;
+    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << (*ite).NumHash << "\t" << (*ite).NumMapped << endl;
   }
   for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
-    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << "\t" << (*ite).NumMapped << endl;
+    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << (*ite).NumHash << "\t" << (*ite).NumMapped << endl;
   }
 }
 

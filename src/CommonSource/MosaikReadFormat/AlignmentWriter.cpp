@@ -780,35 +780,6 @@ namespace MosaikReadFormat {
 		// check the memory buffer
 		if(mBufferPosition > mBufferThreshold) AdjustBuffer();
 
-		// store the reference sequence start position
-		mLastReferencePosition = pAl->ReferenceBegin;
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceBegin, SIZEOF_INT);
-		mBufferPosition += SIZEOF_INT;
-
-		// store the reference sequence end position
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceEnd, SIZEOF_INT);
-		mBufferPosition += SIZEOF_INT;
-
-		// store the reference sequence index
-		if ( pAl->ReferenceIndex > mNumRefSeqs ) {
-			cout << "ERROR: The reference index is out the range when saving alignments." << endl;
-			exit(1);
-		}
-		mLastReferenceIndex = pAl->ReferenceIndex;
-		mReferenceSequences[pAl->ReferenceIndex].NumAligned++;
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceIndex, SIZEOF_INT);
-		mBufferPosition += SIZEOF_INT;
-
-		// store the alignment's best and 2nd best Smith-Waterman scores
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->SwScore, SIZEOF_FLOAT);
-		mBufferPosition += SIZEOF_FLOAT;
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NextSwScore, SIZEOF_FLOAT);
-		mBufferPosition += SIZEOF_FLOAT;
-
-		// store the alignment's longest perfect match
-		memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumLongestMatchs, SIZEOF_SHORT);
-		mBufferPosition += SIZEOF_SHORT;
-
 		// store the alignment status flag
 		unsigned char status = AF_UNKNOWN;
 
@@ -844,9 +815,37 @@ namespace MosaikReadFormat {
 			mBufferPosition += csLen;
 		}
 
-		if ( pAl->IsJunk )
+		if (pAl->IsJunk)
 			mBuffer[mBufferPosition++] = 0;
-		else {	
+		else {
+			// store the reference sequence start position
+			mLastReferencePosition = pAl->ReferenceBegin;
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceBegin, SIZEOF_INT);
+			mBufferPosition += SIZEOF_INT;
+
+			// store the reference sequence end position
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceEnd, SIZEOF_INT);
+			mBufferPosition += SIZEOF_INT;
+
+			// store the reference sequence index
+			if ( pAl->ReferenceIndex > mNumRefSeqs ) {
+				cout << "ERROR: The reference index is out the range when saving alignments." << endl;
+				exit(1);
+			}
+			mLastReferenceIndex = pAl->ReferenceIndex;
+			mReferenceSequences[pAl->ReferenceIndex].NumAligned++;
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->ReferenceIndex, SIZEOF_INT);
+			mBufferPosition += SIZEOF_INT;
+
+			// store the alignment's best and 2nd best Smith-Waterman scores
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->SwScore, SIZEOF_FLOAT);
+			mBufferPosition += SIZEOF_FLOAT;
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->NextSwScore, SIZEOF_FLOAT);
+			mBufferPosition += SIZEOF_FLOAT;
+
+			// store the alignment's longest perfect match
+			memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumLongestMatchs, SIZEOF_SHORT);
+			mBufferPosition += SIZEOF_SHORT;
 		
 			// store the number of mismatches
 			memcpy(mBuffer + mBufferPosition, (char*)&pAl->NumMismatches, SIZEOF_SHORT);

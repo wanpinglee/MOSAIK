@@ -850,30 +850,6 @@ namespace MosaikReadFormat {
 		const int&  numMate2Hashes,
 		const bool& hasCsString) {
 
-		// get the reference sequence start position
-		memcpy((char*)&al.ReferenceBegin, mBufferPtr, SIZEOF_INT);
-		mBufferPtr += SIZEOF_INT;
-
-		// get the reference sequence end position
-		memcpy((char*)&al.ReferenceEnd, mBufferPtr, SIZEOF_INT);
-		mBufferPtr += SIZEOF_INT;
-
-		// get the reference sequence index
-		memcpy((char*)&al.ReferenceIndex, mBufferPtr, SIZEOF_INT);
-		mBufferPtr += SIZEOF_INT;
-		al.ReferenceName = (char*)mRefSeqLUT[al.ReferenceIndex].c_str();
-		//strcpy( al.ReferenceName, mRefSeqLUT[al.ReferenceIndex].c_str() );
-
-		// get the alignment's best and 2nd best Smith-Waterman scores
-		memcpy((char*)&al.SwScore, mBufferPtr, SIZEOF_FLOAT);
-		mBufferPtr += SIZEOF_FLOAT;
-		memcpy((char*)&al.NextSwScore, mBufferPtr, SIZEOF_FLOAT);
-		mBufferPtr += SIZEOF_FLOAT;
-
-		// get the alignment's longest perfect match
-		memcpy((char*)&al.NumLongestMatchs, mBufferPtr, SIZEOF_SHORT);
-		mBufferPtr += SIZEOF_SHORT;
-
 		// get the alignment status flag
 		const unsigned char status = (unsigned char)*mBufferPtr;
 		++mBufferPtr;
@@ -928,6 +904,29 @@ namespace MosaikReadFormat {
 
 		if ( !al.IsJunk ) {
 
+			// get the reference sequence start position
+			memcpy((char*)&al.ReferenceBegin, mBufferPtr, SIZEOF_INT);
+			mBufferPtr += SIZEOF_INT;
+
+			// get the reference sequence end position
+			memcpy((char*)&al.ReferenceEnd, mBufferPtr, SIZEOF_INT);
+			mBufferPtr += SIZEOF_INT;
+
+			// get the reference sequence index
+			memcpy((char*)&al.ReferenceIndex, mBufferPtr, SIZEOF_INT);
+			mBufferPtr += SIZEOF_INT;
+			al.ReferenceName = (char*)mRefSeqLUT[al.ReferenceIndex].c_str();
+	
+			// get the alignment's best and 2nd best Smith-Waterman scores
+			memcpy((char*)&al.SwScore, mBufferPtr, SIZEOF_FLOAT);
+			mBufferPtr += SIZEOF_FLOAT;
+			memcpy((char*)&al.NextSwScore, mBufferPtr, SIZEOF_FLOAT);
+			mBufferPtr += SIZEOF_FLOAT;
+
+			// get the alignment's longest perfect match
+			memcpy((char*)&al.NumLongestMatchs, mBufferPtr, SIZEOF_SHORT);
+			mBufferPtr += SIZEOF_SHORT;
+			
 			// get the number of mismatches
 			memcpy((char*)&al.NumMismatches, mBufferPtr, SIZEOF_SHORT);
 			mBufferPtr += SIZEOF_SHORT;

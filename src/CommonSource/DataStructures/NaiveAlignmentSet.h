@@ -66,8 +66,6 @@ public:
 	void Clear(void);
 	// dumps the contents of the alignment set to standard output
 	void Dump(void) const;
-	// returns the number of alignments in the set
-	unsigned int GetCount(void) const;
 	// retrieves the mhp occupancy list for the forward read
 	MhpOccupancyList* GetFwdMhpOccupancyList(void);
 	// retrieves the mhp occupancy list for the reverse read
@@ -75,15 +73,17 @@ public:
 	// retrieves the alignment set
 	AlignmentSet* GetSet(void);
 	void GetSet(vector<Alignment*>* alSet);
+	// returns the number of alignments in the set
+	inline unsigned int GetCount(void) const {return (unsigned int)mAlignments.size(); };
 	// retrieves the long alignment flag
-	bool HasLongAlignment(void) const;
+	inline bool HasLongAlignment(void) const { return mHasLongAlignment; };
 	// returns true if the alignment set is empty
-	bool IsEmpty(void) const;
+	inline bool IsEmpty(void) const { return mAlignments.empty(); };
 	// returns true if the alignment set contains only one entry
-	bool IsUnique(void) const;
+	inline bool IsUnique(void) const { return (mAlignments.size() == 1 ? true : false); };
 	// returns true if the alignment set contains more than one entry
-	bool IsMultiple ( void ) const;
-	unsigned int GetHighestSwScore( void );
+	inline bool IsMultiple (void) const { return (mAlignments.size() > 1 ? true : false); };
+	inline unsigned int GetHighestSwScore(void) const { return highestSmithWatermanScore; };
 
 private:
 	// calculates the correction coefficient
