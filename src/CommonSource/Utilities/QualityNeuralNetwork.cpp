@@ -59,25 +59,25 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
   fann_inputs.push_back(swDiff1 / (float)(annInputs1.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs1.longest_match / (float)annInputs1.read_length);
   fann_inputs.push_back(annInputs1.entropy);
-  if (annInputs1.numHashes == 0) { // the mate is rescued by mate2
-    fann_inputs.push_back(log10((float)(annInputs2.numMappings + 1)));
-    fann_inputs.push_back(log10((float)(annInputs2.numHashes + 1)));
-  } else {
+  //if (annInputs1.numHashes == 0) { // the mate is rescued by mate2
+  //  fann_inputs.push_back(log10((float)(annInputs2.numMappings + 1)));
+  //  fann_inputs.push_back(log10((float)(annInputs2.numHashes + 1)));
+  //} else {
     fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
     fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
-  }
+  //}
 
   int swDiff2 = annInputs2.swScore - annInputs2.nextSwScore;
   fann_inputs.push_back(swDiff2 / (float)(annInputs2.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs2.longest_match / (float)annInputs2.read_length);
   fann_inputs.push_back(annInputs2.entropy);
-  if (annInputs2.numHashes == 0) { // the mate is rescued by mate1
-    fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
-    fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
-  } else {
+  //if (annInputs2.numHashes == 0) { // the mate is rescued by mate1
+  //  fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
+  //  fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
+  //} else {
     fann_inputs.push_back(log10((float)(annInputs2.numMappings + 1)));
     fann_inputs.push_back(log10((float)(annInputs2.numHashes + 1)));
-  }
+  //}
 
   fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
 

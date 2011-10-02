@@ -150,18 +150,15 @@ void BestNSecondBestSelection::CalculateFragmentLength( const Alignment& al1, co
 void BestNSecondBestSelection::Select ( 
 	Alignment& bestMate1,
 	Alignment& bestMate2,
-	//Alignment& secondBestMate1,
-	//Alignment& secondBestMate2,
 	vector<Alignment*>& mate1Set,
 	vector<Alignment*>& mate2Set, 
-	const unsigned int expectedFragmentLength,
+	const unsigned int& expectedFragmentLength,
 	const SequencingTechnologies& tech,
-	const unsigned int numMate1Bases,
-	const unsigned int numMate2Bases,
+	const unsigned int& numMate1Bases,
+	const unsigned int& numMate2Bases,
 	const bool& considerMate1,
-	const bool& considerMate2) {
-	//const unsigned int highestSwScoreMate1,
-	//const unsigned int highestSwScoreMate2) {
+	const bool& considerMate2,
+	const bool& resetNextSwScore) {
 	
 	//vector<Alignment> newMate1Set;
 	//vector<Alignment> newMate2Set;
@@ -216,7 +213,9 @@ void BestNSecondBestSelection::Select (
 					
 				// in the fragment length threshold
 					} else {
-						if ( IsBetterPair( **ite, **ite2, length, bestMate1, bestMate2, bestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
+						if ( IsBetterPair(**ite, **ite2, length, bestMate1, bestMate2, 
+						                  bestFl, expectedFragmentLength, tech, numMate1Bases, 
+								  numMate2Bases ) ) {
 							// store the current best as second best
 							if ( best ) {
 								secondBest = true;
@@ -230,7 +229,9 @@ void BestNSecondBestSelection::Select (
 							bestFl    = length;
 	
 						} else {
-							if ( best && IsBetterPair( **ite, **ite2, length, secondBestMate1, secondBestMate2, secondBestFl, expectedFragmentLength, tech, numMate1Bases, numMate2Bases ) ) {
+							if (best && IsBetterPair(**ite, **ite2, length, secondBestMate1, 
+							                         secondBestMate2, secondBestFl, expectedFragmentLength, 
+										 tech, numMate1Bases, numMate2Bases ) ) {
 								secondBest = true;
 								secondBestMate1 = **ite;
 								secondBestMate2 = **ite2;
@@ -252,30 +253,22 @@ void BestNSecondBestSelection::Select (
 		}
 
 		
-		//if (best) {
-		//	newMate1Set.push_back( bestMate1 );
-		//	newMate2Set.push_back( bestMate2 );
-		//}
 		if (!best) {
 			// pick up mates having highest MQ
 			sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
 			sort ( mate2Set.begin(), mate2Set.end(), Alignment_LessThanMq() );
 			bestMate1 = **(mate1Set.rbegin());
 			bestMate2 = **(mate2Set.rbegin());
-			//newMate1Set.push_back( **(mate1Set.rbegin()) );
-			//newMate2Set.push_back( **(mate2Set.rbegin()) );
 		}
 
 		
 		if (secondBest) {
 			bestMate1.NextBestQuality = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.Quality;
-			bestMate1.NextSwScore     = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.SwScore;
 			bestMate2.NextBestQuality = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.Quality;
-			bestMate2.NextSwScore     = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.SwScore;
-			//newMate1Set.begin()->NextBestQuality = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.Quality;
-			//newMate1Set.begin()->NextSwScore     = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.SwScore;
-			//newMate2Set.begin()->NextBestQuality = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.Quality;
-			//newMate2Set.begin()->NextSwScore     = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.SwScore;
+			if (resetNextSwScore) {
+				bestMate1.NextSwScore = ( bestMate1 == secondBestMate1 ) ? 0 : secondBestMate1.SwScore;
+				bestMate2.NextSwScore = ( bestMate2 == secondBestMate2 ) ? 0 : secondBestMate2.SwScore;
+			}
 		} else {  // !secondBest
 			if (best) {
 				sort (mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq());
@@ -284,59 +277,37 @@ void BestNSecondBestSelection::Select (
 
 			if (nMate1 == 1) {
 				bestMate1.NextBestQuality = 0;
-				bestMate1.NextSwScore     = 0;
-				//newMate1Set.begin()->NextBestQuality = 0;
+				if (resetNextSwScore) bestMate1.NextSwScore = 0;
 			} else {
 				bestMate1.NextBestQuality = (*(mate1Set.rbegin() + 1))->Quality;
-				bestMate1.NextSwScore     = (*(mate1Set.rbegin() + 1))->SwScore;
-				//newMate1Set.begin()->NextBestQuality = (*(mate1Set.rbegin() + 1))->Quality;
+				if (resetNextSwScore) bestMate1.NextSwScore = (*(mate1Set.rbegin() + 1))->SwScore;
 			}
 
 			if (nMate2 == 1) {
 				bestMate2.NextBestQuality = 0;
-				bestMate2.NextSwScore     = 0;
-				//newMate2Set.begin()->NextBestQuality = 0;
+				if (resetNextSwScore) bestMate2.NextSwScore = 0;
 			} else {
 				bestMate2.NextBestQuality = (*(mate2Set.rbegin() + 1))->Quality;
-				bestMate2.NextSwScore     = (*(mate2Set.rbegin() + 1))->SwScore;
-				//newMate2Set.begin()->NextBestQuality = (*(mate2Set.rbegin() + 1))->Quality;
+				if (resetNextSwScore) bestMate2.NextSwScore = (*(mate2Set.rbegin() + 1))->SwScore;
 			}
 		}
 
 		bestMate1.NumMapped = nMate1;
 		bestMate2.NumMapped = nMate2;
-		//newMate1Set.begin()->NumMapped = nMate1;
-		//newMate2Set.begin()->NumMapped = nMate2;
-		
-		//mate1Set.clear();
-		//mate2Set.clear();
-		//for (unsigned int i = 0; i < newMate1Set.size(); ++i)
-		//  *mate1Set[i] = newMate1Set[i];
-		
-		//for (unsigned int i = 0; i < newMate2Set.size(); ++i)
-		//  *mate2Set[i] = newMate2Set[i];
-		
-		
+	
 	} else if ( isMate1Aligned ) {
 		nMate1 = mate1Set.size();
-
 		sort ( mate1Set.begin(), mate1Set.end(), Alignment_LessThanMq() );
+
 		// note: the size of mate1Set must be larger than one
 		vector<Alignment*>::reverse_iterator ite = mate1Set.rbegin();
 		// the one having the highest MQ
-		//newMate1Set.push_back( **ite );
 		bestMate1 = **ite;
 		ite++;
-		//newMate1Set.begin()->NextBestQuality = (*ite)->Quality;
-		//newMate1Set.begin()->NumMapped = nMate1;
 		bestMate1.NextBestQuality = (*ite)->Quality;
-		bestMate1.NextSwScore     = (*ite)->SwScore;
 		bestMate1.NumMapped = nMate1;
-
-		//mate1Set.clear();
-		//mate1Set = newMate1Set;
-		//for (unsigned int i = 0; i < newMate1Set.size(); ++i)
-		//  *mate1Set[i] = newMate1Set[i];
+		if (resetNextSwScore)
+			bestMate1.NextSwScore = (*ite)->SwScore;
 
 	} else if ( isMate2Aligned ) {
 		nMate2 = mate2Set.size();
@@ -345,20 +316,13 @@ void BestNSecondBestSelection::Select (
 		// note: the size of mate2Set must be larger than one
 		vector<Alignment*>::reverse_iterator ite = mate2Set.rbegin();
 		// the one having the highest MQ
-		//newMate2Set.push_back( **ite );
 		bestMate2 = **ite;
 		ite++;
-		//newMate2Set.begin()->NextBestQuality = (*ite)->Quality;
-		//newMate2Set.begin()->NumMapped = nMate2;
 		bestMate2.NextBestQuality = (*ite)->Quality;
-		bestMate2.NextSwScore     = (*ite)->SwScore;
 		bestMate2.NumMapped = nMate2;
-
-		//mate2Set.clear();
-		//mate2Set = newMate2Set;
-		//for (unsigned int i = 0; i < newMate2Set.size(); ++i)
-		//  *mate2Set[i] = newMate2Set[i];
-	}
+		if (resetNextSwScore)
+			bestMate2.NextSwScore = (*ite)->SwScore;
+	} // end if-else
 }
 
 

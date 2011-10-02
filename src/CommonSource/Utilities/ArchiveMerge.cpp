@@ -433,28 +433,47 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	unsigned int nMate2Alignments = 0;
 	unsigned int nMate1Hashes     = 0;
 	unsigned int nMate2Hashes     = 0;
+	unsigned int mate1SwScore     = 0;
+	unsigned int mate2SwScore     = 0;
+	unsigned int mate1NextSwScore = 0;
+	unsigned int mate2NextSwScore = 0;
 
 	vector<Alignment*> newMate1Set, newMate2Set;
 	Mosaik::Read read;
 
 	string mate1Cs, mate1Cq, mate2Cs, mate2Cq;
 	bool isMate1FilteredOut = false, isMate2FilteredOut = false;
-
+/*
 if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
-  cerr << "mate1" << endl;
+  cerr << "mate1\t" << mate1SwScore << "\t" << mate1NextSwScore << endl;
   for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
-    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << (*ite).NumHash << "\t" << (*ite).NumMapped << endl;
+    cerr << (*ite).ReferenceIndex << "\t" 
+         << (*ite).ReferenceBegin << "\t" 
+	 << (*ite).SwScore << "\t" 
+	 << (*ite).NextSwScore << "\t"
+	 << (*ite).NumHash << "\t" 
+	 << (*ite).NumMapped << endl;
   }
+  cerr << "mate2\t" << mate2SwScore << "\t" << mate2NextSwScore << endl;
   for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
-    cerr << (*ite).ReferenceIndex << "\t" << (*ite).ReferenceBegin << "\t" << (*ite).NumHash << "\t" << (*ite).NumMapped << endl;
+    cerr << (*ite).ReferenceIndex << "\t" 
+         << (*ite).ReferenceBegin << "\t" 
+	 << (*ite).SwScore << "\t" 
+	 << (*ite).NextSwScore << "\t"
+	 << (*ite).NumHash << "\t" 
+	 << (*ite).NumMapped << endl;
   }
 }
-
+*/
 	for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
 		nMate1Alignments   += ite->NumMapped;
 		nMate1Hashes       += ite->NumHash;
-		ite->SpecialCode    = _specialCode1;
 		isMate1FilteredOut |= ite->IsFilteredOut;
+		ite->SpecialCode    = _specialCode1;
+		if (ite->SwScore >= mate1SwScore) {
+			mate1NextSwScore = mate1SwScore;
+			mate1SwScore     = ite->SwScore;
+		}
 		if (ite->IsMapped) newMate1Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if ( ite->Owner == 0 ) {
@@ -471,8 +490,12 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 	for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
 		nMate2Alignments   += ite->NumMapped;
 		nMate2Hashes       += ite->NumHash;
-		ite->SpecialCode    = _specialCode2;
 		isMate2FilteredOut |= ite->IsFilteredOut;
+		ite->SpecialCode    = _specialCode2;
+		if (ite->SwScore >= mate2SwScore) {
+			mate2NextSwScore = mate2SwScore;
+			mate2SwScore     = ite->SwScore;
+		}
 		if (ite->IsMapped) newMate2Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
 		if (ite->Owner == 0) {
@@ -486,20 +509,6 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 		}
 	}
 
-	//if ( nMate1Alignments > 0 ) {
-	//	if ( newMate1Set.empty() ) {
-	//		cout << "ERROR: The vector is empty." << endl;
-	//		exit(1);
-	//	}
-		//r.Mate1Alignments.clear();
-		//r.Mate1Alignments = newMate1Set;
-	//}
-
-	//if ( nMate2Alignments > 0 ) {
-		//r.Mate2Alignments.clear();
-		//r.Mate2Alignments = newMate2Set;
-	//}
-
 	const bool isMate1Unique   = ( newMate1Set.size() == 1 ) ? true : false;
 	const bool isMate2Unique   = ( newMate2Set.size() == 1 ) ? true : false;
 	const bool isMate1Multiple = ( newMate1Set.size() > 1 ) ? true : false;
@@ -507,19 +516,27 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 	bool isMate1Empty    = ( newMate1Set.size() == 0 ) ? true : false;
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
-/*
-if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
-  cerr << "mate1" << endl;
-  for (vector<Alignment*>::iterator ite = newMate1Set.begin(); ite != newMate1Set.end(); ++ite) {
-    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->NumMapped << endl;
+if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
+  cerr << "mate1\t" << mate1SwScore << "\t" << mate1NextSwScore << endl;
+  for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
+    cerr << (*ite).ReferenceIndex << "\t" 
+         << (*ite).ReferenceBegin << "\t" 
+	 << (*ite).SwScore << "\t" 
+	 << (*ite).NextSwScore << "\t"
+	 << (*ite).NumHash << "\t" 
+	 << (*ite).NumMapped << endl;
   }
-  
-  cerr << "mate2" << endl;
-  for (vector<Alignment*>::iterator ite = newMate2Set.begin(); ite != newMate2Set.end(); ++ite) {
-    cerr << (*ite)->ReferenceIndex << "\t" << (*ite)->ReferenceBegin << "\t" << (int)(*ite)->Quality << "\t" << (*ite)->NumMapped << endl;
+  cerr << "mate2\t" << mate2SwScore << "\t" << mate2NextSwScore << endl;
+  for ( vector<Alignment>::iterator ite = r.Mate2Alignments.begin(); ite != r.Mate2Alignments.end(); ++ite ) {
+    cerr << (*ite).ReferenceIndex << "\t" 
+         << (*ite).ReferenceBegin << "\t" 
+	 << (*ite).SwScore << "\t" 
+	 << (*ite).NextSwScore << "\t"
+	 << (*ite).NumHash << "\t" 
+	 << (*ite).NumMapped << endl;
   }
 }
-*/
+
 	// UU, UM, and MM pair
 	if ( (isMate1Unique && isMate2Unique)
 		|| (isMate1Unique && isMate2Multiple)
@@ -531,7 +548,7 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 	          || ( isMate1Multiple && isMate2Unique )
 	          || ( isMate1Multiple && isMate2Multiple ) )
 			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
-			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length() );
+			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), true, true, false );
 
 		//isMate1Empty = newMate1Set.empty();
 		//isMate2Empty = newMate2Set.empty();
@@ -577,7 +594,15 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		al2.NumHash   = nMate2Hashes;
 		al1.QueryLength = al1.Query.Length();
 		al2.QueryLength = al2.Query.Length();
-
+		if (al1.SwScore == mate1SwScore) 
+			al1.NextSwScore = (al1.NextSwScore > mate1NextSwScore) ? al1.NextSwScore: mate1NextSwScore;
+		else 
+			al1.NextSwScore = mate1SwScore;  // implies al1.SwScore < mate1SwScore
+		if (al2.SwScore == mate2SwScore) 
+			al2.NextSwScore = (al2.NextSwScore > mate2NextSwScore) ? al2.NextSwScore: mate2NextSwScore;
+		else 
+			al2.NextSwScore = mate2SwScore;  // implies al2.SwScore < mate2SwScore
+		
 		al1.Entropy = _entropy.shannon_H(al1.Query.Data(), al1.QueryLength);
 		al2.Entropy = _entropy.shannon_H(al2.Query.Data(), al2.QueryLength);
 
@@ -644,9 +669,12 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		Alignment al1, al2, unmappedAl;
 		if (!isMate1Empty) al1 = *newMate1Set[0];
 		if (!isMate2Empty) al2 = *newMate2Set[0];
-		if ( isMate1Multiple || isMate2Multiple ) 
-			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
-			    read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), ( isMate1Empty ? false : true), ( isMate2Empty ? false : true));
+		if ( isMate1Multiple || isMate2Multiple ) {
+			if (r.Name == "9_67107412_67108404_1:0:0_0:0:0_266e") cerr << "bestselection" << endl;
+			BestNSecondBestSelection::Select(al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
+			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), 
+			    (isMate1Empty ? false : true), (isMate2Empty ? false : true), false);
+		}
 
 		//isMate1Empty = r.Mate1Alignments.empty();
 		//isMate2Empty = r.Mate2Alignments.empty();
@@ -683,6 +711,18 @@ if (r.Name == "10_100305433_100306510_2:0:0_2:0:0_508c") {
 		al.NumHash   = isFirstMate ? nMate1Hashes : nMate2Hashes;
 		al.QueryLength = al.Query.Length();
 		al.Entropy = _entropy.shannon_H(al.Query.Data(), al.QueryLength);
+		if (isFirstMate) {
+			if (al.SwScore == mate1SwScore) 
+				al.NextSwScore = (al.NextSwScore > mate1NextSwScore) ? al.NextSwScore: mate1NextSwScore;
+			else 
+				al1.NextSwScore = mate1SwScore;
+		} else {
+			if (al.SwScore == mate2SwScore) 
+				al.NextSwScore = (al.NextSwScore > mate2NextSwScore) ? al.NextSwScore: mate2NextSwScore;
+			else 
+				al.NextSwScore = mate2SwScore;
+		}
+
 		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 
 		SetAlignmentFlags( unmappedAl, al, true, false, !isFirstMate, _isPairedEnd, false, true, r );

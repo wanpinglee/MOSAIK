@@ -199,10 +199,6 @@ struct Alignment_LessThanMq {
 		} else { 
 			return al1.SwScore < al2.SwScore;
 		}
-			
-		//if ( al1.Quality == al2.Quality )
-		//	return al1.SwScore < al2.SwScore;
-		//return al1.Quality < al2.Quality;
 	}
 
 	bool operator() (const Alignment* al1, const Alignment* al2) {

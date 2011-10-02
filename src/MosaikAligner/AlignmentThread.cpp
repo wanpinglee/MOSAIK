@@ -754,33 +754,33 @@ void CAlignmentThread::AlignReadArchive(
 		// local alignment search
 		// ======================
 
-		bool isMate1Unique = mate1Alignments.IsUnique();
-		bool isMate2Unique = mate2Alignments.IsUnique();
+		vector<Alignment*> mate1Set, mate2Set;
 
-		vector<Alignment*> mate1Set;
-		vector<Alignment*> mate2Set;
-
-		//bool isMate1Rescued = false;
-		//bool isMate2Rescued = false;
 		// we can only perform a local alignment search if both mates are present
 		if(areBothMatesPresent) {
-			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && (mate1Alignments.IsMultiple()) ) {
+			// search local region
+			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate2) {
 				mate1Alignments.GetSet(&mate1Set);
-				isMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
+				if (mate1Alignments.IsUnique()) {
+					SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
+				} else if (mate1Alignments.IsMultiple()){ // do local search for some good multiply mappings
+					bool considerMate1Unique = TreatBestAsUnique(&mate1Set, numMate1Bases);
+					if (considerMate1Unique) // TreatBestAsUnique puts candidates in mate1Set
+						SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
+				} // end if-else
 			}
+
 			// search local region
-			if( mFlags.UseLocalAlignmentSearch && isMate1Unique && !isTooManyNMate2 ) 
-				SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
-			
-			// do local search for some good multiply mappings
-			if ( ( mFlags.UseLocalAlignmentSearch ) && (mate2Alignments.IsMultiple()) ) {
+			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate1) {
 				mate2Alignments.GetSet(&mate2Set);
-				isMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
+				if (mate2Alignments.IsUnique()) {
+					SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
+				} else if (mate2Alignments.IsMultiple()){ // do local search for some good multiply mappings
+					bool considerMate2Unique = TreatBestAsUnique(&mate2Set, numMate2Bases);
+					if (considerMate2Unique) // TreatBestAsUnique puts candidates in mate1Set
+						SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
+				} // end if-else
 			}
-			// search local region
-			if(mFlags.UseLocalAlignmentSearch && isMate2Unique && !isTooManyNMate1 )
-				SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 		}
 
 		// process alignments mapped in special references and delete them in vectors
@@ -804,14 +804,12 @@ void CAlignmentThread::AlignReadArchive(
 		isMate1Aligned = !mate1Set.empty();
 		isMate2Aligned = !mate2Set.empty();
 
-		isMate1Unique = ( mate1Set.size() == 1 ) ? true: false;
-		isMate2Unique = ( mate2Set.size() == 1 ) ? true: false;
-
-		bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true: false;
-		bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true: false;
-
-		bool isMate1Empty = mate1Set.empty();
-		bool isMate2Empty = mate2Set.empty();
+		const bool isMate1Unique = ( mate1Set.size() == 1 ) ? true: false;
+		const bool isMate2Unique = ( mate2Set.size() == 1 ) ? true: false;
+		const bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true: false;
+		const bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true: false;
+		const bool isMate1Empty = mate1Set.empty();
+		const bool isMate2Empty = mate2Set.empty();
 
 
 		// ===================================
@@ -835,7 +833,8 @@ void CAlignmentThread::AlignReadArchive(
 				|| ( isMate1Multiple && isMate2Multiple ) )
 				// After selecting, only best and second best (if there) will be kept in mate1Set and mate2Set
 				// The function also sets NumMapped of alignments
-				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
+				BestNSecondBestSelection::Select(al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
+				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
 
 			// sanity check
 			//if ( mate1Set.empty() || mate2Set.empty() ) {
@@ -930,7 +929,7 @@ void CAlignmentThread::AlignReadArchive(
 			Alignment al1, al2, unmappedAl;
 			if ( isMate1Multiple || isMate2Multiple ) 
 				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
-				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases );
+				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
 
 			bool isFirstMate;
 			Alignment al;

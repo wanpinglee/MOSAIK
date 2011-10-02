@@ -33,14 +33,13 @@ namespace BestNSecondBestSelection {
 		Alignment& bestMate2,
 		vector<Alignment*>& mate1Set, 
 		vector<Alignment*>& mate2Set, 
-		const unsigned int expectedFragmentLength,
+		const unsigned int& expectedFragmentLength,
 		const SequencingTechnologies& tech,
-		const unsigned int numMate1Bases,
-		const unsigned int numMate2Bases,
-		const bool& considerMate1 = true,
-		const bool& considerMate2 = true );
-		//const unsigned int highestSwScoreMate1 = 0,
-		//const unsigned int highestSwScoreMate2 = 0);
+		const unsigned int& numMate1Bases,
+		const unsigned int& numMate2Bases,
+		const bool& considerMate1,
+		const bool& considerMate2,
+		const bool& reserSwScore);
 
 	void CalculateFragmentLength( 
 		const Alignment& al1, 
