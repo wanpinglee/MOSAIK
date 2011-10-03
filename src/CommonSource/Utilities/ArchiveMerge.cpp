@@ -473,6 +473,8 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 		if (ite->SwScore >= mate1SwScore) {
 			mate1NextSwScore = mate1SwScore;
 			mate1SwScore     = ite->SwScore;
+		} else if (ite->SwScore >= mate1NextSwScore){
+			mate1NextSwScore = ite->SwScore;
 		}
 		if (ite->IsMapped) newMate1Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
@@ -495,6 +497,8 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 		if (ite->SwScore >= mate2SwScore) {
 			mate2NextSwScore = mate2SwScore;
 			mate2SwScore     = ite->SwScore;
+		} else if (ite->SwScore >= mate2NextSwScore) {
+			mate2NextSwScore = ite->SwScore;
 		}
 		if (ite->IsMapped) newMate2Set.push_back( &*ite );
 		// the record is in the first archive, and contains complete bases and base qualities.
@@ -517,7 +521,7 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
 /*
-if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
+if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
   cerr << "mate1\t" << mate1SwScore << "\t" << mate1NextSwScore << endl;
   for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
     cerr << (*ite).ReferenceIndex << "\t" 
@@ -551,18 +555,6 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 			BestNSecondBestSelection::Select( al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
 			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), true, true, false );
 
-		//isMate1Empty = newMate1Set.empty();
-		//isMate2Empty = newMate2Set.empty();
-			
-		// sanity check
-		//if ( isMate1Empty | isMate2Empty ) {
-		//	cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
-		//	exit(1);
-		//}
-
-		// patch the information for reporting
-		//Alignment al1 = *(newMate1Set[0]), al2 = *(newMate2Set[0]);
-		
 		// TODO: handle fragment length for others sequencing techs
 		int minFl = _expectedFragmentLength - _localAlignmentSearchRadius;
 		int maxFl = _expectedFragmentLength + _localAlignmentSearchRadius;
@@ -611,13 +603,13 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		al2.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 
 		//CZaTager za1, za2;
-		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-/*
+		//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+		//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 		zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-*/
+
 		//const char* zaTag1 = zaTag1Stream.str().c_str();
 		//const char* zaTag2 = zaTag2Stream.str().c_str();
 
@@ -657,8 +649,10 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
 
-		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
-		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
+		//_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
+		//_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
+		_rBam.SaveAlignment( al1, zaTag1Stream.str().c_str(), false, false, _isSolid );
+		_rBam.SaveAlignment( al2, zaTag2Stream.str().c_str(), false, false, _isSolid );
 
 		//if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
@@ -717,7 +711,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 			if (al.SwScore == mate1SwScore) 
 				al.NextSwScore = (al.NextSwScore > mate1NextSwScore) ? al.NextSwScore: mate1NextSwScore;
 			else 
-				al1.NextSwScore = mate1SwScore;
+				al.NextSwScore = mate1SwScore;
 		} else {
 			if (al.SwScore == mate2SwScore) 
 				al.NextSwScore = (al.NextSwScore > mate2NextSwScore) ? al.NextSwScore: mate2NextSwScore;
@@ -732,9 +726,9 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		unmappedAl.NumHash   = 0;
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
-		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
-/*
+		//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
+		//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
+
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al.SwScore << ";" 
 		             << al.NextSwScore << ";" 
@@ -748,12 +742,9 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 			     << unmappedAl.Entropy << ";" 
 			     << unmappedAl.NumMapped << ";" 
 			     << unmappedAl.NumHash;
-*/
-		//const char* zaTag1 = zaTag1Stream.str().c_str();
-		//const char* zaTag2 = zaTag2Stream.str().c_str();
-		
+
 		// store the alignment
-		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
+		_rBam.SaveAlignment( al, zaTag1Stream.str().c_str(), false, false, _isSolid );
 
 		// store mate1 special hits
 		// NOTE: we consider mate2 special hits in the next block
@@ -776,7 +767,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		
 		if ( _isPairedEnd ) {
 			// store mate2 alignment in regular and unmapped bams
-			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
+			_rBam.SaveAlignment( unmappedAl, zaTag2Stream.str().c_str(), true, false, _isSolid );
 			//_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
 
 			// store special hits
