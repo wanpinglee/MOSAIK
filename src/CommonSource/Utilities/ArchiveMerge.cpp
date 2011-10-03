@@ -657,8 +657,8 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
 
-		_rBam.SaveAlignment( al1, zaTag1Stream.str().c_str(), false, false, _isSolid );
-		_rBam.SaveAlignment( al2, zaTag2Stream.str().c_str(), false, false, _isSolid );
+		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
+		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
 		//if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
@@ -753,7 +753,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		//const char* zaTag2 = zaTag2Stream.str().c_str();
 		
 		// store the alignment
-		_rBam.SaveAlignment( al, zaTag1Stream.str().c_str(), false, false, _isSolid );
+		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
 
 		// store mate1 special hits
 		// NOTE: we consider mate2 special hits in the next block
@@ -776,7 +776,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		
 		if ( _isPairedEnd ) {
 			// store mate2 alignment in regular and unmapped bams
-			_rBam.SaveAlignment( unmappedAl, zaTag2Stream.str().c_str(), true, false, _isSolid );
+			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
 			//_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
 
 			// store special hits
