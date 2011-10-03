@@ -516,6 +516,7 @@ if (r.Name == "15_23564567_23565516_0:0:0_1:0:0_7552") {
 	bool isMate1Empty    = ( newMate1Set.size() == 0 ) ? true : false;
 	bool isMate2Empty    = ( newMate2Set.size() == 0 ) ? true : false;
 
+/*
 if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
   cerr << "mate1\t" << mate1SwScore << "\t" << mate1NextSwScore << endl;
   for ( vector<Alignment>::iterator ite = r.Mate1Alignments.begin(); ite != r.Mate1Alignments.end(); ++ite ) {
@@ -536,7 +537,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 	 << (*ite).NumMapped << endl;
   }
 }
-
+*/
 	// UU, UM, and MM pair
 	if ( (isMate1Unique && isMate2Unique)
 		|| (isMate1Unique && isMate2Multiple)
@@ -610,12 +611,13 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		al2.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
 
 		//CZaTager za1, za2;
-		//const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-		//const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-
+		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
+		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+/*
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
 		zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+*/
 		//const char* zaTag1 = zaTag1Stream.str().c_str();
 		//const char* zaTag2 = zaTag2Stream.str().c_str();
 
@@ -730,9 +732,9 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 		unmappedAl.NumHash   = 0;
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-		//const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
-		//const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
-
+		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
+		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
+/*
 		ostringstream zaTag1Stream, zaTag2Stream;
 		zaTag1Stream << "" << al.SwScore << ";" 
 		             << al.NextSwScore << ";" 
@@ -746,6 +748,7 @@ if (r.Name == "22_21258613_21259590_0:0:0_3:0:0_440") {
 			     << unmappedAl.Entropy << ";" 
 			     << unmappedAl.NumMapped << ";" 
 			     << unmappedAl.NumHash;
+*/
 		//const char* zaTag1 = zaTag1Stream.str().c_str();
 		//const char* zaTag2 = zaTag2Stream.str().c_str();
 		
