@@ -329,7 +329,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	
 	}
 	else {
-
+/*
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/1");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/2");
             outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/3");
@@ -359,7 +359,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	//}
             PrintStatistics();
             exit(1);
-
+*/
 		
 		// grouping reference and store information in referenceGroups vector
 		GroupReferences( referenceSequences );
@@ -649,7 +649,7 @@ void CMosaikAligner::GroupReferences( const vector<ReferenceSequence>& reference
 
 
 void CMosaikAligner::MergeArchives(void) {
-//exit(1);
+exit(1);
 	// set active threads
 	unsigned int nThread = ( mSettings.NumThreads < outputFilenames.size() ) ? mSettings.NumThreads : outputFilenames.size();
 	

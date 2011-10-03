@@ -836,15 +836,6 @@ void CAlignmentThread::AlignReadArchive(
 				BestNSecondBestSelection::Select(al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
 				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
 
-			// sanity check
-			//if ( mate1Set.empty() || mate2Set.empty() ) {
-			//	cout << "ERROR: One of mate sets is empty after apllying best and second best selection." << endl;
-			//	exit(1);
-			//}
-
-			// patch the information for reporting
-			//Alignment al1 = *(mate1Set[0]), al2 = *(mate2Set[0]);
-			
 			bool properPair1 = false, properPair2 = false;
 			al1.IsFirstMate = true;
 			al2.IsFirstMate = false;
@@ -911,13 +902,13 @@ void CAlignmentThread::AlignReadArchive(
 				SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
-			
-				//ostringstream zaTag1, zaTag2;
-				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
-				
+				/*
+				ostringstream zaTag1, zaTag2;
+				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
+				*/
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -983,9 +974,10 @@ void CAlignmentThread::AlignReadArchive(
 					     << unmappedAl.Entropy << ";" 
 					     << unmappedAl.NumMapped << ";" 
 					     << unmappedAl.NumHash;
-				const char* zaTag1 = zaTag1Stream.str().c_str();
-				const char* zaTag2 = zaTag2Stream.str().c_str();
 				*/
+				//const char* zaTag1 = zaTag1Stream.str().c_str();
+				//const char* zaTag2 = zaTag2Stream.str().c_str();
+				
 				
 
 				// store special hits
@@ -1209,8 +1201,6 @@ void CAlignmentThread::SetRequiredInfo (
 	// calculate entropy
 	if (isItselfMapped && !alInfo.isUsingLowMemory) 
 		al.Entropy = entropy_.shannon_H((char*) m.Bases.CData(), m.Bases.Length());
-	if (isItselfMapped && al.WasRescued)
-		al.NextSwScore = 0;
 
 	// fill out the alignment
 	// not SOLiD
