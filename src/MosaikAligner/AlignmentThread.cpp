@@ -516,7 +516,7 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 }
 
 // Save alignment in buffer
-void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool noCigarMdNm, const bool notShowRnamePos, const bool isSpecial ) {
+void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSpecial ) {
 	AlignmentBamBuffer buffer;
 	buffer.al              = al;
 	buffer.noCigarMdNm     = noCigarMdNm;
@@ -546,7 +546,7 @@ void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaStri
 		bamBuffer.push( buffer );
 }
 
-inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool isLongRead ){
+inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool& isLongRead ){
 	AlignmentArchiveBuffer buffer;
 	buffer.mr  = mr;
 	buffer.al1 = al1;
@@ -786,7 +786,7 @@ void CAlignmentThread::AlignReadArchive(
 		// process alignments mapped in special references and delete them in vectors
 		mate1Alignments.GetSet(&mate1Set);
 		mate2Alignments.GetSet(&mate2Set);
-		bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+		//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
 
 
 		// For low-memory, we don't remove special alignment here,
@@ -869,6 +869,8 @@ void CAlignmentThread::AlignReadArchive(
 
 			if (alInfo.isUsingLowMemory) {
 				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
+				bool isLongRead = ( ( al1.QueryEnd > 255 ) || ( al2.QueryEnd > 255 ) ) ? true : false;
+				isLongRead |= ((al1.Reference.Length() > 255) || (al2.Reference.Length() > 255));
 				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, al1, al2, isLongRead );
 			} else {
@@ -902,13 +904,11 @@ void CAlignmentThread::AlignReadArchive(
 				SaveBamAlignment( al2, zaTag2, false, false, false );
 
 				// for neural network
-				/*
-				ostringstream zaTag1, zaTag2;
-				zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
-				*/
+				//ostringstream zaTag1, zaTag2;
+				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
+				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
+				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
+				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -954,6 +954,8 @@ void CAlignmentThread::AlignReadArchive(
 
 
 			if (alInfo.isUsingLowMemory) {
+				bool isLongRead = ( ( al.QueryEnd > 255 ) || ( unmappedAl.QueryEnd > 255 ) ) ? true : false;
+				isLongRead |= ((al.Reference.Length() > 255) || (unmappedAl.Reference.Length() > 255));
 				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
@@ -975,10 +977,6 @@ void CAlignmentThread::AlignReadArchive(
 					     << unmappedAl.NumMapped << ";" 
 					     << unmappedAl.NumHash;
 				*/
-				//const char* zaTag1 = zaTag1Stream.str().c_str();
-				//const char* zaTag2 = zaTag2Stream.str().c_str();
-				
-				
 
 				// store special hits
 				if ( isMate1Special ) {
@@ -1023,9 +1021,10 @@ void CAlignmentThread::AlignReadArchive(
 
 			if (alInfo.isUsingLowMemory) {
 
-				bool isLongReadXX = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
-				isLongReadXX |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
-				SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongReadXX );
+				bool isLongRead = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
+				isLongRead |= ((unmappedAl1.Reference.Length() > 255) || (unmappedAl2.Reference.Length() > 255));
+				isLongRead |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
+				SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongRead );
 			} else {
 				// store special hits
 				if ( isMate1Special ) {
@@ -1284,6 +1283,7 @@ void CAlignmentThread::SetRequiredInfo (
 		al.QueryBegin = 0;
 		al.QueryEnd   = m.Bases.Length() - 1;
 		al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
+
 	}
 	else {
 		// fill out Colorspace raw bases and qualites

@@ -387,7 +387,6 @@ namespace MosaikReadFormat {
 		// load the read header
 		LoadReadHeader(ar.Name, ar.ReadGroupCode, readStatus, numMate1Alignments, numMate2Alignments, 
 		    numMate1OriginalAlignments, numMate2OriginalAlignments, numMate1Hash, numMate2Hash);
-
 		// interpret the read status
 		const bool haveMate1        = ((readStatus & RF_HAVE_MATE1)              != 0 ? true : false);
 		const bool haveMate2        = ((readStatus & RF_HAVE_MATE2)              != 0 ? true : false);
@@ -397,11 +396,11 @@ namespace MosaikReadFormat {
 		ar.IsPairedEnd              = ((readStatus & RF_IS_PAIRED_IN_SEQUENCING) != 0 ? true : false);
 		ar.IsResolvedAsPair         = ((readStatus & RF_RESOLVED_AS_PAIR)        != 0 ? true : false);
 
-
 		// =================================
 		// deserialize each mate 1 alignment
 		// =================================
 
+		ar.Mate1Alignments.clear();
 		ar.Mate1Alignments.resize(numMate1Alignments);
 		if (haveMate1) 
 			ReadAlignments(ar.Mate1Alignments, ar.IsLongRead, ar.IsPairedEnd, 
@@ -412,6 +411,7 @@ namespace MosaikReadFormat {
 		// deserialize each mate 2 alignment
 		// =================================
 
+		ar.Mate2Alignments.clear();
 		ar.Mate2Alignments.resize(numMate2Alignments);
 		if (haveMate2) 
 			ReadAlignments(ar.Mate2Alignments, ar.IsLongRead, ar.IsPairedEnd, 
@@ -859,6 +859,7 @@ namespace MosaikReadFormat {
 		al.IsMateReverseStrand = false;
 		al.WasRescued          = false;
 		al.IsMapped            = true;
+		al.IsJunk              = false;
 		al.IsFilteredOut       = false;
 
 		al.IsPairedEnd      = isPairedInSequencing;
@@ -894,12 +895,14 @@ namespace MosaikReadFormat {
 				++mBufferPtr;
 			}
 
-                        // retrieve the colorspace raw sequence
-			al.CsQuery.insert(0, (const char*)mBufferPtr, csLen);
-			mBufferPtr += csLen;
-			// retrieve the colorspace raw base qualities
-			al.CsBaseQualities.insert(0, (const char*)mBufferPtr, csLen);
-			mBufferPtr += csLen;
+                        if (csLen != 0) {
+			  // retrieve the colorspace raw sequence
+			  al.CsQuery.insert(0, (const char*)mBufferPtr, csLen);
+			  mBufferPtr += csLen;
+			  // retrieve the colorspace raw base qualities
+			  al.CsBaseQualities.insert(0, (const char*)mBufferPtr, csLen);
+			  mBufferPtr += csLen;
+			}
 		}
 
 		if ( !al.IsJunk ) {
@@ -983,7 +986,6 @@ namespace MosaikReadFormat {
 				al.QueryEnd = (unsigned char)*mBufferPtr;
 				++mBufferPtr;
 			}
-
 			// retrieve the packed pairwise alignment
 			al.Reference.Copy((const char*)mBufferPtr, pairwiseLength);
 			mBufferPtr += pairwiseLength;

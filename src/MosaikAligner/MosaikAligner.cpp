@@ -330,23 +330,23 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	else {
 /*
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/1");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/2");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/3");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/4");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/5");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/6");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/7");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/8");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/9");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/10");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/11");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/12");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/13");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/14");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/15");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/16");
-            outputFilenames.push_back("/home/wanping/tools/seqan-trunk/build/Release/reads/illumina_readLength100/bak/test/17");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/1");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/2");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/3");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/4");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/5");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/6");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/7");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/8");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/9");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/10");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/11");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/12");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/13");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/14");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/15");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/16");
+            outputFilenames.push_back("/home/wanping/bugTest/NCBI/bak/test/17");
             //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/18");
             MergeArchives();
 
@@ -682,6 +682,8 @@ void CMosaikAligner::MergeArchives(void) {
 		alignmentCacheEachSorter = alignmentInMemory / nThread;
 		fileEachSorter           = avgReads / alignmentCacheEachSorter;
 	}
+
+	nThread = 1;
 
 	CConsole::Heading();
 	cout << endl << "Sorting alignment archive:" << endl;
