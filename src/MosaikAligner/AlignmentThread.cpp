@@ -1322,6 +1322,8 @@ void CAlignmentThread::SetRequiredInfo (
 			// sanity checker
 			if ( al.QueryEnd > ( readLength - 1 ) ) {
 				cout << "ERROR: The aligned length is larger than the read length." << endl;
+				cout << "       Read name: " << r.Name.CData() << endl;
+				cout << "       Aligned bases:" << al.Query.CData() << endl;
 				exit(1);
 			}
 			if ( patchStartLen == 0 ) {

@@ -170,7 +170,7 @@ void CBamWriter::BgzfOpen(const string& filename) {
 }
 
 // writes the supplied data into the BGZF buffer
-unsigned int CBamWriter::BgzfWrite(const char* data, const unsigned int dataLen) {
+unsigned int CBamWriter::BgzfWrite(const char* data, const unsigned int& dataLen) {
 
 	// initialize
 	unsigned int numBytesWritten = 0;
@@ -211,7 +211,7 @@ void CBamWriter::TranslateCigarToPackCigar ( const string cigar, string packCiga
 
 
 // creates a cigar string from the supplied alignment
-void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool isSolid ) {
+void CBamWriter::CreatePackedCigar( const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool& isSolid ) {
 
 	// initialize
 	const char* pReference = al.Reference.CData();
@@ -469,7 +469,7 @@ void CBamWriter::Open(const string& filename, const BamHeader& header) {
 	}
 }
 // saves the reference and position of an alignment to the alignment archive
-void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd ) {
+void CBamWriter::SaveReferencePosition( const unsigned int& refIndex, const unsigned int& refBegin, const unsigned int& refEnd ) {
 	// =================
 	// set the BAM flags
 	// =================
@@ -523,7 +523,7 @@ void CBamWriter::SaveReferencePosition( const unsigned int refIndex, const unsig
 
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool processedBamData ) {
+void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool& processedBamData ) {
 
 	// =================
 	// set the BAM flags
@@ -675,13 +675,17 @@ void CBamWriter::SaveAlignment(const Alignment al, const char* zaString, const b
 
 	// assign the BAM core data
 	unsigned int buffer[8] = {0};
-	buffer[0] = (notShowRnamePos || !al.IsMapped) ? 0xffffffff : al.ReferenceIndex;
-	buffer[1] = (notShowRnamePos || !al.IsMapped) ? 0xffffffff : al.ReferenceBegin;
+	unsigned int reference_index = (!al.IsMapped && al.IsMateMapped) ? 
+	                               al.MateReferenceIndex : al.ReferenceIndex;
+	unsigned int reference_pos   = (!al.IsMapped && al.IsMateMapped) ?
+	                               al.MateReferenceBegin : al.ReferenceBegin;
+	buffer[0] = (notShowRnamePos) ? 0xffffffff : reference_index;
+	buffer[1] = (notShowRnamePos) ? 0xffffffff : reference_pos;
 	buffer[2] = (bin << 16) | (al.RecalibratedQuality << 8) | nameLen;
 	buffer[3] = (flag << 16) | numCigarOperations;
 	buffer[4] = queryLen;
 
-	if(al.IsResolvedAsPair) {
+	if(al.IsPairedEnd) {
 		buffer[5] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceIndex;
 		buffer[6] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceBegin;
 		buffer[7] = insertSize;

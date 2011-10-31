@@ -139,11 +139,11 @@ public:
 	// opens the alignment archive
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
-	void SaveAlignment(const Alignment al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool processedBamData = false );
+	void SaveAlignment(const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool& processedBamData = false );
 	// saves the reference and position of an alignment to the alignment archive
-	void SaveReferencePosition( const unsigned int refIndex, const unsigned int refBegin, const unsigned int refEnd );
+	void SaveReferencePosition( const unsigned int& refIndex, const unsigned int& refBegin, const unsigned int& refEnd );
 	// creates a packed cigar string from the supplied alignment
-	void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool isSolid );
+	void CreatePackedCigar(const Alignment& al, string& packedCigar, unsigned short& numCigarOperations, const bool& isSolid );
 	// encodes the supplied query sequence into 4-bit notation
 	void EncodeQuerySequence(const CMosaikString& query, string& encodedQuery);
 private:
@@ -160,7 +160,7 @@ private:
 	// packs an unsigned short into the specified buffer
 	static inline void BgzfPackUnsignedShort(char* buffer, unsigned short value);
 	// writes the supplied data into the BGZF buffer
-	unsigned int BgzfWrite(const char* data, const unsigned int dataLen);
+	unsigned int BgzfWrite(const char* data, const unsigned int& dataLen);
 	// calculates the minimum bin that contains a region [begin, end)
 	static inline unsigned int CalculateMinimumBin(unsigned int begin, unsigned int end);
 	// creates a packed cigar string from the supplied alignment
