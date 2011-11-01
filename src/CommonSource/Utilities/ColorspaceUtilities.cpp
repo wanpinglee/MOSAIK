@@ -410,7 +410,7 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 
 // convert cs sequence to bs sequence
 // a '-' converter would produce a '-'
-bool CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase) {
+bool CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int& start, const unsigned int& end, const char& startBase) {
 
 	char lastQueryBase = startBase;
 	//bsSequence[ start ] = startBase;
@@ -438,7 +438,7 @@ bool CColorspaceUtilities::ConvertCs2Bs (const char* csSequence, char* bsSequenc
 
 
 // adjust positions of insertions or deletion
-void CColorspaceUtilities::AdjustDash(const char* csSequence, const char* csSequenceOpp, const RegionT* dashRegion, const unsigned int nDashRegion, char* bsSequence) {
+void CColorspaceUtilities::AdjustDash(const char* csSequence, const char* csSequenceOpp, const RegionT* dashRegion, const unsigned int& nDashRegion, char* bsSequence) {
 
 	// a dash appears after a '-' translation
 	// sometimes, it should be in front of a '-' translation
@@ -468,7 +468,7 @@ void CColorspaceUtilities::AdjustDash(const char* csSequence, const char* csSequ
 
 
 // detect sequencing errors
-bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen ) {
+bool CColorspaceUtilities::FindSequencingError( const unsigned int& pairwiseLen ) {
 
 	
 	for ( unsigned int i = 0; i < mCsAl.nMismatch; i++ ) {
@@ -605,7 +605,7 @@ bool CColorspaceUtilities::FindSequencingError( const unsigned int pairwiseLen )
 
 
 // converts a colorspace sequence with provided seed base into basespace
-void CColorspaceUtilities::ConvertColorspaceToBasespace(char seed, const string& colorspaceSeq, string& basespaceSeq) {
+void CColorspaceUtilities::ConvertColorspaceToBasespace(char& seed, const string& colorspaceSeq, string& basespaceSeq) {
 
 	// make the basespace sequence just as long as the colorspace sequence
 	const unsigned short csLen = colorspaceSeq.size();
@@ -637,13 +637,13 @@ void CColorspaceUtilities::ConvertReadBasespaceToPseudoColorspace(CMosaikString&
 	char* pString = pPrev + 1;
 
 	// simplify various ambiguity codes
-	*pPrev = GetSimplifiedBase(*pPrev);
+	GetSimplifiedBase(pPrev);
 
 	CS_MAP_t::const_iterator csIter;
 	for(unsigned int i = 1; i < s.Length(); ++i, ++pString, ++pPrev) {
 
 		// simplify various ambiguity codes
-		*pString = GetSimplifiedBase(*pString);
+		GetSimplifiedBase(pString);
 
 		csIter = mCSMap.find(PACK_SHORT(*pPrev, *pString));
 		if(csIter == mCSMap.end()) {
@@ -726,7 +726,7 @@ void CColorspaceUtilities::ConvertReadPseudoColorspaceToColorspace(CMosaikString
 }
 
 // records regions of contiguous identity in the alignment
-void CColorspaceUtilities::FindIndenticalRegions(char* pReference, char* pQuery, const unsigned short pairwiseLen, RegionVector& rv) {
+void CColorspaceUtilities::FindIndenticalRegions(char* pReference, char* pQuery, const unsigned short& pairwiseLen, RegionVector& rv) {
 
 	for(unsigned short i = 0; i < pairwiseLen; i++) {
 		if(pReference[i] == pQuery[i]) {
@@ -841,7 +841,7 @@ void CColorspaceUtilities::InitializeColorspaceMap(void) {
 // replaces the gaps in the pairwise alignment with a dibase transition code '4'
 // NOTE: we arbitrarily add an extra gap transition - this should be modified so
 //       that we create a true transition to the next base.
-void CColorspaceUtilities::PatchColorspaceGaps(char* pReference, char* pQuery, const unsigned short pairwiseLen) {
+void CColorspaceUtilities::PatchColorspaceGaps(char* pReference, char* pQuery, const unsigned short& pairwiseLen) {
 
 	const unsigned int lastIndex = pairwiseLen - 1;
 
@@ -876,5 +876,59 @@ void CColorspaceUtilities::SetReferenceSequences(char** pBsRefSeqs) {
 
 void CColorspaceUtilities::SetNumAllowedMismatch(unsigned int allowedMismatch) {
 	mNAllowedMismatch = allowedMismatch;
+}
+
+// returns the simplified version of the IUPAC ambiguity code - based on base frequencies in the human genome 36.3
+void CColorspaceUtilities::GetSimplifiedBase(char* c) {
+
+	switch(*c) {
+		case 'M':
+		case 'R':
+		case 'V':
+			*c = 'A';
+			break;
+
+		case 'S':
+			*c = 'G';
+			break;
+
+		case 'B':
+		case 'D':
+		case 'H':
+		case 'K':
+		case 'W':
+		case 'Y':
+			*c = 'T';
+			break;
+
+		// Marked by Lee on 1/19/2009
+		//case 'N':
+		//	c = 'X';
+		//	break;
+	}
+
+	//return c;
+}
+
+// get the complement base
+void CColorspaceUtilities::GetComplementBase(char* c) {
+	
+	switch(*c) {
+		case 'A':
+			*c = 'T';
+			break;
+		case 'C':
+			*c = 'G';
+			break;
+		case 'G':
+			*c = 'C';
+			break;
+		case 'T':
+			*c = 'A';
+		default:
+			break;
+	}
+
+	//return c;
 }
 

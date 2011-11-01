@@ -125,27 +125,27 @@ private:
 	// assing operator
 	CColorspaceUtilities& operator=( const CColorspaceUtilities& copy );
 	// converts a colorspace sequence with provided seed base into basespace
-	void ConvertColorspaceToBasespace(char seed, const string& colorspaceSeq, string& basespaceSeq);
+	void ConvertColorspaceToBasespace(char& seed, const string& colorspaceSeq, string& basespaceSeq);
 	// records regions of contiguous identity in the alignment
-	void FindIndenticalRegions(char* pReference, char* pQuery, const unsigned short pairwiseLen, RegionVector& rv);
+	void FindIndenticalRegions(char* pReference, char* pQuery, const unsigned short& pairwiseLen, RegionVector& rv);
 	// returns the simplified version of the IUPAC ambiguity code - based on base frequencies in the human genome 36.3
-	static inline char GetSimplifiedBase(char c);
+	void GetSimplifiedBase(char* c);
 	// adds the colorspace to basespace conversions
 	void InitializeBasespaceMap(void);
 	// adds the basespace to colorspace conversions
 	void InitializeColorspaceMap(void);
 	// replaces the gaps in the pairwise alignment with a dibase transition code '4'
-	void PatchColorspaceGaps(char* pReference, char* pQuery, const unsigned short pairwiseLen);
+	void PatchColorspaceGaps(char* pReference, char* pQuery, const unsigned short& pairwiseLen);
 	// updates the observed gaps array and returns true if gaps are found in the alignment
-	bool UpdateObservedGaps(const char* pReference, const char* pQuery, const unsigned short pairwiseLen);
+	bool UpdateObservedGaps(const char* pReference, const char* pQuery, const unsigned short& pairwiseLen);
 	// detect sequencing errors
-	bool FindSequencingError(unsigned int pairwiseLen);
+	bool FindSequencingError(const unsigned int& pairwiseLen);
 	// adjust positions of insertions or deletion
-	void AdjustDash(const char* csSequence, const char* csSequenceOpp, const RegionT* dashRegion, const unsigned int nDashRegion, char* bsSequence);
+	void AdjustDash(const char* csSequence, const char* csSequenceOpp, const RegionT* dashRegion, const unsigned int& nDashRegion, char* bsSequence);
 	// convert cs sequence to bs sequence
-	bool ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int start, const unsigned int end, const char startBase);
+	bool ConvertCs2Bs (const char* csSequence, char* bsSequence, const unsigned int& start, const unsigned int& end, const char& startBase);
 	// get the complement base
-	inline char GetComplementBase(char c) ;
+	void GetComplementBase(char* c) ;
 	// our colorspace to basespace conversion map
 	BS_MAP_t mBSMap;
 	// our basespace to colorspace conversion map
@@ -156,19 +156,19 @@ private:
 	csAlignment mCsAl;
 	unsigned int mNAllowedMismatch;
 };
-
+/*
 // returns the simplified version of the IUPAC ambiguity code - based on base frequencies in the human genome 36.3
-inline char CColorspaceUtilities::GetSimplifiedBase(char c) {
+void CColorspaceUtilities::GetSimplifiedBase(char* c) {
 
-	switch(c) {
+	switch(*c) {
 		case 'M':
 		case 'R':
 		case 'V':
-			c = 'A';
+			*c = 'A';
 			break;
 
 		case 'S':
-			c = 'G';
+			*c = 'G';
 			break;
 
 		case 'B':
@@ -177,7 +177,7 @@ inline char CColorspaceUtilities::GetSimplifiedBase(char c) {
 		case 'K':
 		case 'W':
 		case 'Y':
-			c = 'T';
+			*c = 'T';
 			break;
 
 		// Marked by Lee on 1/19/2009
@@ -186,29 +186,29 @@ inline char CColorspaceUtilities::GetSimplifiedBase(char c) {
 		//	break;
 	}
 
-	return c;
+	//return c;
 }
 
 // get the complement base
-inline char CColorspaceUtilities::GetComplementBase(char c) {
+void CColorspaceUtilities::GetComplementBase(char* c) {
 	
-	switch(c) {
+	switch(*c) {
 		case 'A':
-			c = 'T';
+			*c = 'T';
 			break;
 		case 'C':
-			c = 'G';
+			*c = 'G';
 			break;
 		case 'G':
-			c = 'C';
+			*c = 'C';
 			break;
 		case 'T':
-			c = 'A';
+			*c = 'A';
 		default:
 			break;
 	}
 
-	return c;
+	//return c;
 }
-
+*/
 #endif // COLORSPACEUTILITIES_H_
