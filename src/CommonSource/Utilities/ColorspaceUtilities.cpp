@@ -67,7 +67,9 @@ CColorspaceUtilities::~CColorspaceUtilities(void) {
 // converts the supplied alignment from colorspace to basespace
 bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 
-	
+	//cout << al.Reference.CData() << endl;
+	//cout << al.Query.CData() << endl;
+
 	// convert the alignment to character arrays
 	const unsigned int pairwiseLen = al.Reference.Length();
 	if ( pairwiseLen == 0 )
@@ -362,6 +364,8 @@ bool CColorspaceUtilities::ConvertAlignmentToBasespace(Alignment& al) {
 	++al.QueryEnd;
 	al.QueryLength = al.QueryEnd - al.QueryBegin + 1;
 
+	//cout << al.Reference.CData() << endl;
+	//cout << al.Query.CData() << "\t" << al.QueryBegin << "\t" << al.QueryEnd << endl;
        
       
 	// ------------------------------------------------------------------------------------------

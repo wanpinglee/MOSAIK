@@ -820,7 +820,7 @@ void CAlignmentThread::AlignReadArchive(
 		if ( mFlags.SaveMultiplyBam ) {
 			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps );
 		}
-
+		
 		// UU, UM, and MM pair
 		if ( ( isMate1Unique && isMate2Unique )
 			|| ( isMate1Unique && isMate2Multiple )
@@ -1032,7 +1032,6 @@ void CAlignmentThread::AlignReadArchive(
 					SetRequiredInfo( specialAl, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
 					const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !isPairedEnd, true );
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
-
 				}
 
 				if ( isPairedEnd ) {
@@ -1322,8 +1321,9 @@ void CAlignmentThread::SetRequiredInfo (
 			// sanity checker
 			if ( al.QueryEnd > ( readLength - 1 ) ) {
 				cout << "ERROR: The aligned length is larger than the read length." << endl;
+				cout << "       Query end: " << al.QueryEnd << "\tread length: " << readLength << "\t# of mappings" << al.NumMapped << endl;
 				cout << "       Read name: " << r.Name.CData() << endl;
-				cout << "       Aligned bases:" << al.Query.CData() << endl;
+				cout << "       Aligned bases :" << al.Query.CData() << endl;
 				exit(1);
 			}
 			if ( patchStartLen == 0 ) {
@@ -1387,7 +1387,7 @@ void CAlignmentThread::ProcessSpecialAlignment (
   if ((nMobAl == mate1Set->size()) && (mate1Set->size() != 0)) { // all alignments are special
     *isMate1Special = true;
     sort(mate1Set->begin(), mate1Set->end(), Alignment_LessThanMq());
-    mate1SpecialAl = *(mate1Set->rbegin());
+    *mate1SpecialAl = **(mate1Set->rbegin());
     mate1SpecialAl->SpecialCode = specialCode;
     mate1SpecialAl->NumMapped   = nMobAl;
     mate1Set->clear();
@@ -1829,7 +1829,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 	// aligned to special references
 	if ( ret && mSReference.found )
 		al.IsMappedSpecialReference = mReferenceSpecial[ al.ReferenceIndex ];
-
+	
 	return ret;
 }
 
