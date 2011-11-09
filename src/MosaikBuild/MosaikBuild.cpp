@@ -865,7 +865,7 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 		while(true) {
 
 			// get the next sequence line
-			fscanf(seq, "%d\t%d\t%d\t%d\t%s", &lane, &tile, &xcoord, &ycoord, fBuffer);
+			fscanf(seq, "%u\t%u\t%u\t%u\t%s", &lane, &tile, &xcoord, &ycoord, fBuffer);
 
 			// stop if we found the EOF
 			if(feof(seq)) break;
@@ -878,7 +878,7 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 			mr.Mate1.Qualities.Reserve(numBases);
 
 			// assign the read name
-			sprintf_s(fBuffer, fBufferSize, "%d_%d_%d_%d", lane, tile, xcoord, ycoord);
+			sprintf_s(fBuffer, fBufferSize, "%u_%u_%u_%u", lane, tile, xcoord, ycoord);
 			mr.Name = fBuffer;
 
 			// retrieve the base qualities

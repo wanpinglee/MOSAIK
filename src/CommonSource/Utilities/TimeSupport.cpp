@@ -17,8 +17,8 @@ const char* CTimeSupport::MONTHS[]   = { "Jan", "Feb", "Mar", "Apr", "May", "Jun
 const uint64_t CTimeSupport::SECS_BETWEEN_EPOCHS = 11644473600;
 const uint64_t CTimeSupport::SECS_TO_100NS       = 10000000;
 #else
-const uint64_t CTimeSupport::SECS_BETWEEN_EPOCHS = 11644473600llu;
-const uint64_t CTimeSupport::SECS_TO_100NS       = 10000000llu;
+const uint64_t CTimeSupport::SECS_BETWEEN_EPOCHS = 11644473600;
+const uint64_t CTimeSupport::SECS_TO_100NS       = 10000000;
 #endif
 
 // returns the current time (UTC)
@@ -182,7 +182,7 @@ string CTimeSupport::ConvertTimeToString(const uint64_t& currentTime) {
 	struct tm localTime;
 	char timebuf[26];
 
-	time_t currentTimeT = (time_t)((currentTime - 116444736000000000llu) / 10000000.0);
+	time_t currentTimeT = (time_t)((currentTime - 116444736000000000) / 10000000.0);
 	localtime_s(&localTime, &currentTimeT);
 	asctime_s(timebuf, 26, &localTime);
 

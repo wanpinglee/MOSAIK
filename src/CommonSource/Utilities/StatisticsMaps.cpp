@@ -464,7 +464,7 @@ void CStatisticsMaps::PrintMaps( const char* filename, const vector<MosaikReadFo
 		//PrintMap( fOut, "IS isize", nIsize, nIsizeOver, nIsizeUnder, isizes, 0);
 
 		char buffer[1024];
-		uint8_t n = sprintf( buffer, "LF fragment mapping length (-mfl: %u; -ls: %u)", _fragmentLength, _localSearchRadius);
+		int n = sprintf( buffer, "LF fragment mapping length (-mfl: %u; -ls: %u)", _fragmentLength, _localSearchRadius);
 		if ( n > 1024 ) {
 			printf("ERROR: The buffer for LF title is insufficient.\n");
 			exit(1);

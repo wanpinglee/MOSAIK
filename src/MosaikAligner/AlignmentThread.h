@@ -236,7 +236,7 @@ public:
 		bool     found;
 		uint64_t begin;
 		uint64_t nReference;
-		double   count;
+		int      count;
 		string   prefix;
 
 		SReference()

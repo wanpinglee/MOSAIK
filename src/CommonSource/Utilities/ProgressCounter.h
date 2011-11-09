@@ -12,6 +12,7 @@
 #ifndef PROGRESSCOUNTER_H_
 #define PROGRESSCOUNTER_H_
 
+#include <stdint.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -29,7 +30,7 @@
 
 using namespace std;
 
-typedef unsigned long long progress_counter_time_t;
+typedef uint64_t progress_counter_time_t;
 
 // define our sleep interval (0.5 s)
 #define PROGRESS_COUNTER_SLEEP_MS         500

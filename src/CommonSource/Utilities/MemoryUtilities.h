@@ -12,6 +12,8 @@
 #ifndef MEMORYUTILITIES_H_
 #define MEMORYUTILITIES_H_
 
+#include <stdint.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -34,7 +36,7 @@ typedef SIZE_T mem_size_t;
 #include <unistd.h>
 
 typedef pid_t process_id_t;
-typedef unsigned long long mem_size_t;
+typedef uint64_t mem_size_t;
 #define MEM_USAGE_BUFFER_LEN 4096
 #define BYTES_PER_MEMORY_PAGE 4096
 

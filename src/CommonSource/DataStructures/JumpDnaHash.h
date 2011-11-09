@@ -37,7 +37,20 @@ class CRandomGenerator {
 class CJumpDnaHash : public CAbstractDnaHash {
 public:
 	// constructor
-	CJumpDnaHash(const unsigned char hashSize, const string& filenameStub, const unsigned short numPositions, const bool keepKeysInMemory, const bool keepPositionsInMemory, const unsigned int numCachedElements, const unsigned int begin, const unsigned int end, const unsigned int offset, const unsigned int expectedMemory, const bool useLowMemory, const bool bubbleSpecialHashes, const uint64_t specialBegin, const unsigned int specialPercent);
+	CJumpDnaHash(const unsigned char&  hashSize, 
+	             const string&         filenameStub, 
+		     const unsigned short& numPositions, 
+		     const bool&           keepKeysInMemory, 
+		     const bool&           keepPositionsInMemory, 
+		     const unsigned int&   numCachedElements, 
+		     const unsigned int&   begin, 
+		     const unsigned int&   end, 
+		     const unsigned int&   offset, 
+		     const unsigned int&   expectedMemory, 
+		     const bool&           useLowMemory, 
+		     const bool&           bubbleSpecialHashes, 
+		     const uint64_t&       specialBegin, 
+		     const unsigned int&   specialPercent);
 	// destructor
 	~CJumpDnaHash(void);
 	// dummy function

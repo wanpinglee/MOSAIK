@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 // define our alignment status flags (relevant before MosaikMerge)
 typedef unsigned char AlignmentStatus;
 #define AS_UNKNOWN                      0   // specifies an unset status flag
@@ -82,11 +84,11 @@ struct Tag {
 		double Double;
 		float Float;
 		int Int32;
-		long long Int64;
+		int64_t Int64;
 		short Int16;
 		unsigned char UChar;
 		unsigned int UInt32;
-		unsigned long long UInt64;
+		uint64_t UInt64;
 		unsigned short UInt16;
 	};
 };

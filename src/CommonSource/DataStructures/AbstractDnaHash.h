@@ -67,6 +67,9 @@ protected:
 	const static unsigned int LargestResizeableSize;
 	// stores the current hash size
 	unsigned char mHashSize;
+private:
+	CAbstractDnaHash(const CAbstractDnaHash&);
+	CAbstractDnaHash& operator= (const CAbstractDnaHash&);
 };
 
 

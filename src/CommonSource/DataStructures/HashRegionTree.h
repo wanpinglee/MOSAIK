@@ -86,6 +86,9 @@ namespace AVLTree {
 		void RightRotate(HashRegionAvlNode* n);
 		// moves on to the previous element in the tree
 		void MoveToPreviousEntry();
+
+		CHashRegionTree (const AVLTree::CHashRegionTree&);
+		CHashRegionTree& operator=(const AVLTree::CHashRegionTree&);
 	};
 }
 

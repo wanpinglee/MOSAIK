@@ -11,6 +11,8 @@
 
 #include "NaiveAlignmentSet.h"
 
+#include <stdint.h>
+
 // constructor
 CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina) 
 : mHasLongAlignment(false)
@@ -186,7 +188,7 @@ bool CNaiveAlignmentSet::CheckOverlap(const Alignment& al1, AlignmentSet::iterat
 	// CASE 5: ignore overlap if the phase is skewed
 	if(observedOverlap) {
 
-		long long al1BeginDiff, al1EndDiff, al2BeginDiff, al2EndDiff;
+		int64_t al1BeginDiff, al1EndDiff, al2BeginDiff, al2EndDiff;
 
 		// calculate the phase difference for al1
 		if(al1.IsReverseStrand) {

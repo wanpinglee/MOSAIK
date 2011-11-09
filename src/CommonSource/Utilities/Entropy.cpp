@@ -90,7 +90,7 @@ Entropy::count_num_tokens()
  */
 void
 Entropy::get_token_frequencies(char* buf, 
-	     	               long long length)
+	     	               const int& length)
 {
   int i=0;
   char* itr=NULL;
@@ -130,7 +130,7 @@ Entropy::get_token_frequencies(char* buf,
  */
 float
 Entropy::shannon_H(char* buf, 
-	           long long length)
+	           const int& length)
 {
   int i = 0;
   float bits = 0.0;

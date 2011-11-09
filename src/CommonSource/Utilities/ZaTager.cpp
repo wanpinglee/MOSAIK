@@ -24,64 +24,6 @@ void CZaTager::ExtendBuffer( const unsigned int& length ) {
 	bufferLen = length;
 }
 
-/*
-const char* CZaTager::GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 ) {
-	
-	char* zaPtr = buffer;
-	unsigned int len = 0;
-	len = sprintf( zaPtr, "1");
-	zaPtr += len;
-	
-	for ( vector<Alignment>::iterator ite = ar1.begin(); ite != ar1.end(); ++ite ) {
-		len = sprintf( zaPtr, "<");
-		zaPtr += len;
-		len = sprintf( zaPtr, "%s;", ite->ReferenceName );
-		zaPtr += len;
-		len = sprintf( zaPtr, "%u;", ite->ReferenceBegin + 1 );
-		zaPtr += len;
-		len = sprintf( zaPtr, "%u;", ite->Quality);
-		zaPtr += len;
-		char strand = ( ite->IsReverseStrand ) ? '-' : '+';
-		len = sprintf( zaPtr, "%c;", strand );
-		zaPtr += len;
-		const char* pCigar = cigarTager.GetCigarTag( ite->Reference.CData(), ite->Query.CData(), ite->Reference.Length() );
-		len = strlen( pCigar );
-		memcpy( zaPtr, pCigar, len );
-		zaPtr += len;
-		len = sprintf( zaPtr, ">");
-		zaPtr += len;
-	}
-
-
-	len = sprintf( zaPtr, "2");
-	zaPtr += len;
-
-	for ( vector<Alignment>::iterator ite = ar2.begin(); ite != ar2.end(); ++ite ) {
-		len = sprintf( zaPtr, "<");
-		zaPtr += len;
-		len = sprintf( zaPtr, "%s;", ite->ReferenceName );
-		zaPtr += len;
-		len = sprintf( zaPtr, "%u;", ite->ReferenceBegin + 1 );
-		zaPtr += len;
-		len = sprintf( zaPtr, "%u;", ite->Quality);
-		zaPtr += len;
-		char strand = ( ite->IsReverseStrand ) ? '-' : '+';
-		len = sprintf( zaPtr, "%c;", strand );
-		zaPtr += len;
-		const char* pCigar = cigarTager.GetCigarTag( ite->Reference.CData(), ite->Query.CData(), ite->Reference.Length() );
-		len = strlen( pCigar );
-		memcpy( zaPtr, pCigar, len );
-		zaPtr += len;
-		len = sprintf( zaPtr, ">");
-		zaPtr += len;
-	}
-	
-	*zaPtr = 0;
-
-	return buffer;
-}
-*/
-
 const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton, const bool& isMateUnmapped ) {
 	
 	char* zaPtr = buffer;

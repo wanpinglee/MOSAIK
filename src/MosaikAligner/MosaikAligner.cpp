@@ -129,10 +129,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
 	// check special reference
-	if ( mSReference.enable ) {
+	if (mSReference.enable) {
 		// the special references should be appended after normal ones
 		for ( vector<ReferenceSequence>::reverse_iterator rit = referenceSequences.rbegin(); rit != referenceSequences.rend(); ++rit ) {
-			size_t found = rit->Name.find( mSReference.prefix );
+			size_t found = rit->Name.find(mSReference.prefix);
 			if ( found != string::npos ) {
 				mSReference.found = true;
 				mSReference.nReference++;
@@ -388,7 +388,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			unsigned int expectedMemory = nHashs[i] + expectedMemories[i];
 			// reserve 3% more memory for unexpected usage
 			// TODO: for small mhp, 3% more allowed space is not enough
-			expectedMemory =  expectedMemory * 1.03;
+			expectedMemory =  static_cast<unsigned int>(ceil(expectedMemory * 1.03));
 
 			InitializeHashTables(
 				0, 
@@ -402,7 +402,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				double ratio = nHashs[i] / (double)nTotalHash;
 				unsigned int positionThreshold = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) 
 					? mSReference.count 
-					: ceil(ratio * (double)mSettings.HashPositionThreshold);
+					: static_cast<unsigned int>(ceil(ratio * (double)mSettings.HashPositionThreshold));
 				mpDNAHash->RandomizeAndTrimHashPositions(positionThreshold);
 			}
 
@@ -570,7 +570,11 @@ void CMosaikAligner::GetHashStatistics(
 		mFlags.KeepJumpPositionsInMemory, 
 		mSettings.NumCachedHashes, 
 		begin, end, offset, 
-		0, false, false, 0, 0.0);
+		0, 
+		false, 
+		false, 
+		0, 
+		0);
 
 	// set mhp number to JumpDnaHash
 	if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
@@ -588,7 +592,12 @@ void CMosaikAligner::GetHashStatistics(
 
 	nHashs.resize(length, 0);
 	expectedMemories.resize(length, 0);
-	hash.GetHashStatistics(references, nHashs, expectedMemories, mSReference.found, mSReference.begin, mSReference.count );
+	hash.GetHashStatistics(references, 
+	                       nHashs, 
+			       expectedMemories, 
+			       mSReference.found, 
+			       mSReference.begin, 
+			       mSReference.count);
 
 	nTotalHash = 0;
 	for ( unsigned int i = 0; i < nHashs.size(); i++ ) {
@@ -1423,17 +1432,59 @@ void CMosaikAligner::InitializeHashTables(const unsigned char bitSize, const uns
 	case CAlignmentThread::AlignerAlgorithm_FAST:
 	case CAlignmentThread::AlignerAlgorithm_SINGLE:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 1, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end, offset, expectedMemory, useLowMemory, bubbleSpecialHashes, mSReference.begin, mSReference.count);
+			mpDNAHash = new CJumpDnaHash(
+				            mSettings.HashSize, 
+			                    mSettings.JumpFilenameStub, 
+					    1, 
+					    mFlags.KeepJumpKeysInMemory, 
+					    mFlags.KeepJumpPositionsInMemory, 
+					    mSettings.NumCachedHashes, 
+					    begin, 
+					    end, 
+					    offset, 
+					    expectedMemory, 
+					    useLowMemory, 
+					    bubbleSpecialHashes, 
+					    mSReference.begin, 
+					    mSReference.count);
 		} else mpDNAHash = new CDnaHash(bitSize, mSettings.HashSize);
 		break;
 	case CAlignmentThread::AlignerAlgorithm_MULTI:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 9, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end, offset, expectedMemory, useLowMemory, bubbleSpecialHashes, mSReference.begin, mSReference.count);
+			mpDNAHash = new CJumpDnaHash(
+			                    mSettings.HashSize, 
+					    mSettings.JumpFilenameStub, 
+					    9, 
+					    mFlags.KeepJumpKeysInMemory, 
+					    mFlags.KeepJumpPositionsInMemory, 
+					    mSettings.NumCachedHashes, 
+					    begin, 
+					    end, 
+					    offset, 
+					    expectedMemory, 
+					    useLowMemory, 
+					    bubbleSpecialHashes, 
+					    mSReference.begin, 
+					    mSReference.count);
 		} else mpDNAHash = new CMultiDnaHash(bitSize, mSettings.HashSize);
 		break;
 	case CAlignmentThread::AlignerAlgorithm_ALL:
 		if(mFlags.IsUsingJumpDB) {
-			mpDNAHash = new CJumpDnaHash(mSettings.HashSize, mSettings.JumpFilenameStub, 0, mFlags.KeepJumpKeysInMemory, mFlags.KeepJumpPositionsInMemory, mSettings.NumCachedHashes, begin, end, offset, expectedMemory, useLowMemory, bubbleSpecialHashes, mSReference.begin, mSReference.count);
+			mpDNAHash = new CJumpDnaHash(
+			                    mSettings.HashSize, 
+					    mSettings.JumpFilenameStub, 
+					    0, 
+					    mFlags.KeepJumpKeysInMemory, 
+					    mFlags.KeepJumpPositionsInMemory, 
+					    mSettings.NumCachedHashes, 
+					    begin, 
+					    end, 
+					    offset, 
+					    expectedMemory, 
+					    useLowMemory, 
+					    bubbleSpecialHashes, 
+					    mSReference.begin, 
+					    mSReference.count);
 		} else mpDNAHash = new CUbiqDnaHash(bitSize, mSettings.HashSize);
 		break;
 	default:

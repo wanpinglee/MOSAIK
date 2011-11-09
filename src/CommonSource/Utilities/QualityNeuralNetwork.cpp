@@ -11,10 +11,11 @@ inline unsigned char float2phred(float prob) {
     if (prob == 1)
     return PHRED_MAX;  // guards against "-0"
     float p = -10 * (float) log10(prob);
+    p = floor(p + 0.5);
     if (p < 0 || p > PHRED_MAX) // int overflow guard
       return PHRED_MAX;
     else
-      return floor(p + 0.5);
+      return static_cast<unsigned char>(p);
 
 }
 
@@ -67,7 +68,7 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
     fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
   //}
 
-  int swDiff2 = annInputs2.swScore - annInputs2.nextSwScore;
+  float swDiff2 = annInputs2.swScore - annInputs2.nextSwScore;
   fann_inputs.push_back(swDiff2 / (float)(annInputs2.read_length * SwMatchScore));
   fann_inputs.push_back(annInputs2.longest_match / (float)annInputs2.read_length);
   fann_inputs.push_back(annInputs2.entropy);

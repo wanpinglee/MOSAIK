@@ -12,6 +12,7 @@
 #ifndef PROGRESSBAR_H_
 #define PROGRESSBAR_H_
 
+#include <stdint.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -42,7 +43,7 @@ using namespace std;
 #define PROGRESS_BAR_ETA_LENGTH       15
 #define PROGRESS_BAR_TWIRL_LENGTH     2
 
-typedef unsigned long long progress_bar_time_t;
+typedef int64_t progress_bar_time_t;
 
 // define our multi-platform sleep function
 #ifdef WIN32

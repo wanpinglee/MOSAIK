@@ -13,6 +13,7 @@
 
 #include <cstdio>
 
+/*
 inline unsigned long long GetUInt64(char* s) {
 	char* end_ptr = NULL;
 	unsigned long long ull = (unsigned long long)strtoul(s, &end_ptr, 10);
@@ -24,6 +25,7 @@ inline unsigned long long GetUInt64(char* s) {
 
 	return ull;
 }
+*/
 
 inline unsigned int GetUnsignedInt(char* s) {
 	char* end_ptr = NULL;

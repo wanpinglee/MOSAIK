@@ -49,7 +49,7 @@ class Entropy {
    * runs into unallocated memory, this function should fail with a
    * SIGSEGV.
    */
-  float    shannon_H(char*, long long);
+  float    shannon_H(char*, const int&);
 
   /** Report the number of (unique) tokens seen. This is _not_ the
       number of individual events seen. For example, if the library sees
@@ -74,7 +74,7 @@ class Entropy {
 
   void initialize_lib();
   void count_num_tokens();
-  void get_token_frequencies(char* buf, long long length);
+  void get_token_frequencies(char* buf, const int& length);
   Entropy (const Entropy&);
   Entropy& operator= (const Entropy&);
 

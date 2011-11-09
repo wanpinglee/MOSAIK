@@ -23,7 +23,13 @@ pthread_mutex_t CAbstractDnaHash::mJumpPositionMutex;
 
 CAbstractDnaHash::CAbstractDnaHash() 
 : mHashes(NULL)
+, mCapacity(0)
+, mMask(0)
+, mLoad(0)
+, mThreshold(0)
+, mCount(0)
 , mMemoryAllocated(false)
+, mHashSize(0)
 {}
 
 CAbstractDnaHash::~CAbstractDnaHash() {}

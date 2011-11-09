@@ -449,11 +449,11 @@ int main(int argc, char* argv[]) {
 		} else {
 			if ( settings.CheckNumMismatches ) {
 				settings.HasBandwidth = true;
-				settings.Bandwidth    = ceil( 2.5 * settings.NumMismatches );
+				settings.Bandwidth    = static_cast<unsigned int>(ceil( 2.5 * settings.NumMismatches ));
 				if ( ( settings.Bandwidth % 2 ) != 1 ) ++settings.Bandwidth;
 			} else if ( settings.CheckMismatchPercent ) {
 				settings.HasBandwidth = true;
-				settings.Bandwidth    = ceil( 2.5 * settings.MismatchPercent * ceil(readLength) );
+				settings.Bandwidth    = static_cast<unsigned int>(ceil( 2.5 * settings.MismatchPercent * ceil(readLength) ));
 				if ( ( settings.Bandwidth % 2 ) != 1 ) ++settings.Bandwidth;
 			} else {
 				settings.HasBandwidth = false;
@@ -501,15 +501,16 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		if ( settings.LocalAlignmentSearchHighMqThreshold > 255 ) {
-			errorBuilder << ERROR_SPACER << "The range of high MQ threshold (-lsh) is 0-255." << endl;
-			foundError = true;
-		}
+		// Note: These two statements are always tru
+		//if (settings.LocalAlignmentSearchHighMqThreshold > 255) {
+		//	errorBuilder << ERROR_SPACER << "The range of high MQ threshold (-lsh) is 0-255." << endl;
+		//	foundError = true;
+		//}
 
-		if ( settings.LocalAlignmentSearchLowMqThreshold > 255 ) {
-			errorBuilder << ERROR_SPACER << "The range of low MQ threshold (-lsl) is 0-255." << endl;
-			foundError = true;
-		}
+		//if ( settings.LocalAlignmentSearchLowMqThreshold > 255 ) {
+		//	errorBuilder << ERROR_SPACER << "The range of low MQ threshold (-lsl) is 0-255." << endl;
+		//	foundError = true;
+		//}
 
 		reader.Close();
 	}

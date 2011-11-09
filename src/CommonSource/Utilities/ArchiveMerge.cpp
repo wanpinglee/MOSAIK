@@ -433,10 +433,10 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	unsigned int nMate2Alignments = 0;
 	unsigned int nMate1Hashes     = 0;
 	unsigned int nMate2Hashes     = 0;
-	unsigned int mate1SwScore     = 0;
-	unsigned int mate2SwScore     = 0;
-	unsigned int mate1NextSwScore = 0;
-	unsigned int mate2NextSwScore = 0;
+	float mate1SwScore     = 0;
+	float mate2SwScore     = 0;
+	float mate1NextSwScore = 0;
+	float mate2NextSwScore = 0;
 
 	vector<Alignment*> newMate1Set, newMate2Set;
 	Mosaik::Read read;

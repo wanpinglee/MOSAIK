@@ -36,7 +36,14 @@ public:
 	// load hash keys and positions from the file to memory
 	void LoadKeysNPositions(void);
 	// returns statistics about the hash table
-	void GetStatistics(unsigned int& numUsedHashes, unsigned int& numUniqueHashes, unsigned int& numNonUniqueHashes, unsigned int& numUsedHashesCount, unsigned int& numUniqueHashesCount, unsigned int& numNonUniqueHashesCount, double& mean, double& stddev);
+	void GetStatistics(unsigned int& numUsedHashes, 
+	                   unsigned int& numUniqueHashes, 
+			   unsigned int& numNonUniqueHashes, 
+			   unsigned int& numUsedHashesCount, 
+			   unsigned int& numUniqueHashesCount, 
+			   unsigned int& numNonUniqueHashesCount, 
+			   double& mean, 
+			   double& stddev);
 	// dumps the contents of the hash table to standard output
 	void Dump();
 	// frees all memory used by the hash table

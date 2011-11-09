@@ -83,7 +83,7 @@ public:
 	inline bool IsUnique(void) const { return (mAlignments.size() == 1 ? true : false); };
 	// returns true if the alignment set contains more than one entry
 	inline bool IsMultiple (void) const { return (mAlignments.size() > 1 ? true : false); };
-	inline unsigned int GetHighestSwScore(void) const { return highestSmithWatermanScore; };
+	inline float GetHighestSwScore(void) const { return highestSmithWatermanScore; };
 
 private:
 	// calculates the correction coefficient
@@ -97,7 +97,7 @@ private:
 	MhpOccupancyList mRevMhpOccupancyList;
 	// sets the flag when we have long alignments
 	bool mHasLongAlignment;
-	unsigned int highestSmithWatermanScore;
+	float highestSmithWatermanScore;
 };
 
 #endif // NAIVEALIGNMENTSET_H_
