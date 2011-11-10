@@ -20,7 +20,13 @@ class QualityNeuralNetwork {
     int numMappings;
     int numHashes;
   };
-  QualityNeuralNetwork(): ann_open(false) {};
+  QualityNeuralNetwork()
+      : pe_ann(NULL)
+      , se_ann(NULL)
+      , ann_open(false)
+      , fann_inputs()
+      , calc_out(NULL)
+      {};
   ~QualityNeuralNetwork();
   void Open(const string& pe_file, const string& se_file);
   unsigned char GetQualitySe(const FannInputs& annInputs);
@@ -38,7 +44,7 @@ class QualityNeuralNetwork {
   
   // Functions
   QualityNeuralNetwork (const QualityNeuralNetwork&);
-  void operator= (const QualityNeuralNetwork&);
+  QualityNeuralNetwork& operator= (const QualityNeuralNetwork&);
   // end of Functions
 };
 

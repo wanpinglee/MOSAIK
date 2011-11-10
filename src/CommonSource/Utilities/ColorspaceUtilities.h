@@ -93,6 +93,10 @@ struct csAlignment {
 		, identical(NULL)
 	{}
 
+	private:
+	csAlignment (const csAlignment&);
+	csAlignment& operator=(const csAlignment&);
+
 };
 
 typedef map<short, char> CS_MAP_t;
@@ -121,9 +125,9 @@ public:
 
 private:
 	// copy constructor 
-	CColorspaceUtilities( const CColorspaceUtilities& copy );
+	CColorspaceUtilities(const CColorspaceUtilities& copy);
 	// assing operator
-	CColorspaceUtilities& operator=( const CColorspaceUtilities& copy );
+	CColorspaceUtilities& operator=(const CColorspaceUtilities& copy);
 	// converts a colorspace sequence with provided seed base into basespace
 	void ConvertColorspaceToBasespace(char& seed, const string& colorspaceSeq, string& basespaceSeq);
 	// records regions of contiguous identity in the alignment

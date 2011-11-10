@@ -79,6 +79,9 @@ private:
 	bool mUseHomoPolymerGapOpenPenalty;
 	// specifies the homo-polymer gap open penalty
 	float mHomoPolymerGapOpenPenalty;
+
+	CSmithWatermanGotoh (const CSmithWatermanGotoh&);
+	CSmithWatermanGotoh& operator=(const CSmithWatermanGotoh&);
 };
 
 // returns the maximum floating point number

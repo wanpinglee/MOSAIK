@@ -12,7 +12,10 @@
 
 // constructor
 CColorspaceUtilities::CColorspaceUtilities(unsigned int nAllowedMismatch) 
-: mpBsRefSeqs(NULL)
+: mBSMap()
+, mCSMap()
+, mpBsRefSeqs(NULL)
+, mCsAl()
 , mNAllowedMismatch(nAllowedMismatch)
 {
 	// initialize our basespace and colorspace conversion maps
@@ -22,7 +25,10 @@ CColorspaceUtilities::CColorspaceUtilities(unsigned int nAllowedMismatch)
 
 // constructor
 CColorspaceUtilities::CColorspaceUtilities(void) 
-: mpBsRefSeqs(NULL)
+: mBSMap()
+, mCSMap()
+, mpBsRefSeqs(NULL)
+, mCsAl()
 , mNAllowedMismatch(3)
 {
 	// initialize our basespace and colorspace conversion maps

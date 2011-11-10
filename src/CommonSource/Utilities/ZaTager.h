@@ -16,14 +16,19 @@ class CZaTager {
 		//const char* GetZaTag( vector<Alignment>& ar1, vector<Alignment>& ar2 );
 		const char* GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton = false, const bool& isMateUnmapped = false );
 		// copy constructor
-		CZaTager( CZaTager const & copy ) {
+		CZaTager( CZaTager const & copy )
+		    : bufferLen(0)
+		    , buffer(NULL)
+		    , cigarTager()
+		    , mdTager()
+		{
 			bufferLen = copy.bufferLen;
 			buffer    = new char [ bufferLen ];
 			memcpy( buffer, copy.buffer, bufferLen );
 			cigarTager = copy.cigarTager;
 		};
 		// assign operator
-		CZaTager& operator=( CZaTager const & copy ) {
+		CZaTager& operator=( CZaTager const & copy ){
 			 char * temp = new char [ copy.bufferLen ];
 			 delete [] buffer;
 			 bufferLen = copy.bufferLen;

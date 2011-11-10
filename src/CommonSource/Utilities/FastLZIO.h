@@ -46,6 +46,9 @@ private:
 	// our buffer
 	char* mBuffer;
 	unsigned int mBufferLen;
+
+	CFastLZIO (const CFastLZIO&);
+	CFastLZIO& operator= (const CFastLZIO&);
 };
 
 #endif // FASTLZTO_H_

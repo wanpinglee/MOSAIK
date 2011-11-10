@@ -3,6 +3,8 @@
 CZaTager::CZaTager( void )
 	: bufferLen(512)
 	, buffer(NULL)
+	, cigarTager()
+	, mdTager()
 {
 	buffer = new char [ bufferLen ];
 	memset(buffer, 0, bufferLen);

@@ -93,5 +93,6 @@ namespace MosaikReadFormat {
 		unordered_map<string, ReferenceSequence> mIndex;
 		// our FastLZ IO reader and writer
 		CFastLZIO mFIO;
+
 	};
 }

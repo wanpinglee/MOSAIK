@@ -79,9 +79,9 @@ namespace MosaikReadFormat {
 
 	private:
 		// copy constructor
-		CAlignmentReader ( CAlignmentReader const & copy );
+		CAlignmentReader (CAlignmentReader const & copy);
 		// assing operator
-		CAlignmentReader& operator= ( CAlignmentReader const & copy );
+		CAlignmentReader& operator= (CAlignmentReader const & copy);
 		// load the read header from disk
 		void LoadReadHeader(CMosaikString& readName, 
 		                    unsigned int& readGroupCode, 

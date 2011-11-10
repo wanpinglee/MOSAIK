@@ -26,6 +26,8 @@ namespace MosaikReadFormat {
 		, mConcatenatedLen(0)
 		, mConcatenated2bLen(0)
 		, mStatus(0)
+		, mIndex()
+		, mFIO()
 	{}
 
 	// destructor

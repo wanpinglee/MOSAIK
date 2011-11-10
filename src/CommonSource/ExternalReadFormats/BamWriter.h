@@ -154,7 +154,7 @@ struct BGZF {
 class CBamWriter {
 public:
 	// constructor
-	//CBamWriter(void);
+	CBamWriter(void);
 	// destructor
 	~CBamWriter(void);
 	// closes the alignment archive

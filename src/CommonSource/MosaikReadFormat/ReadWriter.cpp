@@ -21,11 +21,14 @@ namespace MosaikReadFormat {
 		, mBuffer(NULL)
 		, mBufferLen(10485760)
 		, mBufferPosition(0)
+		, mBufferThreshold(0)
 		, mCompressionBuffer(NULL)
 		, mCompressionBufferLen(0)
 		, mPartitionSize(20000)
 		, mPartitionMembers(0)
+		, mOutputFilename()
 		, mIsSOLiD(false)
+		//, mReadsOffset(0)
 	{
 		// set the buffer threshold
 		mBufferThreshold = mBufferLen - MEMORY_BUFFER_SIZE;

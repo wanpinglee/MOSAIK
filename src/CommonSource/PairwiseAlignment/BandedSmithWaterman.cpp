@@ -39,6 +39,7 @@ CBandedSmithWaterman::CBandedSmithWaterman(float matchScore, float mismatchScore
 , mReversedAnchor(NULL)
 , mReversedQuery(NULL)
 , mUseHomoPolymerGapOpenPenalty(false)
+, mHomoPolymerGapOpenPenalty(0.0)
 {
 	CreateScoringMatrix();
 

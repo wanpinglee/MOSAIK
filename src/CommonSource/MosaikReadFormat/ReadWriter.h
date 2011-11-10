@@ -77,6 +77,9 @@ namespace MosaikReadFormat {
 		// our AB SOLiD flag
 		bool mIsSOLiD;
 		// our reads offset
-		off_type mReadsOffset;
+		//off_type mReadsOffset;
+
+		CReadWriter (const CReadWriter&);
+		CReadWriter& operator=(const CReadWriter&);
 	};
 }

@@ -1,8 +1,15 @@
 #include "CigarTager.h"
 
 CCigarTager::CCigarTager( void )
-	: bufferLen(512)
-	, buffer(NULL)
+		    : bufferLen(512)
+		    , buffer(NULL)
+		    , pCigar(NULL)
+		    , pPackCigar(NULL)
+		    , pReference(NULL)
+		    , pQuery(NULL)
+		    , numBases(0)
+		    , currentPos(0)
+		    , numBufferBytes(0)
 {
 	buffer    = new char [ bufferLen ];
 	//packBuffer= new unsigned int [ bufferLen ];

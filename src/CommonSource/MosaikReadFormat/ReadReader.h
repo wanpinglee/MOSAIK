@@ -83,5 +83,8 @@ namespace MosaikReadFormat {
 		off_type mReadsOffset;
 		// our metadata
 		ReadGroup mReadGroup;
+
+		CReadReader (const CReadReader&);
+		CReadReader& operator= (const CReadReader&);
 	};
 }

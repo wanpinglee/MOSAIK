@@ -1,6 +1,6 @@
 
-#ifndef _CigarTager_H_
-#define _CigarTager_H_
+#ifndef CIGARTAGER_H_
+#define CIGARTAGER_H_
 
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +19,17 @@ class CCigarTager {
 			const unsigned int& laggingClip = 0,
 			const bool packCigar = false);
 		// copy constructor
-		CCigarTager ( const CCigarTager & copy ) {
+		CCigarTager ( const CCigarTager & copy )
+		    : bufferLen(0)
+		    , buffer(NULL)
+		    , pCigar(NULL)
+		    , pPackCigar(NULL)
+		    , pReference(NULL)
+		    , pQuery(NULL)
+		    , numBases(0)
+		    , currentPos(0)
+		    , numBufferBytes(0)
+		{
 			bufferLen = copy.bufferLen;
 			buffer    = new char [ bufferLen ];
 			memcpy( buffer, copy.buffer, bufferLen );
@@ -64,4 +74,4 @@ class CCigarTager {
 		unsigned int numBufferBytes;
 };
 
-#endif
+#endif // CIGARTAGER_H_

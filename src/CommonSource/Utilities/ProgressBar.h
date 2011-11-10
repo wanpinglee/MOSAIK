@@ -118,11 +118,25 @@ private:
 		K MinValue;
 		K MaxValue;
 		string Units;
+
+		ThreadParams()
+		    : pCurrentValue(NULL)
+		    , MinValue()
+		    , MaxValue()
+		    , Units()
+		{}
+
+		private:
+		ThreadParams (const ThreadParams&);
+		ThreadParams& operator= (const ThreadParams&);
 	};
 	// our main thread
 	static pthread_t mThread;
 	// monitors the value parameter
 	static void* Monitor(void* arg);
+
+	CProgressBar (const CProgressBar&);
+	CProgressBar& operator= (const CProgressBar&);
 };
 
 template<class K>
@@ -134,8 +148,13 @@ CProgressBar<K>::CProgressBar(K* pCurrentValue, const K minValue, const K maxVal
 , mMinValue(minValue)
 , mMaxValue(maxValue)
 , mTwirlState(0)
+, mScreenWidth(0)
+, mBarLength(0)
 , mUnits(units)
 , mBuffer(NULL)
+, mBufferLen(0)
+, mCalculationWaitTime()
+, mHistory()
 {
 	// get the current screen width
 	mScreenWidth = GetScreenWidth();

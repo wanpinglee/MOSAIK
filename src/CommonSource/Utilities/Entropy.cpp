@@ -29,11 +29,12 @@
 #define        log2(x) (log((x)) * (1./M_LN2))
 #endif
 
-Entropy::Entropy() {
-  m_num_tokens = 0;
-  m_maxent     = 0.0;
-  m_ratio      = 0.0;
-  LIBDISORDER_INITIALIZED = 0;
+Entropy::Entropy()
+: m_num_tokens(0)
+, m_maxent(0.0)
+, m_ratio(0.0)
+, LIBDISORDER_INITIALIZED(0)
+{
 }
 
 /** Frequecies for each byte */

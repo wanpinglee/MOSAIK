@@ -14,7 +14,18 @@
 CBenchmark::CBenchmark(void)
 : mIsStartSet(false)
 , mIsStopSet(false)
+, mCpuStart(0)
+, mCpuStop(0)
 , mCpuTotal(0)
+#ifdef WIN32
+, mWallStart()
+, mWallStop()
+, mWallTotal(0)
+#else
+, mWallStart()
+, mWallStop()
+, mWallTotal()
+#endif
 {
 	// reset our total walltime counters
 #ifdef WIN32

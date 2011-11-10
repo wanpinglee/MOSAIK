@@ -86,6 +86,9 @@ class CArchiveSort {
 		void SortNStoreCache( vector< string >& tempFiles, list<Mosaik::AlignedRead>& _alignedReadCache );
 		void SortNStoreTemp ( vector< string >& tempFiles );
 
+		CArchiveSort (const CArchiveSort&);
+		CArchiveSort& operator=(const CArchiveSort&);
+
 
 		//ofstream tempfile;
 

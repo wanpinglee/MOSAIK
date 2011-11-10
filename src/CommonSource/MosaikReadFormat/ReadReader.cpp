@@ -24,9 +24,13 @@ namespace MosaikReadFormat {
 		, mBufferLen(0)
 		, mCompressionBuffer(NULL)
 		, mCompressionBufferLen(0)
+		, mInputFilename()
 		, mPartitionSize(0)
 		, mPartitionMembers(0)
+		, mStatus(RS_UNKNOWN)
 		, mIsSOLiD(false)
+		, mReadsOffset(0)
+		, mReadGroup()
 	{}
 
 	// destructor

@@ -91,9 +91,9 @@ namespace MosaikReadFormat {
 
 	private:
 		// copy constructor
-		CAlignmentWriter ( CAlignmentWriter const & copy );
+		CAlignmentWriter (CAlignmentWriter const & copy);
 		// assign operator
-		CAlignmentWriter& operator= ( CAlignmentWriter const & copy );
+		CAlignmentWriter& operator= (CAlignmentWriter const & copy);
 		// specifies our index entry
 		struct IndexEntry {
 			off_type Offset;

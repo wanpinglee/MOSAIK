@@ -49,10 +49,17 @@ namespace SortThreadData {
 		pthread_mutex_t _readCounterMutex;
 
 		ThreadData()
-			:_nArchive(0)
-			,_archiveNo(0)
-			,_nRead(0)
-			,_readNo(0)
+			: _input()
+			, _output()
+			, _nArchive(0)
+			, _archiveNo(0)
+			, _nRead(0)
+			, _readNo(0)
+			, _medianFragmentLength(0)
+			, _sorterCacheSize(0)
+			, _attr()
+			, _mutex()
+			, _readCounterMutex()
 			{}
 	};
 /*
@@ -90,7 +97,9 @@ class SortThread {
 	
 	public:
 		SortThread( const vector< string > input, const vector< string > output, const unsigned int nThread, uint64_t nRead, const unsigned int medianFragmentLength, const unsigned int sorterCacheSize )
-			:_nThread(nThread)
+			: _td()
+			, _nThread(nThread)
+			, _threads(NULL)
 			, IsQuietMode(false)
 		{
 			_td._input      = input;
@@ -124,6 +133,9 @@ class SortThread {
 		unsigned int _nThread;
 		pthread_t *_threads;
 		bool IsQuietMode;
+
+		SortThread (const SortThread&);
+		SortThread& operator=(const SortThread&);
 		
 };
 

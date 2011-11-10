@@ -36,6 +36,11 @@ namespace SortNMergeUtilities {
 		Mosaik::AlignedRead read;
 		unsigned int owner;
 
+		AlignedReadPair()
+		    : read()
+		    , owner(0)
+		{}
+
 		bool Clear(){
 			read.Clear();
 			owner = 0;
