@@ -38,6 +38,12 @@ struct ReferenceSequence {
 		, Begin(0)
 		, End(0)
 		, NumBases(0)
+		, Name()
+		, Bases()
+		, GenomeAssemblyID()
+		, Species()
+		, MD5()
+		, URI()
 		, Special(false)
 	{}
 };

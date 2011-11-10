@@ -37,6 +37,12 @@ struct ProgramGroup {
 	string ID;  // program name
 	string VN;  // program version
 	string CL;  // command line
+
+	ProgramGroup()
+	    : ID()
+	    , VN()
+	    , CL()
+	{}
 };
 
 // define our BAM header structure
@@ -53,7 +59,13 @@ struct BamHeader {
 		, Version("1.0")
 		, pReadGroups(NULL)
 		, pReferenceSequences(NULL)
+		, pg()
 	{}
+
+	private:
+	BamHeader (const BamHeader&);
+	BamHeader& operator= (const BamHeader&);
+
 };
 
 // define our BZGF structure
@@ -96,7 +108,17 @@ struct BGZF {
 	}
 
 	// copy constructor
-	BGZF ( const BGZF & copy ) {
+	BGZF ( const BGZF & copy )
+		: UncompressedBlockSize(DEFAULT_BLOCK_SIZE)
+		, CompressedBlockSize(MAX_BLOCK_SIZE)
+		, BlockLength(0)
+		, BlockOffset(0)
+		, BlockAddress(0)
+		, IsOpen(false)
+		, Stream(NULL)
+		, UncompressedBlock(NULL)
+		, CompressedBlock(NULL)
+	{
 		CompressedBlockSize   = copy.CompressedBlockSize;
 		UncompressedBlockSize = copy.UncompressedBlockSize;
 		CompressedBlock   = new char[ CompressedBlockSize ];
@@ -107,7 +129,8 @@ struct BGZF {
 	}
 
 	// assign operator
-	BGZF& operator=( const BGZF & copy ) {
+	BGZF& operator=( const BGZF & copy )
+	{
 		CompressedBlockSize    = copy.CompressedBlockSize;
 		UncompressedBlockSize  = copy.UncompressedBlockSize;
 		char* temp_CompressedBlock   = new char[ CompressedBlockSize ];
@@ -171,6 +194,9 @@ private:
 	CMdTager mdTager;
 	// our BGZF output object
 	BGZF mBGZF;
+
+	CBamWriter (const CBamWriter&);
+	CBamWriter& operator= (const CBamWriter&);
 };
 
 // packs an unsigned integer into the specified buffer

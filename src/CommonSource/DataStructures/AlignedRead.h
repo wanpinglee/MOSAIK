@@ -35,6 +35,9 @@ namespace Mosaik {
 		AlignedRead()
 			: ReadGroupCode(0)
 			, Owner(0)
+			, Name()
+			, Mate1Alignments()
+			, Mate2Alignments()
 			, IsLongRead(false)
 			, IsPairedEnd(false)
 			, IsResolvedAsPair(false)
@@ -75,17 +78,17 @@ namespace Mosaik {
                         return Name < x.Name;
                 }
 
-		void operator=( const AlignedRead& x ) {
-			ReadGroupCode    = x.ReadGroupCode;
-			Owner            = x.Owner;
-			Name             = x.Name;
-			Mate1Alignments  = x.Mate1Alignments;
-			Mate2Alignments  = x.Mate2Alignments;
-			IsLongRead       = x.IsLongRead;
-			IsPairedEnd      = x.IsPairedEnd;
-			IsResolvedAsPair = x.IsResolvedAsPair;
-			hasCsString      = x.hasCsString;
-		}
+		//void operator=( const AlignedRead& x ) {
+		//	ReadGroupCode    = x.ReadGroupCode;
+		//	Owner            = x.Owner;
+		//	Name             = x.Name;
+		//	Mate1Alignments  = x.Mate1Alignments;
+		//	Mate2Alignments  = x.Mate2Alignments;
+		//	IsLongRead       = x.IsLongRead;
+		//	IsPairedEnd      = x.IsPairedEnd;
+		//	IsResolvedAsPair = x.IsResolvedAsPair;
+		//	hasCsString      = x.hasCsString;
+		//}
 
 	};
 }

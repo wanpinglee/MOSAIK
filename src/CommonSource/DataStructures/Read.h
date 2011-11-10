@@ -22,6 +22,10 @@ namespace Mosaik {
 		CMosaikString Qualities;
 		char SolidPrefixTransition[SOLID_PREFIX_LENGTH];
 
+		Mate()
+		    : Bases()
+		    , Qualities()
+		{}
 		bool clear(void) {
 			Bases.clear();
 			Qualities.clear();
@@ -36,6 +40,14 @@ namespace Mosaik {
 		CMosaikString Name;
 		Mate Mate1;
 		Mate Mate2;
+
+		Read()
+		    : ReadGroupCode(0)
+		    , Owner(0)
+		    , Name()
+		    , Mate1()
+		    , Mate2()
+		{}
 		
 		bool clear(void) {
 			ReadGroupCode = 0;

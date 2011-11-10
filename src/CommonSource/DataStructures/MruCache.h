@@ -55,7 +55,9 @@ pthread_mutex_t CMruCache<K,V>::mMruCacheMutex;
 // constructor
 template<class K, class V>
 CMruCache<K,V>::CMruCache(const unsigned int maxSize)
-: mMaxSize(maxSize)
+: mMruList()
+, mMruMap()
+, mMaxSize(maxSize)
 , mCacheHits(0)
 , mCacheMisses(0)
 {}

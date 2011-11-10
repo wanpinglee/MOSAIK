@@ -81,4 +81,7 @@ private:
 	inline void PrintRead ( Mosaik::Read& read, ofstream& file );
 	inline void PrintRead ( Mosaik::Read& read, FILE* file );
 	inline void PrintRead ( Mosaik::Read& read, char*& buffer, char*& bufferPtr, unsigned int& bufferUsed, unsigned int& bufferLen );
+
+	//CFastq (const CFastq&);
+	//CFastq& operator=(const CFastq&);
 };

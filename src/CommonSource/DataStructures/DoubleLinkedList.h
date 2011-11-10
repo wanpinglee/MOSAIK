@@ -33,6 +33,10 @@ struct LinkedListNode {
 		, pNext(NULL)
 		, pPrev(NULL)
 	{}
+
+	private:
+	LinkedListNode (const LinkedListNode&);
+	LinkedListNode& operator=(const LinkedListNode&);
 };
 
 template <class K, class V>
@@ -62,6 +66,9 @@ private:
 	LinkedListNode<K,V>* mpTail;
 	// our current size
 	unsigned int mSize;
+
+	CDoubleLinkedList (const CDoubleLinkedList&);
+	CDoubleLinkedList& operator=(const CDoubleLinkedList&);
 };
 
 // constructor

@@ -4,13 +4,16 @@ CMdTager::CMdTager( void )
 	: bufferLen(256)
 	, buffer(NULL)
 	, tempBases(NULL)
+	, pMd(NULL)
+	, numBases(0)
+	, currentPos(0)
+	, numBufferBytes(0)
+	, zeroChar('0')
 {
 	buffer    = new char [ bufferLen ];
 	tempBases = new char [ bufferLen ];
 	memset(buffer, 0, bufferLen);
 	memset(tempBases, 0, bufferLen);
-
-	zeroChar = '0';
 }
 
 CMdTager::~CMdTager( void ) {

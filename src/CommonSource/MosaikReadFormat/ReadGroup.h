@@ -34,6 +34,12 @@ namespace MosaikReadFormat {
 			: MedianFragmentLength(0)
 			, ReadGroupCode(0)
 			, SequencingTechnology(ST_UNKNOWN)
+			, CenterName()
+			, Description()
+			, LibraryName()
+			, PlatformUnit()
+			, ReadGroupID()
+			, SampleName()
 		{}
 
 		// create a 32-bit identifier for the read group code

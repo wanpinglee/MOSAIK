@@ -1,13 +1,17 @@
 #include "AlignedReadCache.h"
 
-CAlignedReadCache::CAlignedReadCache( unsigned int cacheSize ) {
+CAlignedReadCache::CAlignedReadCache( unsigned int cacheSize )
+    : _cache()
+    , _currentIte()
+    , _loadIte()
+    , _cacheSize(cacheSize)
+    , _currentNo(0)
+    , _loadNo(0)
+    , _full(false)
+{
 	_cache.resize( cacheSize );
         _currentIte = _cache.begin();
 	_loadIte    = _cache.begin();
-        _cacheSize = cacheSize;
-        _currentNo = 0;
-	_loadNo    = 0;
-	_full = false;
 }
 
 CAlignedReadCache::~CAlignedReadCache () {

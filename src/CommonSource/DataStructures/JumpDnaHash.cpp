@@ -33,9 +33,11 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char&  hashSize,
 , mKeepPositionsInMemory(keepPositionsInMemory)
 , mUseCache(false)
 , mKeys(NULL)
+, mMeta(NULL)
 , mPositions(NULL)
 , mBuffer(NULL)
 , mBufferLen(4096)
+, mMaxHashPositions(0)
 , mKeyBuffer(NULL)
 , mKeyBufferLen(0)
 , mKeyBufferPtr(0)
@@ -47,10 +49,12 @@ CJumpDnaHash::CJumpDnaHash(const unsigned char&  hashSize,
 , _end(end)
 , _offset(offset)
 , _expectedMemory(expectedMemory)
+, hasKeysNPositions(false)
 , _useLowMemory(useLowMemory)
 , _bubbleSpecialHashes(bubbleSpecialHashes)
 , _specialBegin(specialBegin)
 , _nSpecialHash(nSpecialHash)
+, randomGenerator()
 {
 	mHashSize = hashSize;
 
@@ -235,7 +239,7 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 	}
 
 	// return if the key is undefined
-	if(position == 0xffffffffffULL) return;
+	if(position == 0xffffffffff) return;
 
 	if((uint64_t)position > mPositionBufferLen) {
 		cout << "ERROR: A position (" << position << ") was specified that is larger than the jump positions database (" << mPositionBufferLen << ")." << endl;
@@ -396,7 +400,7 @@ void CJumpDnaHash::GetHashStatistics(
 		memcpy((char*)&filePosition, (char*)(mKeyBufferPtr + offset), KEY_LENGTH);
 
 		// no hash hits
-		if ( filePosition ==  0xffffffffffULL ) {
+		if ( filePosition ==  0xffffffffff ) {
 			offset += KEY_LENGTH;
 			//noHash++;
 			continue;
@@ -569,7 +573,7 @@ void CJumpDnaHash::LoadKeys(void) {
 	}
 
 	uint64_t bytesLeft = mKeyBufferLen;
-	const unsigned int fillBufferSize = 2147483648ULL; // 2 GB
+	const unsigned int fillBufferSize = 2147483648; // 2 GB
 
 	//cout << "- loading jump keys database into memory... ";
 	//cout.flush();
@@ -661,7 +665,7 @@ void CJumpDnaHash::LoadPositions(void) {
 		memcpy((char*)&filePosition, (char*)(mKeyBufferPtr + offset), KEY_LENGTH);
 
 		// no hash hits
-		if ( filePosition ==  0xffffffffffULL ) {
+		if ( filePosition ==  0xffffffffff ) {
 			offset += KEY_LENGTH;
 			continue;
 		}

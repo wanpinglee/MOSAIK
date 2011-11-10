@@ -58,6 +58,9 @@ private:
 	unsigned int* mHashPositions;
 	// defines the code for a non-unique key
 	const static unsigned int DNA_HASH_NON_UNIQUE_KEY;
+
+	CDnaHash (const CDnaHash&);
+	CDnaHash& operator=(const CDnaHash&);
 };
 
 #endif // DNAHASH_H_

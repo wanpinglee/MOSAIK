@@ -115,7 +115,10 @@ private:
 		unsigned char *trace_hdr;
 
 		TraceHeader()
-			: trace_hdr(NULL)
+			: block_type('\0')
+			, read_prefix_type('\0')
+			, trace_hdr_size(0)
+			, trace_hdr(NULL)
 		{}
 	};
 	// trace body
@@ -127,7 +130,10 @@ private:
 		unsigned char *trace;
 
 		TraceBody()
-			: trace(NULL)
+			: block_type('\0')
+			, flags(0)
+			, trace_size(0)
+			, trace(NULL)
 		{}
 	};
 	// the ZTR header
@@ -146,8 +152,12 @@ private:
 		int ztr_owns;			// boolean: true if we can free (meta)data
 
 		ZtrChunk()
-			: mdata(NULL)
+			: type(0)
+			, mdlength(0)
+			, mdata(NULL)
+			, dlength(0)
 			, data(NULL)
+			, ztr_owns(0)
 		{}
 	};
 	// A single symbol and it's encoding
@@ -167,6 +177,9 @@ private:
 
 		huffman_codes_t()
 			: codes(NULL)
+			, ncodes(0)
+			, codes_static(0)
+			, max_code_len(0)
 		{}
 	};
 	// Use for store_bits() and GetBits()
@@ -178,6 +191,9 @@ private:
 
 		block_t()
 			: data(NULL)
+			, alloc(0)
+			, byte(0)
+			, bit(0)
 		{}
 	};
 	// Byte-wise jumping table
@@ -208,7 +224,10 @@ private:
 
 		huffman_codeset_t()
 			: codes(NULL)
+			, ncodes(0)
+			, code_set(0)
 			, blk(NULL)
+			, bit_num(0)
 			, decode_t(NULL)
 		{}
 	};
@@ -218,7 +237,8 @@ private:
 		huffman_codeset_t* codes;
 
 		ztr_hcode_t()
-			: codes(NULL)
+			: ztr_owns(0)
+			, codes(NULL)
 		{}
 	};
 	// the main ZTR structure
@@ -234,8 +254,11 @@ private:
 		int hcodes_checked;
 
 		ZTR_t()
-			: chunk(NULL)
+			: header()
+			, chunk(NULL)
+			, nchunks(0)
 			, hcodes(NULL)
+			, nhcodes(0)
 			, hcodes_checked(0)
 		{}
 	};
@@ -253,6 +276,12 @@ private:
 		mFILE()
 			: fp(NULL)
 			, data(NULL)
+			, alloced(0)
+			, eof(0)
+			, mode(0)
+			, size(0)
+			, offset(0)
+			, flush_pos(0)
 		{}
 	};
 	// master SRF object
@@ -271,8 +300,13 @@ private:
 
 		SRF_t()
 			: fp(NULL)
+			, ch()
+			, th()
+			, tb()
 			, ztr(NULL)
 			, mf(NULL)
+			, mf_pos(0)
+			, mf_end(0)
 		{}
 
 	} mSrfData;

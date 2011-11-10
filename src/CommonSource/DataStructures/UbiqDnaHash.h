@@ -52,6 +52,9 @@ private:
 	vector<unsigned int>* mHashPositions;
 	// stores the number of positions in the hash table
 	unsigned int mPositions;
+
+	CUbiqDnaHash (const CUbiqDnaHash&);
+	CUbiqDnaHash& operator=(const CUbiqDnaHash&);
 };
 
 #endif // UBIQDNAHASH_H_

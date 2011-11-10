@@ -77,6 +77,9 @@ private:
 	string mBaseQualityFilename;
 	// our assigned base quality
 	unsigned char mAssignedBaseQuality;
+
+	CFasta (const CFasta&);
+	CFasta& operator=(const CFasta&);
 };
 
 #endif // FASTA_H_

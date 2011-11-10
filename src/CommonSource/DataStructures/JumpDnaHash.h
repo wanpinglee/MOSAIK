@@ -84,6 +84,21 @@ private:
 	void LoadPositions(void);
 	// dummy function
 	void Resize(void);
+	// load a block of hash positions
+	inline void LoadBlockPositions(char* blockPosition, 
+	                               uint64_t& bytesLeft, 
+				       const unsigned int& fillBufferSize);
+	// Store hash positions
+	void StorePositions (off_type& curFilePosition, 
+	                     off_type& left, 
+			     vector<unsigned int>& positions, 
+			     const off_type keyOffest);
+	// determine the chromosome which positions locating in
+	void SetPositionDistribution(
+	    const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
+	    vector<unsigned int>& nHashs, 
+	    vector<unsigned int>& expectedMemories, 
+	    const vector<unsigned int>& positions);
 	// specifies how many hash positions should be retrieved
 	unsigned short mNumPositions;
 	// toggles whether or not we return all hash positions or just a subset
@@ -114,12 +129,6 @@ private:
 	uintptr_t mPositionBufferPtr;
 	// caches the most recently used hashes
 	CMruCache<uint64_t, vector<unsigned int> > mMruCache;
-	// load a block of hash positions
-	inline void LoadBlockPositions( char* blockPosition, uint64_t& bytesLeft, const unsigned int& fillBufferSize );
-	// Store hash positions
-	void StorePositions ( off_type& curFilePosition, off_type& left, vector<unsigned int>& positions, const off_type keyOffest);
-	// determine the chromosome which positions locating in
-	void SetPositionDistribution(const vector<pair<unsigned int, unsigned int> >& referenceSequences, vector<unsigned int>& nHashs, vector<unsigned int>& expectedMemories, const vector<unsigned int>& positions);
 	// the begining of current chromosome
 	unsigned int _begin;
 	// the end of current chromosome
@@ -133,4 +142,7 @@ private:
 	unsigned int  _nSpecialHash;
 
 	CRandomGenerator randomGenerator;
+
+	CJumpDnaHash (const CJumpDnaHash&);
+	CJumpDnaHash& operator=(const CJumpDnaHash&);
 };

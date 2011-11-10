@@ -48,6 +48,9 @@ private:
 	unsigned int* mHashPositions;
 	// defines the code for an empty hash position
 	const static unsigned int DNA_EMPTY_HASH_POSITION;
+
+	CMultiDnaHash (const CMultiDnaHash&);
+	CMultiDnaHash& operator=(const CMultiDnaHash&);
 };
 
 #endif // MULTIDNAHASH_H_

@@ -15,7 +15,11 @@
 
 // constructor
 CNaiveAlignmentSet::CNaiveAlignmentSet(unsigned int refLen, bool usingIllumina) 
-: mHasLongAlignment(false)
+: mAlignments()
+, mFwdMhpOccupancyList()
+, mRevMhpOccupancyList()
+, mHasLongAlignment(false)
+, highestSmithWatermanScore(0.0)
 {}
 
 // destructor

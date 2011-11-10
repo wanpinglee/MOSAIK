@@ -117,6 +117,18 @@ struct Alignment {
 		, IsMateMapped(false)
 		, WasRescued(false)
 		, ReferenceName(NULL)
+		, Reference()
+		, Query()
+		, BaseQualities()
+		, Name()
+		, CsQuery()
+		, CsBaseQualities()
+		, Cigar()
+		, ReadGroup()
+		, SpecialCode()
+		, MdString()
+		, EncodedQuery()
+		, PackedCigar()
 		, Mark(false)
 	{}
 
