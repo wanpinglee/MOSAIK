@@ -595,7 +595,7 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	
 	// encode the query
 	string encodedQuery;
-	if ( !processedBamData )
+	if (!processedBamData && (query.Length() != 0 ))
 		EncodeQuerySequence(query, encodedQuery);
 	else
 		encodedQuery = al.EncodedQuery;
@@ -652,7 +652,7 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	unsigned int csTagLen = 0;
 	string csTag;
 	char* pCsTag;
-	if ( isSolid ) {
+	if (isSolid) {
 		csTagLen = 3 + strlen ( al.CsQuery.c_str() ) + 1;
 		csTag.resize( csTagLen );
 		pCsTag = (char*)csTag.data();
@@ -663,7 +663,7 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	unsigned int cqTagLen = 0;
 	string cqTag;
 	char* pCqTag;
-	if ( isSolid ) {
+	if (isSolid) {
 		cqTagLen = 3 + strlen ( al.CsBaseQualities.c_str() ) + 1;
 		cqTag.resize( cqTagLen );
 		pCqTag = (char*)cqTag.data();

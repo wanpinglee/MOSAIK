@@ -17,10 +17,13 @@ export PAIRWISE_DIR = CommonSource/PairwiseAlignment
 export UTILITIES_DIR = CommonSource/Utilities
 
 # define some default flags
-export CFLAGS ?= -Wall -O3 -Wno-char-subscripts 
-#export CFLAGS ?= -Wall -g
-#export CFLAGS ?= -Wall -pg -O2
-export CXXFLAGS ?= $(CFLAGS)
+FLAGS = -Wall -Wno-char-subscripts -O3
+CFLAGS =
+CXXFLAGS =
+CFLAGS += $(FLAGS)
+CXXFLAGS += $(FLAGS)
+export CFLAGS
+export CXXFLAGS
 #export LDFLAGS ?= -Wl,-s
 export LDFLAGS = -Wl
 export CXX ?= g++
