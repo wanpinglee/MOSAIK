@@ -19,19 +19,12 @@ export UTILITIES_DIR = CommonSource/Utilities
 # define some default flags
 FLAGS = -Wall -Wno-char-subscripts -ansi -O3
 CFLAGS = -std=C99
-CXXFLAGS =
+CXXFLAGS = 
+#CXXFLAGS = -ansi -pedantic -Wextra -Weffc++
 CFLAGS += $(FLAGS)
 CXXFLAGS += $(FLAGS)
 export CFLAGS
 export CXXFLAGS
-#export CFLAGS ?= -std=C99 \
-                 -Wall -O3 -Wno-char-subscripts \
-                 -ansi -pedantic 
-                 #-ansi -pedantic -Wextra -Weffc++
-#export CFLAGS ?= -Wall -g
-#export CFLAGS ?= -Wall -pg -O2
-#export CXXFLAGS ?= $(CFLAGS)
-#export LDFLAGS ?= -Wl,-s
 export LDFLAGS = -Wl
 export CXX ?= g++
 
