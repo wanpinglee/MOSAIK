@@ -24,6 +24,7 @@ SOURCES= ArchiveMerge.cpp \
 		FileUtilities.cpp \
 		MdTager.cpp \
 		MemoryUtilities.cpp \
+		Options.cpp \
 		PairwiseUtilities.cpp \
 		QualityNeuralNetwork.cpp \
 		RegexUtilities.cpp \

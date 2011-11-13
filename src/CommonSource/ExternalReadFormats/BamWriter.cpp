@@ -11,8 +11,8 @@
 #include "BamWriter.h"
 
 // constructor
-//CBamWriter::CBamWriter(void)
-//{}
+CBamWriter::CBamWriter(void)
+{}
 
 // destructor
 CBamWriter::~CBamWriter(void) {
@@ -595,7 +595,7 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	
 	// encode the query
 	string encodedQuery;
-	if ( !processedBamData )
+	if ( !processedBamData && (query.Length() != 0 ))
 		EncodeQuerySequence(query, encodedQuery);
 	else
 		encodedQuery = al.EncodedQuery;

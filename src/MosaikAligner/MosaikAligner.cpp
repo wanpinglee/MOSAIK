@@ -692,8 +692,6 @@ void CMosaikAligner::MergeArchives(void) {
 		fileEachSorter           = avgReads / alignmentCacheEachSorter;
 	}
 
-	nThread = 1;
-
 	CConsole::Heading();
 	cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
