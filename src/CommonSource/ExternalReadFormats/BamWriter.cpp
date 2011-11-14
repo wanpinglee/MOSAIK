@@ -675,10 +675,21 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 
 	// assign the BAM core data
 	unsigned int buffer[8] = {0};
-	unsigned int reference_index = (!al.IsMapped && al.IsMateMapped) ? 
-	                               al.MateReferenceIndex : al.ReferenceIndex;
-	unsigned int reference_pos   = (!al.IsMapped && al.IsMateMapped) ?
-	                               al.MateReferenceBegin : al.ReferenceBegin;
+	unsigned int reference_index, reference_pos;
+	if (!al.IsMapped) {
+	  if (al.IsMateMapped) reference_index = al.MateReferenceIndex;
+	  else reference_index = 0xffffffff;
+	} else {
+	  reference_index = al.ReferenceIndex;
+	}
+
+	if (!al.IsMapped) {
+	  if (al.IsMateMapped) reference_pos = al.MateReferenceBegin;
+	  else reference_pos = 0xffffffff;
+	} else {
+	  reference_pos = al.ReferenceBegin;
+	}
+
 	buffer[0] = (notShowRnamePos) ? 0xffffffff : reference_index;
 	buffer[1] = (notShowRnamePos) ? 0xffffffff : reference_pos;
 	buffer[2] = (bin << 16) | (al.RecalibratedQuality << 8) | nameLen;
