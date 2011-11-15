@@ -144,6 +144,7 @@ class CArchiveMerge
 		string _specialCode2;
 		MosaikReadFormat::CAlignmentReader _specialReader;
 		Mosaik::AlignedRead                _specialAl;
+		int                                _special_owner;
 		bool                               _specialArchiveEmpty;
 		vector<ReferenceSequence>          _specialReferenceSequences;
 

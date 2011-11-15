@@ -83,6 +83,7 @@ CArchiveMerge::CArchiveMerge (
 	, _specialCode2()
 	, _specialReader()
 	, _specialAl()
+	, _special_owner(0)
 	, _specialArchiveEmpty(true)
 	, _specialReferenceSequences()
 	, _counters()
@@ -430,6 +431,8 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
 			if ( !_specialArchiveEmpty ) *_readNo = *_readNo + 1;
 		}
+
+		UpdateReferenceIndex(_specialAl, _special_owner);
 
 		if ( _specialAl.Name == r.Name ) {
 			if ( r.Mate1Alignments.size() > 1 ) {
@@ -1012,6 +1015,7 @@ void CArchiveMerge::Merge() {
 		// the last one is special archive
 		_specialArchiveName = *_inputFilenames.rbegin();
 		vector < string >::iterator ite = _inputFilenames.end() - 1;
+		_special_owner = _inputFilenames.size() - 1;
 		_inputFilenames.erase( ite );
 		_specialArchiveEmpty = false;
 		_specialReader.Open( _specialArchiveName );
