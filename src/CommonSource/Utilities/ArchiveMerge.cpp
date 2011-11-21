@@ -656,6 +656,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
 			specialAl.SpecialCode = _specialCode2;
+			specialAl.NumMapped   = al2.NumMapped;
 			
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
@@ -673,6 +674,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
 
 			specialAl.SpecialCode = _specialCode1;
+			specialAl.NumMapped   = al1.NumMapped;
 
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
@@ -792,6 +794,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			//CZaTager zas1, zas2;
 
 			specialAl.SpecialCode = _specialCode1;
+			if (isFirstMate) specialAl.NumMapped = al.NumMapped;
 
 			const char* zas2Tag = isFirstMate 
 				? za2.GetZaTag( specialAl, al, true, !_isPairedEnd, true ) 
@@ -812,6 +815,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 
 				//CZaTager zas1, zas2;
 				specialAl.SpecialCode = _specialCode2;
+				if (!isFirstMate) specialAl.NumMapped = al.NumMapped;
 
 				const char* zas2Tag = !isFirstMate 
 					? za2.GetZaTag( specialAl, al, false, !_isPairedEnd, true ) 

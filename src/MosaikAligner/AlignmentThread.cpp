@@ -888,7 +888,7 @@ void CAlignmentThread::AlignReadArchive(
 				if (  isMate1Special  ) {
 					Alignment genomicAl = al2;
 					Alignment specialAl = mate1SpecialAl;
-					
+
 					SetRequiredInfo( specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
 	
 					const char *zas1Tag = za1.GetZaTag( genomicAl, al1, false );
