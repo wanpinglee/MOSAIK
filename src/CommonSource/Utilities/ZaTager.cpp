@@ -27,6 +27,9 @@ void CZaTager::ExtendBuffer( const unsigned int& length ) {
 }
 
 const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, const bool& isFirstMate, const bool& isSingleton, const bool& isMateUnmapped ) {
+	// default values;
+	// isSingleton = false;
+	// isMateUnmapped = false;
 	
 	char* zaPtr = buffer;
 	unsigned int len = 0;
