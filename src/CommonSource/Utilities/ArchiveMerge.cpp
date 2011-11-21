@@ -144,11 +144,13 @@ CArchiveMerge::CArchiveMerge (
 
 	if (!_hasSpecial)
 		_referenceSequencesWoSpecial = _referenceSequences;
+	/*
 	if (_hasSpecial) {
 	  for (unsigned int i = 0; i < _specialReferenceSequences.size(); ++i) {
 	    printf("%s\n",_specialReferenceSequences[i].Species.c_str());
 	  }
 	}
+	*/
 
 	_sHeader.SortOrder = SORTORDER_UNSORTED;
 	//_uHeader.SortOrder = SORTORDER_UNSORTED;
