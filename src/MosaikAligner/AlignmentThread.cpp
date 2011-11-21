@@ -878,7 +878,7 @@ void CAlignmentThread::AlignReadArchive(
 
 					SetRequiredInfo( specialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true );
 				
-					const char *zas1Tag = za1.GetZaTag(genomicAl, al2, true);
+					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, true);
 					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
 					const char *zas2Tag = za2.GetZaTag(specialAl, genomicAl, false);
 					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
@@ -889,7 +889,7 @@ void CAlignmentThread::AlignReadArchive(
 
 					SetRequiredInfo( specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
 	
-					const char *zas1Tag = za1.GetZaTag(genomicAl, al1, false);
+					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, false);
 					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
 					const char *zas2Tag = za2.GetZaTag(specialAl, genomicAl, true);
 					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
@@ -951,44 +951,42 @@ void CAlignmentThread::AlignReadArchive(
 				if (isPairedEnd) {
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
-					const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+					const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !isPairedEnd, true);
 					SaveBamAlignment(al, zaTag1, false, false, false);
-					const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+					const char* zaTag2 = za2.GetZaTag(unmappedAl, al, !isFirstMate, !isPairedEnd, false);
 					SaveBamAlignment(unmappedAl, zaTag2, true, false, false);
 				} else {
-					const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
+					const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !isPairedEnd, true);
 					SaveBamAlignment(al, zaTag1, false, false, false);
 				}
 
 				// store special hits
-				if ( isMate1Special ) {
+				if (isMate1Special) {
 					Alignment specialAl = mate1SpecialAl;
 					SetRequiredInfo( specialAl, mate1Status, al, mr.Mate1, mr, !isFirstMate, false, true, isPairedEnd, true, !isFirstMate );
 					if (isFirstMate) { // the other mate is missing
 					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, true, !isPairedEnd, true);
 					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					} else { // the mate is mapped; myself has special alignments only
-					  const char *zas1Tag = (al, specialAl, false, !isPairedEnd, false);
-					  SaveBamAlignment(al, zasTag1, false, false, true);
-					  const char *zas2Tag = (specialAl, al, true, !isPairedEnd, false);
+					} else if (isPairedEnd){ // the mate is mapped; myself has special alignments only
+					  const char *zas1Tag = za1.GetZaTag(al, specialAl, false, !isPairedEnd, false);
+					  SaveBamAlignment(al, zas1Tag, false, false, true);
+					  const char *zas2Tag = za2.GetZaTag(specialAl, al, true, !isPairedEnd, false);
 					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 					}
 				}
 				
-				if ( isPairedEnd ) {
+				if (isPairedEnd && isMate2Special) {
 					// store special hits
-					if ( isMate2Special ) {
-						Alignment specialAl = mate2SpecialAl ;
-						SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
-						if (!isFirstMate) { // the other mate is missing
-						  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !isPairedEnd, true);
-						  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-						} else { // the mate is mapped; myself has special alignments only
-						  const char *zas1Tag = (al, specialAl, true, !isPairedEnd, false);
-						  SaveBamAlignment(al, zasTag1, false, false, true);
-						  const char *zas2Tag = (specialAl, al, false, !isPairedEnd, false);
-						  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-						}
+					Alignment specialAl = mate2SpecialAl ;
+					SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
+					if (!isFirstMate) { // the other mate is missing
+					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !isPairedEnd, true);
+					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+					} else { // the mate is mapped; myself has special alignments only
+					  const char *zas1Tag = za1.GetZaTag(al, specialAl, true, !isPairedEnd, false);
+					  SaveBamAlignment(al, zas1Tag, false, false, true);
+					  const char *zas2Tag = za2.GetZaTag(specialAl, al, false, !isPairedEnd, false);
+					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 					}
 				}
 			}
@@ -1356,10 +1354,10 @@ void CAlignmentThread::ProcessSpecialAlignment (
   specialCode.resize(3);
   for (vector<Alignment*>::const_iterator ite = mate1Set->begin(); ite != mate1Set->end(); ++ite) {
     if ((*ite)->IsMappedSpecialReference) {
-      nMobAl++;
+      ++nMobAl;
       char* tempCode = mReferenceSpecies[(*ite)->ReferenceIndex];
       specialCode[0] = *tempCode;
-      tempCode++;
+      ++tempCode;
       specialCode[1] = *tempCode;
       specialCode[2] = 0;
     } // end if

@@ -643,29 +643,20 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
-		//ostringstream zaTag1Stream, zaTag2Stream;
-		//zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-		//zaTag2Stream << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-
-		//const char* zaTag1 = zaTag1Stream.str().c_str();
-		//const char* zaTag2 = zaTag2Stream.str().c_str();
-
 		if ( isMate2Special ) {
 			Alignment genomicAl = al1;
 			Alignment specialAl = _specialAl.Mate2Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
-			specialAl.SpecialCode = _specialCode2;
-			specialAl.NumMapped   = al2.NumMapped;
-			
-			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
-			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
-
+			specialAl.SpecialCode     = _specialCode2;
+			specialAl.NumMapped       = al2.NumMapped;
 			specialAl.CsQuery         = mate2Cs;
 			specialAl.CsBaseQualities = mate2Cq;
-
-			_sBam.SaveAlignment( genomicAl, zas1Tag, false, false, _isSolid );
-			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+			
+			const char* zas1Tag = za1.GetZaTag(genomicAl, specialAl, true);
+			_sBam.SaveAlignment(genomicAl, zas1Tag, false, false, _isSolid);
+			const char* zas2Tag = za2.GetZaTag(specialAl, genomicAl, false);
+			_sBam.SaveAlignment(specialAl, zas2Tag, false, false, _isSolid);
 		}
 
 		if ( isMate1Special ) {
@@ -673,8 +664,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
 
-			specialAl.SpecialCode = _specialCode1;
-			specialAl.NumMapped   = al1.NumMapped;
+			specialAl.SpecialCode     = _specialCode1;
+			specialAl.NumMapped       = al1.NumMapped;
 			specialAl.CsQuery         = mate1Cs;
 			specialAl.CsBaseQualities = mate1Cq;
 			
@@ -769,43 +760,41 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		// NOTE: we consider mate2 special hits in the next block
 		if ( isMate1Special ) {
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
-			SetAlignmentFlags( specialAl, al, !isFirstMate, false, true, _isPairedEnd, true, !isFirstMate, r );
-
-			//CZaTager zas1, zas2;
-
-			specialAl.SpecialCode = _specialCode1;
-			if (isFirstMate) specialAl.NumMapped = al.NumMapped;
-
-			const char* zas2Tag = isFirstMate 
-				? za2.GetZaTag( specialAl, al, true, !_isPairedEnd, true ) 
-				: za2.GetZaTag( specialAl, al, true );
-
 			specialAl.CsQuery         = mate1Cs;
 			specialAl.CsBaseQualities = mate1Cq;
+			specialAl.SpecialCode     = _specialCode1;
+			SetAlignmentFlags( specialAl, al, !isFirstMate, false, true, _isPairedEnd, true, !isFirstMate, r );
 
-			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
+			if (isFirstMate) { // the other mate is missing
+			  specialAl.NumMapped = al.NumMapped;
+			  const char* zas2Tag = za2.GetZaTag(specialAl, unmappedAl, true, !_isPairedEnd, true);
+			  _sBam.SaveAlignment(specialAl, zas2Tag, false, false, _isSolid);
+			} else if (_isPairedEnd){ // the mate is mapped; myself has special alignments only
+			  const char* zas1Tag = za1.GetZaTag(al, specialAl, false, !_isPairedEnd, false);
+			  _sBam.SaveAlignment(al, zas1Tag, false, false, _isSolid);
+			  const char* zas2Tag = za2.GetZaTag(specialAl, al, true, !_isPairedEnd, false);
+			  _sBam.SaveAlignment(specialAl, zas2Tag, false, false, _isSolid);
+			}
 		}
 
 		
 		if (_isPairedEnd && isMate2Special) {
-			// store special hits
-			//if ( isMate2Special ) {
-				Alignment specialAl = _specialAl.Mate2Alignments[0];
-				SetAlignmentFlags( specialAl, al, isFirstMate, false, false, _isPairedEnd, true, isFirstMate, r );
+			Alignment specialAl = _specialAl.Mate2Alignments[0];
+			specialAl.CsQuery         = mate2Cs;
+			specialAl.CsBaseQualities = mate2Cq;
+			specialAl.SpecialCode = _specialCode2;
+			SetAlignmentFlags( specialAl, al, isFirstMate, false, false, _isPairedEnd, true, isFirstMate, r );
 
-				//CZaTager zas1, zas2;
-				specialAl.SpecialCode = _specialCode2;
-				if (!isFirstMate) specialAl.NumMapped = al.NumMapped;
-
-				const char* zas2Tag = !isFirstMate 
-					? za2.GetZaTag( specialAl, al, false, !_isPairedEnd, true ) 
-					: za2.GetZaTag( specialAl, al, false );
-
-				specialAl.CsQuery         = mate2Cs;
-				specialAl.CsBaseQualities = mate2Cq;
-
-				_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
-			//}
+			if (!isFirstMate) { // the other mate is missing
+			  specialAl.NumMapped = al.NumMapped;
+			  const char* zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !_isPairedEnd, true);
+			  _sBam.SaveAlignment(specialAl, zas2Tag, false, false, _isSolid);
+			} else {
+			  const char* zas1Tag = za1.GetZaTag(al, specialAl, true, !_isPairedEnd, false);
+			  _sBam.SaveAlignment(al, zas1Tag, false, false, _isSolid);
+			  const char* zas2Tag = za2.GetZaTag(specialAl, al, false, !_isPairedEnd, false);
+			  _sBam.SaveAlignment(specialAl, zas2Tag, false, false, _isSolid);
+			}
 		}
 
 		unmappedAl.IsFilteredOut = isFirstMate ? isMate1FilteredOut : isMate2FilteredOut;
