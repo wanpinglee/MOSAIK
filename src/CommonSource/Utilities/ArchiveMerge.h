@@ -128,7 +128,7 @@ class CArchiveMerge
 		bool                       _isSolid;
 		unsigned int               _expectedFragmentLength;
 		unsigned int               _localAlignmentSearchRadius;
-		vector< unsigned int >     _refIndex;
+		vector<unsigned int>       _refIndex;
 		vector<ReferenceSequence>           _referenceSequences;
 		vector<ReferenceSequence>           _referenceSequencesWoSpecial;
 		vector<MosaikReadFormat::ReadGroup> _readGroups;

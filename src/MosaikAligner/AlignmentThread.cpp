@@ -962,6 +962,14 @@ void CAlignmentThread::AlignReadArchive(
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
 				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
+				if (isPairedEnd) {
+					unmappedAl.ReferenceBegin = al.ReferenceBegin;
+					unmappedAl.ReferenceIndex = al.ReferenceIndex;
+					SaveBamAlignment( al, zaTag1, false, false, false );
+					SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
+				} else {
+					SaveBamAlignment( al, zaTag1, false, false, false );
+				}
 				/*
 				ostringstream zaTag1Stream, zaTag2Stream;
 				zaTag1Stream << "" << al.SwScore << ";" 
@@ -997,16 +1005,16 @@ void CAlignmentThread::AlignReadArchive(
 						SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 					}
 					
-					unmappedAl.ReferenceBegin = al.ReferenceBegin;
-					unmappedAl.ReferenceIndex = al.ReferenceIndex;
+					//unmappedAl.ReferenceBegin = al.ReferenceBegin;
+					//unmappedAl.ReferenceIndex = al.ReferenceIndex;
 
-					SaveBamAlignment( al, zaTag1, false, false, false );
-					SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
+					//SaveBamAlignment( al, zaTag1, false, false, false );
+					//SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
 				}
 				// single end
-				else {
-					SaveBamAlignment( al, zaTag1, false, false, false );
-				}
+				//else {
+				//	SaveBamAlignment( al, zaTag1, false, false, false );
+				//}
 			}
 
 			UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );

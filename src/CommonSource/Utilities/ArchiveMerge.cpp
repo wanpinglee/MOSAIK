@@ -107,7 +107,7 @@ CArchiveMerge::CArchiveMerge (
 
 	_isPairedEnd = ( ( _alignmentStatus & AS_PAIRED_END_READ ) != 0 ) ? true : false;
 
-	_refIndex.resize( _inputFilenames.size(), 0 );
+	_refIndex.resize(_inputFilenames.size(), 0);
 
 	for ( vector<MosaikReadFormat::ReadGroup>::iterator ite = _readGroups.begin(); ite != _readGroups.end(); ++ite ) {
 		ite->ReadGroupCode = ite->GetCode( *ite );
@@ -131,19 +131,24 @@ CArchiveMerge::CArchiveMerge (
 		_refIndex[i] = ( i == 0 ) ? referenceSequences.size() : referenceSequences.size() + _refIndex[i-1];
 
 		// don't include the special references
-		if ( ( _hasSpecial ) && ( i != ( _inputFilenames.size() - 1 ) ) )
+		if ((_hasSpecial) && (i != ( _inputFilenames.size() - 1)))
 			_referenceSequencesWoSpecial.insert( _referenceSequencesWoSpecial.end(), referenceSequences.begin(), referenceSequences.end() );
 
 		// includes the special references
-		if ( ( _hasSpecial ) && ( i == ( _inputFilenames.size() - 1 ) ) )
+		if ((_hasSpecial) && (i == ( _inputFilenames.size() - 1)))
 			_specialReferenceSequences.insert( _specialReferenceSequences.end(), referenceSequences.begin(), referenceSequences.end() );
 
 		referenceSequences.clear();
 		reader.Close();
 	}
 
-	if ( !_hasSpecial )
+	if (!_hasSpecial)
 		_referenceSequencesWoSpecial = _referenceSequences;
+	if (_hasSpecial) {
+	  for (unsigned int i = 0; i < _specialReferenceSequences.size(); ++i) {
+	    printf("%s\n",_specialReferenceSequences[i].Species.c_str());
+	  }
+	}
 
 	_sHeader.SortOrder = SORTORDER_UNSORTED;
 	//_uHeader.SortOrder = SORTORDER_UNSORTED;
@@ -281,7 +286,7 @@ void CArchiveMerge::UpdateReferenceIndex ( Mosaik::AlignedRead& mr, const unsign
 		exit(1);
         }
 
-        unsigned int offset = ( owner == 0 ) ? 0 : _refIndex[ owner - 1 ];
+        unsigned int offset = ( owner == 0 ) ? 0 : _refIndex[owner - 1];
 
         for ( unsigned int i = 0; i < mr.Mate1Alignments.size(); i++ )
 		mr.Mate1Alignments[i].ReferenceIndex += offset;
@@ -424,23 +429,21 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 	bool isMate2Special = false;
 
 	// grab special tag
-	if ( _hasSpecial ) {
+	if (_hasSpecial) {
 		// compare their names
 		while ( ( _specialAl < r ) && !_specialArchiveEmpty ) {
 			_specialAl.Clear();
-			_specialArchiveEmpty = !_specialReader.LoadNextRead( _specialAl );
+			_specialArchiveEmpty = !_specialReader.LoadNextRead(_specialAl);
 			if ( !_specialArchiveEmpty ) *_readNo = *_readNo + 1;
 		}
 
-		UpdateReferenceIndex(_specialAl, _special_owner);
-
-		if ( _specialAl.Name == r.Name ) {
+		if (_specialAl.Name == r.Name) {
 			if ( r.Mate1Alignments.size() > 1 ) {
 				if ( _specialAl.Mate1Alignments[0].IsMapped ) {
 					unsigned int referenceIndex = _specialAl.Mate1Alignments[0].ReferenceIndex;
 					_specialCode1 = _specialReferenceSequences[ referenceIndex ].Species;
-					_specialCode1.resize(3);
-					_specialCode1[2] = 0;
+					//_specialCode1.resize(2);
+					//_specialCode1[2] = 0;
 					isMate1Special = true;
 				}
 			}
@@ -449,12 +452,14 @@ void CArchiveMerge::WriteAlignment( Mosaik::AlignedRead& r ) {
 				if ( _specialAl.Mate2Alignments[0].IsMapped ) {
 					unsigned int referenceIndex = _specialAl.Mate2Alignments[0].ReferenceIndex;
 					_specialCode2 = _specialReferenceSequences[ referenceIndex ].Species;
-					_specialCode2.resize(3);
-					_specialCode2[2] = 0;
+					//_specialCode2.resize(2);
+					//_specialCode2[2] = 0;
 					isMate2Special = true;
 				}
 			}
 		}
+
+		UpdateReferenceIndex(_specialAl, _special_owner);
 	}
 
 	unsigned int nMate1Alignments = 0;
@@ -633,6 +638,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		CZaTager za1, za2;
 		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
 		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
+		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
+		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
 		//ostringstream zaTag1Stream, zaTag2Stream;
 		//zaTag1Stream << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
@@ -646,6 +653,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			Alignment specialAl = _specialAl.Mate2Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, false, _isPairedEnd, true, true, r );
 
+			specialAl.SpecialCode = _specialCode2;
+			
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, true );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 
@@ -661,7 +670,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			Alignment specialAl = _specialAl.Mate1Alignments[0];
 			SetAlignmentFlags( specialAl, genomicAl, true, false, true, _isPairedEnd, true, true, r );
 
-			//CZaTager zas1, zas2;
+			specialAl.SpecialCode = _specialCode1;
 
 			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
 			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
@@ -677,11 +686,6 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		r.Mate1Alignments[0] = al1;
 		r.Mate2Alignments[0] = al2;
 
-		//_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
-		//_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
-		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
-		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
-
 		//if ( ( _statMappingQuality <= al1.Quality ) && ( _statMappingQuality <= al2.Quality ) )
 			_statisticsMaps.SaveRecord( al1, al2, _isPairedEnd, _sequencingTechnologies );
 
@@ -694,7 +698,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		if (!isMate1Empty) al1 = *newMate1Set[0];
 		if (!isMate2Empty) al2 = *newMate2Set[0];
 		if ( isMate1Multiple || isMate2Multiple ) {
-			if (r.Name == "9_67107412_67108404_1:0:0_0:0:0_266e") cerr << "bestselection" << endl;
+			//if (r.Name == "9_67107412_67108404_1:0:0_0:0:0_266e") cerr << "bestselection" << endl;
 			BestNSecondBestSelection::Select(al1, al2, newMate1Set, newMate2Set, _expectedFragmentLength, 
 			    _sequencingTechnologies, read.Mate1.Bases.Length(), read.Mate2.Bases.Length(), 
 			    (isMate1Empty ? false : true), (isMate2Empty ? false : true), false);
@@ -775,6 +779,7 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 
 		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
+		if (_isPairedEnd) _rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
 
 		// store mate1 special hits
 		// NOTE: we consider mate2 special hits in the next block
@@ -783,6 +788,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 			SetAlignmentFlags( specialAl, al, !isFirstMate, false, true, _isPairedEnd, true, !isFirstMate, r );
 
 			//CZaTager zas1, zas2;
+
+			specialAl.SpecialCode = _specialCode1;
 
 			const char* zas2Tag = isFirstMate 
 				? za2.GetZaTag( specialAl, al, true, !_isPairedEnd, true ) 
@@ -795,17 +802,14 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		}
 
 		
-		if ( _isPairedEnd ) {
-			// store mate2 alignment in regular and unmapped bams
-			_rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
-			//_uBam.SaveAlignment( unmappedAl, 0, true, false, _isSolid );
-
+		if (_isPairedEnd && isMate2Special) {
 			// store special hits
-			if ( isMate2Special ) {
+			//if ( isMate2Special ) {
 				Alignment specialAl = _specialAl.Mate2Alignments[0];
 				SetAlignmentFlags( specialAl, al, isFirstMate, false, false, _isPairedEnd, true, isFirstMate, r );
 
 				//CZaTager zas1, zas2;
+				specialAl.SpecialCode = _specialCode2;
 
 				const char* zas2Tag = !isFirstMate 
 					? za2.GetZaTag( specialAl, al, false, !_isPairedEnd, true ) 
@@ -815,14 +819,12 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 				specialAl.CsBaseQualities = mate2Cq;
 
 				_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
-			}
+			//}
 		}
 
 		unmappedAl.IsFilteredOut = isFirstMate ? isMate1FilteredOut : isMate2FilteredOut;
 		// GetStatisticsCounters needs some information
 		r.Mate1Alignments[0] = isFirstMate ? al : unmappedAl;
-		if ( _isPairedEnd )
-			r.Mate2Alignments[0] = isFirstMate ? unmappedAl : al;
 			
 		//if ( _statMappingQuality <= al.Quality ) 
 			_statisticsMaps.SaveRecord( ( isFirstMate ? al : unmappedAl ), ( !isFirstMate ? al : unmappedAl ), _isPairedEnd, _sequencingTechnologies );
@@ -854,6 +856,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 
 			//CZaTager zas1, zas2;
 
+			specialAl.SpecialCode = _specialCode1;
+
 			const char* zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !_isPairedEnd, true );
 
 			specialAl.CsQuery         = mate1Cs;
@@ -882,6 +886,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 				SetAlignmentFlags( specialAl, unmappedAl1, false, false, false, _isPairedEnd, true, false, r );
 
 				//CZaTager zas1, zas2;
+
+				specialAl.SpecialCode = _specialCode2;
 
 				const char* zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !_isPairedEnd, true );
 

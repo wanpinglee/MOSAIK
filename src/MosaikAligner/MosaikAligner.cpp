@@ -131,13 +131,24 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	// check special reference
 	if (mSReference.enable) {
 		// the special references should be appended after normal ones
-		for ( vector<ReferenceSequence>::reverse_iterator rit = referenceSequences.rbegin(); rit != referenceSequences.rend(); ++rit ) {
+		for (vector<ReferenceSequence>::reverse_iterator rit = referenceSequences.rbegin(); rit != referenceSequences.rend(); ++rit) {
 			size_t found = rit->Name.find(mSReference.prefix);
-			if ( found != string::npos ) {
+			if (found != string::npos) {
 				mSReference.found = true;
-				mSReference.nReference++;
+				++mSReference.nReference;
 				mSReference.begin = rit->Begin;
-				rit->Species = rit->Name.substr( found + mSReference.prefix.size() + 1, 2 );
+				rit->Species = rit->Name.substr(found + mSReference.prefix.size() + 1, 2);
+				rit->Special = true;
+			}
+			else
+				break;
+		}
+
+		// the special references should be appended after normal ones
+		for (vector<ReferenceSequence>::reverse_iterator rit = referenceSequencesBs.rbegin(); rit != referenceSequencesBs.rend(); ++rit) {
+			size_t found = rit->Name.find(mSReference.prefix);
+			if (found != string::npos) {
+				rit->Species = rit->Name.substr(found + mSReference.prefix.size() + 1, 2);
 				rit->Special = true;
 			}
 			else
@@ -246,9 +257,9 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			pRefBegin[j]   = referenceSequences[j].Begin;
 			pRefEnd[j]     = referenceSequences[j].End;
 			pRefSpecial[j] = referenceSequences[j].Special;
-			if ( pRefSpecial[j] ) {
+			if (pRefSpecial[j]) {
 				pRefSpecies[j] = new char [3];
-				memcpy( pRefSpecies[j], referenceSequences[j].Species.data(), 2 );
+				memcpy(pRefSpecies[j], referenceSequences[j].Species.data(), 2);
 				pRefSpecies[j][2] = 0;
 			} else {
 				pRefSpecies[j] = new char [1];
@@ -347,7 +358,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
             outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/15");
             outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/16");
             outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/17");
-            //outputFilenames.push_back("/home/wanping/bugTest/Al/buffer/tmp/SE/18");
+            outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/18");
             MergeArchives();
 
 	//string tempDir1;
@@ -368,7 +379,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		vector< unsigned int > nHashs;             // the numbers of hash positions in each reference group
 		vector< unsigned int > expectedMemories;   // the numbers of hashs in each reference group
 		uint64_t nTotalHash;
-		GetHashStatistics( nHashs, expectedMemories, nTotalHash, referenceSequences );
+		GetHashStatistics(nHashs, expectedMemories, nTotalHash, referenceSequences);
 		
 
 		// align reads again per chromosome group
