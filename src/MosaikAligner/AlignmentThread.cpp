@@ -881,8 +881,8 @@ void CAlignmentThread::AlignReadArchive(
 					SetRequiredInfo( specialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true );
 				
 					const char *zas1Tag = za1.GetZaTag( genomicAl, al2, true );
-					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 					SaveBamAlignment( genomicAl, zas1Tag, false, false, true );
+					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, false );
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 				if (  isMate1Special  ) {
@@ -892,23 +892,15 @@ void CAlignmentThread::AlignReadArchive(
 					SetRequiredInfo( specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
 	
 					const char *zas1Tag = za1.GetZaTag( genomicAl, al1, false );
-					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 					SaveBamAlignment( genomicAl, zas1Tag, false, false, true );
+					const char *zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 					SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 				}
 
 				const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
-
 				SaveBamAlignment( al1, zaTag1, false, false, false );
+				const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 				SaveBamAlignment( al2, zaTag2, false, false, false );
-
-				// for neural network
-				//ostringstream zaTag1, zaTag2;
-				//zaTag1 << "" << al1.SwScore << ";" << al1.NextSwScore << ";" << al1.NumLongestMatchs << ";" << al1.Entropy << ";" << al1.NumMapped << ";" << al1.NumHash;
-				//zaTag2 << "" << al2.SwScore << ";" << al2.NextSwScore << ";" << al2.NumLongestMatchs << ";" << al2.Entropy << ";" << al2.NumMapped << ";" << al2.NumHash;
-				//SaveBamAlignment( al1, zaTag1.str().c_str(), false, false, false );
-				//SaveBamAlignment( al2, zaTag2.str().c_str(), false, false, false );
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
@@ -950,8 +942,6 @@ void CAlignmentThread::AlignReadArchive(
 			if (!alInfo.isUsingLowMemory) {
 				al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
 			}
-			//al.RecalibratedQuality = al.Quality;
-
 
 			if (alInfo.isUsingLowMemory) {
 				bool isLongRead = ( ( al.QueryEnd > 255 ) || ( unmappedAl.QueryEnd > 255 ) ) ? true : false;
@@ -960,14 +950,15 @@ void CAlignmentThread::AlignReadArchive(
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
-				const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
 				if (isPairedEnd) {
 					unmappedAl.ReferenceBegin = al.ReferenceBegin;
 					unmappedAl.ReferenceIndex = al.ReferenceIndex;
+					const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
 					SaveBamAlignment( al, zaTag1, false, false, false );
+					const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !isPairedEnd, false );
 					SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
 				} else {
+					const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !isPairedEnd, true );
 					SaveBamAlignment( al, zaTag1, false, false, false );
 				}
 				/*
@@ -999,22 +990,10 @@ void CAlignmentThread::AlignReadArchive(
 					if ( isMate2Special ) {
 						Alignment specialAl = mate2SpecialAl ;
 						SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
-	
 						const char *zas2Tag = !isFirstMate ? za2.GetZaTag( specialAl, al, false, !isPairedEnd, true ) : za2.GetZaTag( specialAl, al, false );
-
 						SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 					}
-					
-					//unmappedAl.ReferenceBegin = al.ReferenceBegin;
-					//unmappedAl.ReferenceIndex = al.ReferenceIndex;
-
-					//SaveBamAlignment( al, zaTag1, false, false, false );
-					//SaveBamAlignment( unmappedAl, zaTag2, true, false, false );
 				}
-				// single end
-				//else {
-				//	SaveBamAlignment( al, zaTag1, false, false, false );
-				//}
 			}
 
 			UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
@@ -1046,12 +1025,9 @@ void CAlignmentThread::AlignReadArchive(
 					if ( isMate2Special ) {
 						Alignment specialAl = mate2SpecialAl;
 						SetRequiredInfo( specialAl, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, true, false );
-	
 						const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !isPairedEnd, true );
-
 						SaveBamAlignment( specialAl, zas2Tag, false, false, true );
 					}
-
 					SaveBamAlignment( unmappedAl1, 0, true, false, false );
 					SaveBamAlignment( unmappedAl2, 0, true, false, false );
 

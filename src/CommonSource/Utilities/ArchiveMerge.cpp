@@ -639,8 +639,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 
 		CZaTager za1, za2;
 		const char* zaTag1 = za1.GetZaTag( al1, al2, true );
-		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 		_rBam.SaveAlignment( al1, zaTag1, false, false, _isSolid );
+		const char* zaTag2 = za2.GetZaTag( al2, al1, false );
 		_rBam.SaveAlignment( al2, zaTag2, false, false, _isSolid );
 
 		//ostringstream zaTag1Stream, zaTag2Stream;
@@ -675,14 +675,12 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 
 			specialAl.SpecialCode = _specialCode1;
 			specialAl.NumMapped   = al1.NumMapped;
-
-			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
-			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
-
 			specialAl.CsQuery         = mate1Cs;
 			specialAl.CsBaseQualities = mate1Cq;
-
+			
+			const char* zas1Tag = za1.GetZaTag( genomicAl, specialAl, false );
 			_sBam.SaveAlignment( genomicAl, zas1Tag, false, false, _isSolid );
+			const char* zas2Tag = za2.GetZaTag( specialAl, genomicAl, true );
 			_sBam.SaveAlignment( specialAl, zas2Tag, false, false, _isSolid );
 		}
 
@@ -763,26 +761,8 @@ if (r.Name == "11_67645641_67646650_1:0:0_4:0:0_3e62") {
 		
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 		const char* zaTag1 = za1.GetZaTag( al, unmappedAl, isFirstMate, !_isPairedEnd, true );
-		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
-
-		/*
-		ostringstream zaTag1Stream, zaTag2Stream;
-		zaTag1Stream << "" << al.SwScore << ";" 
-		             << al.NextSwScore << ";" 
-			     << al.NumLongestMatchs << ";" 
-			     << al.Entropy << ";" 
-			     << al.NumMapped << ";" 
-			     << al.NumHash;
-		zaTag2Stream << "" << unmappedAl.SwScore << ";" 
-		             << unmappedAl.NextSwScore << ";" 
-			     << unmappedAl.NumLongestMatchs << ";" 
-			     << unmappedAl.Entropy << ";" 
-			     << unmappedAl.NumMapped << ";" 
-			     << unmappedAl.NumHash;
-		*/
-
-		// store the alignment
 		_rBam.SaveAlignment( al, zaTag1, false, false, _isSolid );
+		const char* zaTag2 = za2.GetZaTag( unmappedAl, al, !isFirstMate, !_isPairedEnd, false );
 		if (_isPairedEnd) _rBam.SaveAlignment( unmappedAl, zaTag2, true, false, _isSolid );
 
 		// store mate1 special hits
