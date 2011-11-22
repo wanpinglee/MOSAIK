@@ -1049,14 +1049,6 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 	unsigned short numSuffixCharactersRemoved1 = 0;
 	unsigned short numSuffixCharactersRemoved2 = 0;
 
-	// re-arrange the FASTA filenames if we are parsing a SOLiD csfasta file
-	// the F3 read will always be mate1 and the R3 read will always be mate2
-	
-	//if(mEnableColorspace) {
-	//	ReorderSolidFastaFilenames(readFastaFilename, readFastaFilename2);
-	//	if(mHasBaseQualities) ReorderSolidFastaFilenames(mSettings.BaseQualityFastaFilename, mSettings.BaseQualityFasta2Filename);
-	//}
-
 	// initialize our mate 1 reader
 	CFasta reader;
 	reader.SetAssignedBaseQuality(mSettings.AssignedBaseQuality);
@@ -1233,12 +1225,12 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			r.Mate1.Qualities.TrimBegin(1);
+			//r.Mate1.Qualities.TrimBegin(1);
 
 			const char* bases2 = r.Mate2.Bases.CData();
 			memcpy((char*)&r.Mate2.SolidPrefixTransition, bases2, 1);
 			r.Mate2.Bases.TrimBegin(1);
-			r.Mate2.Qualities.TrimBegin(1);
+			//r.Mate2.Qualities.TrimBegin(1);
 
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate2.Bases);
@@ -1246,15 +1238,15 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 
 		numMate1Orphaned += numMate1Read - 1;
 		numMate2Orphaned += numMate2Read - 1;
-		numMate1Written++;
-		numMate2Written++;
+		++numMate1Written;
+		++numMate2Written;
 
 		r.Name = ftags1.Name;
 		//ProcessReadName(r.Name);
 		ProcessMate(r.Mate1);
 		ProcessMate(r.Mate2);
 		writer.SaveRead(r);
-		numReadsParsed++;
+		++numReadsParsed;
 		if(mHasReadLimit && (numReadsParsed >= mReadLimit)) break;
 	}
 
