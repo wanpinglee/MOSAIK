@@ -872,22 +872,24 @@ void CAlignmentThread::AlignReadArchive(
 				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
 				SaveArchiveAlignment( mr, al1, al2, isLongRead );
 			} else {
-				if (  isMate2Special  ) {
+				if (isMate2Special) {
 					Alignment genomicAl = al1;
 					Alignment specialAl = mate2SpecialAl;
+					specialAl.NumMapped = al2.NumMapped;
 
-					SetRequiredInfo( specialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true );
+					SetRequiredInfo(specialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true);
 				
 					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, true);
 					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
 					const char *zas2Tag = za2.GetZaTag(specialAl, genomicAl, false);
 					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 				}
-				if (  isMate1Special  ) {
+				if (isMate1Special) {
 					Alignment genomicAl = al2;
 					Alignment specialAl = mate1SpecialAl;
+					specialAl.NumMapped = al1.NumMapped;
 
-					SetRequiredInfo( specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true );
+					SetRequiredInfo(specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true);
 	
 					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, false);
 					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
@@ -965,6 +967,7 @@ void CAlignmentThread::AlignReadArchive(
 					Alignment specialAl = mate1SpecialAl;
 					SetRequiredInfo( specialAl, mate1Status, al, mr.Mate1, mr, !isFirstMate, false, true, isPairedEnd, true, !isFirstMate );
 					if (isFirstMate) { // the other mate is missing
+					  specialAl.NumMapped = al.NumMapped;
 					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, true, !isPairedEnd, true);
 					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 					} else if (isPairedEnd){ // the mate is mapped; myself has special alignments only
@@ -977,9 +980,10 @@ void CAlignmentThread::AlignReadArchive(
 				
 				if (isPairedEnd && isMate2Special) {
 					// store special hits
-					Alignment specialAl = mate2SpecialAl ;
+					Alignment specialAl = mate2SpecialAl;
 					SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
 					if (!isFirstMate) { // the other mate is missing
+					  specialAl.NumMapped = al.NumMapped;
 					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !isPairedEnd, true);
 					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 					} else { // the mate is mapped; myself has special alignments only
