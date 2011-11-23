@@ -188,7 +188,7 @@ void CJumpDnaHash::LoadKeysNPositions() {
 void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, CHashRegionTree& hrt, double& mhpOccupancy) {
 
 	if ( !hasKeysNPositions ) {
-		cout << "Have not loaded hash keys and positions before using them" << endl;
+		cout << "ERROR: Have not loaded hash keys and positions before using them." << endl;
 		exit(1);
 	}
 	
@@ -282,7 +282,6 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 		// set the mhp occupancy
 		bool found = false;
 		if(mLimitPositions && (numPositions > mMaxHashPositions)) {
-//cerr << numPositions << endl;
 			mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
 			numPositions = mMaxHashPositions;
 			found = true;
