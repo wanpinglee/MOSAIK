@@ -42,11 +42,11 @@ void CSequenceUtilities::GetReverseComplement(char* seqBases, const unsigned int
 void CSequenceUtilities::Chomp(char* s) {
 	size_t sLen = strlen(s);
 	if(sLen == 0) return;
-	sLen--;
+	--sLen;
 
 	while((s[sLen] == 10) || (s[sLen] == 13)) {
 		s[sLen] = 0;
-		sLen--;
+		--sLen;
 		if(sLen < 0) break;
 	}
 }
@@ -55,11 +55,11 @@ void CSequenceUtilities::Chomp(char* s) {
 void CSequenceUtilities::ChompQuality(char* s) {
 	size_t sLen = strlen(s);
 	if(sLen == 0) return;
-	sLen--;
+	--sLen;
 	
 	while((s[sLen] == 10) || (s[sLen] == 13)) {
 		s[sLen] = ' ';
-		sLen--;
+		--sLen;
 		if(sLen < 0) break;
 	}
 }

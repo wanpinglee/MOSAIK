@@ -298,11 +298,11 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 	// write the reference sequences
 	vector<ReferenceSequence>::iterator rsIter;
-	for(rsIter = references.begin(); rsIter != references.end(); rsIter++) {
+	for(rsIter = references.begin(); rsIter != references.end(); ++rsIter) {
 		rsIter->BasesOffset = ftell64(refStream);
 		fio.Write(rsIter->Bases.data(), rsIter->NumBases, refStream);
 
-		currentRefSeq++;
+		++currentRefSeq;
 	}
 
 	if ( !mFlags.IsQuietMode )
@@ -480,7 +480,7 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 	// build the concatenated reference sequence
 	char* pBuffer = concatenatedReference;
-	for(rsIter = references.begin(); rsIter != references.end(); rsIter++) {
+	for(rsIter = references.begin(); rsIter != references.end(); ++rsIter) {
 
 		// add the divider
 		if(rsIter != references.begin()) {
