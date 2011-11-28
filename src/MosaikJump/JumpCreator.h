@@ -34,7 +34,7 @@ public:
 	// enables hash position logging
 	//void EnableHashPositionsLogging(const string& filename);
 	// hashes the reference and stores the results in sorted temporary files
-	void HashReference(const string& referenceFilename);
+	void HashReference(const string& referenceFilename, const bool& consider_iupac);
 	// saves the metadata to the jump database
 	void WriteMetadata(void);
 private:
@@ -42,6 +42,13 @@ private:
 		uint64_t Hash;
 		unsigned int Position;
 		unsigned char Owner;
+
+		// constructor
+		HashPosition()
+		  : Hash(0)
+		  , Position(0)
+		  , Owner(0)
+		{}
 
 		// deserialize this object from the supplied file stream
 		bool Deserialize(FILE* temp) {
@@ -56,6 +63,13 @@ private:
 		void Serialize(FILE* temp) {
 			fwrite((char*)&Hash,     SIZEOF_UINT64, 1, temp);
 			fwrite((char*)&Position, SIZEOF_INT,       1, temp);
+		}
+
+		// reset all members to zeros
+		void Reset() {
+		  Hash = 0;
+		  Position = 0;
+		  Owner = 0;
 		}
 	};
 	// define a comparison function for sorting our hash positions (ascending)

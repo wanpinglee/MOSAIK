@@ -9,6 +9,47 @@
 // ***************************************************************************
 
 #include "JumpCreator.h"
+                                       //A, B, C, D,  E,  F, G, H,  I, J,  K,  L, M,  N,  O, P,  Q,  R, S, T,  U, V, W,  X, Y,  Z
+const char TRANSLATION[26] =            {0, 3, 1, 3, -1, -1, 2, 3, -1, -1, 3, -1, 0, -1, -1, -1, -1, 0, 2, 3, -1, 0, 3, -1, 3, -1};
+const char IUPAC_BASES[26] =            {1, 3, 1, 3,  0,  0, 1, 3,  0,  0, 2,  0, 2,  0,  0,  0,  0, 2, 2, 1,  0, 3, 2,  0, 2,  0};
+const char IUPAC_SUBSTITUTIONS_ID[26] = {-1,0,-1, 1, -1, -1,-1, 2, -1, -1, 3, -1, 4, -1, -1, -1, -1, 5, 6,-1, -1, 7, 8, -1, 9, -1};
+const char IUPAC_SUBSTITUTIONS[10][3] =
+    {{1, 2, 3},  // B->CGT, id=0
+     {0, 2, 3},  // D->AGT,    1
+     {0, 1, 3},  // H->ACT,    2
+     {2, 3, -1}, // K->GT,     3
+     {0, 1, -1}, // M->AC,     4
+     {0, 2, -1}, // R->AG,     5
+     {1, 2, -1}, // S->CG,     6
+     {0, 1, 2},  // V->ACG,    7
+     {0, 3, -1}, // W->AT,     8
+     {1, 3, -1}  // Y->CT,     9
+    };
+
+void AppendBase(const bool& consider_iupac,
+                const char& base,
+		vector<string>* anchors) {
+
+  int possible_bases = (int)IUPAC_BASES[base - 'A'];
+  if (possible_bases <= 0) {
+    cout << "ERROR: Unrecognized nucleotide in IUPAC table: " << base << endl;
+    exit(1);
+  } // end if
+
+  bool duplicate = consider_iupac && (possible_bases > 1);
+  if (duplicate) { // duplicate anchors
+    unsigned int size = anchors->size();
+    vector<string>::iterator ite = anchors->begin();
+    anchors->insert(ite, anchors->begin(), anchors->end());
+    if ((size * 2) != anchors->size()) {
+      cout << "ERROR: Duplicating vector fails." << endl;
+      exit(1);
+    }
+  } //end if
+
+  for (unsigned int i = 0; i < anchors->size(); ++i)
+    (*anchors)[i] += base;
+} 
 
 // constructor
 CJumpCreator::CJumpCreator(const unsigned char hashSize, const string& filenameStub, const unsigned char sortingMemoryGB, const bool keepKeysInMemory, const unsigned int hashPositionThreshold)
@@ -275,11 +316,12 @@ void CJumpCreator::BuildJumpDatabase(void) {
 }
 
 // creates the hash for a supplied fragment
-void CJumpCreator::CreateHash(const char* fragment, const unsigned char fragmentLen, uint64_t& key) {
+void CJumpCreator::CreateHash(const char* fragment, 
+                              const unsigned char fragmentLen,
+			      uint64_t& key) {
 
 	// set the key to zero
 	key = 0;
-	const char translation[26] = { 0, 3, 1, 3, -1, -1, 2, 3, -1, -1, 3, -1, 0, 3, -1, -1, -1, 0, 2, 3, -1, 0, 3, 1, 3, -1 };
 
 	if(fragmentLen > 32) {
 		cout << "ERROR: This hash table can only handle fragments smaller or equal to 32 bases." << endl;
@@ -290,9 +332,9 @@ void CJumpCreator::CreateHash(const char* fragment, const unsigned char fragment
 	for(unsigned char i = 0; i < fragmentLen; i++) {
 
 		// convert [A,C,G,T] to [0,1,2,3]
-		char tValue = translation[fragment[i] - 'A'];
+		char tValue = TRANSLATION[fragment[i] - 'A'];
 
-		// catch any unrecognized nucleotides
+		// sanity checker: catch any unrecognized nucleotides
 		if(tValue < 0) {
 			cout << "ERROR: Unrecognized nucleotide in hash table: " << fragment[i] << endl;
 			cout << "- fragment: ";
@@ -320,7 +362,8 @@ void CJumpCreator::CreateHash(const char* fragment, const unsigned char fragment
 //}
 
 // hashes the reference and stores the results in sorted temporary files
-void CJumpCreator::HashReference(const string& referenceFilename) {
+void CJumpCreator::HashReference(const string& referenceFilename, 
+                                 const bool& consider_iupac) {
 
 	// --------------------------------------------
 	// retrieve the concatenated reference sequence
@@ -368,31 +411,44 @@ void CJumpCreator::HashReference(const string& referenceFilename) {
 	mNumHashPositions = 0;
 
 	CProgressBar<unsigned int>::StartThread(&i, 0, maxPositions, "hashes");
-
-	for(; i < maxPositions; i++, pAnchor++) {
-
+	HashPosition hp;
+	vector<string> anchors;
+	for(; i < maxPositions; ++i, ++pAnchor) {
 		bool skipHash = false;
-
-		for(unsigned int j = 0; j < mHashSize; j++) {
+		anchors.clear();
+		anchors.resize(1);
+		for(unsigned int j = 0; j < mHashSize; ++j) {
 			char anchorChar = *(pAnchor + j);
 			// E, F, I, L, O are used for SOLiD reference
-			skipHash = (anchorChar == 'J') || (anchorChar == 'X') || (anchorChar == 'N') || (anchorChar == 'E') || (anchorChar == 'F') || (anchorChar == 'I') || (anchorChar == 'L') || (anchorChar == 'O');
-			if( skipHash ) {
-				break;
-			}
+			skipHash = (anchorChar == 'J') || 
+			           (anchorChar == 'X') || 
+				   (anchorChar == 'N') || 
+				   (anchorChar == 'E') || 
+				   (anchorChar == 'F') || 
+				   (anchorChar == 'I') || 
+				   (anchorChar == 'L') || 
+				   (anchorChar == 'O') ||
+				   (anchorChar == 'P') ||
+				   (anchorChar == 'Q') ||
+				   (anchorChar == 'U') ||
+				   (anchorChar == 'Z');
+			if (skipHash) break;
+			AppendBase(consider_iupac, anchorChar, &anchors);
 		}
 
-		if( skipHash ) continue;
+		if (skipHash) continue;
 
-		HashPosition hp;
-		hp.Position = i;
-		CreateHash(pAnchor, mHashSize, hp.Hash);
-		hashPositions.push_back(hp);
-
+		for (unsigned int i = 0; i < anchors.size(); ++i) {
+		  hp.Reset();
+		  hp.Position = i;
+		  CreateHash(anchors[i].c_str(), mHashSize, hp.Hash);
+		  hashPositions.push_back(hp);
+		}
+		
 		// dump our sorting vector
-		if(hashPositions.size() >= maxSortingElements) {
-			mNumHashPositions += hashPositions.size();
-			SerializeSortingVector(hashPositions);
+		if (hashPositions.size() >= maxSortingElements) {
+		  mNumHashPositions += hashPositions.size();
+		  SerializeSortingVector(hashPositions);
 		}
 	}
 

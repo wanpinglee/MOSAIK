@@ -30,6 +30,7 @@ unsigned char DEFAULT_SORTING_MEMORY = 2;
 struct ConfigurationSettings {
 
 	// flags
+	bool ConsiderIupac;
 	bool HasJumpFilenameStub;
 	bool HasHashPositionsFilename;
 	bool HasHashSize;
@@ -50,7 +51,8 @@ struct ConfigurationSettings {
 
 	// constructor
 	ConfigurationSettings()
-		: HasJumpFilenameStub(false)
+		: ConsiderIupac(false)
+		, HasJumpFilenameStub(false)
 		, HasHashPositionsFilename(false)
 		, HasHashSize(false)
 		, HasReferenceFilename(false)
@@ -92,10 +94,11 @@ int main(int argc, char* argv[]) {
 
 	// add the options
 	OptionGroup* pOpts = COptions::CreateOptionGroup("Options");
-	COptions::AddOption("-kd",                         "keeps the keys database on disk",                             settings.KeepKeysOnDisk,                                   pOpts);
+	COptions::AddOption("-kd",                         "keeps the keys database on disk",                             settings.KeepKeysOnDisk,                                     pOpts);
 	COptions::AddValueOption("-mem", "GB",             "the amount memory used when sorting hashes", "",              settings.HasSortingMemory,   settings.SortingMemory,         pOpts, DEFAULT_SORTING_MEMORY);
 	COptions::AddValueOption("-hs",  "hash size",      "the hash size [4 - 32]",                     "The hash size", settings.HasHashSize,        settings.HashSize,              pOpts);
 	COptions::AddValueOption("-mhp", "hash positions", "sets the max number of hash positions",      "",              settings.LimitHashPositions, settings.HashPositionThreshold, pOpts);
+	COptions::AddOption("-iupac",                      "considers IUPAC",                                             settings.ConsiderIupac,                                      pOpts);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -153,7 +156,7 @@ int main(int argc, char* argv[]) {
 	CJumpCreator jc(settings.HashSize, settings.JumpFilenameStub, settings.SortingMemory, !settings.KeepKeysOnDisk, settings.HashPositionThreshold);
 
 	// hash the reference and store the results in sorted temporary files
-	jc.HashReference(settings.ReferenceFilename);
+	jc.HashReference(settings.ReferenceFilename, settings.ConsiderIupac);
 
 	// build the jump database
 	jc.BuildJumpDatabase();
