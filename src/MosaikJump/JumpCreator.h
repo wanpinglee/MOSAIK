@@ -67,9 +67,9 @@ private:
 
 		// reset all members to zeros
 		void Reset() {
-		  Hash = 0;
+		  Hash     = 0;
 		  Position = 0;
-		  Owner = 0;
+		  Owner    = 0;
 		}
 	};
 	// define a comparison function for sorting our hash positions (ascending)

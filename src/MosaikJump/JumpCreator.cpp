@@ -14,17 +14,28 @@ const char TRANSLATION[26] =            {0, 3, 1, 3, -1, -1, 2, 3, -1, -1, 3, -1
 const char IUPAC_BASES[26] =            {1, 3, 1, 3,  0,  0, 1, 3,  0,  0, 2,  0, 2,  0,  0,  0,  0, 2, 2, 1,  0, 3, 2,  0, 2,  0};
 const char IUPAC_SUBSTITUTIONS_ID[26] = {-1,0,-1, 1, -1, -1,-1, 2, -1, -1, 3, -1, 4, -1, -1, -1, -1, 5, 6,-1, -1, 7, 8, -1, 9, -1};
 const char IUPAC_SUBSTITUTIONS[10][3] =
-    {{1, 2, 3},  // B->CGT, id=0
-     {0, 2, 3},  // D->AGT,    1
-     {0, 1, 3},  // H->ACT,    2
-     {2, 3, -1}, // K->GT,     3
-     {0, 1, -1}, // M->AC,     4
-     {0, 2, -1}, // R->AG,     5
-     {1, 2, -1}, // S->CG,     6
-     {0, 1, 2},  // V->ACG,    7
-     {0, 3, -1}, // W->AT,     8
-     {1, 3, -1}  // Y->CT,     9
+    {{'C', 'G', 'T'},// B->CGT, id=0
+     {'A', 'G', 'T'},// D->AGT,    1
+     {'A', 'C', 'T'},// H->ACT,    2
+     {'G', 'G', -1}, // K->GT,     3
+     {'A', 'C', -1}, // M->AC,     4
+     {'A', 'G', -1}, // R->AG,     5
+     {'C', 'G', -1}, // S->CG,     6
+     {'A', 'C', 'G'},// V->ACG,    7
+     {'A', 'T', -1}, // W->AT,     8
+     {'C', 'T', -1}  // Y->CT,     9
     };
+
+void DuplicateVector(const int& times,
+                     vector<string>** anchors) {
+  vector<string> temp = **anchors;
+  if (times > 1) {
+    for (int i = 0; i < times - 1; ++i) {
+      vector<string>::iterator ite = (*anchors)->begin();
+      (*anchors)->insert(ite, temp.begin(), temp.end());
+    }
+  }
+}
 
 void AppendBase(const bool& consider_iupac,
                 const char& base,
@@ -39,16 +50,36 @@ void AppendBase(const bool& consider_iupac,
   bool duplicate = consider_iupac && (possible_bases > 1);
   if (duplicate) { // duplicate anchors
     unsigned int size = anchors->size();
-    vector<string>::iterator ite = anchors->begin();
-    anchors->insert(ite, anchors->begin(), anchors->end());
-    if ((size * 2) != anchors->size()) {
-      cout << "ERROR: Duplicating vector fails." << endl;
+    DuplicateVector(possible_bases, &anchors);
+    
+    if ((size * possible_bases) != anchors->size()) {
+      cout << "ERROR: Duplicating the vector fails. IUPAC: " << base << endl
+           << "       The original size: " << size << "; after duplicating: " << anchors->size() << endl;
       exit(1);
-    }
-  } //end if
+    } // end if
 
-  for (unsigned int i = 0; i < anchors->size(); ++i)
-    (*anchors)[i] += base;
+    for (int i = 0; i < possible_bases; ++i) {
+      int id = (int)IUPAC_SUBSTITUTIONS_ID[base - 'A'];
+      if (id == -1) {
+        cout << "ERROR: Unknown IUPAC id " << base << endl;
+	exit(1);
+      } // end if
+      char trans_base = IUPAC_SUBSTITUTIONS[id][i];
+      if ((trans_base != 'A') && (trans_base != 'C') && (trans_base != 'G') && (trans_base != 'T')){
+        cout << "ERROR: Translating IUPAC fails; translated base: " << trans_base << endl;
+	exit(1);
+      } // end if
+
+      for (unsigned int j = 0; j < size; ++j) {
+	(*anchors)[i * size + j] += trans_base;
+      } // end for
+    } // end for
+
+  } else {
+    for (unsigned int i = 0; i < anchors->size(); ++i)
+      (*anchors)[i] += base;
+  } // end if-else
+
 } 
 
 // constructor
@@ -329,7 +360,7 @@ void CJumpCreator::CreateHash(const char* fragment,
 	}	
 
 	// convert each nucleotide to its 2-bit representation
-	for(unsigned char i = 0; i < fragmentLen; i++) {
+	for(unsigned char i = 0; i < fragmentLen; ++i) {
 
 		// convert [A,C,G,T] to [0,1,2,3]
 		char tValue = TRANSLATION[fragment[i] - 'A'];
@@ -438,10 +469,10 @@ void CJumpCreator::HashReference(const string& referenceFilename,
 
 		if (skipHash) continue;
 
-		for (unsigned int i = 0; i < anchors.size(); ++i) {
+		for (unsigned int j = 0; j < anchors.size(); ++j) {
 		  hp.Reset();
 		  hp.Position = i;
-		  CreateHash(anchors[i].c_str(), mHashSize, hp.Hash);
+		  CreateHash(anchors[j].c_str(), mHashSize, hp.Hash);
 		  hashPositions.push_back(hp);
 		}
 		
