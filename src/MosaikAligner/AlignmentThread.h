@@ -126,6 +126,7 @@ public:
 		bool UseArchiveOutput;
 		bool SaveMultiplyBam;
 		bool SaveUnmappedBasesInArchive;
+		bool ReportZnTag;
 
 		FlagData()
 			: EnableColorspace(false)
@@ -148,6 +149,7 @@ public:
 			, UseArchiveOutput(false)
 			, SaveMultiplyBam(false)
 			, SaveUnmappedBasesInArchive(false)
+			, ReportZnTag(false)
 		{}
 	};
 	// stores the statistical counters
@@ -356,7 +358,7 @@ private:
 		bool      noCigarMdNm;
 		bool      notShowRnamePos;
 
-		AlignmentBamBuffer( void )
+		AlignmentBamBuffer(void)
 			: noCigarMdNm(false)
 			, notShowRnamePos(false)
 		{}

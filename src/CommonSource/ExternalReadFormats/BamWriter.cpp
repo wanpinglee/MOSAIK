@@ -523,7 +523,14 @@ void CBamWriter::SaveReferencePosition( const unsigned int& refIndex, const unsi
 
 
 // saves the alignment to the alignment archive
-void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool& processedBamData ) {
+void CBamWriter::SaveAlignment(
+    const Alignment& al, 
+    const char* zaString, 
+    const bool& noCigarMdNm, 
+    const bool& notShowRnamePos, 
+    const bool& isSolid, 
+    const bool& processedBamData,
+    const bool& report_zn) {
 
 	// =================
 	// set the BAM flags
@@ -647,6 +654,23 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 		pZaTag = (char*)zaTag.data();
 		sprintf(pZaTag, "ZAZ%s",zaString);
 	}
+
+	// create our zn tag
+	unsigned int znTagLen = 0;
+	string znTag;
+	if (report_zn){
+	  ostringstream zn_buffer;
+	  zn_buffer << "ZNZ" 
+	            << al.SwScore << ";"
+		    << al.NextSwScore << ";"
+		    << al.NumLongestMatchs << ";"
+		    << al.Entropy << ";"
+		    << al.NumMapped << ";"
+		    << al.NumHash;
+	  znTag = zn_buffer.str();
+	  znTagLen = znTag.size() + 1;
+	  //cerr << znTag.data() << "\t" << znTag << "\t" << znTagLen << endl;
+	}
 	
 	// create our cs tag
 	unsigned int csTagLen = 0;
@@ -697,8 +721,18 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	buffer[4] = queryLen;
 
 	if(al.IsPairedEnd) {
-		buffer[5] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceIndex;
-		buffer[6] = (notShowRnamePos || !al.IsMateMapped) ? 0xffffffff : al.MateReferenceBegin;
+		if (notShowRnamePos) {
+		  buffer[5] = 0xffffffff;
+		  buffer[6] = 0xffffffff;
+		} else {
+		  if (!al.IsMateMapped) {//unmapped mate
+		    buffer[5] = reference_index;
+		    buffer[6] = reference_pos;
+		  } else {
+		    buffer[5] = al.MateReferenceIndex;
+		    buffer[6] = al.MateReferenceBegin;
+		  }
+		}
 		buffer[7] = insertSize;
 	} else {
 		buffer[5] = 0xffffffff;
@@ -707,7 +741,7 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	}
 
 	// write the block size
-	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen + csTagLen + cqTagLen;
+	const unsigned int dataBlockSize = nameLen + packedCigarLen + encodedQueryLen + queryLen + readGroupTagLen + nmTagLen + mdTagLen + zaTagLen + znTagLen + csTagLen + cqTagLen;
 	const unsigned int blockSize = BAM_CORE_SIZE + dataBlockSize;
 	BgzfWrite((char*)&blockSize, SIZEOF_INT);
 
@@ -740,12 +774,16 @@ void CBamWriter::SaveAlignment(const Alignment& al, const char* zaString, const 
 	// write the ZA tag
 	if ( zaString != 0 && (zaString != (char)0))
 		BgzfWrite(zaTag.data(), zaTagLen);
+	
+	// write the ZN tag
+	if (report_zn && (znTagLen > 0))
+		BgzfWrite(znTag.data(), znTagLen);
 
 	// write the cs tag
-	if ( isSolid )
+	if (isSolid)
 		BgzfWrite(csTag.data(), csTagLen);
 
 	// write the cq tag
-	if ( isSolid )
+	if (isSolid)
 		BgzfWrite(cqTag.data(), cqTagLen);
 }

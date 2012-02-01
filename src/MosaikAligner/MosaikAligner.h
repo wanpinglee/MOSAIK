@@ -100,6 +100,7 @@ public:
 	void OutputMultiply(void);
 	void SetPeNeuralNetworkFilename(const string& neuralNetworkFilename);
 	void SetSeNeuralNetworkFilename(const string& neuralNetworkFilename);
+	void EnableZnTag();
 
 private:
 	// copy constructor

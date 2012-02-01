@@ -49,6 +49,7 @@ struct ConfigurationSettings {
 	bool CheckNumMismatches;
 	bool EnableAlignmentCandidateThreshold;
 	bool EnableColorspace;
+	bool EnableZnTag;
 //	bool EnableDoubleHashHits;
 	bool HasAlgorithm;
 	bool HasAlignmentsFilename;
@@ -130,6 +131,7 @@ struct ConfigurationSettings {
 		, CheckNumMismatches(false)
 		, EnableAlignmentCandidateThreshold(false)
 		, EnableColorspace(false)
+		, EnableZnTag(false)
 //		, EnableDoubleHashHits(false)
 		, HasAlgorithm(false)
 		, HasAlignmentsFilename(false)
@@ -254,7 +256,8 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts); 
+	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts);
+	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
 	// add the pairwise alignment scoring options
@@ -676,6 +679,9 @@ int main(int argc, char* argv[]) {
 	// ===============
 	// enable features
 	// ===============
+
+	// set zn tag reporting
+	if (settings.EnableZnTag) ma.EnableZnTag();
 
 	// set neural network filename
 	if (settings.HasPeNeuralNetworkFilename) ma.SetPeNeuralNetworkFilename(settings.PeNeuralNetworkFilename);

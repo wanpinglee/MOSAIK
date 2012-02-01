@@ -1134,11 +1134,15 @@ unsigned char CMosaikAligner::CalculateHashTableSize(const unsigned int referenc
 	return bitSize;
 }
 
-void CMosaikAligner::SetPeNeuralNetworkFilename( const string& neuralNetworkFilename ) {
+void CMosaikAligner::EnableZnTag(){
+	mFlags.ReportZnTag = true;
+}
+
+void CMosaikAligner::SetPeNeuralNetworkFilename( const string& neuralNetworkFilename ){
 	mPeNeuralNetworkFilename = neuralNetworkFilename;
 }
 
-void CMosaikAligner::SetSeNeuralNetworkFilename( const string& neuralNetworkFilename ) {
+void CMosaikAligner::SetSeNeuralNetworkFilename( const string& neuralNetworkFilename ){
 	mSeNeuralNetworkFilename = neuralNetworkFilename;
 }
 

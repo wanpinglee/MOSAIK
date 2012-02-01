@@ -162,7 +162,14 @@ public:
 	// opens the alignment archive
 	void Open(const string& filename, const BamHeader& header);
 	// saves the alignment to the alignment archive
-	void SaveAlignment(const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSolid, const bool& processedBamData = false );
+	void SaveAlignment(
+	    const Alignment& al,
+	    const char* zaString,
+	    const bool& noCigarMdNm,
+	    const bool& notShowRnamePos,
+	    const bool& isSolid,
+	    const bool& processedBamData = false,
+	    const bool& report_zn = false);
 	// saves the reference and position of an alignment to the alignment archive
 	void SaveReferencePosition( const unsigned int& refIndex, const unsigned int& refBegin, const unsigned int& refEnd );
 	// creates a packed cigar string from the supplied alignment

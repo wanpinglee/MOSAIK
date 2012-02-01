@@ -426,12 +426,12 @@ void CAlignmentThread::SaveMultiplyAlignment(
 		}
 
 		// buffer is full; save and clear it
-		if ( bamMultiplyBuffer.size() > _bufferSize ) {
+		if (bamMultiplyBuffer.size() > _bufferSize) {
 			AlignmentBamBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
-			while( !bamMultiplyBuffer.empty() ) {
+			while(!bamMultiplyBuffer.empty()) {
 				buffer = bamMultiplyBuffer.front();
-				pBams->mBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
+				pBams->mBam.SaveAlignment(buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD);
 				bamMultiplyBuffer.pop();
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -587,8 +587,8 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 				buffer1 = bamBuffer.front();
 				bamBuffer.pop();
 				const char* za = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
-				pBams->rBam.SaveAlignment( buffer1.al, za, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
-				pMaps->SaveRecord( buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology );
+				pBams->rBam.SaveAlignment(buffer1.al, za, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData, mFlags.ReportZnTag);
+				pMaps->SaveRecord(buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology);
 			}
 			pthread_mutex_unlock(&mSaveReadMutex);
 		} else {
@@ -599,9 +599,9 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 				buffer2 = bamBuffer.front();
 				bamBuffer.pop();
 				const char* za1 = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
-				pBams->rBam.SaveAlignment(buffer1.al, za1, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData);
+				pBams->rBam.SaveAlignment(buffer1.al, za1, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData, mFlags.ReportZnTag);
 				const char* za2 = buffer2.zaString.empty() ? 0 : buffer2.zaString.c_str();
-				pBams->rBam.SaveAlignment(buffer2.al, za2, buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData);
+				pBams->rBam.SaveAlignment(buffer2.al, za2, buffer2.noCigarMdNm, buffer2.notShowRnamePos, mFlags.EnableColorspace, processedBamData, mFlags.ReportZnTag);
 				bool buffer1IsMate1 = buffer1.al.IsFirstMate;
 				pMaps->SaveRecord((buffer1IsMate1 ? buffer1.al : buffer2.al), 
 				                  (buffer1IsMate1 ? buffer2.al : buffer1.al), 
