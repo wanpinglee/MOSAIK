@@ -19,8 +19,8 @@ pthread_mutex_t CAlignmentThread::mSaveMultipleBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveSpecialBamMutex;
 pthread_mutex_t CAlignmentThread::mSaveUnmappedBamMutex;
 
-bool FilterMateOut ( const unsigned int length, char* basePtr ) {
-
+namespace {
+bool FilterMateOut (const unsigned int length, char* basePtr) {
 	unsigned int count = 0;
 	for ( unsigned int i = 0; i < length; ++i ) {
 		if ( *basePtr == 'N' )
@@ -31,6 +31,15 @@ bool FilterMateOut ( const unsigned int length, char* basePtr ) {
 
 	return ( ( count / (float) length ) > 0.7 );
 }
+
+inline bool CheckLongRead (const Alignment& al1, const Alignment& al2) {
+	bool isLongRead = ( ( al1.QueryEnd > 255 ) || ( al2.QueryEnd > 255 ) ) ? true : false;
+	isLongRead |= ((al1.Reference.Length() > 255) || (al2.Reference.Length() > 255));
+	isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
+
+	return isLongRead;
+}
+} // namespace
 
 // constructor
 CAlignmentThread::CAlignmentThread(
@@ -541,9 +550,9 @@ void CAlignmentThread::SaveBamAlignment( const Alignment& al, const char* zaStri
 	buffer.al.Query.clearMemory();
 
 	if (isSpecial)
-		bamSpecialBuffer.push( buffer );
+		bamSpecialBuffer.push(buffer);
 	else
-		bamBuffer.push( buffer );
+		bamBuffer.push(buffer);
 }
 
 inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool& isLongRead ){
@@ -623,6 +632,100 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 
 }
 
+void CAlignmentThread::SaveUuUmMm(
+    const Mosaik::Read& mr,
+    const int& numMate1Hashes,
+    const int& numMate2Hashes,
+    const bool& isMate1Special,
+    const bool& isMate2Special,
+    const AlignmentStatusType& mate1Status,
+    const AlignmentStatusType& mate2Status,
+    Alignment& mate1SpecialAl,
+    Alignment& mate2SpecialAl,
+    vector<Alignment*>& mate1Set, 
+    vector<Alignment*>& mate2Set){
+
+	Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
+	if ((mate1Set.size() > 1) || (mate2Set.size() > 1)) {
+		const unsigned short numMate1Bases = (unsigned short)mr.Mate1.Bases.Length();
+		const unsigned short numMate2Bases = (unsigned short)mr.Mate2.Bases.Length();
+		// After selecting, only best and second best (if there) will be kept in mate1Set and mate2Set
+		// The function also sets NumMapped of alignments
+		BestNSecondBestSelection::Select(al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
+		    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
+	}
+
+			bool properPair1 = false, properPair2 = false;
+			al1.IsFirstMate = true;
+			al2.IsFirstMate = false;
+			// MM pair is always an improper pair
+			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+
+			// sanity checker
+			if ( properPair1 != properPair2 ) {
+				cout << "ERROR: An inconsistent proper pair is found." << endl;
+				exit(1);
+			}
+
+			al1.NumHash = numMate1Hashes;
+			al2.NumHash = numMate2Hashes;
+			SetRequiredInfo(al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, alInfo.isPairedEnd, true, true);
+			SetRequiredInfo(al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, alInfo.isPairedEnd, true, true);
+
+			if (!alInfo.isUsingLowMemory) {
+				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
+				al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
+			}
+
+			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
+			bool isMate1Multiple = (mate1Set.size() > 1);
+			bool isMate2Multiple = (mate2Set.size() > 1);
+			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
+				al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+				al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+			}
+
+			if (alInfo.isUsingLowMemory) {
+				bool isLongRead = CheckLongRead(al1, al2);
+				SaveArchiveAlignment( mr, al1, al2, isLongRead );
+			} else {
+				if (isMate2Special) {
+					Alignment genomicAl = al1;
+					//Alignment specialAl = mate2SpecialAl;
+					//specialAl.NumMapped = al2.NumMapped;
+					mate2SpecialAl.NumMapped = al2.NumMapped;
+
+					SetRequiredInfo(mate2SpecialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, alInfo.isPairedEnd, true, true);
+				
+					const char *zas1Tag = za1.GetZaTag(genomicAl, mate2SpecialAl, true);
+					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
+					const char *zas2Tag = za2.GetZaTag(mate2SpecialAl, genomicAl, false);
+					SaveBamAlignment(mate2SpecialAl, zas2Tag, false, false, true);
+				}
+				if (isMate1Special) {
+					Alignment genomicAl = al2;
+					//Alignment specialAl = mate1SpecialAl;
+					//specialAl.NumMapped = al1.NumMapped;
+					mate1SpecialAl.NumMapped = al1.NumMapped;
+
+					SetRequiredInfo(mate1SpecialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, alInfo.isPairedEnd, true, true);
+	
+					const char *zas1Tag = za1.GetZaTag(genomicAl, mate1SpecialAl, false);
+					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
+					const char *zas2Tag = za2.GetZaTag(mate1SpecialAl, genomicAl, true);
+					SaveBamAlignment(mate1SpecialAl, zas2Tag, false, false, true);
+				}
+
+				const char* zaTag1 = za1.GetZaTag(al1, al2, true);
+				SaveBamAlignment(al1, zaTag1, false, false, false);
+				const char* zaTag2 = za2.GetZaTag(al2, al1, false);
+				SaveBamAlignment(al2, zaTag2, false, false, false);
+			}
+
+			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
+}
+
 // aligns the read archive
 void CAlignmentThread::AlignReadArchive(
 	MosaikReadFormat::CReadReader* pIn, 
@@ -639,6 +742,8 @@ void CAlignmentThread::AlignReadArchive(
 	alInfo.isUsingIlluminaLong = (mSettings.SequencingTechnology == ST_ILLUMINA_LONG    ? true : false);
 	alInfo.isPairedEnd         = isPairedEnd;
 	alInfo.isUsingLowMemory    = mFlags.UseArchiveOutput;
+	alInfo.minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
+	alInfo.maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 
 	_bufferSize = 1000;
 
@@ -666,10 +771,6 @@ void CAlignmentThread::AlignReadArchive(
 	CNaiveAlignmentSet mate2Alignments(mReferenceLength, (alInfo.isUsingIllumina || alInfo.isUsingSOLiD || alInfo.isUsingIlluminaLong ) );
 
 	unsigned int alignmentBufferSize = 1000;
-
-	// fragment length window
-	int minFl = mSettings.MedianFragmentLength - mSettings.LocalAlignmentSearchRadius;
-	int maxFl = mSettings.MedianFragmentLength + mSettings.LocalAlignmentSearchRadius;
 
 	while(true) {
 
@@ -783,11 +884,13 @@ void CAlignmentThread::AlignReadArchive(
 			}
 		}
 
+		// ==========================
+		// process special alignments
+		// ==========================
+		
 		// process alignments mapped in special references and delete them in vectors
 		mate1Alignments.GetSet(&mate1Set);
 		mate2Alignments.GetSet(&mate2Set);
-		//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
-
 
 		// For low-memory, we don't remove special alignment here,
 		// the special alignments will be considered when merging archives
@@ -817,16 +920,18 @@ void CAlignmentThread::AlignReadArchive(
 		// ===================================
 
 		// save chromosomes and positions of multiple alignments in bam
-		if ( mFlags.SaveMultiplyBam ) {
-			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps );
-		}
-		
+		if (mFlags.SaveMultiplyBam) 
+			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps);
+	
 		// UU, UM, and MM pair
 		if ( ( isMate1Unique && isMate2Unique )
 			|| ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
-	
+
+			SaveUuUmMm(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
+			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
+/*	
 			Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
 			if ( ( isMate1Unique && isMate2Multiple )
 				|| ( isMate1Multiple && isMate2Unique )
@@ -866,10 +971,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			if (alInfo.isUsingLowMemory) {
-				//bool isLongRead = mate1Alignments.HasLongAlignment() || mate2Alignments.HasLongAlignment();
-				bool isLongRead = ( ( al1.QueryEnd > 255 ) || ( al2.QueryEnd > 255 ) ) ? true : false;
-				isLongRead |= ((al1.Reference.Length() > 255) || (al2.Reference.Length() > 255));
-				isLongRead |= ( ( al1.CsQuery.size() > 255 ) || ( al2.CsQuery.size() > 255 ) );
+				bool isLongRead = CheckLongRead(al1, al2);
 				SaveArchiveAlignment( mr, al1, al2, isLongRead );
 			} else {
 				if (isMate2Special) {
@@ -904,7 +1006,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
-
+*/
 		// UX and MX pair
 		} else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
@@ -944,9 +1046,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			if (alInfo.isUsingLowMemory) {
-				bool isLongRead = ( ( al.QueryEnd > 255 ) || ( unmappedAl.QueryEnd > 255 ) ) ? true : false;
-				isLongRead |= ((al.Reference.Length() > 255) || (unmappedAl.Reference.Length() > 255));
-				isLongRead |= ( ( al.CsQuery.size() > 255 ) || ( unmappedAl.CsQuery.size() > 255 ) );
+				bool isLongRead = CheckLongRead(al, unmappedAl);
 				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
 			} else {
 				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
@@ -1006,10 +1106,7 @@ void CAlignmentThread::AlignReadArchive(
 			SetRequiredInfo( unmappedAl2, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
 
 			if (alInfo.isUsingLowMemory) {
-
-				bool isLongRead = ( ( unmappedAl1.QueryEnd > 255 ) || ( unmappedAl2.QueryEnd > 255 ) ) ? true : false;
-				isLongRead |= ((unmappedAl1.Reference.Length() > 255) || (unmappedAl2.Reference.Length() > 255));
-				isLongRead |= ( ( unmappedAl1.CsQuery.size() > 255 ) || ( unmappedAl2.CsQuery.size() > 255 ) );
+				bool isLongRead = CheckLongRead(unmappedAl1, unmappedAl2);
 				SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongRead );
 			} else {
 				// store special hits
@@ -1037,7 +1134,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			UpdateStatistics( mate1Status, mate2Status, unmappedAl1, unmappedAl2, false );
-
+		// unknown pairs
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
 			//cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
@@ -1167,7 +1264,7 @@ void CAlignmentThread::SetRequiredInfo (
 	al.MateReferenceBegin     = mate.ReferenceBegin;
 	al.IsMapped               = isItselfMapped;
 	al.IsMateMapped           = isMateMapped;
-	al.IsFilteredOut          = ( status == ALIGNMENTSTATUS_FILTEREDOUT );
+	al.IsFilteredOut          = (status == ALIGNMENTSTATUS_FILTEREDOUT);
 
 	map<unsigned int, MosaikReadFormat::ReadGroup>::iterator rgIte;
 	rgIte = mReadGroupsMap->find( r.ReadGroupCode );

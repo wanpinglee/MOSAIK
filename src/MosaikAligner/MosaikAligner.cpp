@@ -338,8 +338,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		//mBams.uBam.Close();
 		mBams.rBam.Close();
 	
-	}
-	else {
+	} else {
+	// ==================
+	// low-memory version
+	// ==================
 /*
             outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/1");
             outputFilenames.push_back("/home/wanping/bugTest/Al/bak/test/2");
@@ -502,6 +504,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			//out.AdjustPartitionSize(20000/referenceGroups.size());
 			out.AdjustPartitionSize(1000);
 
+			// we don't save multiple alignments that are located in special references
 			mFlags.SaveMultiplyBam = ( mSReference.found && ( i == referenceGroups.size() - 1 ) ) ? false : true;
 			mFlags.SaveUnmappedBasesInArchive = ( i == 0 ) ? true : false; 
 			AlignReadArchive(inn, out, pRefBegin, pRefEnd, pRefSpecies, pRefSpecial, pBsRefSeqs, referenceGroups[i].first );

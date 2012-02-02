@@ -389,6 +389,9 @@ private:
 		bool isUsingIlluminaLong;
 		bool isPairedEnd;
 		bool isUsingLowMemory;
+
+		int minFl;
+		int maxFl;
 	};
 
 	// =========
@@ -438,6 +441,18 @@ private:
 	    const int& al1_length, 
 	    const Alignment& al2, 
 	    const int& al2_length);
+	void SaveUuUmMm(
+	    const Mosaik::Read& mr,
+	    const int& numMate1Hashes,
+	    const int& numMate2Hashes,
+	    const bool& isMate1Special,
+	    const bool& isMate2Special,
+	    const AlignmentStatusType& mate1Status,
+	    const AlignmentStatusType& mate2Status,
+	    Alignment& mate1SpecialAl,
+	    Alignment& mate2SpecialAl,
+	    vector<Alignment*>& mate1Set, 
+	    vector<Alignment*>& mate2Set);
 
 	// ====
 	// data
