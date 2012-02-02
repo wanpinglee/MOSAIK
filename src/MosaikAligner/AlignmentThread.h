@@ -453,7 +453,18 @@ private:
 	    Alignment& mate2SpecialAl,
 	    vector<Alignment*>& mate1Set, 
 	    vector<Alignment*>& mate2Set);
-
+	void SaveUxMx(
+	    const Mosaik::Read& mr,
+	    const int& numMate1Hashes,
+	    const int& numMate2Hashes,
+	    const bool& isMate1Special,
+	    const bool& isMate2Special,
+	    const AlignmentStatusType& mate1Status,
+	    const AlignmentStatusType& mate2Status,
+	    Alignment& mate1SpecialAl,
+	    Alignment& mate2SpecialAl,
+	    vector<Alignment*>& mate1Set, 
+	    vector<Alignment*>& mate2Set);
 	// ====
 	// data
 	// ====

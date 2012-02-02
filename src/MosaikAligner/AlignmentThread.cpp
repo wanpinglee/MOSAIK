@@ -655,75 +655,180 @@ void CAlignmentThread::SaveUuUmMm(
 		    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
 	}
 
-			bool properPair1 = false, properPair2 = false;
-			al1.IsFirstMate = true;
-			al2.IsFirstMate = false;
-			// MM pair is always an improper pair
-			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
-			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+	bool properPair1 = false, properPair2 = false;
+	al1.IsFirstMate = true;
+	al2.IsFirstMate = false;
+	// MM pair is always an improper pair
+	properPair1 = al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+	properPair2 = al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
 
-			// sanity checker
-			if ( properPair1 != properPair2 ) {
-				cout << "ERROR: An inconsistent proper pair is found." << endl;
-				exit(1);
-			}
+	// sanity checker
+	if ( properPair1 != properPair2 ) {
+		cout << "ERROR: An inconsistent proper pair is found." << endl;
+		exit(1);
+	}
 
-			al1.NumHash = numMate1Hashes;
-			al2.NumHash = numMate2Hashes;
-			SetRequiredInfo(al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, alInfo.isPairedEnd, true, true);
-			SetRequiredInfo(al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, alInfo.isPairedEnd, true, true);
+	al1.NumHash = numMate1Hashes;
+	al2.NumHash = numMate2Hashes;
+	SetRequiredInfo(al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, alInfo.isPairedEnd, true, true);
+	SetRequiredInfo(al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, alInfo.isPairedEnd, true, true);
 
-			if (!alInfo.isUsingLowMemory) {
-				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
-				al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
-			}
+	if (!alInfo.isUsingLowMemory) {
+		al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
+		al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
+	}
 
-			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
-			bool isMate1Multiple = (mate1Set.size() > 1);
-			bool isMate2Multiple = (mate2Set.size() > 1);
-			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
-				al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
-				al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
-			}
+	// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
+	bool isMate1Multiple = (mate1Set.size() > 1);
+	bool isMate2Multiple = (mate2Set.size() > 1);
+	if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
+		al1.SetPairFlagsAndFragmentLength( al2, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+		al2.SetPairFlagsAndFragmentLength( al1, alInfo.minFl, alInfo.maxFl, mSettings.SequencingTechnology );
+	}
 
-			if (alInfo.isUsingLowMemory) {
-				bool isLongRead = CheckLongRead(al1, al2);
-				SaveArchiveAlignment( mr, al1, al2, isLongRead );
-			} else {
-				if (isMate2Special) {
-					Alignment genomicAl = al1;
-					//Alignment specialAl = mate2SpecialAl;
-					//specialAl.NumMapped = al2.NumMapped;
-					mate2SpecialAl.NumMapped = al2.NumMapped;
+	if (alInfo.isUsingLowMemory) {
+		bool isLongRead = CheckLongRead(al1, al2);
+		SaveArchiveAlignment( mr, al1, al2, isLongRead );
+	} else {
+		if (isMate2Special) {
+			Alignment genomicAl = al1;
+			//Alignment specialAl = mate2SpecialAl;
+			//specialAl.NumMapped = al2.NumMapped;
+			mate2SpecialAl.NumMapped = al2.NumMapped;
 
-					SetRequiredInfo(mate2SpecialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, alInfo.isPairedEnd, true, true);
-				
-					const char *zas1Tag = za1.GetZaTag(genomicAl, mate2SpecialAl, true);
-					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
-					const char *zas2Tag = za2.GetZaTag(mate2SpecialAl, genomicAl, false);
-					SaveBamAlignment(mate2SpecialAl, zas2Tag, false, false, true);
-				}
-				if (isMate1Special) {
-					Alignment genomicAl = al2;
-					//Alignment specialAl = mate1SpecialAl;
-					//specialAl.NumMapped = al1.NumMapped;
-					mate1SpecialAl.NumMapped = al1.NumMapped;
+			SetRequiredInfo(mate2SpecialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, alInfo.isPairedEnd, true, true);
+			
+			const char *zas1Tag = za1.GetZaTag(genomicAl, mate2SpecialAl, true);
+			SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
+			const char *zas2Tag = za2.GetZaTag(mate2SpecialAl, genomicAl, false);
+			SaveBamAlignment(mate2SpecialAl, zas2Tag, false, false, true);
+		}
+		if (isMate1Special) {
+			Alignment genomicAl = al2;
+			//Alignment specialAl = mate1SpecialAl;
+			//specialAl.NumMapped = al1.NumMapped;
+			mate1SpecialAl.NumMapped = al1.NumMapped;
 
-					SetRequiredInfo(mate1SpecialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, alInfo.isPairedEnd, true, true);
+			SetRequiredInfo(mate1SpecialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, alInfo.isPairedEnd, true, true);
 	
-					const char *zas1Tag = za1.GetZaTag(genomicAl, mate1SpecialAl, false);
-					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
-					const char *zas2Tag = za2.GetZaTag(mate1SpecialAl, genomicAl, true);
-					SaveBamAlignment(mate1SpecialAl, zas2Tag, false, false, true);
-				}
+			const char *zas1Tag = za1.GetZaTag(genomicAl, mate1SpecialAl, false);
+			SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
+			const char *zas2Tag = za2.GetZaTag(mate1SpecialAl, genomicAl, true);
+			SaveBamAlignment(mate1SpecialAl, zas2Tag, false, false, true);
+		}
 
-				const char* zaTag1 = za1.GetZaTag(al1, al2, true);
-				SaveBamAlignment(al1, zaTag1, false, false, false);
-				const char* zaTag2 = za2.GetZaTag(al2, al1, false);
-				SaveBamAlignment(al2, zaTag2, false, false, false);
+		const char* zaTag1 = za1.GetZaTag(al1, al2, true);
+		SaveBamAlignment(al1, zaTag1, false, false, false);
+		const char* zaTag2 = za2.GetZaTag(al2, al1, false);
+		SaveBamAlignment(al2, zaTag2, false, false, false);
+	}
+
+	UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
+}
+
+void CAlignmentThread::SaveUxMx(
+    const Mosaik::Read& mr,
+    const int& numMate1Hashes,
+    const int& numMate2Hashes,
+    const bool& isMate1Special,
+    const bool& isMate2Special,
+    const AlignmentStatusType& mate1Status,
+    const AlignmentStatusType& mate2Status,
+    Alignment& mate1SpecialAl,
+    Alignment& mate2SpecialAl,
+    vector<Alignment*>& mate1Set, 
+    vector<Alignment*>& mate2Set){
+	
+	bool isMate1Multiple = (mate1Set.size() > 1);
+	bool isMate2Multiple = (mate2Set.size() > 1);
+	Alignment al1, al2, unmappedAl;
+	if (isMate1Multiple || isMate2Multiple) {
+		const unsigned short numMate1Bases = (unsigned short)mr.Mate1.Bases.Length();
+		const unsigned short numMate2Bases = (unsigned short)mr.Mate2.Bases.Length();
+		BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
+		    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
+	}
+
+	bool isFirstMate;
+	Alignment al;
+	if ( !mate1Set.empty() ) {
+		isFirstMate = true;
+		al = isMate1Multiple ? al1 : *mate1Set[0];
+	} else if ( !mate2Set.empty() ) {
+		isFirstMate = false;
+		al = isMate2Multiple ? al2 : *mate2Set[0];
+		if ( !alInfo.isPairedEnd ) {
+			cout << "ERROR: The sequence technology is single-end, but second mate is aligned." << endl;
+			exit(1);
+		}
+	} else {
+		cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
+		exit(1);
+	}
+
+	al.NumHash         = isFirstMate ? numMate1Hashes : numMate2Hashes;
+	unmappedAl.NumHash = !isFirstMate ? numMate1Hashes : numMate2Hashes;
+	SetRequiredInfo( al, (isFirstMate ? mate1Status : mate2Status), unmappedAl, (isFirstMate ? mr.Mate1 : mr.Mate2)
+		, mr, false, false, isFirstMate, alInfo.isPairedEnd, true, false);
+	if (alInfo.isPairedEnd)
+		SetRequiredInfo(unmappedAl, (isFirstMate ? mate2Status : mate1Status ),
+		    al, (isFirstMate ? mr.Mate2 : mr.Mate1), mr, true, false, !isFirstMate, alInfo.isPairedEnd, false, true );
+
+	if (!alInfo.isUsingLowMemory) {
+		al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
+	}
+
+	if (alInfo.isUsingLowMemory) {
+		bool isLongRead = CheckLongRead(al, unmappedAl);
+		SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
+	} else {
+		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
+		if (alInfo.isPairedEnd) {
+			unmappedAl.ReferenceBegin = al.ReferenceBegin;
+			unmappedAl.ReferenceIndex = al.ReferenceIndex;
+			const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !alInfo.isPairedEnd, true);
+			SaveBamAlignment(al, zaTag1, false, false, false);
+			const char* zaTag2 = za2.GetZaTag(unmappedAl, al, !isFirstMate, !alInfo.isPairedEnd, false);
+			SaveBamAlignment(unmappedAl, zaTag2, true, false, false);
+		} else {
+			const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !alInfo.isPairedEnd, true);
+			SaveBamAlignment(al, zaTag1, false, false, false);
+		}
+
+		// store special hits
+		if (isMate1Special) {
+			Alignment specialAl = mate1SpecialAl;
+			SetRequiredInfo( specialAl, mate1Status, al, mr.Mate1, mr, !isFirstMate, false, true, alInfo.isPairedEnd, true, !isFirstMate );
+			if (isFirstMate) { // the other mate is missing
+			  specialAl.NumMapped = al.NumMapped;
+			  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, true, !alInfo.isPairedEnd, true);
+			  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+			} else if (alInfo.isPairedEnd){ // the mate is mapped; myself has special alignments only
+			  const char *zas1Tag = za1.GetZaTag(al, specialAl, false, !alInfo.isPairedEnd, false);
+			  SaveBamAlignment(al, zas1Tag, false, false, true);
+			  const char *zas2Tag = za2.GetZaTag(specialAl, al, true, !alInfo.isPairedEnd, false);
+			  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
 			}
+		}
+		
+		if (alInfo.isPairedEnd && isMate2Special) {
+			// store special hits
+			Alignment specialAl = mate2SpecialAl;
+			SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, alInfo.isPairedEnd, true, isFirstMate );
+			if (!isFirstMate) { // the other mate is missing
+			  specialAl.NumMapped = al.NumMapped;
+			  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !alInfo.isPairedEnd, true);
+			  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+			} else { // the mate is mapped; myself has special alignments only
+			  const char *zas1Tag = za1.GetZaTag(al, specialAl, true, !alInfo.isPairedEnd, false);
+			  SaveBamAlignment(al, zas1Tag, false, false, true);
+			  const char *zas2Tag = za2.GetZaTag(specialAl, al, false, !alInfo.isPairedEnd, false);
+			  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+			}
+		}
+	}
 
-			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
+	UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
 }
 
 // aligns the read archive
@@ -928,89 +1033,14 @@ void CAlignmentThread::AlignReadArchive(
 			|| ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
-
 			SaveUuUmMm(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
 			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
-/*	
-			Alignment al1 = *mate1Set[0], al2 = *mate2Set[0];
-			if ( ( isMate1Unique && isMate2Multiple )
-				|| ( isMate1Multiple && isMate2Unique )
-				|| ( isMate1Multiple && isMate2Multiple ) )
-				// After selecting, only best and second best (if there) will be kept in mate1Set and mate2Set
-				// The function also sets NumMapped of alignments
-				BestNSecondBestSelection::Select(al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
-				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
-
-			bool properPair1 = false, properPair2 = false;
-			al1.IsFirstMate = true;
-			al2.IsFirstMate = false;
-			// MM pair is always an improper pair
-			properPair1 = al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
-			properPair2 = al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
-
-			// sanity checker
-			if ( properPair1 != properPair2 ) {
-				cout << "ERROR: An inconsistent proper pair is found." << endl;
-				exit(1);
-			}
-
-			al1.NumHash = numMate1Hashes;
-			al2.NumHash = numMate2Hashes;
-			SetRequiredInfo(al1, mate1Status, al2, mr.Mate1, mr, true, properPair1, true, isPairedEnd, true, true);
-			SetRequiredInfo(al2, mate2Status, al1, mr.Mate2, mr, true, properPair2, false, isPairedEnd, true, true);
-
-			if (!alInfo.isUsingLowMemory) {
-				al1.RecalibratedQuality = GetMappingQuality(al1, al1.QueryLength, al2, al2.QueryLength);
-				al2.RecalibratedQuality = GetMappingQuality(al2, al2.QueryLength, al1, al1.QueryLength);
-			}
-
-			// Since Reference Begin may be changed, applying the following function to reset fragment length is necessary.
-			if ( mFlags.EnableColorspace && ( !isMate1Multiple || !isMate2Multiple ) ) {
-				al1.SetPairFlagsAndFragmentLength( al2, minFl, maxFl, mSettings.SequencingTechnology );
-				al2.SetPairFlagsAndFragmentLength( al1, minFl, maxFl, mSettings.SequencingTechnology );
-			}
-
-			if (alInfo.isUsingLowMemory) {
-				bool isLongRead = CheckLongRead(al1, al2);
-				SaveArchiveAlignment( mr, al1, al2, isLongRead );
-			} else {
-				if (isMate2Special) {
-					Alignment genomicAl = al1;
-					Alignment specialAl = mate2SpecialAl;
-					specialAl.NumMapped = al2.NumMapped;
-
-					SetRequiredInfo(specialAl, mate2Status, genomicAl, mr.Mate2, mr, true, false, false, isPairedEnd, true, true);
-				
-					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, true);
-					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
-					const char *zas2Tag = za2.GetZaTag(specialAl, genomicAl, false);
-					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-				}
-				if (isMate1Special) {
-					Alignment genomicAl = al2;
-					Alignment specialAl = mate1SpecialAl;
-					specialAl.NumMapped = al1.NumMapped;
-
-					SetRequiredInfo(specialAl, mate1Status, genomicAl, mr.Mate1, mr, true, false, true, isPairedEnd, true, true);
-	
-					const char *zas1Tag = za1.GetZaTag(genomicAl, specialAl, false);
-					SaveBamAlignment(genomicAl, zas1Tag, false, false, true);
-					const char *zas2Tag = za2.GetZaTag(specialAl, genomicAl, true);
-					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-				}
-
-				const char* zaTag1 = za1.GetZaTag(al1, al2, true);
-				SaveBamAlignment(al1, zaTag1, false, false, false);
-				const char* zaTag2 = za2.GetZaTag(al2, al1, false);
-				SaveBamAlignment(al2, zaTag2, false, false, false);
-			}
-
-			UpdateStatistics( mate1Status, mate2Status, al1, al2, properPair1 );
-*/
 		// UX and MX pair
 		} else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
-
+			SaveUxMx(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
+			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
+/*
 			Alignment al1, al2, unmappedAl;
 			if ( isMate1Multiple || isMate2Multiple ) 
 				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
@@ -1096,6 +1126,7 @@ void CAlignmentThread::AlignReadArchive(
 			}
 
 			UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
+*/
 		// XX
 		} else if ( isMate1Empty && isMate2Empty ) {
 			
