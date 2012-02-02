@@ -581,11 +581,30 @@ int main(int argc, char* argv[]) {
 		errorBuilder << ERROR_SPACER << "An input paired-end neural-network file was not specified. Please use the -annpe parameter." << endl
 		             << ERROR_SPACER << "   The file is on src/networkFile/2.1.26.pe.100.0065.ann." << endl;
 		foundError = true;
+	} else { // test the exietance of the file
+		// doesn't show error message
+		bool found = CFileUtilities::CheckFile(settings.PeNeuralNetworkFilename.c_str(), false);
+		if (!found) {
+		  errorBuilder << ERROR_SPACER << "Could not open " << settings.PeNeuralNetworkFilename << " for reading." 
+		               << " Please check the -annpe parameter." << endl;
+		  foundError = true;
+		} else {
+		  // nothing
+		}
 	}
 	if (!settings.HasSeNeuralNetworkFilename) {
 		errorBuilder << ERROR_SPACER << "An input single-end neural-network file was not specified. Please use the -annse parameter." << endl
 		             << ERROR_SPACER << "   The file is on src/networkFile/2.1.26.se.100.005.ann." << endl;
 		foundError = true;
+	} else { // test the exietance of the file
+		bool found = CFileUtilities::CheckFile(settings.SeNeuralNetworkFilename.c_str(), false);
+		if (!found) {
+		  errorBuilder << ERROR_SPACER << "Could not open " << settings.SeNeuralNetworkFilename << " for reading."
+		               " Please check the -annse parameter." << endl;
+		  foundError = true;
+		} else {
+		  // nothing
+		}
 	}
 
 	// print the errors if any were found
