@@ -831,6 +831,54 @@ void CAlignmentThread::SaveUxMx(
 	UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
 }
 
+void CAlignmentThread::SaveXx(
+    const Mosaik::Read& mr,
+    const int& numMate1Hashes,
+    const int& numMate2Hashes,
+    const bool& isMate1Special,
+    const bool& isMate2Special,
+    const AlignmentStatusType& mate1Status,
+    const AlignmentStatusType& mate2Status,
+    Alignment& mate1SpecialAl,
+    Alignment& mate2SpecialAl){
+
+	Alignment unmappedAl1, unmappedAl2;
+	unmappedAl1.NumHash = numMate1Hashes;
+	unmappedAl2.NumHash = numMate2Hashes;
+	SetRequiredInfo( unmappedAl1, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, alInfo.isPairedEnd, false, false );
+	SetRequiredInfo( unmappedAl2, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, alInfo.isPairedEnd, false, false );
+
+	if (alInfo.isUsingLowMemory) {
+		bool isLongRead = CheckLongRead(unmappedAl1, unmappedAl2);
+		SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongRead );
+	} else {
+		// store special hits
+		if (isMate1Special) {
+			Alignment specialAl = mate1SpecialAl;
+			SetRequiredInfo( specialAl, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, alInfo.isPairedEnd, true, false );
+			const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !alInfo.isPairedEnd, true );
+			SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+		}
+
+		if (alInfo.isPairedEnd) {
+			if ( isMate2Special ) {
+				Alignment specialAl = mate2SpecialAl;
+				SetRequiredInfo( specialAl, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, alInfo.isPairedEnd, true, false );
+				const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !alInfo.isPairedEnd, true );
+				SaveBamAlignment(specialAl, zas2Tag, false, false, true);
+			}
+			SaveBamAlignment(unmappedAl1, 0, true, false, false);
+			SaveBamAlignment(unmappedAl2, 0, true, false, false);
+		} else {
+			SaveBamAlignment(unmappedAl1, 0, true, false, false);
+		}
+
+	}
+
+	UpdateStatistics( mate1Status, mate2Status, unmappedAl1, unmappedAl2, false );
+}
+
+
 // aligns the read archive
 void CAlignmentThread::AlignReadArchive(
 	MosaikReadFormat::CReadReader* pIn, 
@@ -1040,151 +1088,28 @@ void CAlignmentThread::AlignReadArchive(
 			&&  !( isMate1Empty && isMate2Empty ) ) {
 			SaveUxMx(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
 			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
-/*
-			Alignment al1, al2, unmappedAl;
-			if ( isMate1Multiple || isMate2Multiple ) 
-				BestNSecondBestSelection::Select( al1, al2, mate1Set, mate2Set, mSettings.MedianFragmentLength, 
-				    mSettings.SequencingTechnology, numMate1Bases, numMate2Bases, true, true, true);
-
-			bool isFirstMate;
-			Alignment al;
-			if ( !mate1Set.empty() ) {
-				isFirstMate = true;
-				al = isMate1Multiple ? al1 : *mate1Set[0];
-			} else if ( !mate2Set.empty() ) {
-				isFirstMate = false;
-				al = isMate2Multiple ? al2 : *mate2Set[0];
-				if ( !isPairedEnd ) {
-					cout << "ERROR: The sequence technology is single-end, but second mate is aligned." << endl;
-					exit(1);
-				}
-			} else {
-				cout << "ERROR: Both mates are empty after applying best and second best selection." << endl;
-				exit(1);
-			}
-
-			al.NumHash         = isFirstMate ? numMate1Hashes : numMate2Hashes;
-			unmappedAl.NumHash = !isFirstMate ? numMate1Hashes : numMate2Hashes;
-			SetRequiredInfo( al, (isFirstMate ? mate1Status : mate2Status), unmappedAl, (isFirstMate ? mr.Mate1 : mr.Mate2)
-				, mr, false, false, isFirstMate, isPairedEnd, true, false);
-			if (isPairedEnd)
-				SetRequiredInfo(unmappedAl, (isFirstMate ? mate2Status : mate1Status ),
-				    al, (isFirstMate ? mr.Mate2 : mr.Mate1), mr, true, false, !isFirstMate, isPairedEnd, false, true );
-
-			if (!alInfo.isUsingLowMemory) {
-				al.RecalibratedQuality = GetMappingQuality(al, al.QueryLength);
-			}
-
-			if (alInfo.isUsingLowMemory) {
-				bool isLongRead = CheckLongRead(al, unmappedAl);
-				SaveArchiveAlignment( mr, ( isFirstMate ? al : unmappedAl ), ( isFirstMate ? unmappedAl : al ), isLongRead );
-			} else {
-				// show the original MQs in ZAs, and zeros in MQs fields of a BAM
-				if (isPairedEnd) {
-					unmappedAl.ReferenceBegin = al.ReferenceBegin;
-					unmappedAl.ReferenceIndex = al.ReferenceIndex;
-					const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !isPairedEnd, true);
-					SaveBamAlignment(al, zaTag1, false, false, false);
-					const char* zaTag2 = za2.GetZaTag(unmappedAl, al, !isFirstMate, !isPairedEnd, false);
-					SaveBamAlignment(unmappedAl, zaTag2, true, false, false);
-				} else {
-					const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !isPairedEnd, true);
-					SaveBamAlignment(al, zaTag1, false, false, false);
-				}
-
-				// store special hits
-				if (isMate1Special) {
-					Alignment specialAl = mate1SpecialAl;
-					SetRequiredInfo( specialAl, mate1Status, al, mr.Mate1, mr, !isFirstMate, false, true, isPairedEnd, true, !isFirstMate );
-					if (isFirstMate) { // the other mate is missing
-					  specialAl.NumMapped = al.NumMapped;
-					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, true, !isPairedEnd, true);
-					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					} else if (isPairedEnd){ // the mate is mapped; myself has special alignments only
-					  const char *zas1Tag = za1.GetZaTag(al, specialAl, false, !isPairedEnd, false);
-					  SaveBamAlignment(al, zas1Tag, false, false, true);
-					  const char *zas2Tag = za2.GetZaTag(specialAl, al, true, !isPairedEnd, false);
-					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					}
-				}
-				
-				if (isPairedEnd && isMate2Special) {
-					// store special hits
-					Alignment specialAl = mate2SpecialAl;
-					SetRequiredInfo( specialAl, mate2Status, al, mr.Mate2, mr, isFirstMate, false, false, isPairedEnd, true, isFirstMate );
-					if (!isFirstMate) { // the other mate is missing
-					  specialAl.NumMapped = al.NumMapped;
-					  const char *zas2Tag = za2.GetZaTag(specialAl, unmappedAl, false, !isPairedEnd, true);
-					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					} else { // the mate is mapped; myself has special alignments only
-					  const char *zas1Tag = za1.GetZaTag(al, specialAl, true, !isPairedEnd, false);
-					  SaveBamAlignment(al, zas1Tag, false, false, true);
-					  const char *zas2Tag = za2.GetZaTag(specialAl, al, false, !isPairedEnd, false);
-					  SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					}
-				}
-			}
-
-			UpdateStatistics( ( isFirstMate ? mate1Status : mate2Status ) , ( isFirstMate ? mate2Status : mate1Status ), al, unmappedAl, false );
-*/
 		// XX
 		} else if ( isMate1Empty && isMate2Empty ) {
-			
-			Alignment unmappedAl1, unmappedAl2;
-			unmappedAl1.NumHash = numMate1Hashes;
-			unmappedAl2.NumHash = numMate2Hashes;
-			SetRequiredInfo( unmappedAl1, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, false, false );
-			SetRequiredInfo( unmappedAl2, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, false, false );
-
-			if (alInfo.isUsingLowMemory) {
-				bool isLongRead = CheckLongRead(unmappedAl1, unmappedAl2);
-				SaveArchiveAlignment( mr, unmappedAl1, unmappedAl2, isLongRead );
-			} else {
-				// store special hits
-				if ( isMate1Special ) {
-					Alignment specialAl = mate1SpecialAl;
-					SetRequiredInfo( specialAl, mate1Status, unmappedAl2, mr.Mate1, mr, false, false, true, isPairedEnd, true, false );
-					const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl2, true, !isPairedEnd, true );
-					SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-				}
-
-				if ( isPairedEnd ) {
-					if ( isMate2Special ) {
-						Alignment specialAl = mate2SpecialAl;
-						SetRequiredInfo( specialAl, mate2Status, unmappedAl1, mr.Mate2, mr, false, false, false, isPairedEnd, true, false );
-						const char *zas2Tag = za2.GetZaTag( specialAl, unmappedAl1, false, !isPairedEnd, true );
-						SaveBamAlignment(specialAl, zas2Tag, false, false, true);
-					}
-					SaveBamAlignment(unmappedAl1, 0, true, false, false);
-					SaveBamAlignment(unmappedAl2, 0, true, false, false);
-
-				} else {
-					SaveBamAlignment(unmappedAl1, 0, true, false, false);
-				}
-
-			}
-
-			UpdateStatistics( mate1Status, mate2Status, unmappedAl1, unmappedAl2, false );
+			SaveXx(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special,
+			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl);
 		// unknown pairs
 		} else {
 			cout << "ERROR: Unknown pairs." << endl;
-			//cout << mate1Alignments.GetCount() << "\t" << mate2Alignments.GetCount() << endl;
 			exit(1);
 		}
 
 		if (!alInfo.isUsingLowMemory) {
 			if ( bamBuffer.size() > alignmentBufferSize )
 				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
-		}
-		else { 
+		} else { 
 			if ( archiveBuffer.size() > alignmentBufferSize )
 				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 		}
 		
 
-		if ( bamSpecialBuffer.size() > alignmentBufferSize ) {
+		if ( bamSpecialBuffer.size() > alignmentBufferSize ) 
 			WriteSpecialAlignmentBufferToFile( pBams );
-		}
+		
 
 	} // end while
 	
