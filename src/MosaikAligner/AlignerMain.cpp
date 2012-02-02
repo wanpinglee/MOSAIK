@@ -83,6 +83,7 @@ struct ConfigurationSettings {
 	bool UseJumpDB;
 	bool UseLowMemory;
 	bool IsQuietMode;
+	bool OutputAll;
 	bool OutputMultiply;
 
 	// filenames
@@ -163,6 +164,7 @@ struct ConfigurationSettings {
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
+		, OutputAll(false)
 		, OutputMultiply(false)
 		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
@@ -256,7 +258,8 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts);
+	COptions::AddOption("-oall",        "output all obtained alignments in bam", settings.OutputAll, pReportingOpts);
+	COptions::AddOption("-om",          "output complete inforamtion of alignments in the multiple bam", settings.OutputMultiply, pReportingOpts);
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
@@ -706,6 +709,9 @@ int main(int argc, char* argv[]) {
 	if (settings.HasPeNeuralNetworkFilename) ma.SetPeNeuralNetworkFilename(settings.PeNeuralNetworkFilename);
 	if (settings.HasSeNeuralNetworkFilename) ma.SetSeNeuralNetworkFilename(settings.SeNeuralNetworkFilename);
 
+	// output all alignments in the main bam
+	if (settings.OutputAll) ma.OutputAll();
+	
 	// output multiply mapped alignments
 	if (settings.OutputMultiply) ma.OutputMultiply();
 	
