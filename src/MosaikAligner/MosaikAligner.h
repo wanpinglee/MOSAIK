@@ -97,6 +97,7 @@ public:
 	// sets quiet mode
 	void SetQuietMode(void);
 	// outputs multiply mapped alignments
+	void OutputAll(void);
 	void OutputMultiply(void);
 	void SetPeNeuralNetworkFilename(const string& neuralNetworkFilename);
 	void SetSeNeuralNetworkFilename(const string& neuralNetworkFilename);

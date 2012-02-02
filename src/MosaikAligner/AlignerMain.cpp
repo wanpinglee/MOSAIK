@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-oall",        "output all obtained alignments in bam", settings.OutputAll, pReportingOpts);
+	COptions::AddOption("-oall",        "output all obtained alignments in bam; disable -om", settings.OutputAll, pReportingOpts);
 	COptions::AddOption("-om",          "output complete inforamtion of alignments in the multiple bam", settings.OutputMultiply, pReportingOpts);
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
@@ -660,7 +660,7 @@ int main(int argc, char* argv[]) {
 
 	// show warning message about unique alignments
 	if(((readStatus & RS_PAIRED_END_READ) != 0) && (modeType != CAlignmentThread::AlignerMode_ALL)) {
-		cout << "WARNING: A paired-end read archive was detected and the aligner mode (-m parameter) was not set to 'all'. Paired-end resolution in MosaikSort will be limited to unique vs unique reads.\n" << endl << endl;
+		cout << "WARNING: A paired-end read archive was detected and the aligner mode (-m parameter) was not set to 'all'. Paired-end resolution in MosaikSort will be limited to unique vs unique reads." << endl << endl;
 	}
 
 	// show warning messages dealing with the local alignment search radius
@@ -668,7 +668,7 @@ int main(int argc, char* argv[]) {
 
 		// show the warning message if we have a SE read archive
 		if( ( readStatus & RS_SINGLE_END_READ ) != 0 ) {
-			cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads.\n" << endl << endl;
+			cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads." << endl << endl;
 			settings.HasLocalAlignmentSearchRadius = false;
 		} else { 
 
@@ -679,7 +679,7 @@ int main(int argc, char* argv[]) {
 			in.Close();
 
 			if( readGroup.MedianFragmentLength == 0 ) {
-				cout << "WARNING: Local alignment search only works when the median fragment length (-mfl parameter) has been specified in MosaikBuild.\n" << endl << endl;
+				cout << "WARNING: Local alignment search only works when the median fragment length (-mfl parameter) has been specified in MosaikBuild." << endl << endl;
 				settings.HasLocalAlignmentSearchRadius = false;
 			}
 		}
@@ -687,8 +687,13 @@ int main(int argc, char* argv[]) {
 
 	// show warning message about using the local alignment search with SE read archives
 	if(((readStatus & RS_SINGLE_END_READ) != 0) && settings.HasLocalAlignmentSearchRadius) {
-		cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads.\n" << endl << endl;
+		cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads." << endl << endl;
 		settings.HasLocalAlignmentSearchRadius = false;
+	}
+
+	// -oall will disable -om
+	if (settings.OutputAll && settings.OutputMultiply) {
+		cout << "WARNING: -oall will disable -om." << endl << endl;
 	}
 
 	// start benchmarking

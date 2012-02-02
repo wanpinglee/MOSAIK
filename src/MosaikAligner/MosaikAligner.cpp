@@ -1157,8 +1157,14 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 	mSReference.count = count;
 }
 
+// output all alignments in the main bam
+void CMosaikAligner::OutputAll(void) {
+	mFlags.OutputAll = true;
+	mFlags.OutputMultiply = false;
+}
+
 // outputs multiply mapped alignments
-void CMosaikAligner::OutputMultiply( void ) {
+void CMosaikAligner::OutputMultiply(void) {
 	mFlags.OutputMultiply = true;
 }
 
