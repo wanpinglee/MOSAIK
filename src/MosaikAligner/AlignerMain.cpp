@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-oall",        "output all obtained alignments in bam; disable -om", settings.OutputAll, pReportingOpts);
+	COptions::AddOption("-stdout",      "output all obtained alignments in bam format on stdout", settings.OutputAll, pReportingOpts);
 	COptions::AddOption("-om",          "output complete inforamtion of alignments in the multiple bam", settings.OutputMultiply, pReportingOpts);
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);

@@ -1098,6 +1098,9 @@ void CAlignmentThread::AlignReadArchive(
 			exit(1);
 		}
 
+		// ======================
+		// Save and clean buffers
+		// ======================
 		if (!alInfo.isUsingLowMemory) {
 			if ( bamBuffer.size() > alignmentBufferSize )
 				WriteAlignmentBufferToFile( pBams, pMaps, pOut );
