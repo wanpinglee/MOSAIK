@@ -1161,7 +1161,7 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 }
 
 // output all alignments in the main bam
-void CMosaikAligner::OutputAll(void) {
+void CMosaikAligner::OutputStdout(void) {
 	mFlags.OutputAll = true;
 	mFlags.OutputMultiply = false;
 }

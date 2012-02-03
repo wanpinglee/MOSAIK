@@ -83,7 +83,7 @@ struct ConfigurationSettings {
 	bool UseJumpDB;
 	bool UseLowMemory;
 	bool IsQuietMode;
-	bool OutputAll;
+	bool OutputStdout;
 	bool OutputMultiply;
 
 	// filenames
@@ -164,7 +164,7 @@ struct ConfigurationSettings {
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
-		, OutputAll(false)
+		, OutputStdout(false)
 		, OutputMultiply(false)
 		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
@@ -211,7 +211,8 @@ int main(int argc, char* argv[]) {
 	OptionGroup* pIoOpts = COptions::CreateOptionGroup("Input/output: (required)");
 	COptions::AddValueOption("-ia",  "MOSAIK reference filename", "the input reference file",  "An input MOSAIK reference file",  settings.HasReferencesFilename, settings.ReferencesFilename, pIoOpts);
 	COptions::AddValueOption("-in",  "MOSAIK read filename",      "the input read file",       "An input MOSAIK read file",       settings.HasReadsFilename,      settings.ReadsFilename,      pIoOpts);
-	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output alignment file", "An output MOSAIK alignment file", settings.HasAlignmentsFilename, settings.AlignmentsFilename, pIoOpts);
+	COptions::AddValueOption("-out", "MOSAIK alignment filename", "the output alignment file", "", settings.HasAlignmentsFilename, settings.AlignmentsFilename, pIoOpts);
+	COptions::AddOption("-stdout",      "output all obtained alignments in bam format on stdout", settings.OutputStdout, pIoOpts);
 	COptions::AddValueOption("-ibs", "MOSAIK reference filename", "enables colorspace to basespace conversion using the supplied BASESPACE reference archive",  "",  settings.HasBasespaceReferencesFilename, settings.BasespaceReferencesFilename, pIoOpts);
 	COptions::AddValueOption("-annpe", "Neural network filename", "", "", settings.HasPeNeuralNetworkFilename, settings.PeNeuralNetworkFilename, pIoOpts);
 	COptions::AddValueOption("-annse", "Neural network filename", "", "", settings.HasSeNeuralNetworkFilename, settings.SeNeuralNetworkFilename, pIoOpts);
@@ -258,7 +259,6 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-stdout",      "output all obtained alignments in bam format on stdout", settings.OutputAll, pReportingOpts);
 	COptions::AddOption("-om",          "output complete inforamtion of alignments in the multiple bam", settings.OutputMultiply, pReportingOpts);
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
@@ -290,6 +290,11 @@ int main(int argc, char* argv[]) {
 	//	errorBuilder << ERROR_SPACER << "Please specify either an alignment candidate threshold (-act) or double-hash hits (-dh). Double-hash hits are equivalent to '-act <hash size + 1>." << endl;
 	//	foundError = true;
 	//}
+
+	if (!settings.HasAlignmentsFilename && !settings.OutputStdout) {
+		errorBuilder << ERROR_SPACER << "-out or -stdout sould be set." << endl;
+		foundError = true;
+	}
 
 	if((settings.HasJumpCacheMemory || settings.KeepJumpKeysOnDisk || settings.KeepJumpPositionsOnDisk) && !settings.UseJumpDB) {
 		errorBuilder << ERROR_SPACER << "Jump database settings were specified, but the jump database was not explicitly chosen. Please use the -j parameter." << endl;
@@ -678,7 +683,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	// -oall will disable -om
-	if (settings.OutputAll && settings.OutputMultiply) {
+	if (settings.OutputStdout && settings.OutputMultiply) {
 		cout << "WARNING: -oall will disable -om." << endl << endl;
 	}
 
@@ -701,7 +706,7 @@ int main(int argc, char* argv[]) {
 	if (settings.HasSeNeuralNetworkFilename) ma.SetSeNeuralNetworkFilename(settings.SeNeuralNetworkFilename);
 
 	// output all alignments in the main bam
-	if (settings.OutputAll) ma.OutputAll();
+	if (settings.OutputStdout) ma.OutputStdout();
 	
 	// output multiply mapped alignments
 	if (settings.OutputMultiply) ma.OutputMultiply();
