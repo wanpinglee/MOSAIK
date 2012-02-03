@@ -193,13 +193,6 @@ int main(int argc, char* argv[]) {
 	for ( int i = 0; i < argc; ++i )
 		commandLine = commandLine + argv[i] + " ";
 
-	printf("------------------------------------------------------------------------------\n");
-	printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
-	printf(" %u.%u.%u                                                %s\n", 
-		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Michael Stromberg & Wan-Ping Lee  Marth Lab, Boston College Biology Department\n");
-	printf("------------------------------------------------------------------------------\n\n");
-
 	// =================================
 	// configure the command line parser
 	// =================================
@@ -285,6 +278,15 @@ int main(int argc, char* argv[]) {
 	bool foundError = false;
 	ostringstream errorBuilder;
 	const string ERROR_SPACER(7, ' ');
+
+	if (!settings.OutputStdout) {
+		printf("------------------------------------------------------------------------------\n");
+		printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
+		printf(" %u.%u.%u                                                %s\n", 
+			MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
+		printf("Michael Stromberg & Wan-Ping Lee  Marth Lab, Boston College Biology Department\n");
+		printf("------------------------------------------------------------------------------\n\n");
+	}
 
 	//if(settings.EnableAlignmentCandidateThreshold && settings.EnableDoubleHashHits) {
 	//	errorBuilder << ERROR_SPACER << "Please specify either an alignment candidate threshold (-act) or double-hash hits (-dh). Double-hash hits are equivalent to '-act <hash size + 1>." << endl;
@@ -481,7 +483,8 @@ int main(int argc, char* argv[]) {
 				settings.LocalAlignmentSearchRadius    = 0;
 			} else {
 				if ( ( readStatus & RS_PAIRED_END_READ ) == 0 ) {
-					cout << "WARNING: Local alignment search only works for paired-end data." << endl;
+					if (!settings.OutputStdout)
+					  cout << "WARNING: Local alignment search only works for paired-end data." << endl;
 					settings.HasLocalAlignmentSearchRadius = false;
 					settings.LocalAlignmentSearchRadius    = 0;
 				}
@@ -489,9 +492,10 @@ int main(int argc, char* argv[]) {
 		} else {
 			if ( ( readStatus & RS_PAIRED_END_READ ) != 0 ) {
 				if ( readGroup.MedianFragmentLength == 0 ) {
-					cout << "WARNING: Paired-end data is detected, but the median fragment length is not specified." << endl; 
-					cout << "         Accordingly, local alignment search is not enabled." << endl;
-					cout << "         The median fragment length (-mfl parameter) can be specified in MosaikBuild.\n" << endl;
+					if (!settings.OutputStdout)
+					  cout << "WARNING: Paired-end data is detected, but the median fragment length is not specified." << endl
+					       << "         Accordingly, local alignment search is not enabled." << endl
+					       << "         The median fragment length (-mfl parameter) can be specified in MosaikBuild.\n" << endl;
 				} else {
 					settings.HasLocalAlignmentSearchRadius = true;
 					settings.LocalAlignmentSearchRadius    = readGroup.MedianFragmentLength;
@@ -500,10 +504,12 @@ int main(int argc, char* argv[]) {
 		}
 
 		if ( !settings.HasLocalAlignmentSearchRadius && settings.HasLocalAlignmentSearchHighMqThreshold )
-			cout << "WARNING: -lsh is enabled but -ls is not." << endl;
+			if (!settings.OutputStdout)
+			  cout << "WARNING: -lsh is enabled but -ls is not." << endl;
 
 		if ( !settings.HasLocalAlignmentSearchRadius && settings.HasLocalAlignmentSearchLowMqThreshold )
-			cout << "WARNING: -lsl is enabled but -ls is not." << endl;
+			if (!settings.OutputStdout)
+			  cout << "WARNING: -lsl is enabled but -ls is not." << endl;
 
 		if ( settings.HasLocalAlignmentSearchHighMqThreshold || settings.HasLocalAlignmentSearchLowMqThreshold ) {
 			if ( settings.LocalAlignmentSearchLowMqThreshold > settings.LocalAlignmentSearchHighMqThreshold ) {
@@ -649,43 +655,49 @@ int main(int argc, char* argv[]) {
 		CPairwiseUtilities::UseHomoPolymerGapOpenPenalty = true;
 	}
 
-	// show warning message about unique alignments
-	if(((readStatus & RS_PAIRED_END_READ) != 0) && (modeType != CAlignmentThread::AlignerMode_ALL)) {
-		cout << "WARNING: A paired-end read archive was detected and the aligner mode (-m parameter) was not set to 'all'. Paired-end resolution in MosaikSort will be limited to unique vs unique reads." << endl << endl;
-	}
+	if (!settings.OutputStdout) {
+	  // show warning message about unique alignments
+	  if(((readStatus & RS_PAIRED_END_READ) != 0) && (modeType != CAlignmentThread::AlignerMode_ALL)) {
+	    cout << "WARNING: A paired-end read archive was detected and"
+	         << " the aligner mode (-m parameter) was not set to 'all'."
+		 << " Paired-end resolution in MosaikSort will be limited to"
+		 << " unique vs unique reads." << endl << endl;
+	  }
 
-	// show warning messages dealing with the local alignment search radius
-	if(settings.HasLocalAlignmentSearchRadius) {
+	  // show warning messages dealing with the local alignment search radius
+	  if(settings.HasLocalAlignmentSearchRadius) {
+	    // show the warning message if we have a SE read archive
+	    if( ( readStatus & RS_SINGLE_END_READ ) != 0 ) {
+	      cout << "WARNING: A single-end read archive was detected and"
+	           << " the local alignment search was enabled."
+		   << " Local alignment search only works with paired-end reads." 
+		   << endl << endl;
+	      settings.HasLocalAlignmentSearchRadius = false;
+	    } else { 
+	      // show the warning message if we have a PE read archive with no mean fragment length
+	      MosaikReadFormat::CReadReader in;
+	      in.Open(settings.ReadsFilename);
+	      MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
+	      in.Close();
 
-		// show the warning message if we have a SE read archive
-		if( ( readStatus & RS_SINGLE_END_READ ) != 0 ) {
-			cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads." << endl << endl;
-			settings.HasLocalAlignmentSearchRadius = false;
-		} else { 
+	      if( readGroup.MedianFragmentLength == 0 ) {
+	        cout << "WARNING: Local alignment search only works when"
+		     << " the median fragment length (-mfl parameter) has been"
+		     << " specified in MosaikBuild." << endl << endl;
+	        settings.HasLocalAlignmentSearchRadius = false;
+	      }
+	    }
+          }
 
-			// show the warning message if we have a PE read archive with no mean fragment length
-			MosaikReadFormat::CReadReader in;
-			in.Open(settings.ReadsFilename);
-			MosaikReadFormat::ReadGroup readGroup = in.GetReadGroup();
-			in.Close();
-
-			if( readGroup.MedianFragmentLength == 0 ) {
-				cout << "WARNING: Local alignment search only works when the median fragment length (-mfl parameter) has been specified in MosaikBuild." << endl << endl;
-				settings.HasLocalAlignmentSearchRadius = false;
-			}
-		}
-	}
-
-	// show warning message about using the local alignment search with SE read archives
-	if(((readStatus & RS_SINGLE_END_READ) != 0) && settings.HasLocalAlignmentSearchRadius) {
-		cout << "WARNING: A single-end read archive was detected and the local alignment search was enabled. Local alignment search only works with paired-end reads." << endl << endl;
-		settings.HasLocalAlignmentSearchRadius = false;
-	}
-
-	// -oall will disable -om
-	if (settings.OutputStdout && settings.OutputMultiply) {
-		cout << "WARNING: -oall will disable -om." << endl << endl;
-	}
+	  // show warning message about using the local alignment search with SE read archives
+	  if(((readStatus & RS_SINGLE_END_READ) != 0) && settings.HasLocalAlignmentSearchRadius) {
+	    cout << "WARNING: A single-end read archive was detected and"
+	         << " the local alignment search was enabled."
+		 << " Local alignment search only works with paired-end reads." 
+		 << endl << endl;
+	    settings.HasLocalAlignmentSearchRadius = false;
+	  }
+	} // end if (!settings.OutputStdout)
 
 	// start benchmarking
 	CBenchmark bench;
@@ -705,8 +717,12 @@ int main(int argc, char* argv[]) {
 	if (settings.HasPeNeuralNetworkFilename) ma.SetPeNeuralNetworkFilename(settings.PeNeuralNetworkFilename);
 	if (settings.HasSeNeuralNetworkFilename) ma.SetSeNeuralNetworkFilename(settings.SeNeuralNetworkFilename);
 
-	// output all alignments in the main bam
-	if (settings.OutputStdout) ma.OutputStdout();
+	// output all alignments in stdout
+	if (settings.OutputStdout) {
+		ma.OutputStdout();
+		ma.SetQuietMode();
+		ma.SetIsNoLog();
+	}
 	
 	// output multiply mapped alignments
 	if (settings.OutputMultiply) ma.OutputMultiply();

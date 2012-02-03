@@ -109,6 +109,7 @@ public:
 		bool EnableColorspace;
 		bool IsAligningAllReads;
 		bool IsQuietMode;
+		bool IsNoLog;
 		//bool IsReportingUnalignedReads;
 		bool IsUsingAlignmentCandidateThreshold;
 		bool IsUsingHashPositionThreshold;
@@ -133,6 +134,7 @@ public:
 			: EnableColorspace(false)
 			, IsAligningAllReads(false)
 			, IsQuietMode(false)
+			, IsNoLog(false)
 			//, IsReportingUnalignedReads(false)
 			, IsUsingAlignmentCandidateThreshold(false)
 			, IsUsingHashPositionThreshold(false)

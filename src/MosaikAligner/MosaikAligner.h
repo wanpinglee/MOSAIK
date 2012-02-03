@@ -96,6 +96,7 @@ public:
 	void UseAlignedReadLengthForMismatchCalculation(void);
 	// sets quiet mode
 	void SetQuietMode(void);
+	void SetIsNoLog(void);
 	// outputs multiply mapped alignments
 	void OutputStdout(void);
 	void OutputMultiply(void);

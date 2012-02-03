@@ -1172,8 +1172,13 @@ void CMosaikAligner::OutputMultiply(void) {
 }
 
 // sets quiet mode
-void CMosaikAligner::SetQuietMode( void ) {
+void CMosaikAligner::SetQuietMode(void) {
 	mFlags.IsQuietMode = true;
+}
+
+// sets no log on stdout
+void CMosaikAligner::SetIsNoLog(void) {
+	mFlags.IsNoLog = true;
 }
 
 // enables the alignment candidate threshold
