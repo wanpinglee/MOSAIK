@@ -790,9 +790,9 @@ int main(int argc, char* argv[]) {
 	// ====================
 	// echo enabled options
 	// ====================
-
-	cout << "- Using the following alignment algorithm: ";
-	switch(algorithmType) {
+	if (!settings.OutputStdout) {
+	  cout << "- Using the following alignment algorithm: ";
+	  switch(algorithmType) {
 		case CAlignmentThread::AlignerAlgorithm_FAST:
 			cout << "single position (fast)" << endl;
 			break;
@@ -809,10 +809,10 @@ int main(int argc, char* argv[]) {
 			cout << "ERROR: Unknown alignment algorithm specified." << endl;
 			exit(1);
 			break;
-	}
+	  }
 
-	cout << "- Using the following alignment mode: ";
-	switch(modeType) {
+	  cout << "- Using the following alignment mode: ";
+	  switch(modeType) {
 		case CAlignmentThread::AlignerMode_ALL:
 			cout << "aligning reads to all possible locations" << endl;
 			break;
@@ -823,28 +823,28 @@ int main(int argc, char* argv[]) {
 			cout << "ERROR: Unknown alignment mode specified." << endl;
 			exit(1);
 			break;
-	}
+	  }
 
-	//if(settings.CheckAlignmentQuality)    cout << "- Using an alignment quality threshold of " << CPairwiseUtilities::MinAlignmentQuality << endl;
-	if(settings.CheckNumMismatches)       cout << "- Using a maximum mismatch threshold of " << CPairwiseUtilities::MaxNumMismatches << endl;
-	if(settings.CheckMismatchPercent)     cout << "- Using a maximum mismatch percent threshold of " << CPairwiseUtilities::MaxMismatchPercent << endl;
-	if(settings.CheckMinAlignment)        cout << "- Using a minimum alignment threshold of " << CPairwiseUtilities::MinAlignment << endl;
-	if(settings.CheckMinAlignmentPercent) cout << "- Using a minimum percent alignment threshold of " << CPairwiseUtilities::MinPercentAlignment << endl;
-	if(settings.HasHashSize)              cout << "- Using a hash size of " << (unsigned int)settings.HashSize << endl;
-	//if(settings.EnableDoubleHashHits)     cout << "- Using double-hash hits" << endl;
-	if(settings.EnableColorspace)         cout << "- Aligning in colorspace (SOLiD)" << endl;
-	if(settings.HasNumThreads)            cout << "- Using " << (short)settings.NumThreads << (settings.NumThreads > 1 ? " processors" : " processor") << endl;
-	if(settings.HasBandwidth)             cout << "- Using a Smith-Waterman bandwidth of " << settings.Bandwidth << endl;
+	  //if(settings.CheckAlignmentQuality)    cout << "- Using an alignment quality threshold of " << CPairwiseUtilities::MinAlignmentQuality << endl;
+	  if(settings.CheckNumMismatches)       cout << "- Using a maximum mismatch threshold of " << CPairwiseUtilities::MaxNumMismatches << endl;
+	  if(settings.CheckMismatchPercent)     cout << "- Using a maximum mismatch percent threshold of " << CPairwiseUtilities::MaxMismatchPercent << endl;
+	  if(settings.CheckMinAlignment)        cout << "- Using a minimum alignment threshold of " << CPairwiseUtilities::MinAlignment << endl;
+	  if(settings.CheckMinAlignmentPercent) cout << "- Using a minimum percent alignment threshold of " << CPairwiseUtilities::MinPercentAlignment << endl;
+	  if(settings.HasHashSize)              cout << "- Using a hash size of " << (unsigned int)settings.HashSize << endl;
+	  //if(settings.EnableDoubleHashHits)     cout << "- Using double-hash hits" << endl;
+	  if(settings.EnableColorspace)         cout << "- Aligning in colorspace (SOLiD)" << endl;
+	  if(settings.HasNumThreads)            cout << "- Using " << (short)settings.NumThreads << (settings.NumThreads > 1 ? " processors" : " processor") << endl;
+	  if(settings.HasBandwidth)             cout << "- Using a Smith-Waterman bandwidth of " << settings.Bandwidth << endl;
 
-	if(settings.EnableAlignmentCandidateThreshold) 
+	  if(settings.EnableAlignmentCandidateThreshold) 
 		cout << "- Using an alignment candidate threshold of " << (unsigned short)settings.AlignmentCandidateThreshold << "bp." << endl;
 
-	if(settings.HasLocalAlignmentSearchRadius)
+	  if(settings.HasLocalAlignmentSearchRadius)
 		cout << "- Using a local alignment search radius of " << settings.LocalAlignmentSearchRadius << "bp." << endl;
 
-	if(settings.LimitHashPositions) cout << "- Setting hash position threshold to " << settings.HashPositionThreshold << endl;
+	  if(settings.LimitHashPositions) cout << "- Setting hash position threshold to " << settings.HashPositionThreshold << endl;
 
-	if(settings.UseJumpDB) {
+	  if(settings.UseJumpDB) {
 		cout << "- Using a jump database for hashing";
 		if(settings.HasJumpCacheMemory) cout << " with a " << settings.JumpCacheMemory << " element cache";
 		cout << ".";
@@ -865,6 +865,7 @@ int main(int argc, char* argv[]) {
 		cout << "- Updating Smith-Waterman scoring scheme (match, mismatch, gap open, gap extend): (" <<
 		CPairwiseUtilities::MatchScore << ", " << CPairwiseUtilities::MismatchScore << ", " <<
 		CPairwiseUtilities::GapOpenPenalty << ", " << CPairwiseUtilities::GapExtendPenalty << ")" << endl;
+	} // end if (!settings.OutputStdout)
 
 	// ==============
 	// Start aligning
