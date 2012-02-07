@@ -165,21 +165,27 @@ void CJumpDnaHash::FreeMemory(void) {
 }
 
 // load hash keys and positions form file to memory
-void CJumpDnaHash::LoadKeysNPositions() {
+void CJumpDnaHash::LoadKeysNPositions(const bool& is_no_log) {
 	
 	if(mKeepKeysInMemory) {
-		cout << "- loading jump key database into memory... ";
-		cout.flush();
+		if (!is_no_log) {
+		  cout << "- loading jump key database into memory... ";
+		  cout.flush();
+		}
 		LoadKeys();
 	}
-	cout << "finished." << endl;
+	if (!is_no_log)
+	  cout << "finished." << endl;
 	
 	if(mKeepPositionsInMemory) {
-		cout << "- loading jump positions database into memory... ";
-		cout.flush();
+		if (!is_no_log) {
+		  cout << "- loading jump positions database into memory... ";
+		  cout.flush();
+		}
 		LoadPositions();
 	}
-	cout << "finished." << endl;
+	if (!is_no_log)
+	  cout << "finished." << endl;
 
 	hasKeysNPositions = true;
 }

@@ -316,4 +316,4 @@ void CMultiDnaHash::Dump() {
 
 // dummy function
 void CMultiDnaHash::RandomizeAndTrimHashPositions(unsigned short numHashPositions) {}
-void CMultiDnaHash::LoadKeysNPositions(void){}
+void CMultiDnaHash::LoadKeysNPositions(const bool& is_no_log){}

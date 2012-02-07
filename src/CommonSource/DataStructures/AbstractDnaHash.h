@@ -34,7 +34,7 @@ public:
 	// redimension the hash table to the specified size
 	virtual void FreeMemory(void) = 0;
 	// load hash keys and positions
-	virtual void LoadKeysNPositions(void) = 0;
+	virtual void LoadKeysNPositions(const bool& is_no_log) = 0;
 	// randomize and trim hash positions
 	virtual void RandomizeAndTrimHashPositions(unsigned short numHashPositions) = 0;
 	// register our thread mutexes

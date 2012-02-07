@@ -273,7 +273,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 		else {
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0, mFlags.UseLowMemory, 0, mSReference.found);
-			mpDNAHash->LoadKeysNPositions();
+			mpDNAHash->LoadKeysNPositions(mFlags.IsNoLog);
 		}
 
 		// set the hash positions threshold
@@ -419,7 +419,7 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			}
 
 			// load jump data
-			mpDNAHash->LoadKeysNPositions();
+			mpDNAHash->LoadKeysNPositions(mFlags.IsNoLog);
 
 			// set reference information
 			unsigned int* pRefBegin = new unsigned int[ referenceGroups[i].second ];

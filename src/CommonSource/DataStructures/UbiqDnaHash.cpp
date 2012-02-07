@@ -345,4 +345,4 @@ void CUbiqDnaHash::RandomizeAndTrimHashPositions(unsigned short numHashPositions
 }
 
 
-void CUbiqDnaHash::LoadKeysNPositions(void){}
+void CUbiqDnaHash::LoadKeysNPositions(const bool& is_no_log){}

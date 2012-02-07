@@ -68,7 +68,7 @@ public:
 	// dummy function
 	void RandomizeAndTrimHashPositions(unsigned short numHashPositions);
 	// load hash keys and positions from the file to memory
-	void LoadKeysNPositions(void);
+	void LoadKeysNPositions(const bool& is_no_log);
 	void GetHashStatistics(
 		const vector<pair<unsigned int, unsigned int> >& referenceSequences, 
 		vector<unsigned int>& nHashs, 
