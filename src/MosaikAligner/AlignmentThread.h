@@ -480,7 +480,14 @@ private:
 	void SaveCompleteInfoMultiplyAlignment(
 	    const vector<Alignment*>& mate1Set, 
 	    const vector<Alignment*>& mate2Set,
-	    const Mosaik::Read& mr);
+	    const Mosaik::Read& mr,
+	    const bool& save_all);
+	void SaveUnmapped(
+	    const Mosaik::Read& mr,
+	    const AlignmentStatusType& mate1Status,
+	    const AlignmentStatusType& mate2Status,
+    	    vector<Alignment*>& mate1Set,
+	    vector<Alignment*>& mate2Set);
 	// ====
 	// data
 	// ====

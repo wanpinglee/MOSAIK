@@ -367,66 +367,111 @@ void CAlignmentThread::UpdateStatistics (
 
 }
 
+void CAlignmentThread::SaveUnmapped(
+    const Mosaik::Read& mr,
+    const AlignmentStatusType& mate1Status,
+    const AlignmentStatusType& mate2Status,
+    vector<Alignment*>& mate1Set,
+    vector<Alignment*>& mate2Set){
+	bool isMate1Empty    = ( mate1Set.size() == 0 ) ? true : false;
+	bool isMate2Empty    = ( mate2Set.size() == 0 ) ? true : false;
+
+	if (isMate1Empty) {
+		Alignment mateAl, unmappedAl;
+		if (!isMate2Empty) {
+			mateAl = *(mate2Set[0]);
+			mateAl.ReferenceIndex += mReferenceOffset;
+		}
+		SetRequiredInfo(unmappedAl, mate1Status, mateAl, mr.Mate1, mr,
+		    (alInfo.isPairedEnd && !isMate2Empty), false, true, alInfo.isPairedEnd, false, !isMate2Empty);
+		AlignmentBamBuffer buffer;
+		buffer.al = unmappedAl;
+		buffer.zaString        = (char) 0;
+		buffer.noCigarMdNm     = false;
+		buffer.notShowRnamePos = false;
+		bamMultiplyBuffer.push( buffer );
+	}
+
+	if (alInfo.isPairedEnd && isMate2Empty) {
+		Alignment mateAl, unmappedAl;
+		if (!isMate1Empty) {
+			mateAl = *(mate1Set[0]);
+			mateAl.ReferenceIndex += mReferenceOffset;
+		}
+		SetRequiredInfo(unmappedAl, mate2Status, mateAl, mr.Mate2, mr,
+		    (alInfo.isPairedEnd && !isMate1Empty), false, false, true, false, !isMate1Empty);
+		AlignmentBamBuffer buffer;
+		buffer.al = unmappedAl;
+		buffer.zaString        = (char) 0;
+		buffer.noCigarMdNm     = false;
+		buffer.notShowRnamePos = false;
+		bamMultiplyBuffer.push( buffer );
+	}
+
+
+}
+
 void CAlignmentThread::SaveCompleteInfoMultiplyAlignment(
     const vector<Alignment*>& mate1Set,
     const vector<Alignment*>& mate2Set,
-    const Mosaik::Read& mr) {
+    const Mosaik::Read& mr,
+    const bool& save_all) {
 
 	bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true : false;
 	bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true : false;
 	bool isMate1Empty    = ( mate1Set.size() == 0 ) ? true : false;
 	bool isMate2Empty    = ( mate2Set.size() == 0 ) ? true : false;
 	AlignmentStatusType mate1Status, mate2Status;
-		if ( isMate1Multiple ) {
-			Alignment mateAl;
-			if ( !isMate2Empty ) {
-				mateAl = *(mate2Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
-			vector<Alignment*> mate1SetTemp = mate1Set;
-			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
-				
-				if ( !isMate2Empty )
-					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
-
-				(*alIter)->ReferenceIndex += mReferenceOffset;
-				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
-				SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
-
-				AlignmentBamBuffer buffer;
-				buffer.al = **alIter;
-				buffer.zaString        = (char) 0;
-				buffer.noCigarMdNm     = false;
-				buffer.notShowRnamePos = false;
-
-				bamMultiplyBuffer.push( buffer );
-			}
+	if (save_all || isMate1Multiple) {
+		Alignment mateAl;
+		if (!isMate2Empty) {
+			mateAl = *(mate2Set[0]);
+			mateAl.ReferenceIndex += mReferenceOffset;
 		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
-			Alignment mateAl;
-			if ( !isMate1Empty ) {
-				mateAl = *(mate1Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
+		vector<Alignment*> mate1SetTemp = mate1Set;
+		for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
+			if (!isMate2Empty)
+				(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
 
-			vector<Alignment*> mate2SetTemp = mate2Set;
-			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
-				if ( !isMate1Empty )
-					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
-				
-				(*alIter)->ReferenceIndex += mReferenceOffset;
-				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
-				SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
+			(*alIter)->ReferenceIndex += mReferenceOffset;
+			(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+			SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
 
-				AlignmentBamBuffer buffer;
-				buffer.al = **alIter;
-				buffer.zaString        = (char) 0;
-				buffer.noCigarMdNm     = false;
-				buffer.notShowRnamePos = false;
+			AlignmentBamBuffer buffer;
+			buffer.al = **alIter;
+			buffer.zaString        = (char) 0;
+			buffer.noCigarMdNm     = false;
+			buffer.notShowRnamePos = false;
 
-				bamMultiplyBuffer.push( buffer );
-			}
+			bamMultiplyBuffer.push( buffer );
 		}
+	}
+
+	if (save_all || (alInfo.isPairedEnd && isMate2Multiple)) {
+		Alignment mateAl;
+		if (!isMate1Empty) {
+			mateAl = *(mate1Set[0]);
+			mateAl.ReferenceIndex += mReferenceOffset;
+		}
+
+		vector<Alignment*> mate2SetTemp = mate2Set;
+		for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
+			if ( !isMate1Empty )
+				(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+			
+			(*alIter)->ReferenceIndex += mReferenceOffset;
+			(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+			SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
+
+			AlignmentBamBuffer buffer;
+			buffer.al = **alIter;
+			buffer.zaString        = (char) 0;
+			buffer.noCigarMdNm     = false;
+			buffer.notShowRnamePos = false;
+
+			bamMultiplyBuffer.push( buffer );
+		}
+	}
 }
 
 // save multiply alignment in buffer
@@ -445,59 +490,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 	//AlignmentStatusType mate1Status, mate2Status;
 	// -om is enabled
 	if ( mFlags.OutputMultiply ) {
-		SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr);
-/*
-		if ( isMate1Multiple ) {
-			Alignment mateAl;
-			if ( !isMate2Empty ) {
-				mateAl = *(mate2Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
-			vector<Alignment*> mate1SetTemp = mate1Set;
-			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
-				
-				if ( !isMate2Empty )
-					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
-
-				(*alIter)->ReferenceIndex += mReferenceOffset;
-				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
-				SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
-
-				AlignmentBamBuffer buffer;
-				buffer.al = **alIter;
-				buffer.zaString        = (char) 0;
-				buffer.noCigarMdNm     = false;
-				buffer.notShowRnamePos = false;
-
-				bamMultiplyBuffer.push( buffer );
-			}
-		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
-			Alignment mateAl;
-			if ( !isMate1Empty ) {
-				mateAl = *(mate1Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
-
-			vector<Alignment*> mate2SetTemp = mate2Set;
-			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
-				if ( !isMate1Empty )
-					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
-				
-				(*alIter)->ReferenceIndex += mReferenceOffset;
-				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
-				SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
-
-				AlignmentBamBuffer buffer;
-				buffer.al = **alIter;
-				buffer.zaString        = (char) 0;
-				buffer.noCigarMdNm     = false;
-				buffer.notShowRnamePos = false;
-
-				bamMultiplyBuffer.push( buffer );
-			}
-		}
-*/
+		SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr, false);
 		// buffer is full; save and clear it
 		if (bamMultiplyBuffer.size() > _bufferSize) {
 			AlignmentBamBuffer buffer;
@@ -851,8 +844,8 @@ void CAlignmentThread::SaveUxMx(
 	} else {
 		// show the original MQs in ZAs, and zeros in MQs fields of a BAM
 		if (alInfo.isPairedEnd) {
-			unmappedAl.ReferenceBegin = al.ReferenceBegin;
-			unmappedAl.ReferenceIndex = al.ReferenceIndex;
+			//unmappedAl.ReferenceBegin = al.ReferenceBegin; // bamwriter does this
+			//unmappedAl.ReferenceIndex = al.ReferenceIndex; // bamwriter does this
 			const char* zaTag1 = za1.GetZaTag(al, unmappedAl, isFirstMate, !alInfo.isPairedEnd, true);
 			SaveBamAlignment(al, zaTag1, false, false, false);
 			const char* zaTag2 = za2.GetZaTag(unmappedAl, al, !isFirstMate, !alInfo.isPairedEnd, false);
@@ -944,7 +937,6 @@ void CAlignmentThread::SaveXx(
 
 	UpdateStatistics( mate1Status, mate2Status, unmappedAl1, unmappedAl2, false );
 }
-
 
 // aligns the read archive
 void CAlignmentThread::AlignReadArchive(
@@ -1141,7 +1133,11 @@ void CAlignmentThread::AlignReadArchive(
 
 		// save chromosomes and positions of multiple alignments in bam
 		if (mFlags.OutputStdout) {
-			SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr);
+			// Save all alignments
+			SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr, true);
+			// Save unmapped mates
+			SaveUnmapped(mr, mate1Status, mate2Status, mate1Set, mate2Set);
+
 			if (bamMultiplyBuffer.size() > _bufferSize) {
 				AlignmentBamBuffer buffer;
 				pthread_mutex_lock(&mSaveMultipleBamMutex);
