@@ -35,7 +35,7 @@ CMosaikAligner::~CMosaikAligner(void) {
 	// this cause some problems with double freeing of memory
 	//delete mpDNAHash;
 }
-
+/*
 void testMq(const string& paired_end_ann_file, const string& single_end_ann_file) {
   QualityNeuralNetwork mqCalculator;
   mqCalculator.Open(paired_end_ann_file, single_end_ann_file);
@@ -60,7 +60,7 @@ void testMq(const string& paired_end_ann_file, const string& single_end_ann_file
 
   cout << (int)mqCalculator.GetQualityPe(mate1Ann, mate2Ann, 27) << endl;
 }
-
+*/
 /*
 void testEntropy () {
   string str = "AAAAGGATCTGAGCCCTTGTATGAGTGAGGCTGCTCCAGAAAAACAGAACCAATAGCATTTATATAGATATATAAGAGGAGATGTATTACGGGAATTGGC";
@@ -119,7 +119,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
 
 		if(!bsRefSeq.HasSameReferenceSequences(referenceSequences)) {
-			printf("ERROR: The basespace and colorspace reference sequence archives do not seem to represent the same FASTA file.\n"); 
+			cerr<< "ERROR: The basespace and colorspace reference sequence archives"
+			    << " do not seem to represent the same FASTA file." << endl; 
 			exit(1);
 		}
 
@@ -156,12 +157,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 	}
 
-
 	// this reference vector is for regular, multiply, and unmapped bams
 	vector<ReferenceSequence> referenceSequencesWoSpecial;
 	// sanity check
 	if ( mSReference.nReference > referenceSequences.size() ) {
-		cout << "ERROR: The number of detected special references are larger than the one of input references." << endl;
+		cerr << "ERROR: The number of detected special references are larger than the one of input references." << endl;
 		exit(1);
 	}
 	const unsigned int nReference = referenceSequences.size() - mSReference.nReference;
@@ -173,32 +173,28 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	
 	// both of full- and low-memory MOSAIK need multiply-mapped bam in AlignmentThread.cpp
-	mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
-	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-	mBams.mHeader.pReadGroups         = &readGroups;
-	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	if (!mFlags.OutputStdout) {
+	  mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
+	  mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+	  mBams.mHeader.pReadGroups         = &readGroups;
+	  mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	}
 
 	// ===================
 	// full-memory version
 	// ===================
 	if ( !mFlags.UseLowMemory ) {
-		
 		// ==============================
 		// set the headers of bam writers
 		// ==============================
-		//mBams.mHeader.SortOrder = SORTORDER_UNSORTED;
-		mBams.sHeader.SortOrder = SORTORDER_UNSORTED;
-		//mBams.uHeader.SortOrder = SORTORDER_UNSORTED;
-		mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
+		if (!mFlags.OutputStdout) {
+		  mBams.sHeader.SortOrder = SORTORDER_UNSORTED;
+		  mBams.sHeader.pReferenceSequences = mFlags.EnableColorspace ? &referenceSequencesBs : &referenceSequences;
+		  mBams.sHeader.pReadGroups = &readGroups;
+		}
 
-		//mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-		mBams.sHeader.pReferenceSequences = mFlags.EnableColorspace ? &referenceSequencesBs : &referenceSequences;
-		//mBams.uHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+		mBams.rHeader.SortOrder = SORTORDER_UNSORTED;
 		mBams.rHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-	
-		//mBams.mHeader.pReadGroups = &readGroups;
-		mBams.sHeader.pReadGroups = &readGroups;
-		//mBams.uHeader.pReadGroups = &readGroups;
 		mBams.rHeader.pReadGroups = &readGroups;
 
 		ProgramGroup pg;
@@ -208,28 +204,27 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		pg.VN = ss.str();
 		pg.CL = commandLine;
 
-		mBams.sHeader.pg.ID = "MosaikAligner";
-		//mBams.uHeader.pg.ID = "MosaikAligner";
-		mBams.rHeader.pg.ID = "MosaikAligner";
-		mBams.sHeader.pg.VN = ss.str();
-		//mBams.uHeader.pg.VN = ss.str();
-		mBams.rHeader.pg.VN = ss.str();
-		mBams.sHeader.pg.CL = commandLine;
-		//mBams.uHeader.pg.CL = commandLine;
-		mBams.rHeader.pg.CL = commandLine;
+		if (!mFlags.OutputStdout) {
+		  mBams.sHeader.pg.ID = "MosaikAligner";
+		  mBams.sHeader.pg.VN = ss.str();
+		  mBams.sHeader.pg.CL = commandLine;
+		  mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.sHeader);
+		}
 
-		//mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
-		mBams.sBam.Open( mSettings.OutputReadArchiveFilename + ".special.bam", mBams.sHeader);
-		//mBams.uBam.Open( mSettings.OutputReadArchiveFilename + ".unaligned.bam", mBams.uHeader);
-		mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.rHeader);
+		mBams.rHeader.pg.ID = "MosaikAligner";
+		mBams.rHeader.pg.VN = ss.str();
+		mBams.rHeader.pg.CL = commandLine;
+		mBams.rBam.Open( mSettings.OutputReadArchiveFilename + ".bam", mBams.rHeader, mFlags.OutputStdout);
 	
 
 		// prepare BS reference sequence for SOLiD data
 		char** pBsRefSeqs = NULL;
 		if(mFlags.EnableColorspace) {
 
-			cout << "- loading basespace reference sequences... ";
-			cout.flush();
+			if (!mFlags.IsNoLog) {
+			  cout << "- loading basespace reference sequences... ";
+			  cout.flush();
+			}
 
 			MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
 			bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
@@ -238,15 +233,19 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
 			bsRefSeq.Close();
 
-			cout << "finished." << endl;
+			if (!mFlags.IsNoLog)
+			  cout << "finished." << endl;
 		}
 
 		// prepare reference sequence
 		refseq.Open(mSettings.ReferenceFilename);
-		cout << "- loading reference sequence... ";
-		cout.flush();
+		if (!mFlags.IsNoLog) {
+		  cout << "- loading reference sequence... ";
+		  cout.flush();
+		}
 		refseq.LoadConcatenatedSequence(mReference);
-		cout << "finished." << endl;
+		if (!mFlags.IsNoLog)
+		  cout << "finished." << endl;
 		refseq.Close();
 		
 		unsigned int* pRefBegin = new unsigned int[numRefSeqs];
@@ -548,9 +547,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	string tempDir;
 	CFileUtilities::GetTempDirectory( tempDir );
 	if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
-	        cout << endl << "- cleaning up temp files...";
-		CFileUtilities::DeleteDir( tempDir );
-		cout << "finished." << endl;
+	        if (!mFlags.IsNoLog)
+		  cout << endl << "- cleaning up temp files...";
+		CFileUtilities::DeleteDir(tempDir);
+		if (!mFlags.IsNoLog)
+		  cout << "finished." << endl;
 	}
 
 	if ( !mSReference.found ) {
@@ -559,7 +560,8 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 
 
-	PrintStatistics();
+	if (!mFlags.IsNoLog)
+	  PrintStatistics();
 }
 
 
@@ -866,15 +868,16 @@ void CMosaikAligner::AlignReadArchive(
 
 	// initialize our progress bar
 	
-	if ( !mFlags.UseLowMemory ) {
+	if (!mFlags.UseLowMemory && !mFlags.IsNoLog) {
 		CConsole::Heading();
 		cout << endl;
 	}
-	cout << "Aligning read library (" << numReadArchiveReads << "):" << endl;
-	if ( !mFlags.UseLowMemory )
+	if (!mFlags.IsNoLog)
+	  cout << "Aligning read library (" << numReadArchiveReads << "):" << endl;
+	if (!mFlags.UseLowMemory && !mFlags.IsNoLog)
 	CConsole::Reset();
 
-	if ( !mFlags.IsQuietMode )
+	if (!mFlags.IsQuietMode)
 		CProgressBar<uint64_t>::StartThread(&readCounter, 0, numReadArchiveReads, "reads");
 
 	// create our threads
@@ -892,7 +895,7 @@ void CMosaikAligner::AlignReadArchive(
 		pthread_join(activeThreads[i], &status);
 
 	// wait for the progress bar to finish
-	if ( !mFlags.IsQuietMode )
+	if (!mFlags.IsQuietMode)
 		CProgressBar<uint64_t>::WaitThread();
 
 	alignmentBench.Stop();
@@ -1162,7 +1165,7 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 
 // output all alignments in the main bam
 void CMosaikAligner::OutputStdout(void) {
-	mFlags.OutputAll = true;
+	mFlags.OutputStdout = true;
 	mFlags.OutputMultiply = false;
 }
 

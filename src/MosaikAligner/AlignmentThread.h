@@ -117,7 +117,7 @@ public:
 		bool IsUsingJumpDB;
 		bool KeepJumpKeysInMemory;
 		bool KeepJumpPositionsInMemory;
-		bool OutputAll;
+		bool OutputStdout;
 		bool OutputMultiply;
 		bool UseAlignedReadLengthForMismatchCalculation;
 		bool UseBandedSmithWaterman;
@@ -142,7 +142,7 @@ public:
 			, IsUsingJumpDB(false)
 			, KeepJumpKeysInMemory(false)
 			, KeepJumpPositionsInMemory(false)
-			, OutputAll(false)
+			, OutputStdout(false)
 			, OutputMultiply(false)
 			, UseAlignedReadLengthForMismatchCalculation(false)
 			, UseBandedSmithWaterman(false)
@@ -477,6 +477,10 @@ private:
 	    const AlignmentStatusType& mate2Status,
 	    Alignment& mate1SpecialAl,
 	    Alignment& mate2SpecialAl);
+	void SaveCompleteInfoMultiplyAlignment(
+	    const vector<Alignment*>& mate1Set, 
+	    const vector<Alignment*>& mate2Set,
+	    const Mosaik::Read& mr);
 	// ====
 	// data
 	// ====

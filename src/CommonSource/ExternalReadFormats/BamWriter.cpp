@@ -12,6 +12,7 @@
 
 // constructor
 CBamWriter::CBamWriter(void)
+    : is_stdout_(false)
 {}
 
 // destructor
@@ -34,6 +35,7 @@ void CBamWriter::BgzfClose(void) {
 
 	// flush and close
 	fflush(mBGZF.Stream);
+	//if (!is_stdout_)
 	fclose(mBGZF.Stream);
 }
 
@@ -157,9 +159,12 @@ void CBamWriter::BgzfFlushBlock(void) {
 }
 
 // opens the BAM file for writing
-void CBamWriter::BgzfOpen(const string& filename) {
+void CBamWriter::BgzfOpen(const string& filename, const bool& is_stdout) {
 
-	mBGZF.Stream = fopen(filename.c_str(), "wb");
+	if (is_stdout)
+	  mBGZF.Stream = stdout;
+	else
+	  mBGZF.Stream = fopen(filename.c_str(), "wb");
 
 	if(!mBGZF.Stream) {
 		printf("ERROR: Unable to open the BAM file (%s) for writing.\n", filename.c_str());
@@ -344,10 +349,11 @@ void CBamWriter::EncodeQuerySequence(const CMosaikString& query, string& encoded
 }
 
 // opens the alignment archive
-void CBamWriter::Open(const string& filename, const BamHeader& header) {
+void CBamWriter::Open(const string& filename, const BamHeader& header, const bool& is_stdout) {
 
 	// open the BGZF file for writing
-	BgzfOpen(filename);
+	is_stdout_ = is_stdout;
+	BgzfOpen(filename, is_stdout);
 
 	// ====================
 	// write the SAM header

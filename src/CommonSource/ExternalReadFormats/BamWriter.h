@@ -160,7 +160,7 @@ public:
 	// closes the alignment archive
 	void Close(void);
 	// opens the alignment archive
-	void Open(const string& filename, const BamHeader& header);
+	void Open(const string& filename, const BamHeader& header, const bool& is_stdout = false);
 	// saves the alignment to the alignment archive
 	void SaveAlignment(
 	    const Alignment& al,
@@ -184,7 +184,7 @@ private:
 	// flushes the data in the BGZF block
 	void BgzfFlushBlock(void);
 	// opens the BAM file for writing
-	void BgzfOpen(const string& filename);
+	void BgzfOpen(const string& filename, const bool& is_stdout);
 	// packs an unsigned integer into the specified buffer
 	static inline void BgzfPackUnsignedInt(char* buffer, unsigned int value);
 	// packs an unsigned short into the specified buffer
@@ -201,6 +201,7 @@ private:
 	CMdTager mdTager;
 	// our BGZF output object
 	BGZF mBGZF;
+	bool is_stdout_;
 
 	CBamWriter (const CBamWriter&);
 	CBamWriter& operator= (const CBamWriter&);

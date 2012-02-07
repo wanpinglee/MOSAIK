@@ -367,22 +367,16 @@ void CAlignmentThread::UpdateStatistics (
 
 }
 
-// save multiply alignment in buffer
-void CAlignmentThread::SaveMultiplyAlignment(
-    const vector<Alignment*>& mate1Set, 
-    const vector<Alignment*>& mate2Set, 
-    const Mosaik::Read& mr, 
-    BamWriters* const pBams, 
-    CStatisticsMaps* const pMaps ) {
-	
+void CAlignmentThread::SaveCompleteInfoMultiplyAlignment(
+    const vector<Alignment*>& mate1Set,
+    const vector<Alignment*>& mate2Set,
+    const Mosaik::Read& mr) {
+
 	bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true : false;
 	bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true : false;
 	bool isMate1Empty    = ( mate1Set.size() == 0 ) ? true : false;
 	bool isMate2Empty    = ( mate2Set.size() == 0 ) ? true : false;
-
 	AlignmentStatusType mate1Status, mate2Status;
-	// -om is enabled
-	if ( mFlags.OutputMultiply ) {
 		if ( isMate1Multiple ) {
 			Alignment mateAl;
 			if ( !isMate2Empty ) {
@@ -433,7 +427,77 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplyBuffer.push( buffer );
 			}
 		}
+}
 
+// save multiply alignment in buffer
+void CAlignmentThread::SaveMultiplyAlignment(
+    const vector<Alignment*>& mate1Set, 
+    const vector<Alignment*>& mate2Set, 
+    const Mosaik::Read& mr, 
+    BamWriters* const pBams, 
+    CStatisticsMaps* const pMaps) {
+	
+	bool isMate1Multiple = ( mate1Set.size() > 1 ) ? true : false;
+	bool isMate2Multiple = ( mate2Set.size() > 1 ) ? true : false;
+	//bool isMate1Empty    = ( mate1Set.size() == 0 ) ? true : false;
+	//bool isMate2Empty    = ( mate2Set.size() == 0 ) ? true : false;
+
+	//AlignmentStatusType mate1Status, mate2Status;
+	// -om is enabled
+	if ( mFlags.OutputMultiply ) {
+		SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr);
+/*
+		if ( isMate1Multiple ) {
+			Alignment mateAl;
+			if ( !isMate2Empty ) {
+				mateAl = *(mate2Set[0]);
+				mateAl.ReferenceIndex += mReferenceOffset;
+			}
+			vector<Alignment*> mate1SetTemp = mate1Set;
+			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
+				
+				if ( !isMate2Empty )
+					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+
+				(*alIter)->ReferenceIndex += mReferenceOffset;
+				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+				SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
+
+				AlignmentBamBuffer buffer;
+				buffer.al = **alIter;
+				buffer.zaString        = (char) 0;
+				buffer.noCigarMdNm     = false;
+				buffer.notShowRnamePos = false;
+
+				bamMultiplyBuffer.push( buffer );
+			}
+		}
+		if ( alInfo.isPairedEnd && isMate2Multiple ) {
+			Alignment mateAl;
+			if ( !isMate1Empty ) {
+				mateAl = *(mate1Set[0]);
+				mateAl.ReferenceIndex += mReferenceOffset;
+			}
+
+			vector<Alignment*> mate2SetTemp = mate2Set;
+			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
+				if ( !isMate1Empty )
+					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+				
+				(*alIter)->ReferenceIndex += mReferenceOffset;
+				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
+				SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
+
+				AlignmentBamBuffer buffer;
+				buffer.al = **alIter;
+				buffer.zaString        = (char) 0;
+				buffer.noCigarMdNm     = false;
+				buffer.notShowRnamePos = false;
+
+				bamMultiplyBuffer.push( buffer );
+			}
+		}
+*/
 		// buffer is full; save and clear it
 		if (bamMultiplyBuffer.size() > _bufferSize) {
 			AlignmentBamBuffer buffer;
@@ -493,7 +557,10 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 		pthread_mutex_lock(&mSaveMultipleBamMutex);
 		while( !bamMultiplyBuffer.empty() ) {
 			buffer = bamMultiplyBuffer.front();
-			pBams->mBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
+			if (mFlags.OutputStdout)
+			  pBams->rBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
+			else
+			  pBams->mBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
 			bamMultiplyBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -1073,29 +1140,43 @@ void CAlignmentThread::AlignReadArchive(
 		// ===================================
 
 		// save chromosomes and positions of multiple alignments in bam
-		if (mFlags.SaveMultiplyBam) 
+		if (mFlags.OutputStdout) {
+			SaveCompleteInfoMultiplyAlignment(mate1Set, mate2Set, mr);
+			if (bamMultiplyBuffer.size() > _bufferSize) {
+				AlignmentBamBuffer buffer;
+				pthread_mutex_lock(&mSaveMultipleBamMutex);
+				while(!bamMultiplyBuffer.empty()) {
+					buffer = bamMultiplyBuffer.front();
+					pBams->rBam.SaveAlignment(buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD);
+					bamMultiplyBuffer.pop();
+				}
+				pthread_mutex_unlock(&mSaveMultipleBamMutex);
+			}
+		} else {
+		  if (mFlags.SaveMultiplyBam) 
 			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps);
 	
-		// UU, UM, and MM pair
-		if ( ( isMate1Unique && isMate2Unique )
+		  // UU, UM, and MM pair
+		  if ( ( isMate1Unique && isMate2Unique )
 			|| ( isMate1Unique && isMate2Multiple )
 			|| ( isMate1Multiple && isMate2Unique )
 			|| ( isMate1Multiple && isMate2Multiple ) ) {
 			SaveUuUmMm(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
 			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
-		// UX and MX pair
-		} else if ( ( isMate1Empty || isMate2Empty )
+		  // UX and MX pair
+		  } else if ( ( isMate1Empty || isMate2Empty )
 			&&  !( isMate1Empty && isMate2Empty ) ) {
 			SaveUxMx(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special, 
 			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl, mate1Set, mate2Set);
-		// XX
-		} else if ( isMate1Empty && isMate2Empty ) {
+		  // XX
+		  } else if ( isMate1Empty && isMate2Empty ) {
 			SaveXx(mr, numMate1Hashes, numMate2Hashes, isMate1Special, isMate2Special,
 			    mate1Status, mate2Status, mate1SpecialAl, mate2SpecialAl);
-		// unknown pairs
-		} else {
-			cout << "ERROR: Unknown pairs." << endl;
+		  // unknown pairs
+		  } else {
+			cerr << "ERROR: Unknown pairs." << endl;
 			exit(1);
+		  }
 		}
 
 		// ======================
