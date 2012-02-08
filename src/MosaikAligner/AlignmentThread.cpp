@@ -433,8 +433,8 @@ void CAlignmentThread::SaveCompleteInfoMultiplyAlignment(
 			if (!isMate2Empty)
 				(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
 
+			(*alIter)->RecalibratedQuality = GetMappingQuality(**alIter, (*alIter)->QueryLength);
 			(*alIter)->ReferenceIndex += mReferenceOffset;
-			(*alIter)->RecalibratedQuality = (*alIter)->Quality;
 			SetRequiredInfo( **alIter, mate1Status, mateAl, mr.Mate1, mr, !isMate2Empty, false, true, alInfo.isPairedEnd, true, !isMate2Empty);
 
 			AlignmentBamBuffer buffer;
@@ -459,8 +459,8 @@ void CAlignmentThread::SaveCompleteInfoMultiplyAlignment(
 			if ( !isMate1Empty )
 				(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
 			
+			(*alIter)->RecalibratedQuality = GetMappingQuality(**alIter, (*alIter)->QueryLength);
 			(*alIter)->ReferenceIndex += mReferenceOffset;
-			(*alIter)->RecalibratedQuality = (*alIter)->Quality;
 			SetRequiredInfo( **alIter, mate2Status, mateAl, mr.Mate2, mr, !isMate1Empty, false, false, alInfo.isPairedEnd, true, !isMate1Empty);
 
 			AlignmentBamBuffer buffer;
