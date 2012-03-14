@@ -52,7 +52,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	else
 		len = sprintf( zaPtr, "&;");
 	zaPtr += len;
-	len = sprintf( zaPtr, "%u;%u;", al1.Quality, al1.NextBestQuality );
+	len = sprintf( zaPtr, "%u;;", al1.RecalibratedQuality);
 	zaPtr += len;
 	if ( !al1.SpecialCode.empty() )
 		len = sprintf( zaPtr, "%s;%u;", al1.SpecialCode.c_str(), al1.NumMapped );
@@ -81,7 +81,7 @@ const char* CZaTager::GetZaTag( const Alignment& query, const Alignment& mate, c
 	else
 		len = sprintf( zaPtr, "&;");
 	zaPtr += len;
-	len = sprintf( zaPtr, "%u;%u;", al2.Quality, al2.NextBestQuality );
+	len = sprintf( zaPtr, "%u;;", al2.RecalibratedQuality);
 	zaPtr += len;
 	if ( !al2.SpecialCode.empty() )
 		len = sprintf( zaPtr, "%s;%u;", al2.SpecialCode.c_str(), al2.NumMapped );
