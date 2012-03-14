@@ -26,7 +26,7 @@ using namespace std;
 class CJumpCreator {
 public:
 	// constructor
-	CJumpCreator(const unsigned char hashSize, const string& filenameStub, const unsigned char sortingMemoryGB, const bool keepKeysInMemory, const unsigned int hashPositionThreshold);
+	CJumpCreator(const unsigned char hashSize, const string& filenameStub, const unsigned char sortingMemoryGB, const bool keepKeysInMemory);
 	// destructor
 	~CJumpCreator(void);
 	// builds the jump database

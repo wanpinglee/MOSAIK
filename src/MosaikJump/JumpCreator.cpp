@@ -83,7 +83,7 @@ void AppendBase(const bool& consider_iupac,
 } 
 
 // constructor
-CJumpCreator::CJumpCreator(const unsigned char hashSize, const string& filenameStub, const unsigned char sortingMemoryGB, const bool keepKeysInMemory, const unsigned int hashPositionThreshold)
+CJumpCreator::CJumpCreator(const unsigned char hashSize, const string& filenameStub, const unsigned char sortingMemoryGB, const bool keepKeysInMemory)
 : mHashSize(hashSize)
 , mSortingMemoryGB(sortingMemoryGB)
 , mKeys(NULL)
@@ -150,11 +150,11 @@ CJumpCreator::CJumpCreator(const unsigned char hashSize, const string& filenameS
 		exit(1);
 	}
 
-	if(hashPositionThreshold > 0) {
-		cout << "- setting hash position threshold to " << hashPositionThreshold << endl;
-		mLimitPositions   = true;
-		mMaxHashPositions = hashPositionThreshold;
-	}
+	//if(hashPositionThreshold > 0) {
+	//	cout << "- setting hash position threshold to " << hashPositionThreshold << endl;
+	//	mLimitPositions   = true;
+	//	mMaxHashPositions = hashPositionThreshold;
+	//}
 }
 
 // destructor
@@ -543,7 +543,8 @@ void CJumpCreator::StoreHash(vector<HashPosition>& hashPositions) {
 	}
 
 	// limit the number of hashes that will be written
-	if(mLimitPositions && (numHashes > mMaxHashPositions)) numHashes = mMaxHashPositions;
+	// Marked at 2012/3/14
+	//if(mLimitPositions && (numHashes > mMaxHashPositions)) numHashes = mMaxHashPositions;
 
 	// shuffle the vector
 	// random_shuffle(hashPositions.begin(), hashPositions.end());
