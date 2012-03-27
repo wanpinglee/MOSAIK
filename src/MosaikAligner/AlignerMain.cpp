@@ -83,7 +83,8 @@ struct ConfigurationSettings {
 	bool UseJumpDB;
 	bool UseLowMemory;
 	bool IsQuietMode;
-	bool OutputMultiply;
+        bool OutputMultiplyIncomplete;
+	bool OutputMultiplyComplete;
 
 	// filenames
 	string AlignmentsFilename;
@@ -163,7 +164,8 @@ struct ConfigurationSettings {
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
-		, OutputMultiply(false)
+		, OutputMultiplyIncomplete(false)
+		, OutputMultiplyComplete(false)
 		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
@@ -225,8 +227,8 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-act",  "threshold",      "the alignment candidate threshold (length)", "", settings.EnableAlignmentCandidateThreshold, settings.AlignmentCandidateThreshold, pFilterOpts);
 	//COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
 	COptions::AddValueOption("-ls",   "radius",          "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
-	COptions::AddValueOption("-lsh",  "mapping quality", "MQ threshold", "", settings.HasLocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchHighMqThreshold, pFilterOpts );
-	COptions::AddValueOption("-lsl",  "mapping quality", "MQ threshold; when the best MQ is higher than -lsh and the second best is lower than -lsl, local alignment search is enabled.", "", settings.HasLocalAlignmentSearchLowMqThreshold, settings.LocalAlignmentSearchLowMqThreshold, pFilterOpts );
+	//COptions::AddValueOption("-lsh",  "mapping quality", "MQ threshold", "", settings.HasLocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchHighMqThreshold, pFilterOpts );
+	//COptions::AddValueOption("-lsl",  "mapping quality", "MQ threshold; when the best MQ is higher than -lsh and the second best is lower than -lsl, local alignment search is enabled.", "", settings.HasLocalAlignmentSearchLowMqThreshold, settings.LocalAlignmentSearchLowMqThreshold, pFilterOpts );
 	COptions::AddValueOption("-mhp",  "hash positions",  "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-mhr",  "hash regionss",   "the maximum # of regions for aligning",      "", settings.LimitHashRegions,                settings.HashRegionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-min",  "nucleotides",     "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
@@ -256,7 +258,9 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts);
+	COptions::AddOption("-omi",         "output chrmosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
+	COptions::AddOption("-om",          "output complete multiply mapped alignments in the multiple.bam", settings.OutputMultiplyComplete, pReportingOpts);
+
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
@@ -593,6 +597,11 @@ int main(int argc, char* argv[]) {
 		CFileUtilities::CheckFile(settings.SeNeuralNetworkFilename.c_str(), true);
 	}
 
+	if (settings.OutputMultiplyIncomplete && settings.OutputMultiplyComplete) {
+		foundError = true;
+		errorBuilder << ERROR_SPACER << "-omi and -om are incompatible." << endl;
+	}
+
 	// print the errors if any were found
 	if(foundError) {
 
@@ -693,7 +702,7 @@ int main(int argc, char* argv[]) {
 	if (settings.HasSeNeuralNetworkFilename) ma.SetSeNeuralNetworkFilename(settings.SeNeuralNetworkFilename);
 
 	// output multiply mapped alignments
-	if (settings.OutputMultiply) ma.OutputMultiply();
+	ma.OutputMultiply(settings.OutputMultiplyIncomplete, settings.OutputMultiplyComplete);
 	
 	// enable quiet mode
 	if (settings.IsQuietMode) ma.SetQuietMode();

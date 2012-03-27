@@ -1158,8 +1158,9 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 }
 
 // outputs multiply mapped alignments
-void CMosaikAligner::OutputMultiply( void ) {
-	mFlags.OutputMultiply = true;
+void CMosaikAligner::OutputMultiply(const bool& incomplete, const bool& complete) {
+	mFlags.OutputMultiplyIncomplete = incomplete;
+	mFlags.OutputMultiplyComplete = complete;
 }
 
 // sets quiet mode
