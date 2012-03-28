@@ -116,7 +116,8 @@ public:
 		bool IsUsingJumpDB;
 		bool KeepJumpKeysInMemory;
 		bool KeepJumpPositionsInMemory;
-		bool OutputMultiply;
+		bool OutputMultiplyComplete;
+		bool OutputMultiplyIncomplete;
 		bool UseAlignedReadLengthForMismatchCalculation;
 		bool UseBandedSmithWaterman;
 		bool UseLocalAlignmentSearch;
@@ -139,7 +140,8 @@ public:
 			, IsUsingJumpDB(false)
 			, KeepJumpKeysInMemory(false)
 			, KeepJumpPositionsInMemory(false)
-			, OutputMultiply(false)
+			, OutputMultiplyComplete(false)
+			, OutputMultiplyIncomplete(false)
 			, UseAlignedReadLengthForMismatchCalculation(false)
 			, UseBandedSmithWaterman(false)
 			, UseLocalAlignmentSearch(false)

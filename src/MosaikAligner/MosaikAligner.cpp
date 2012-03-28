@@ -173,10 +173,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	
 	// both of full- and low-memory MOSAIK need multiply-mapped bam in AlignmentThread.cpp
-	mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
-	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-	mBams.mHeader.pReadGroups         = &readGroups;
-	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	if (mFlags.OutputMultiplyIncomplete || mFlags.OutputMultiplyComplete) {
+		mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
+		mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+		mBams.mHeader.pReadGroups         = &readGroups;
+		mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	}
 
 	// ===================
 	// full-memory version
@@ -534,11 +536,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			pBsRefSeqs  = NULL;
 			pRefSpecies = NULL;
 		}
-	}
+	} // end else low-memory
 
-	mBams.mBam.Close();
+	if (mFlags.OutputMultiplyIncomplete || mFlags.OutputMultiplyComplete)
+		mBams.mBam.Close();
 
-	if ( mFlags.UseLowMemory )
+	if (mFlags.UseLowMemory)
 		MergeArchives();
 
 	// clean up temp files

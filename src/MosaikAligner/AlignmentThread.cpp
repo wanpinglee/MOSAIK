@@ -373,7 +373,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 
 	AlignmentStatusType mate1Status, mate2Status;
 	// -om is enabled
-	if ( mFlags.OutputMultiply ) {
+	if (mFlags.OutputMultiplyComplete) {
 		if ( isMate1Multiple ) {
 			Alignment mateAl;
 			if ( !isMate2Empty ) {
@@ -436,7 +436,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
-	}else {
+	} else {
 		if ( isMate1Multiple ) {
 			SimpleBamRecordBuffer buffer;
 			for(vector<Alignment*>::const_iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
@@ -817,7 +817,7 @@ void CAlignmentThread::AlignReadArchive(
 		// ===================================
 
 		// save chromosomes and positions of multiple alignments in bam
-		if ( mFlags.SaveMultiplyBam ) {
+		if (mFlags.SaveMultiplyBam && (mFlags.OutputMultiplyComplete || mFlags.OutputMultiplyIncomplete)) {
 			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps );
 		}
 		
