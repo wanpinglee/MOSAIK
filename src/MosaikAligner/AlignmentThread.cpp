@@ -427,11 +427,15 @@ void CAlignmentThread::SaveMultiplyAlignment(
 
 		// buffer is full; save and clear it
 		if (bamMultiplyBuffer.size() > _bufferSize) {
-			AlignmentBamBuffer buffer;
+			//AlignmentBamBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
 			while(!bamMultiplyBuffer.empty()) {
-				buffer = bamMultiplyBuffer.front();
-				pBams->mBam.SaveAlignment(buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD);
+				//buffer = bamMultiplyBuffer.front();
+				pBams->mBam.SaveAlignment(bamMultiplyBuffer.front().al, 
+				                          bamMultiplyBuffer.front().zaString.c_str(), 
+							  bamMultiplyBuffer.front().noCigarMdNm, 
+							  bamMultiplyBuffer.front().notShowRnamePos, 
+							  alInfo.isUsingSOLiD);
 				bamMultiplyBuffer.pop();
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -459,11 +463,13 @@ void CAlignmentThread::SaveMultiplyAlignment(
 		
 		// buffer is full; save and clear it
 		if ( bamMultiplySimpleBuffer.size() > _bufferSize ) {
-			SimpleBamRecordBuffer buffer;
+			//SimpleBamRecordBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
 			while( !bamMultiplySimpleBuffer.empty() ) {
-				buffer = bamMultiplySimpleBuffer.front();
-				pBams->mBam.SaveReferencePosition( buffer.refIndex, buffer.refBegin, buffer.refEnd );
+				//buffer = bamMultiplySimpleBuffer.front();
+				pBams->mBam.SaveReferencePosition( bamMultiplySimpleBuffer.front().refIndex, 
+				                                   bamMultiplySimpleBuffer.front().refBegin, 
+								   bamMultiplySimpleBuffer.front().refEnd );
 				bamMultiplySimpleBuffer.pop();
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -480,11 +486,15 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 		WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 
 	if ( !bamMultiplyBuffer.empty() ) {
-		AlignmentBamBuffer buffer;
+		//AlignmentBamBuffer buffer;
 		pthread_mutex_lock(&mSaveMultipleBamMutex);
 		while( !bamMultiplyBuffer.empty() ) {
-			buffer = bamMultiplyBuffer.front();
-			pBams->mBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
+			//buffer = bamMultiplyBuffer.front();
+			pBams->mBam.SaveAlignment( bamMultiplyBuffer.front().al, 
+			                           bamMultiplyBuffer.front().zaString.c_str(), 
+						   bamMultiplyBuffer.front().noCigarMdNm, 
+						   bamMultiplyBuffer.front().notShowRnamePos, 
+						   alInfo.isUsingSOLiD );
 			bamMultiplyBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -503,12 +513,17 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 
 	if ( !bamSpecialBuffer.empty() ) {
 		const bool processedBamData = true;
-		AlignmentBamBuffer buffer;
+		//AlignmentBamBuffer buffer;
 		pthread_mutex_lock(&mSaveSpecialBamMutex);
 		while( !bamSpecialBuffer.empty() ) {
-			buffer = bamSpecialBuffer.front();
+			//buffer = bamSpecialBuffer.front();
 			bamSpecialBuffer.pop();
-			pBams->sBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
+			pBams->sBam.SaveAlignment( bamSpecialBuffer.front().al, 
+			                           bamSpecialBuffer.front().zaString.c_str(), 
+						   bamSpecialBuffer.front().noCigarMdNm, 
+						   bamSpecialBuffer.front().notShowRnamePos, 
+						   mFlags.EnableColorspace, 
+						   processedBamData);
 		}
 		pthread_mutex_unlock(&mSaveSpecialBamMutex);
 	}
@@ -558,15 +573,21 @@ inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, con
 
 // write special buffer to bam
 void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBams ) {
-	AlignmentBamBuffer buffer;
+	//AlignmentBamBuffer buffer;
 	const bool processedBamData = true;
 
 	pthread_mutex_lock(&mSaveSpecialBamMutex);
 	while( !bamSpecialBuffer.empty() ) {
-		buffer = bamSpecialBuffer.front();
+		//buffer = bamSpecialBuffer.front();
+		//bamSpecialBuffer.pop();
+		const char* za = bamSpecialBuffer.front().zaString.empty() ? 0 : bamSpecialBuffer.front().zaString.c_str();
+		pBams->sBam.SaveAlignment( bamSpecialBuffer.front().al, 
+		                           za, 
+					   bamSpecialBuffer.front().noCigarMdNm, 
+					   bamSpecialBuffer.front().notShowRnamePos, 
+					   mFlags.EnableColorspace, 
+					   processedBamData);
 		bamSpecialBuffer.pop();
-		const char* za = buffer.zaString.empty() ? 0 : buffer.zaString.c_str();
-		pBams->sBam.SaveAlignment( buffer.al, za, buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 	}
 	pthread_mutex_unlock(&mSaveSpecialBamMutex);
 
@@ -584,11 +605,17 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 		if ( !alInfo.isPairedEnd ) {
 			pthread_mutex_lock(&mSaveReadMutex);
 			while ( !bamBuffer.empty() ) {
-				buffer1 = bamBuffer.front();
+				//buffer1 = bamBuffer.front();
+				const char* za = bamBuffer.front().zaString.empty() ? 0 : bamBuffer.front().zaString.c_str();
+				pBams->rBam.SaveAlignment(bamBuffer.front().al, 
+				                          za, 
+							  bamBuffer.front().noCigarMdNm, 
+							  bamBuffer.front().notShowRnamePos, 
+							  mFlags.EnableColorspace, 
+							  processedBamData, 
+							  mFlags.ReportZnTag);
+				pMaps->SaveRecord(bamBuffer.front().al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology);
 				bamBuffer.pop();
-				const char* za = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
-				pBams->rBam.SaveAlignment(buffer1.al, za, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData, mFlags.ReportZnTag);
-				pMaps->SaveRecord(buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology);
 			}
 			pthread_mutex_unlock(&mSaveReadMutex);
 		} else {
@@ -611,11 +638,16 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 			pthread_mutex_unlock(&mSaveReadMutex);
 		}
 	} else {
-		AlignmentArchiveBuffer buffer;
+		//AlignmentArchiveBuffer buffer;
 		pthread_mutex_lock(&mSaveReadMutex);
 		while ( !archiveBuffer.empty() ) {
-			buffer = archiveBuffer.front();
-			pOut->SaveRead(buffer.mr, buffer.al1, buffer.al2, buffer.isLongRead, true, alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive);
+			//buffer = archiveBuffer.front();
+			pOut->SaveRead(archiveBuffer.front().mr, 
+			               archiveBuffer.front().al1, 
+				       archiveBuffer.front().al2, 
+				       archiveBuffer.front().isLongRead, 
+				       true, 
+				       alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive);
 			archiveBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveReadMutex);
