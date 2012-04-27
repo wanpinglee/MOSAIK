@@ -424,8 +424,6 @@ int main(int argc, char* argv[]) {
 						mate2Files.push_back(dirFiles[i]);
 
 			} else mate2Files.push_back(settings.Fastq2Filename);
-
-			cout << mate2Files[0] << endl;
 		}
 
 	} else if(settings.HasSrfFilename) {
