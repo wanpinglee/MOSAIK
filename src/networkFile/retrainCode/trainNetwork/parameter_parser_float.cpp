@@ -170,8 +170,8 @@ void PrintHelp(const string& program) {
 		<< endl
 		<< "Input & Output:" << endl
 		<< endl
-		<< "   -i --input <FILE>     Input BAM-format file." << endl
-		<< "   -o --output <FILE>    Output BAM-format file." << endl
+		<< "   -i --input <FILE>     Input SAM file that includes XC tags." << endl
+		<< "   -o --output <FILE>    Output ANN file." << endl
 		<< endl
 		<< "Operations" << endl
 		<< endl
