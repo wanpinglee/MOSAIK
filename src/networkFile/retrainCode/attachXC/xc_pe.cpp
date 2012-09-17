@@ -66,7 +66,7 @@ int main( int argc, char* argv[] ) {
 	string record1Mate1, record1Mate2, record2Mate1, record2Mate2;
 	//string record1Mate1, record2Mate1;
 
-	unsigned int no1 = 0, no2 = 0;
+	//unsigned int no1 = 0, no2 = 0;
 	if ( !sam1.good() || !sam2.good() ) {
 		cerr << "ERROR: Cannot open input files." << endl;
 		return 1;
@@ -77,7 +77,7 @@ int main( int argc, char* argv[] ) {
 	getline ( sam2, record2Mate1 );
 	getline ( sam2, record2Mate2 );
 
-	unsigned int unmappedCount = 0;
+	//unsigned int unmappedCount = 0;
 	unsigned int count = 0;
 	while ( sam1.good() && sam2.good() ) {
 		// ===for PE===
