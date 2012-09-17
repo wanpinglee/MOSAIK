@@ -13,6 +13,6 @@ all: xc_pe.cpp xc_se.cpp
 .PHONY: all
 
 clean:
-	@echo "Cleaning up."
+	@echo "Cleaning up attachXC."
 	@rm xc_pe
 	@rm xc_se

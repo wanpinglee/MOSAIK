@@ -25,6 +25,6 @@ all: $(FANN)/floatfann.c $(SOURCES)
 .PHONY: all
 
 clean:
-	@echo "Cleaning up."
+	@echo "Cleaning up trainNetwork."
 	@rm -rf $(OBJ_DIR)
 	@rm $(PROGRAM)

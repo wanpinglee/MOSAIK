@@ -1,5 +1,10 @@
 #!/bin/sh
 
+### create ../bin/MosaikBuild
+# cd ../src
+# make
+###
+
 # convert the reference sequence to our binary format
 ../bin/MosaikBuild -fr reference/c.elegans_chr2.fasta -oa reference/c.elegans_chr2.dat
 
