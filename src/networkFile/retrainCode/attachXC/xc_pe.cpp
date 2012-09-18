@@ -128,8 +128,8 @@ int main( int argc, char* argv[] ) {
 			// ===end of SE===
 
 			// ===for PE===
-			bool report = (rand() % 500) == 0;
-			//bool report = true;
+			//bool report = (rand() % 500) == 0;
+			bool report = true;
 			string chr1, chr2;
 			if ( flag1Mate1 && flag2Mate1 ) {
 				if (check(buffer11, buffer21, mqs, maps, unmappedMate1, correctPos1, chr1) 
