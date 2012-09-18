@@ -16,11 +16,10 @@ Running the demo
 To see a full list of the available command line options, enter the bin
 directory and run any of the program without any extra parameters.
 
-Included in this release is an Illumina data set featuring reads C. elegans
-chromosome 2.
+Included in this release is an Illumina data set featuring reads E.Coli.
 
-To test Mosaik with this data set, just enter the demo directory and type Build, 
-and Align to run the appropriate scripts.
+To test Mosaik with this data set, just enter the demo directory and 
+type Build, and Align to run the appropriate scripts.
 
 example:
 
@@ -28,5 +27,5 @@ example:
 > ./Build.sh
 > ./Align.sh
 
-The resulting bam file (c_elegans_chr2_test.mka.bam) will be found in the
+The resulting bam file (read.mka.bam) will be found in the
 demo/sequence_archives directory.
