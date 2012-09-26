@@ -1,6 +1,6 @@
 # ==========================
 # MOSAIK Makefile
-# (c) 2009 Michael Stromberg
+# (c) 2012 Wan-Ping Lee
 # ==========================
 
 # define our object and binary directories
