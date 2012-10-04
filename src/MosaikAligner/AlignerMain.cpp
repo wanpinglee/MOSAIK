@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
 
 	// add interface options
 	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
-	COptions::AddOption("-quiet",  "disenable progress bars and counters", settings.IsQuietMode, pInterface);
+	COptions::AddOption("-quiet",  "disable progress bars and counters", settings.IsQuietMode, pInterface);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);

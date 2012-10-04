@@ -28,4 +28,4 @@ example:
 > ./Align.sh
 
 The resulting bam file (read.mka.bam) will be found in the
-demo/sequence_archives directory.
+demo/fastq directory.
