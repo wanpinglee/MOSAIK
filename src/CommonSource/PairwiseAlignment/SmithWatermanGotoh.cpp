@@ -341,7 +341,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 
 
 	// fix the gap order
-	if(hasGap) CorrectHomopolymerGapOrder(alignment);
+	//if(hasGap) CorrectHomopolymerGapOrder(alignment);
 }
 
 // creates a simple scoring matrix to align the nucleotides and the ambiguity code N

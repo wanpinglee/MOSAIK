@@ -374,7 +374,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 	AlignmentStatusType mate1Status, mate2Status;
 	// -om is enabled
 	if (mFlags.OutputMultiplyComplete) {
-		if ( isMate1Multiple ) {
+		if (isMate1Multiple) {
 			Alignment mateAl;
 			if ( !isMate2Empty ) {
 				mateAl = *(mate2Set[0]);
@@ -399,9 +399,9 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplyBuffer.push( buffer );
 			}
 		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
+		if (alInfo.isPairedEnd && isMate2Multiple) {
 			Alignment mateAl;
-			if ( !isMate1Empty ) {
+			if (!isMate1Empty) {
 				mateAl = *(mate1Set[0]);
 				mateAl.ReferenceIndex += mReferenceOffset;
 			}
@@ -424,7 +424,6 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplyBuffer.push( buffer );
 			}
 		}
-
 		// buffer is full; save and clear it
 		if (bamMultiplyBuffer.size() > _bufferSize) {
 			//AlignmentBamBuffer buffer;
@@ -440,8 +439,8 @@ void CAlignmentThread::SaveMultiplyAlignment(
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
-	} else {
-		if ( isMate1Multiple ) {
+	} else if (mFlags.OutputMultiplyIncomplete) {
+		if (isMate1Multiple) {
 			SimpleBamRecordBuffer buffer;
 			for(vector<Alignment*>::const_iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
 				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
@@ -450,7 +449,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
+		if (alInfo.isPairedEnd && isMate2Multiple) {
 			SimpleBamRecordBuffer buffer;
 			for(vector<Alignment*>::const_iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter) {
 				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
@@ -459,10 +458,8 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
-
-		
 		// buffer is full; save and clear it
-		if ( bamMultiplySimpleBuffer.size() > _bufferSize ) {
+		if (bamMultiplySimpleBuffer.size() > _bufferSize) {
 			//SimpleBamRecordBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
 			while( !bamMultiplySimpleBuffer.empty() ) {
@@ -474,6 +471,8 @@ void CAlignmentThread::SaveMultiplyAlignment(
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
+	} else {
+		// nothing
 	}
 
 }
@@ -517,13 +516,14 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 		pthread_mutex_lock(&mSaveSpecialBamMutex);
 		while( !bamSpecialBuffer.empty() ) {
 			//buffer = bamSpecialBuffer.front();
-			bamSpecialBuffer.pop();
+			//bamSpecialBuffer.pop();
 			pBams->sBam.SaveAlignment( bamSpecialBuffer.front().al, 
 			                           bamSpecialBuffer.front().zaString.c_str(), 
 						   bamSpecialBuffer.front().noCigarMdNm, 
 						   bamSpecialBuffer.front().notShowRnamePos, 
 						   mFlags.EnableColorspace, 
 						   processedBamData);
+			bamSpecialBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveSpecialBamMutex);
 	}
@@ -575,7 +575,6 @@ inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, con
 void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBams ) {
 	//AlignmentBamBuffer buffer;
 	const bool processedBamData = true;
-
 	pthread_mutex_lock(&mSaveSpecialBamMutex);
 	while( !bamSpecialBuffer.empty() ) {
 		//buffer = bamSpecialBuffer.front();
@@ -590,7 +589,6 @@ void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBam
 		bamSpecialBuffer.pop();
 	}
 	pthread_mutex_unlock(&mSaveSpecialBamMutex);
-
 }
 
 // write alignment buffer to bam/archive
@@ -764,9 +762,16 @@ void CAlignmentThread::AlignReadArchive(
 		int numMate1Hashes  = 0;
 		mate1Alignments.Clear();
 		if( numMate1Bases != 0 && !isTooManyNMate1 ) {
+			#ifdef VERBOSE_DEBUG
+				cerr << "=== Align mate1 ===" << endl;
+			#endif
 			// align the read
 			if (AlignRead(mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status, &numMate1Hashes)) 
 				isMate1Aligned = true;
+			#ifdef VERBOSE_DEBUG
+				if (isMate1Aligned) cerr << "mate1 is mapped." << endl;
+				else cerr << "mate1 is NOT mapped!" << endl;
+			#endif
 		}
 
 		// =====================
@@ -777,9 +782,16 @@ void CAlignmentThread::AlignReadArchive(
 		int numMate2Hashes  = 0;
 		mate2Alignments.Clear();
 		if( numMate2Bases != 0 && !isTooManyNMate2 ) {
+			#ifdef VERBOSE_DEBUG
+				cerr << "=== Align mate2 ===" << endl;
+			#endif
 			// align the read
 			if (AlignRead(mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status, &numMate2Hashes)) 
 				isMate2Aligned = true;
+			#ifdef VERBOSE_DEBUG
+				if (isMate2Aligned) cerr << "mate2 is mapped." << endl;
+				else cerr << "mate2 is NOT mapped!" << endl;
+			#endif
 		}
 
 		// ======================
@@ -792,6 +804,9 @@ void CAlignmentThread::AlignReadArchive(
 		if(areBothMatesPresent) {
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate2) {
+				#ifdef VERBOSE_DEBUG
+					cerr << "=== Local Search mate2 ===" << endl;
+				#endif
 				mate1Alignments.GetSet(&mate1Set);
 				if (mate1Alignments.IsUnique()) {
 					SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
@@ -804,6 +819,9 @@ void CAlignmentThread::AlignReadArchive(
 
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate1) {
+				#ifdef VERBOSE_DEBUG
+					cerr << "=== Local Search mate1 ===" << endl;
+				#endif
 				mate2Alignments.GetSet(&mate2Set);
 				if (mate2Alignments.IsUnique()) {
 					SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);

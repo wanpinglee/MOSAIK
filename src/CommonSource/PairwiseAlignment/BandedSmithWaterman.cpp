@@ -70,6 +70,23 @@ CBandedSmithWaterman::~CBandedSmithWaterman(void) {
 // aligns the query sequence to the anchor using the Smith Waterman Gotoh algorithm
 void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const unsigned int s1Length, const char* s2, const unsigned int s2Length, HashRegion& hr) {
 
+#ifdef VERBOSE_DEBUG
+	cerr << "=== Banded Smith-Waterman ===" << endl;
+	cerr << "Band width: " << mBandwidth << endl;
+	cerr << "Score scheme: " << mMatchScore << "; " << mMismatchScore << "; " 
+	     << mGapOpenPenalty << "; " << mGapExtendPenalty << endl;
+	cerr << "Reference" << endl;
+	for (unsigned int i = 0; i < s1Length; ++i)
+	  cerr << s1[i];
+	cerr << endl;
+	cerr << "Query" << endl;
+	for (unsigned int i = 0; i < s2Length; ++i)
+	  cerr << s2[i];
+	cerr << endl;
+	cerr << "hash region: ref_begin; query_begin" << endl;
+	cerr << hr.Begin << "; " << hr.QueryBegin << endl;
+#endif
+
 	// determine the hash region type
 	unsigned int rowOffset;
 	unsigned int columnOffset;
@@ -181,6 +198,12 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 
 	alignment.SwScore = bestScore;
 	Traceback(alignment, s1, s2, s2Length, bestRow, bestColumn, rowOffset, columnOffset);
+
+	#ifdef VERBOSE_DEBUG
+	cerr << "sw score: " << alignment.SwScore << endl
+	     << alignment.Reference.CData() << endl
+	     << alignment.Query.CData() << endl;
+	#endif
 }
 
 // calculates the score during the forward algorithm
@@ -604,6 +627,11 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 	alignment.NumMismatches    = numMismatches;
 	alignment.NumLongestMatchs = longestMatch;
 
+	#ifdef VERBOSE_DEBUG
+		cerr << alignment.Reference.CData() << endl
+		     << alignment.Query.CData() << endl;
+	#endif
+
 	// correct the homopolymer gap order
-	CorrectHomopolymerGapOrder(alignment);
+	//CorrectHomopolymerGapOrder(alignment);
 }
