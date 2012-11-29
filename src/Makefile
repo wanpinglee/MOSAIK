@@ -19,7 +19,7 @@ export UTILITIES_DIR = CommonSource/Utilities
 # define some default flags
 FLAGS = -Wall -Wno-char-subscripts -ansi -O3
 #FLAGS = -Wall -Wno-char-subscripts -ansi -O3 -D VERBOSE_DEBUG #enables verbose debugging
-CFLAGS = -std=C99
+CFLAGS =
 CXXFLAGS =
 #CXXFLAGS = -ansi -pedantic -Wextra -Weffc++
 CFLAGS += $(FLAGS)

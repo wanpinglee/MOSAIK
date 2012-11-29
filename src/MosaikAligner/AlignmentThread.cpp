@@ -65,6 +65,7 @@ CAlignmentThread::CAlignmentThread(
 	, mpDNAHash(pDnaHash)
 	, mSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty)
 	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth)
+	, mSSW()
 	, mReferenceBegin(pRefBegin)
 	, mReferenceEnd(pRefEnd)
 	, mReferenceSpecies(pRefSpecies)
@@ -1512,7 +1513,6 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 	//unsigned int numHash = 0;
 
 	try {
-
 		//
 		// copy the query to the forward and reverse reads
 		//
@@ -1608,17 +1608,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 			AlignRegion(fastHashRegion, al, fastHashRead, queryLength, numExtensionBases);
 
 			// add the alignment to the vector if it passes the filters
-			if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
-				// the base qualities of SOLiD reads are attached in ApplyReadFilters
-				//if( mFlags.EnableColorspace )
-				//	al.BaseQualities.Copy(qualities, queryLength);
-				//al.Quality = GetMappingQuality(al);
-				alignments.Add(al);
-			}
-
-			// increment our candidates counter
-			//mStatisticsCounters.AlignmentCandidates++;
-
+			//if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
+			//	alignments.Add(al);
+			//}
 		} else {
 			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); i++) {
 				
@@ -1636,17 +1628,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 				AlignRegion(forwardRegions[i], al, mForwardRead, queryLength, numExtensionBases);
 
 				// add the alignment to the alignments vector
-				if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
-					// the base qualities of SOLiD reads are attached in ApplyReadFilters
-					//if( mFlags.EnableColorspace )
-					//	al.BaseQualities.Copy(qualities, queryLength);
-					//al.Quality = GetMappingQuality(al);
-					//al.NumHash = numHash;
-					alignments.Add(al);
-				}
-
-				// increment our candidates counter
-				//mStatisticsCounters.AlignmentCandidates++;
+				//if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
+				//	alignments.Add(al);
+				//}
 
 				// check if we can prematurely stop
 				if( !alignAllReads && ( alignments.GetCount() > 1 ) ) {
@@ -1681,19 +1665,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 					AlignRegion(reverseRegions[i], al, mReverseRead, queryLength, numExtensionBases);
 
 					// add the alignment to the alignments vector
-					if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
-						// the base qualities of SOLiD reads are attached in ApplyReadFilters
-						//if( mFlags.EnableColorspace ) {
-						//	al.BaseQualities.Copy( qualities, queryLength);
-						//	al.BaseQualities.Reverse();
-						//}
-						//al.Quality = GetMappingQuality(al);
-						//al.NumHash = numHash;
-						alignments.Add(al);
-					}
-
-					// increment our candidates counter
-					//mStatisticsCounters.AlignmentCandidates++;
+					//if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
+					//	alignments.Add(al);
+					//}
 
 					// check if we can prematurely stop
 					if (!alignAllReads && (alignments.GetCount() > 1))
@@ -1711,7 +1685,6 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 		}
 
 	} catch(bad_alloc &ba) {
-
 		cout << "ERROR: Could not allocate enough memory to create forward and reverse aligned sequences: " << ba.what() << endl;
 		exit(1);
 	}
@@ -1786,19 +1759,22 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 		hasEnoughBandwidth = hasEnoughBandwidth && (((end - begin + 1) - diagonalRegion.Begin) > mSettings.Bandwidth / 2);
 	}
 
-	if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
-		mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
-	} else {
-		mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
-	}
+	//if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
+	//	mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
+	//} else {
+	//	mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
+	//}
+	StripedSmithWaterman::Filter filter;
+	StripedSmithWaterman::Alignment ssw_alignment;
+	mSSW.Align(query, pAnchor, (end - begin + 1), filter, &ssw_alignment);
 
 	// adjust the reference start positions
 	//if ( !mFlags.UseLowMemory )
 		alignment.ReferenceIndex = referenceIndex;
 	//else
 	//	alignment.ReferenceIndex = 0;
-	alignment.ReferenceBegin += begin - refBegin;
-	alignment.ReferenceEnd   += begin - refBegin;
+	ssw_alignment.ref_begin += begin - refBegin;
+	ssw_alignment.ref_end   += begin - refBegin;
 }
 
 // returns true if the alignment passes all of the user-specified filters
@@ -2069,7 +2045,10 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	// align according to the model
 	al.IsReverseStrand = (lam.IsTargetReverseStrand ? true : false);
 	char* pAnchor = mReference + begin;
-	mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
+	//mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
+	StripedSmithWaterman::Filter filter;
+	StripedSmithWaterman::Alignment ssw_alignment;
+	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
 
 	// adjust the reference start positions
 	al.ReferenceIndex = refIndex;

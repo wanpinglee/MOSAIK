@@ -35,6 +35,7 @@
 #include "ReferenceSequence.h"
 #include "SequenceUtilities.h"
 #include "SmithWatermanGotoh.h"
+#include "ssw_cpp.h"
 #include "StatisticsMaps.h"
 #include "ZaTager.h"
 
@@ -467,6 +468,7 @@ private:
 	// our Smith-Waterman-Gotoh local alignment algorithms
 	CSmithWatermanGotoh mSW;
 	CBandedSmithWaterman mBSW;
+	StripedSmithWaterman::Aligner mSSW;
 	// our reference sequence LUTs
 	unsigned int* mReferenceBegin;
 	unsigned int* mReferenceEnd;
