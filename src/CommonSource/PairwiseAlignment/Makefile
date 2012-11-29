@@ -12,7 +12,7 @@ INCLUDES = -I$(TD)$(DATA_STRUCT_DIR) -I$(TD)$(CONFIG_DIR) -I$(TD)$(UTILITIES_DIR
 # ----------------------------------
 # define our source and object files
 # ----------------------------------
-SOURCES= SmithWatermanGotoh.cpp BandedSmithWaterman.cpp ssw_cpp.cpp
+SOURCES= SmithWatermanGotoh.cpp BandedSmithWaterman.cpp ssw_cpp.cpp ConvertSswToAlignment.cpp
 OBJECTS= $(SOURCES:.cpp=.o)
 BUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(OBJECTS))
 
