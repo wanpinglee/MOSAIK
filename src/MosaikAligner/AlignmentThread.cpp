@@ -739,6 +739,9 @@ void CAlignmentThread::AlignReadArchive(
 		mr = readBuffer.front();
 		readBuffer.pop();
 
+		#ifdef VERBOSE_DEBUG
+		cerr << "Read: " << mr.Name.CData() << endl;
+		#endif
 
 		// specify if this is a paired-end read
 		const unsigned short numMate1Bases = (unsigned short)mr.Mate1.Bases.Length();
