@@ -1,4 +1,4 @@
-#include <ConvertSswToAlignment.h>
+#include "ConvertSswToAlignment.h"
 
 bool ConvertSswToAlignment(
     const StripedSmithWaterman::Alignment& ssw_al,

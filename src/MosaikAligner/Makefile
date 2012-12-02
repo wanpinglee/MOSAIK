@@ -26,6 +26,7 @@ _EXT_OBJECTS = AbstractDnaHash.o \
 		CigarTager.o \
 		ColorspaceUtilities.o \
 		ConsoleUtilities.o \
+		ConvertSswToAlignment.o \
 		DnaHash.o \
 		Entropy.o \
 		fastlz.o \

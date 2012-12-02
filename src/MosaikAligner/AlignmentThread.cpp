@@ -1608,9 +1608,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 			AlignRegion(fastHashRegion, al, fastHashRead, queryLength, numExtensionBases);
 
 			// add the alignment to the vector if it passes the filters
-			//if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
-			//	alignments.Add(al);
-			//}
+			if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
+				alignments.Add(al);
+			}
 		} else {
 			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); i++) {
 				
@@ -1628,9 +1628,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 				AlignRegion(forwardRegions[i], al, mForwardRead, queryLength, numExtensionBases);
 
 				// add the alignment to the alignments vector
-				//if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
-				//	alignments.Add(al);
-				//}
+				if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
+					alignments.Add(al);
+				}
 
 				// check if we can prematurely stop
 				if( !alignAllReads && ( alignments.GetCount() > 1 ) ) {
@@ -1665,9 +1665,9 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 					AlignRegion(reverseRegions[i], al, mReverseRead, queryLength, numExtensionBases);
 
 					// add the alignment to the alignments vector
-					//if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
-					//	alignments.Add(al);
-					//}
+					if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
+						alignments.Add(al);
+					}
 
 					// check if we can prematurely stop
 					if (!alignAllReads && (alignments.GetCount() > 1))
@@ -1767,21 +1767,21 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	StripedSmithWaterman::Filter filter;
 	StripedSmithWaterman::Alignment ssw_alignment;
 	mSSW.Align(query, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+	ConvertSswToAlignment(ssw_alignment, pAnchor, query, &alignment);
 
 	// adjust the reference start positions
 	//if ( !mFlags.UseLowMemory )
 		alignment.ReferenceIndex = referenceIndex;
 	//else
 	//	alignment.ReferenceIndex = 0;
-	ssw_alignment.ref_begin += begin - refBegin;
-	ssw_alignment.ref_end   += begin - refBegin;
+	alignment.ReferenceBegin += begin - refBegin;
+	alignment.ReferenceEnd   += begin - refBegin;
 }
 
 // returns true if the alignment passes all of the user-specified filters
 bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength) {
 
 	unsigned int queryLength1 = mFlags.EnableColorspace ? queryLength + 1 : queryLength;
-	
 	// assuming this is a good read
 	bool ret = true;
 
@@ -1790,16 +1790,10 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 
 	// convert from colorspace to basespace
 	if( mFlags.EnableColorspace ) {
-		//cerr << al.NumMismatches;
-		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 		if( al.IsReverseStrand ) al.BaseQualities.Reverse();
 		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
 		numNonAlignedBases = queryLength1 - al.QueryLength;
-		//cerr << " " << al.NumMismatches << " " << al.QueryLength << endl;
-
 	} else {
-		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
-	
 		// don't count leading and lagging N's as mismatches
 		unsigned int pos = 0;
 		while( ( bases[pos] == 'N' ) && ( pos < queryLength1 ) ) {
@@ -2049,6 +2043,7 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	StripedSmithWaterman::Filter filter;
 	StripedSmithWaterman::Alignment ssw_alignment;
 	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+	ConvertSswToAlignment(ssw_alignment, pAnchor, query, &al);
 
 	// adjust the reference start positions
 	al.ReferenceIndex = refIndex;

@@ -25,6 +25,7 @@
 #include "BestNSecondBestSelection.h"
 #include "CigarTager.h"
 #include "ColorspaceUtilities.h"
+#include "ConvertSswToAlignment.h"
 #include "Entropy.h"
 #include "MdTager.h"
 #include "NaiveAlignmentSet.h"
