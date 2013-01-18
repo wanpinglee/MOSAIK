@@ -551,7 +551,7 @@ void CFastq::Open(const string& filename) {
 	// initialization
 	// ==============
 
-	CMemoryUtilities::CheckBufferSize(mBuffer, mBufferLen, 5120);
+	CMemoryUtilities::CheckBufferSize(mBuffer, mBufferLen, 10240);
 
 	// record the data offsets
 	mReadDataOffset = READ_FILE_OFFSET;
