@@ -207,9 +207,10 @@ int main( int argc, char* argv[] ) {
 		       << maps[ i ] - mqs[ i ] << "\t" 
 		       << mqs[ i ] << endl;
 		 }
-		 
-
 	}
+
+	cout << "totalMismatch: " << totalMismatch << endl;
+	cout << "totalMaps: " << totalMaps << endl;
 */
 
 	return 0;
