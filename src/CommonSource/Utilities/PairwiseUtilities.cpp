@@ -21,7 +21,7 @@ float CPairwiseUtilities::MismatchScore           = -9.0f;
 float CPairwiseUtilities::GapOpenPenalty          = 15.0f;
 
 // sets the Smith-Waterman gap extend penalty
-float CPairwiseUtilities::GapExtendPenalty        = 6.66f;
+float CPairwiseUtilities::GapExtendPenalty        = 1.0f;
 
 // toggles if we should filter sequences that match too little of the original sequence
 unsigned int CPairwiseUtilities::MinAlignment  = 0;
