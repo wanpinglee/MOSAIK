@@ -35,7 +35,7 @@ bool check (
 	correctPos = pos1;
 	chr = chr1;
 	
-	if (( chr1 == chr2 ) && ( ( ( pos1 - 10 ) < pos2 ) && ( pos2 < ( pos1 + 10 ) ) ) ) {// correctly mappings
+	if (( chr1 == chr2 ) && ( ( ( pos1 - 20 ) < pos2 ) && ( pos2 < ( pos1 + 20 ) ) ) ) {// correctly mappings
 		return true;
 	}
 	else {

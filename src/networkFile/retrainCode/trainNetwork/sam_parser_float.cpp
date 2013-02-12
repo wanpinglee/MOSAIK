@@ -28,7 +28,7 @@ bool IsPositionCorrect(
 
   if (mapped_chr != chr) return false;
   
-  if ( ( ( pos - 10 ) < mapped_position ) && ( mapped_position < ( pos + 10 ) ) )
+  if ( ( ( pos - 20 ) < mapped_position ) && ( mapped_position < ( pos + 20 ) ) )
     return true;
   else
     return false;
