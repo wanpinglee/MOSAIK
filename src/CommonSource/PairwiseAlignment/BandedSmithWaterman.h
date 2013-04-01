@@ -35,11 +35,11 @@ struct ElementInfo {
 class CBandedSmithWaterman {
 public:
 	// constructor
-	CBandedSmithWaterman(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty, unsigned int bandWidth);
+	CBandedSmithWaterman(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty, unsigned int bandWidth, bool notCountGapAsMismatch);
 	// destructor
 	~CBandedSmithWaterman(void);
 	// aligns the query sequence to the anchor using the Smith Waterman Gotoh algorithm
-	void Align(Alignment& alignment, const char* s1, const unsigned int s1Length, const char* s2, const unsigned int s2Length, HashRegion& hr);
+	void Align(Alignment& alignment, const char* s1, const unsigned int& s1Length, const char* s2, const unsigned int& s2Length, const HashRegion& hr);
 	// enables homo-polymer scoring
 	void EnableHomoPolymerGapPenalty(float hpGapOpenPenalty);
 private:
@@ -93,6 +93,7 @@ private:
 	// toggles the use of the homo-polymer gap open penalty
 	bool mUseHomoPolymerGapOpenPenalty;
 	float mHomoPolymerGapOpenPenalty;
+	bool notCountGapAsMismatch_;
 
 	CBandedSmithWaterman (const CBandedSmithWaterman&);
 	CBandedSmithWaterman& operator= (const CBandedSmithWaterman&);

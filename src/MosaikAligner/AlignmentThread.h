@@ -116,6 +116,7 @@ public:
 		bool IsUsingJumpDB;
 		bool KeepJumpKeysInMemory;
 		bool KeepJumpPositionsInMemory;
+		bool NotCountGapAsMismatch;
 		bool OutputMultiplyComplete;
 		bool OutputMultiplyIncomplete;
 		bool UseAlignedReadLengthForMismatchCalculation;
@@ -140,6 +141,7 @@ public:
 			, IsUsingJumpDB(false)
 			, KeepJumpKeysInMemory(false)
 			, KeepJumpPositionsInMemory(false)
+			, NotCountGapAsMismatch(false)
 			, OutputMultiplyComplete(false)
 			, OutputMultiplyIncomplete(false)
 			, UseAlignedReadLengthForMismatchCalculation(false)

@@ -1188,6 +1188,11 @@ void CMosaikAligner::EnableLowMemory(void) {
 	mFlags.UseLowMemory  = true;
 }
 
+// not count gasp as mismatches
+void CMosaikAligner::NotCountGapAsMismatch(void) {
+	mFlags.NotCountGapAsMismatch = true;
+}
+
 // Enables SOLiD colorspace translation
 void CMosaikAligner::EnableColorspace(const string& basespaceReferenceFilename) {
 	mFlags.EnableColorspace              = true;
