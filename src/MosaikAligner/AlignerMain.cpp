@@ -743,6 +743,9 @@ int main(int argc, char* argv[]) {
 	// enable low-memory algorithm
 	if(settings.UseLowMemory) ma.EnableLowMemory();
 
+	// not count gasp as mismatches
+	if(settings.NotCountGapAsMismatch) ma.NotCountGapAsMismatch();
+
 	// enables special references checker
 	if(settings.HasSpecialReferencePrefix) {
 		ma.EnableSpecialReference(settings.SpecialReferencePrefix);
