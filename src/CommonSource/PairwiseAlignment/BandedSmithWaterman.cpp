@@ -95,8 +95,8 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 #endif
 
 	// determine the hash region type
-	unsigned int rowOffset;
-	unsigned int columnOffset;
+	int rowOffset;
+	int columnOffset;
 	PositionType positionType;
 
 	if(hr.Begin == 0) {
@@ -120,6 +120,10 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 			positionType = Position_REF_AND_QUERO_NONZERO;
 		}
 	}
+
+#ifdef VERBOSE_DEBUG
+	cerr << "rowOffset: " << rowOffset << "\tcolumnOffset: " << columnOffset << endl;
+#endif
 
 	// =========================
 	// Reinitialize the matrices
@@ -214,7 +218,7 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 }
 
 // calculates the score during the forward algorithm
-float CBandedSmithWaterman::CalculateScore(const char* s1, const char* s2, const unsigned int rowNum, const unsigned int columnNum, float& currentQueryGapScore, const unsigned int rowOffset, const unsigned int columnOffset) {
+float CBandedSmithWaterman::CalculateScore(const char* s1, const char* s2, const unsigned int& rowNum, const unsigned int& columnNum, float& currentQueryGapScore, const int& rowOffset, const int& columnOffset) {
 
 	// initialize
 	const unsigned int row      = rowNum + rowOffset;
@@ -509,7 +513,7 @@ void CBandedSmithWaterman::ReinitializeMatrices(const PositionType& positionType
 
 
 // performs the backtrace algorithm
-void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const char* s2, const unsigned int s2Length, unsigned int bestRow, unsigned int bestColumn, const unsigned int rowOffset, const unsigned int columnOffset){
+void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const char* s2, const unsigned int& s2Length, unsigned int& bestRow, unsigned int& bestColumn, const int& rowOffset, const int& columnOffset){
 
 	unsigned int currentRow		 = bestRow;
 	unsigned int currentColumn	 = bestColumn;

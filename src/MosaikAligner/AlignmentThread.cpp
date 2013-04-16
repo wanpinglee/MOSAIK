@@ -1790,9 +1790,11 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	}
 
 	if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
-		mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
+		if ((end - begin + 1) > queryLength) // the reference length must be longer than query
+		  mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
 	} else {
-		mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
+	        if ((end - begin + 1) > queryLength) // the reference length must be longer than query
+		  mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
 	}
 
 	// adjust the reference start positions
