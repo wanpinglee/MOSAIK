@@ -239,7 +239,7 @@ void CAlignmentThread::SearchLocalRegion(
 
 }
 
-void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al ) {
+void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment& al ) {
 	
 	bool isMateRescued = al.WasRescued;
 	if ( !al.IsMapped ) {
@@ -280,9 +280,9 @@ void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mate
 void CAlignmentThread::UpdateStatistics ( 
 	  const enum AlignmentStatusType& mate1Status
 	, const enum AlignmentStatusType& mate2Status
-	, const Alignment al1
-	, const Alignment al2
-	, const bool isProperPair) {
+	, const Alignment& al1
+	, const Alignment& al2
+	, const bool& isProperPair) {
 	
 	UpdateSeStatistics( mate1Status, al1 );
 	if ( alInfo.isPairedEnd ) {
@@ -1162,7 +1162,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1,
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
-bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const unsigned int readLength) {
+bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const unsigned int& readLength) {
 	sort(mateSet->begin(), mateSet->end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
@@ -1723,7 +1723,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 }
 
 // aligns the read against a specified hash region using Smith-Waterman-Gotoh
-void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int queryLength, unsigned int extensionBases) {
+void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int& queryLength, unsigned int& extensionBases) {
 
 	// define the begin coordinate of our alignment region
 	unsigned int begin = r.End;
@@ -1807,7 +1807,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 }
 
 // returns true if the alignment passes all of the user-specified filters
-bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength) {
+bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int& queryLength) {
 
 	unsigned int queryLength1 = mFlags.EnableColorspace ? queryLength + 1 : queryLength;
 	
@@ -1872,7 +1872,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 }
 
 // creates the hash for a supplied fragment
-void CAlignmentThread::CreateHash(const char* fragment, const unsigned char fragmentLen, uint64_t& key) {
+void CAlignmentThread::CreateHash(const char* fragment, const unsigned char& fragmentLen, uint64_t& key) {
 
 	// set the key to zero
 	key = 0;
@@ -1951,7 +1951,7 @@ void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, con
 }
 
 // consolidates hash hits into read candidates
-void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList) {
+void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList) {
 
 	// localize the hash size
 	unsigned char hashSize = mSettings.HashSize;
@@ -1985,11 +1985,18 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	}
 
 	// sort the hash regions according to length (descending)
-	if( !mFlags.IsAligningAllReads || mFlags.IsUsingHashPositionThreshold ) sort(regions.begin(), regions.end(), SortHashRegionByLength() );
+	if( !mFlags.IsAligningAllReads || mFlags.IsUsingHashPositionThreshold ) 
+	  sort(regions.begin(), regions.end(), SortHashRegionByLength());
 }
 
 // settles the local Smith-Waterman window
-bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int refIndex, const unsigned int uniqueBegin, const unsigned int uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd ) {
+bool CAlignmentThread::SettleLocalSearchRegion(
+    const LocalAlignmentModel& lam, 
+    const unsigned int& refIndex, 
+    const unsigned int& uniqueBegin, 
+    const unsigned int& uniqueEnd, 
+    unsigned int& localSearchBegin, 
+    unsigned int& localSearchEnd ) {
 
 	// calculate the target regions using the local alignment models
 	const unsigned int refBegin = mReferenceBegin[refIndex];

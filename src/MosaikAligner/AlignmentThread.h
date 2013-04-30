@@ -400,18 +400,18 @@ private:
 	// aligns the read against the reference sequence and returns true if the read was aligned
 	bool AlignRead(CNaiveAlignmentSet& alignments, const char* query, const char* qualities, const unsigned int& queryLength, AlignmentStatusType& status, int* numHashes);
 	// aligns the read against a specified hash region using Smith-Waterman-Gotoh
-	void AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int queryLength, unsigned int extensionBases);
+	void AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int& queryLength, unsigned int& extensionBases);
 	// returns true if the alignment passes all of the user-specified filters
-	bool ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength);
+	bool ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int& queryLength);
 	// creates the hash for a supplied fragment
-	void CreateHash(const char* fragment, const unsigned char fragmentLen, uint64_t& key);
+	void CreateHash(const char* fragment, const unsigned char& fragmentLen, uint64_t& key);
 	// consolidates hash hits into a read candidate (fast algorithm)
-	void GetFastReadCandidate(HashRegion& region, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList);
+	void GetFastReadCandidate(HashRegion& region, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList);
 	// consolidates hash hits into read candidates
-	void GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList);
+	void GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList);
 	// settles the local Smith-Waterman window
-	bool SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int refIndex
-		, const unsigned int uniqueBegin, const unsigned int uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd );
+	bool SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int& refIndex
+		, const unsigned int& uniqueBegin, const unsigned int& uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd );
 	// attempts to rescue the mate paired with a unique mate
 	bool RescueMate(const LocalAlignmentModel& lam, const CMosaikString& bases, const unsigned int& begin
 		, const unsigned int& end, const unsigned int& refIndex, Alignment& al);
@@ -421,11 +421,11 @@ private:
 	void ProcessSpecialAlignment (vector<Alignment*>* mate1Set 
 		, Alignment* mate1SpecialAl, bool* mate1Special);
 	// treat the best alignment as an unique mapping and than turn on local search
-	bool TreatBestAsUnique(vector<Alignment*>* mateSet, const unsigned int readLength);
+	bool TreatBestAsUnique(vector<Alignment*>* mateSet, const unsigned int& readLength);
 	// update statistics
 	void UpdateStatistics ( const enum AlignmentStatusType& mate1Status, const enum AlignmentStatusType& mate2Status
-		, const Alignment al1, const Alignment al2, const bool isProperPair );
-	void UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al );
+		, const Alignment& al1, const Alignment& al2, const bool& isProperPair );
+	void UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment& al );
 	void SearchLocalRegion(const vector<Alignment*>& anchorVector, const Mosaik::Mate& mate, CNaiveAlignmentSet* mateVector);
 	inline void SaveBamAlignment( const Alignment& al, const char* zaString, const bool& noCigarMdNm, const bool& notShowRnamePos, const bool& isSpecial );
 	inline void SaveArchiveAlignment ( const Mosaik::Read& mr, const Alignment& al1, const Alignment& al2, const bool& isLongRead );
