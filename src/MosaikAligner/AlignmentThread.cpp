@@ -1914,7 +1914,7 @@ void CAlignmentThread::CreateHash(const char* fragment, const unsigned char& fra
 }
 
 // consolidates hash hits into a read candidate (fast algorithm)
-void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList) {
+void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList) {
 
 	// localize the hash size
 	unsigned char hashSize = mSettings.HashSize;
