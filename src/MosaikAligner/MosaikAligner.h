@@ -61,6 +61,8 @@ public:
 	void EnableBandedSmithWaterman(const unsigned int bandwidth);
 	// enables low-memory algorithm
 	void EnableLowMemory(void);
+	// not count gasp as mismatches
+	void NotCountGapAsMismatch(void);
 	// enables SOLiD colorspace translation
 	void EnableColorspace(const string& basespaceReferenceFilename);
 	// enables the hash position threshold

@@ -20,12 +20,12 @@
 // MOSAIK version
 // ==============
 
-#define MOSAIK_VERSION_DATE "2012-11-08"
+#define MOSAIK_VERSION_DATE "2013-04-16"
 
 // adopt a major.minor.build version number [1].[1].[3]
 const unsigned char  MOSAIK_MAJOR_VERSION = 2;
 const unsigned char  MOSAIK_MINOR_VERSION = 1;
-const unsigned short MOSAIK_BUILD_VERSION = 73;
+const unsigned short MOSAIK_BUILD_VERSION = 81;
 
 // ================================
 // Platform specific variable sizes

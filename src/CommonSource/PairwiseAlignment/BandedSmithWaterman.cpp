@@ -24,7 +24,13 @@ const PositionType CBandedSmithWaterman::Position_QUERY_ZERO            = 2;
 const PositionType CBandedSmithWaterman::Position_REF_AND_QUERO_NONZERO = 3;
 
 // constructor
-CBandedSmithWaterman::CBandedSmithWaterman(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty, unsigned int bandWidth) 
+CBandedSmithWaterman::CBandedSmithWaterman(
+    float matchScore, 
+    float mismatchScore, 
+    float gapOpenPenalty, 
+    float gapExtendPenalty, 
+    unsigned int bandWidth, 
+    bool notCountGapAsMismatch) 
 : mCurrentMatrixSize(0)
 , mCurrentAnchorSize(0)
 , mCurrentAQSumSize(0)
@@ -40,6 +46,7 @@ CBandedSmithWaterman::CBandedSmithWaterman(float matchScore, float mismatchScore
 , mReversedQuery(NULL)
 , mUseHomoPolymerGapOpenPenalty(false)
 , mHomoPolymerGapOpenPenalty(0.0)
+, notCountGapAsMismatch_(notCountGapAsMismatch)
 {
 	CreateScoringMatrix();
 
@@ -68,7 +75,7 @@ CBandedSmithWaterman::~CBandedSmithWaterman(void) {
 }
 
 // aligns the query sequence to the anchor using the Smith Waterman Gotoh algorithm
-void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const unsigned int s1Length, const char* s2, const unsigned int s2Length, HashRegion& hr) {
+void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const unsigned int& s1Length, const char* s2, const unsigned int& s2Length, const HashRegion& hr) {
 
 #ifdef VERBOSE_DEBUG
 	cerr << "=== Banded Smith-Waterman ===" << endl;
@@ -88,8 +95,8 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 #endif
 
 	// determine the hash region type
-	unsigned int rowOffset;
-	unsigned int columnOffset;
+	int rowOffset;
+	int columnOffset;
 	PositionType positionType;
 
 	if(hr.Begin == 0) {
@@ -113,6 +120,10 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 			positionType = Position_REF_AND_QUERO_NONZERO;
 		}
 	}
+
+#ifdef VERBOSE_DEBUG
+	cerr << "rowOffset: " << rowOffset << "\tcolumnOffset: " << columnOffset << endl;
+#endif
 
 	// =========================
 	// Reinitialize the matrices
@@ -207,7 +218,7 @@ void CBandedSmithWaterman::Align(Alignment& alignment, const char* s1, const uns
 }
 
 // calculates the score during the forward algorithm
-float CBandedSmithWaterman::CalculateScore(const char* s1, const char* s2, const unsigned int rowNum, const unsigned int columnNum, float& currentQueryGapScore, const unsigned int rowOffset, const unsigned int columnOffset) {
+float CBandedSmithWaterman::CalculateScore(const char* s1, const char* s2, const unsigned int& rowNum, const unsigned int& columnNum, float& currentQueryGapScore, const int& rowOffset, const int& columnOffset) {
 
 	// initialize
 	const unsigned int row      = rowNum + rowOffset;
@@ -502,7 +513,7 @@ void CBandedSmithWaterman::ReinitializeMatrices(const PositionType& positionType
 
 
 // performs the backtrace algorithm
-void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const char* s2, const unsigned int s2Length, unsigned int bestRow, unsigned int bestColumn, const unsigned int rowOffset, const unsigned int columnOffset){
+void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const char* s2, const unsigned int& s2Length, unsigned int& bestRow, unsigned int& bestColumn, const int& rowOffset, const int& columnOffset){
 
 	unsigned int currentRow		 = bestRow;
 	unsigned int currentColumn	 = bestColumn;
@@ -539,7 +550,7 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 					mReversedAnchor[gappedAnchorLen++] = GAP;
 					mReversedQuery[gappedQueryLen++]   = s2[currentRow];
 
-					numMismatches++;
+					if (!notCountGapAsMismatch_) ++numMismatches;
 
 					previousRow = currentRow;
 					previousColumn = currentColumn;
@@ -569,7 +580,7 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 				mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
 				mReversedQuery[gappedQueryLen++]   = s2[currentRow];
 
-				if(s1[currentColumn] != s2[currentRow]) numMismatches++;
+				if(s1[currentColumn] != s2[currentRow]) ++numMismatches;
 				previousRow = currentRow;
 				previousColumn = currentColumn;
 
@@ -590,7 +601,7 @@ void CBandedSmithWaterman::Traceback(Alignment& alignment, const char* s1, const
 					mReversedAnchor[gappedAnchorLen++] = s1[currentColumn];
 					mReversedQuery[gappedQueryLen++]   = GAP;
 
-					numMismatches++;
+					if (!notCountGapAsMismatch_) ++numMismatches;
 
 					previousRow = currentRow;
 					previousColumn = currentColumn;
