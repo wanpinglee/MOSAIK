@@ -65,7 +65,7 @@ CAlignmentThread::CAlignmentThread(
 	, mpDNAHash(pDnaHash)
 	, mSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, flags.NotCountGapAsMismatch)
 	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth, flags.NotCountGapAsMismatch)
-	, mSSW()
+	, mSSW(10, 9, 15, 1)
 	, mReferenceBegin(pRefBegin)
 	, mReferenceEnd(pRefEnd)
 	, mReferenceSpecies(pRefSpecies)
