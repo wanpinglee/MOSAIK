@@ -282,8 +282,8 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 		// set the mhp occupancy
 		bool found = false;
 		if(mLimitPositions && (numPositions > mMaxHashPositions)) {
-			//mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
-			//numPositions = mMaxHashPositions;
+			mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
+			numPositions = mMaxHashPositions;
 			found = true;
 		}
 
@@ -776,6 +776,7 @@ void CJumpDnaHash::LoadPositions(void) {
 					else store = false;
 
 				} else { // all of the positions are located in special
+				         // or movedSpecial == 0
 					random_shuffle(positions.begin(), positions.end());
 					int num_erase = totalSpecial - _nSpecialHash;
 					if (num_erase > 0)
@@ -835,9 +836,9 @@ void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& left, v
 
 	// store number of hash hits
 	unsigned int nPositions = 0;
-	//if ( mLimitPositions && (positions.size() > mMaxHashPositions) )
-	//	nPositions = mMaxHashPositions;
-	//else
+	if ( mLimitPositions && (positions.size() > mMaxHashPositions) )
+		nPositions = mMaxHashPositions;
+	else
 		nPositions = positions.size();
 	
 	memcpy((char*)(mPositionBufferPtr + curFilePosition), (char*)&nPositions, SIZEOF_INT);
