@@ -1171,7 +1171,7 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 	Alignment* bestAl  = *rit;
 	unsigned short mq1 = (*rit)->Quality;
 	float swScore1     = (*rit)->SwScore;
-	rit++;
+	++rit;
 	Alignment* secondBestAl = *rit;
 	unsigned short mq2      = (*rit)->Quality;
 	float swScore2          = (*rit)->SwScore;
@@ -1504,7 +1504,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 	//}
 
 	// statistics variables
-	int64_t hashRegionLength = 0;
+	//int64_t hashRegionLength = 0;
 
 	// control variables
 	bool evaluateReverseReads = true;
@@ -1615,13 +1615,14 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 				alignments.Add(al);
 			}
 		} else {
-			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); i++) {
+			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); ++i) {
 				
 				// enforce alignment candidate thresholds
-				if(mFlags.IsUsingAlignmentCandidateThreshold) {
-					hashRegionLength = forwardRegions[i].End - forwardRegions[i].Begin + 1;
-					if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
-				}
+				// @Wan-Ping Lee: The following check is moved to GetReadCandidates function
+				//if(mFlags.IsUsingAlignmentCandidateThreshold) {
+				//	hashRegionLength = forwardRegions[i].End - forwardRegions[i].Begin + 1;
+				//	if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
+				//}
 
 				// create a new alignment data structure
 				Alignment al;
@@ -1652,13 +1653,14 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 			if(alignAllReads) evaluateReverseReads = true;
 
 			if(evaluateReverseReads) {
-				for(unsigned int i = 0; i < (unsigned int)reverseRegions.size(); i++) {
+				for(unsigned int i = 0; i < (unsigned int)reverseRegions.size(); ++i) {
 					
 					// enforce alignment candidate thresholds
-					if(mFlags.IsUsingAlignmentCandidateThreshold) {
-						hashRegionLength = reverseRegions[i].End - reverseRegions[i].Begin + 1;
-						if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
-					}
+					// @Wan-Ping Lee: The following check is moved to GetReadCandidates function 
+					//if(mFlags.IsUsingAlignmentCandidateThreshold) {
+					//	hashRegionLength = reverseRegions[i].End - reverseRegions[i].Begin + 1;
+					//	if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
+					//}
 
 					// create a new alignment data structure
 					Alignment al;
@@ -1718,7 +1720,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 
 	// make sure the endpoints are within the reference sequence
 	unsigned int referenceIndex = 0;
-	while(r.Begin > mReferenceEnd[referenceIndex]) referenceIndex++;
+	while(r.Begin > mReferenceEnd[referenceIndex]) ++referenceIndex;
 
 
 	const unsigned int refBegin = mReferenceBegin[referenceIndex];
@@ -1731,8 +1733,8 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	if(end   > refEnd)   end   = refEnd;
 
 	// adjust the begin and end positions if the reference is masked
-	while(mReference[begin] == 'X') begin++;
-	while(mReference[end]   == 'X') end--;
+	while(mReference[begin] == 'X') ++begin;
+	while(mReference[end]   == 'X') --end;
 
 	// perform a Smith-Waterman alignment on our region
 	char* pAnchor = mReference + begin;
@@ -1748,6 +1750,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	bool hasEnoughBandwidth = false;
 	HashRegion diagonalRegion = r;
 
+	/*
 	if(mFlags.UseBandedSmithWaterman) {
 
 		diagonalRegion.Begin -= begin;
@@ -1761,6 +1764,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 		hasEnoughBandwidth = (queryLength - diagonalRegion.QueryBegin) > mSettings.Bandwidth;
 		hasEnoughBandwidth = hasEnoughBandwidth && (((end - begin + 1) - diagonalRegion.Begin) > mSettings.Bandwidth / 2);
 	}
+	*/
 
 	//if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
 	//	mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
@@ -1942,19 +1946,27 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	}
 
 	// add the consolidated regions
-	regions.resize(hrt.GetCount());
-	vector<HashRegion>::iterator hrIter = regions.begin();
+	regions.reserve(hrt.GetCount());
+	//vector<HashRegion>::iterator hrIter = regions.begin();
 
 	hrt.GotoFirstEntry();
 	while(HashRegion* r = hrt.GetTraversalHashRegion()) {
 		if(!hrt.GetNextEntry()) break;
-		*hrIter = *r;
-		hrIter++;
+		//*hrIter = *r;
+		//hrIter++;
+		if(mFlags.IsUsingAlignmentCandidateThreshold) {
+		  int length = r->End - r->Begin + 1;
+		  if (length >= mSettings.AlignmentCandidateThreshold)
+		    regions.push_back(*r);
+		}
 	}
 
 	// sort the hash regions according to length (descending)
-	if( !mFlags.IsAligningAllReads || mFlags.IsUsingHashPositionThreshold ) 
+	if ((!mFlags.IsAligningAllReads)
+	   || (mFlags.IsUsingHashRegionThreshold && (regions.size() > mSettings.HashRegionThreshold))) {
 	  sort(regions.begin(), regions.end(), SortHashRegionByLength());
+	}
+	  
 }
 
 // settles the local Smith-Waterman window
