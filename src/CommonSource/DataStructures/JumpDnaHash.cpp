@@ -282,8 +282,8 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 		// set the mhp occupancy
 		bool found = false;
 		if(mLimitPositions && (numPositions > mMaxHashPositions)) {
-			mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
-			numPositions = mMaxHashPositions;
+			//mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
+			//numPositions = mMaxHashPositions;
 			found = true;
 		}
 
@@ -664,7 +664,7 @@ void CJumpDnaHash::LoadPositions(void) {
 		memcpy((char*)&filePosition, (char*)(mKeyBufferPtr + offset), KEY_LENGTH);
 
 		// no hash hits
-		if ( filePosition ==  0xffffffffff ) {
+		if ( filePosition == 0xffffffffff ) {
 			offset += KEY_LENGTH;
 			continue;
 		}
@@ -687,12 +687,11 @@ void CJumpDnaHash::LoadPositions(void) {
 		vector <unsigned int> positions;
 		positions.reserve(numPositions);
 		// load all positions of hash hits
-		for ( unsigned int i = 0; i < numPositions; i++ ) {
-			
+		for (unsigned int i = 0; i < numPositions; ++i) {
 			filePosition += SIZEOF_INT;
 			if ( filePosition >= (off_type)(nBlock+1)*fillBufferSize ) {
 				LoadBlockPositions( blockPosition, bytesLeft, fillBufferSize );
-				nBlock++;
+				++nBlock;
 			}
 
 			posOffset = filePosition - (off_type)nBlock*fillBufferSize;
@@ -724,13 +723,14 @@ void CJumpDnaHash::LoadPositions(void) {
 			memset((char*)(mKeyBufferPtr + offset), 0xff, KEY_LENGTH);
 		}
 		else {
+			bool store = false;
 			// NOTE: that low-memory won't go into here
-			if ( _bubbleSpecialHashes ) {
+			if (_bubbleSpecialHashes) {
 				unsigned int totalPos     = positions.size();
 				unsigned int totalSpecial = 0;
 				for ( vector <unsigned int>::reverse_iterator rit = positions.rbegin(); rit != positions.rend(); ++rit ) {
 					if ( *rit > _specialBegin )
-						totalSpecial++;
+						++totalSpecial;
 				}
 				
 				//if ( totalSpecial > 0 ) {
@@ -750,24 +750,51 @@ void CJumpDnaHash::LoadPositions(void) {
 				//	cerr << keys << "\t" << totalSpecial << "\t" << totalPos << endl;
 				//}
 				
+				if (mLimitPositions && ((totalPos - totalSpecial) > mMaxHashPositions)) {
+				  positions.erase(positions.begin(), positions.begin() + (totalPos - totalSpecial - 1));
+				  totalPos = positions.size();
+				}
+
 				unsigned int movedSpecial = ( totalSpecial > _nSpecialHash ) ? _nSpecialHash : totalSpecial;
 				if ( ( totalSpecial != totalPos ) && ( movedSpecial > 0 ) ) {
 					unsigned int specialBegin = totalPos - totalSpecial;
-					unsigned int normalEnd    = totalPos - totalSpecial - 1;
-					random_shuffle( positions.begin(), positions.begin() + normalEnd );
-					random_shuffle( positions.begin() + specialBegin, positions.end() );
+					//unsigned int normalEnd    = totalPos - totalSpecial - 1;
+					//random_shuffle(positions.begin(), positions.begin() + normalEnd);
+					random_shuffle(positions.begin() + specialBegin, positions.end());
+					int num_erase = totalSpecial - _nSpecialHash;
+					if (num_erase > 0)
+					  positions.erase(positions.begin() + specialBegin, positions.begin() + specialBegin + num_erase - 1);
+					/*
 					unsigned int temp;
-					for ( unsigned int i = 0; i < totalSpecial; ++i ) {
+					for ( unsigned int i = 0; i < movedSpecial; ++i ) {
 						temp = positions[i];
 						positions[i] = positions[ specialBegin + i ];
 						positions[ specialBegin + i ] = temp;
 					}
+					*/
+					if (positions.size() > 0) store = true;
+					else store = false;
 
-				} else
-					random_shuffle( positions.begin(), positions.end() );
-			} else
-				random_shuffle( positions.begin(), positions.end() );
-			StorePositions(curFilePosition, left, positions, offset);
+				} else { // all of the positions are located in special
+					random_shuffle(positions.begin(), positions.end());
+					int num_erase = totalSpecial - _nSpecialHash;
+					if (num_erase > 0)
+					  positions.erase(positions.begin(), positions.begin() + num_erase - 1);
+					if (positions.size() > 0) store = true;
+					else store = false;
+				}
+			} else { // !_bubbleSpecialHashes
+				if (mLimitPositions && (positions.size() > mMaxHashPositions)) {
+				  store = false;
+				} else {
+				  //random_shuffle(positions.begin(), positions.end());
+				  store = true;
+				}
+			}
+			if (store)
+			  StorePositions(curFilePosition, left, positions, offset);
+			else
+			  memset((char*)(mKeyBufferPtr + offset), 0xff, KEY_LENGTH);
 		}
 
 		positions.clear();
@@ -808,22 +835,21 @@ void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& left, v
 
 	// store number of hash hits
 	unsigned int nPositions = 0;
-	if ( mLimitPositions && (positions.size() > mMaxHashPositions) )
-		nPositions = mMaxHashPositions;
-	else
+	//if ( mLimitPositions && (positions.size() > mMaxHashPositions) )
+	//	nPositions = mMaxHashPositions;
+	//else
 		nPositions = positions.size();
 	
 	memcpy((char*)(mPositionBufferPtr + curFilePosition), (char*)&nPositions, SIZEOF_INT);
 	curFilePosition += SIZEOF_INT;
 	left            -= SIZEOF_INT;
 
-	for ( unsigned int i = 0; i < nPositions; i++ ) {
+	for (unsigned int i = 0; i < nPositions; ++i) {
 		// mPositionBuffer is full
-		if ( left < SIZEOF_INT ) {
+		if (left < SIZEOF_INT) {
 			cout << "ERROR: Run out the allocated position memory." << endl;
 			exit(1);
 		}
-
 		unsigned int position = positions[i];
 		memcpy((char*)(mPositionBufferPtr + curFilePosition), (char*)&position, SIZEOF_INT);
 		curFilePosition += SIZEOF_INT;
