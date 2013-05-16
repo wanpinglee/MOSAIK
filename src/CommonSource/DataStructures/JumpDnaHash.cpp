@@ -280,15 +280,15 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 
 		
 		// set the mhp occupancy
-		bool found = false;
-		if(mLimitPositions && (numPositions > mMaxHashPositions)) {
-			mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
-			numPositions = mMaxHashPositions;
-			found = true;
-		}
+		//bool found = false;
+		//if(mLimitPositions && (numPositions > mMaxHashPositions)) {
+			//mhpOccupancy = (double)mMaxHashPositions / (double)numPositions;
+			//numPositions = mMaxHashPositions;
+		//	found = true;
+		//}
 
 		unsigned int hashPosition = 0;
-		for(unsigned int i = 0; i < numPositions; i++) {
+		for(unsigned int i = 0; i < numPositions; ++i) {
 			memcpy((char*)&hashPosition, pPositions + bufferOffset, SIZEOF_INT);
 			bufferOffset += SIZEOF_INT;
 
@@ -330,7 +330,7 @@ void CJumpDnaHash::Get(const uint64_t& key, const unsigned int& queryPosition, C
 		vector<unsigned int> positionVector;
 		if(mUseCache) positionVector.resize(numPositions);
 
-		for(unsigned int i = 0; i < numPositions; i++) {
+		for(unsigned int i = 0; i < numPositions; ++i) {
 			memcpy((char*)&hashPosition, mBuffer + bufferOffset, SIZEOF_INT);
 			bufferOffset += SIZEOF_INT;
 
@@ -833,7 +833,7 @@ void CJumpDnaHash::StorePositions ( off_type& curFilePosition, off_type& left, v
 		cout << "ERROR: Run out the allocated position memory." << endl;
 		exit(1);
 	}
-
+	
 	// store number of hash hits
 	unsigned int nPositions = 0;
 	if ( mLimitPositions && (positions.size() > mMaxHashPositions) )

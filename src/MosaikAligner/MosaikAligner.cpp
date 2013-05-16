@@ -276,12 +276,17 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 		else {
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0, mFlags.UseLowMemory, 0, mSReference.found);
+			
+			// set the hash positions threshold
+			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
+			  mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+			
 			mpDNAHash->LoadKeysNPositions();
 		}
 
 		// set the hash positions threshold
-		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
-			mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+		//if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
+		//	mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
 		// localize the read archive filenames
 		string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;

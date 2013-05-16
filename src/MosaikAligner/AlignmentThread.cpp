@@ -1747,8 +1747,8 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 
 
 	// determine if the specified bandwidth is enough to accurately align using the banded algorithm
-	bool hasEnoughBandwidth = false;
-	HashRegion diagonalRegion = r;
+	//bool hasEnoughBandwidth = false;
+	//HashRegion diagonalRegion = r;
 
 	/*
 	if(mFlags.UseBandedSmithWaterman) {
