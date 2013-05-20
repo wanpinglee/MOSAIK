@@ -11,7 +11,7 @@ bool convert_from_string(const std::string& s, T& r) {
 	std::istringstream iss(s);
 	iss >> r;
 	
-	return (iss.fail() || ((std::size_t) iss.tellg()) != s.size()) ? false : true;
+	return iss.fail() ? false : true;
 }
 
 
