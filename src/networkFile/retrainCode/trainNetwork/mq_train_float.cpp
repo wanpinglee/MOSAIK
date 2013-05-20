@@ -90,8 +90,10 @@ void convertSamToFann(const NeuralElement& element, vector<float>* din) {
   din->push_back(element.smith_waterman);  // (best-next_best) / read_len
   din->push_back(element.longest_match);
   din->push_back(element.entropy);
-  din->push_back(log10(element.num_mappings + 1));
-  din->push_back(log10(element.num_hashes + 1));
+  //din->push_back(log10(element.num_mappings + 1));
+  //din->push_back(log10(element.num_hashes + 1));
+  din->push_back(element.num_mappings);
+  din->push_back(element.num_hashes);
 }
 
 int main(int argc, char** argv)
