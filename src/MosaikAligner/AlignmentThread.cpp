@@ -2065,7 +2065,7 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	StripedSmithWaterman::Filter filter;
 	StripedSmithWaterman::Alignment ssw_alignment;
 	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
-	ConvertSswToAlignment(ssw_alignment, pAnchor, query, &al);
+	ConvertSswToAlignment(ssw_alignment, pAnchor, mForwardRead, &al);
 
 	// adjust the reference start positions
 	al.ReferenceIndex = refIndex;
