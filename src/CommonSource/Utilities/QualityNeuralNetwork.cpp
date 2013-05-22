@@ -76,8 +76,8 @@ unsigned char QualityNeuralNetwork::GetQualityPe(const FannInputs& annInputs1,
   //  fann_inputs.push_back(log10((float)(annInputs1.numMappings + 1)));
   //  fann_inputs.push_back(log10((float)(annInputs1.numHashes + 1)));
   //} else {
-    fann_inputs.push_back((float)(annInputs2.numMappings);
-    fann_inputs.push_back((float)(annInputs2.numHashes);
+    fann_inputs.push_back((float)annInputs2.numMappings);
+    fann_inputs.push_back((float)annInputs2.numHashes);
   //}
 
   fann_inputs.push_back(log10((float)(fragment_length_diff + 1)));
