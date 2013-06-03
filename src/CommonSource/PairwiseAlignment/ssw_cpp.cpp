@@ -41,12 +41,12 @@ void BuildSwScoreMatrix(const uint8_t& match_score,
       matrix[id] = ((i == j) ? match_score : static_cast<int8_t>(-mismatch_penalty));
       ++id;
     }
-    matrix[id] = 0;
+    matrix[id] = static_cast<int8_t>(-mismatch_penalty);
     ++id;
   }
 
   for (int i = 0; i < 5; ++i)
-    matrix[id++] = 0;
+    matrix[id++] = static_cast<int8_t>(-mismatch_penalty);
     
 }
 
