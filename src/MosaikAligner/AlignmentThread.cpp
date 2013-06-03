@@ -220,7 +220,7 @@ void CAlignmentThread::SearchLocalRegion(
 	if ( settleLocalSearchWindow )
 		isAlExisting = mateVector->CheckExistence(refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex]);
 
-	if ( !isAlExisting ) {
+	if ( !isAlExisting && settleLocalSearchWindow ) {
 		Alignment al;
 
 		if( RescueMate( lam, mate.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
@@ -2044,9 +2044,13 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 				  const unsigned int& end, 
 				  const unsigned int& refIndex, 
 				  Alignment& al) {
-	// prepare for alignment (borrow the forward read buffer)
+        // prepare for alignment (borrow the forward read buffer)
 	const char* query              = bases.CData();
 	const unsigned int queryLength = bases.Length();
+
+        // the reference is shorter than query 
+        // so we do not align it
+	if ((end - begin + 1) < queryLength) return false;
 
 	strncpy_s(mForwardRead, mSettings.AllocatedReadLength, query, queryLength);
 	mForwardRead[queryLength] = 0;
@@ -2064,7 +2068,9 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	//mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
 	StripedSmithWaterman::Filter filter;
 	StripedSmithWaterman::Alignment ssw_alignment;
-	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+	const bool getSswAl = mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+        if (!getSswAl) return false;
+
 	ConvertSswToAlignment(ssw_alignment, pAnchor, mForwardRead, &al);
 
 	// adjust the reference start positions
