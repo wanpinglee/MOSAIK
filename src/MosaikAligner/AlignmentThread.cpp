@@ -182,6 +182,10 @@ void CAlignmentThread::SearchLocalRegion(
 	// the best one alignment is at the end of the vector
 	//vector<Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
 
+	#ifdef VERBOSE_DEBUG
+	fprintf(stderr,"Anchor position: %u:%u\t%u\n", (*uniqueIter)->ReferenceIndex, (*uniqueIter)->ReferenceBegin, (*uniqueIter)->ReferenceEnd);
+	#endif
+
 	const unsigned int refIndex    = (*uniqueIter)->ReferenceIndex;
 	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceBegin;
 	const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceEnd;
@@ -214,6 +218,9 @@ void CAlignmentThread::SearchLocalRegion(
 
 	// settle the local search region
 	bool settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
+	#ifdef VERBOSE_DEBUG
+	fprintf(stderr, "Local search: %u:%u\t%u;\t%u\t%u\n", refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd);
+	#endif
 	
 	// check if the mate is already sitting in the local region
 	bool isAlExisting = false;
@@ -808,10 +815,11 @@ void CAlignmentThread::AlignReadArchive(
 		if(areBothMatesPresent) {
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate2) {
+				mate1Alignments.GetSet(&mate1Set);
 				#ifdef VERBOSE_DEBUG
 					cerr << "=== Local Search mate2 ===" << endl;
+					cerr << "Mate1 alignments: " << mate1Alignments.GetCount() << endl;
 				#endif
-				mate1Alignments.GetSet(&mate1Set);
 				if (mate1Alignments.IsUnique()) {
 					SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 				} else if (mate1Alignments.IsMultiple()){ // do local search for some good multiply mappings
@@ -823,10 +831,12 @@ void CAlignmentThread::AlignReadArchive(
 
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate1) {
+				mate2Alignments.GetSet(&mate2Set);
+
 				#ifdef VERBOSE_DEBUG
 					cerr << "=== Local Search mate1 ===" << endl;
+					cerr << "Mate2 alignments: " << mate2Alignments.GetCount() << endl;
 				#endif
-				mate2Alignments.GetSet(&mate2Set);
 				if (mate2Alignments.IsUnique()) {
 					SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 				} else if (mate2Alignments.IsMultiple()){ // do local search for some good multiply mappings
@@ -2014,10 +2024,10 @@ bool CAlignmentThread::SettleLocalSearchRegion(
 	if(end   > refEnd)   end   = refEnd;
 
 	// adjust the start position if the reference starts with a J nucleotide
-	while(mReference[begin] == 'X') ++begin;
+	while(mReference[begin] == 'J') ++begin;
 
 	// adjust the stop position if the reference ends with a J nucleotide
-	while(mReference[end] == 'X')   --end;
+	while(mReference[end] == 'J')   --end;
 
 
 	// quit if we don't have a region to align against
@@ -2068,8 +2078,8 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	//mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
 	StripedSmithWaterman::Filter filter;
 	StripedSmithWaterman::Alignment ssw_alignment;
-	const bool getSswAl = mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
-        if (!getSswAl) return false;
+	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+        if (ssw_alignment.sw_score == 0) return false;
 
 	ConvertSswToAlignment(ssw_alignment, pAnchor, mForwardRead, &al);
 
