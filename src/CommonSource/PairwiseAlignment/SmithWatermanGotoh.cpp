@@ -233,7 +233,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 
 	// traceback flag
 	bool keepProcessing = true;
-	bool hasGap = false;
+	//bool hasGap = false;
 
 	bool matchRegion = false;
 	unsigned short longestMatch       = 0;
