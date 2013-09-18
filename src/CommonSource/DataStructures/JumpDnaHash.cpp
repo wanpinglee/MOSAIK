@@ -666,6 +666,9 @@ void CJumpDnaHash::LoadPositions(void) {
 		// no hash hits
 		if ( filePosition == 0xffffffffff ) {
 			offset += KEY_LENGTH;
+                        #ifdef VERBOSE_HASH_TABLE
+                        cerr << "0" << endl;
+                        #endif
 			continue;
 		}
 
@@ -682,6 +685,9 @@ void CJumpDnaHash::LoadPositions(void) {
 		off_type posOffset = filePosition - (off_type)nBlock*fillBufferSize;
 		unsigned int numPositions;
 		memcpy((char*)&numPositions, (char*)(blockPositionPtr + posOffset), SIZEOF_INT);
+                #ifdef VERBOSE_HASH_TABLE
+                cerr << numPositions << endl;
+                #endif
 		
 
 		vector <unsigned int> positions;
@@ -813,7 +819,9 @@ void CJumpDnaHash::LoadPositions(void) {
 
 	fclose(mPositions);
 
-
+        #ifdef VERBOSE_HASH_TABLE
+        exit(1);
+        #endif
 }
 
 // store the positions in the memory

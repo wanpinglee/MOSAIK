@@ -84,7 +84,7 @@ uint64_t CTimeSupport::ConvertStringToTime(const string& timeString) {
 	unsigned char monthDayLen = endPos - startPos;
 
 	//bool hasLeadingZero = false;
-	if((buffer[startPos] == '0') && (monthDayLen > 1)) hasLeadingZero = true;
+	//if((buffer[startPos] == '0') && (monthDayLen > 1)) hasLeadingZero = true;
 
 	memcpy(buffer, pTime + startPos, monthDayLen);
 	buffer[monthDayLen] = 0;
