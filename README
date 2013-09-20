@@ -9,6 +9,7 @@ Version 2.2 is about four-fold faster than previous by improving the Smith-
 Waterman (SW) strategy and using SIMD SW [1]. This is also the version that we 
 use on 1000 Genomes Project [2] Phase-III datasets.
 
+
 Overview:
 
 MOSAIK is a stable, sensitive and open-source program for mapping second and 
