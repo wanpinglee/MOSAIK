@@ -1,7 +1,13 @@
 ================================================================================
-MOSAIK 2.0        Release Distribution Documentation                  2013-04-01
+MOSAIK 2.2        Release Distribution Documentation                  2013-09-20
 Wan-Ping Lee & Michael Stromberg    Marth Lab, Boston College Biology Department
 ================================================================================
+
+News:
+
+Version 2.2 is about four-fold faster than previous by improving the Smith-
+Waterman (SW) strategy and using SIMD SW [1]. This is also the version that we 
+use on 1000 Genomes Project [2] Phase-III datasets.
 
 Overview:
 
@@ -63,3 +69,8 @@ example:
 
 The resulting bam file (read.mka.bam) will be found in the
 demo/fastq directory.
+
+
+References:
+[1]: https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
+[2]: http://www.1000genomes.org/
