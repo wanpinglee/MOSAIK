@@ -38,9 +38,9 @@ Or, download it from google code webpage:
 
 
 If you encounter issues with the development HEAD, or simply wish to obtain the
-most recent stable revision (2.1.78) then use:
+most recent stable revision (2.2.3) then use:
 
-        % git checkout 5dfdc8e723f031f2
+        % git checkout 915f6feca4d321a79c29de34f6512f92b751b457
 
 
 
