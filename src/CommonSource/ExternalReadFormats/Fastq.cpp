@@ -16,10 +16,10 @@
 #define READ_FILE_GETC           (mAreBasesCompressed ? gzgetc(mInZStream)                            : fgetc(mInStream))
 #define READ_FILE_GETS           (mAreBasesCompressed ? gzgets(mInZStream, mBuffer, mBufferLen)       : fgets(mBuffer, mBufferLen, mInStream))
 #define READ_FILE_OFFSET         (mAreBasesCompressed ? gztell(mInZStream)                            : ftell64(mInStream))
-#define READ_FILE_OPEN(filename) (mAreBasesCompressed ? mInZStream = gzopen(filename, "rb")           : mInStream = fopen(filename, "rb"))
+#define READ_FILE_OPEN(filename) (mAreBasesCompressed ? !!(mInZStream = gzopen(filename, "rb"))       : !!(mInStream = fopen(filename, "rb")))
 #define READ_FILE_REWIND         (mAreBasesCompressed ? gzseek(mInZStream, mReadDataOffset, SEEK_SET) : fseek64(mInStream, mReadDataOffset, SEEK_SET))
 #define READ_FILE_UNGETC(ch)     (mAreBasesCompressed ? gzungetc(ch, mInZStream)                      : ungetc(ch, mInStream))
-#define READ_STREAM              (mAreBasesCompressed ? mInZStream                                    : mInStream)
+#define READ_STREAM              (mAreBasesCompressed ? !!mInZStream                                  : !!mInStream)
 
 // constructor
 CFastq::CFastq(void) 
