@@ -22,7 +22,7 @@ add a new .inc file in the includes directory and set the BLD_PLATFORM variable
 accordingly (without the .inc suffix).
 
 All of the source code within is dual licensed under the GPL 2.0+ and via
-a commerical license available from the Marth Lab. 
+a commercial license available from the Marth Lab. 
 
 The exception to this is public domain code used within MOSAIK:
 
