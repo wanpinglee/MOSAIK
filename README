@@ -19,6 +19,12 @@ technologies, including Illumina, Applied Biosystems SOLiD, Roche 454,
 Ion Torrent and Pacific BioSciences SMRT.
 
 
+License:
+MOSAIK is open source software, licensed under the GPL 2.0+, and is provided 
+free-of-charge to all users. All we ask in return is that you acknowledge its 
+use in publications, talks, etc.
+
+
 Citation:
 
 http://arxiv.org/abs/1309.1149
