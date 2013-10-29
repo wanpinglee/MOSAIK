@@ -383,16 +383,39 @@ void CAlignmentThread::SaveMultiplyAlignment(
 	// -om is enabled
 	if (mFlags.OutputMultiplyComplete) {
 		if (isMate1Multiple) {
-			Alignment mateAl;
-			if ( !isMate2Empty ) {
-				mateAl = *(mate2Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
+			//Alignment mateAl;
+			//if ( !isMate2Empty ) {
+			//	mateAl = *(mate2Set[0]);
+			//	mateAl.ReferenceIndex += mReferenceOffset;
+			//}
 			vector<Alignment*> mate1SetTemp = mate1Set;
 			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
 				
-				if ( !isMate2Empty )
+				Alignment mateAl;
+				unsigned int isize = INT_MAX;
+				if ( !isMate2Empty ) {
+				        mateAl = *(mate2Set[0]);
+					if (mateAl.ReferenceIndex == (*alIter)->ReferenceIndex) {
+					  isize = 
+					    (mateAl.ReferenceBegin > (*alIter)->ReferenceBegin) 
+					    ? (mateAl.ReferenceBegin - (*alIter)->ReferenceBegin)
+					    : ((*alIter)->ReferenceBegin - mateAl.ReferenceBegin);
+					}
+					// pick the alignment in mate2Set that is closest to *alIter
+				        for(vector<Alignment*>::const_iterator al2Iter = mate2Set.begin() + 1; al2Iter != mate2Set.end(); ++al2Iter) {
+					  if ((*al2Iter)->ReferenceIndex == (*alIter)->ReferenceIndex) {
+					    unsigned int cur_isize = ((*al2Iter)->ReferenceBegin > (*alIter)->ReferenceBegin)
+					      ? ((*al2Iter)->ReferenceBegin - (*alIter)->ReferenceBegin)
+					      : ((*alIter)->ReferenceBegin - (*al2Iter)->ReferenceBegin);
+
+					    if (cur_isize < isize) {
+					      cur_isize = isize;
+					      mateAl = **al2Iter;
+					    }
+					  }
+					}
 					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+				}
 
 				(*alIter)->ReferenceIndex += mReferenceOffset;
 				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
@@ -408,16 +431,40 @@ void CAlignmentThread::SaveMultiplyAlignment(
 			}
 		}
 		if (alInfo.isPairedEnd && isMate2Multiple) {
-			Alignment mateAl;
-			if (!isMate1Empty) {
-				mateAl = *(mate1Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
+			//Alignment mateAl;
+			//if (!isMate1Empty) {
+			//	mateAl = *(mate1Set[0]);
+			//	mateAl.ReferenceIndex += mReferenceOffset;
+			//}
 
 			vector<Alignment*> mate2SetTemp = mate2Set;
 			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
-				if ( !isMate1Empty )
+
+			        Alignment mateAl;
+				unsigned int isize = INT_MAX;
+				if ( !isMate1Empty ) {
+				        mateAl = *(mate1Set[0]);
+					if (mateAl.ReferenceIndex == (*alIter)->ReferenceIndex) {
+					  isize = 
+					    (mateAl.ReferenceBegin > (*alIter)->ReferenceBegin) 
+					    ? (mateAl.ReferenceBegin - (*alIter)->ReferenceBegin)
+					    : ((*alIter)->ReferenceBegin - mateAl.ReferenceBegin);
+					}
+					// pick the alignment in mate2Set that is closest to *alIter
+				        for(vector<Alignment*>::const_iterator al2Iter = mate1Set.begin() + 1; al2Iter != mate1Set.end(); ++al2Iter) {
+					  if ((*al2Iter)->ReferenceIndex == (*alIter)->ReferenceIndex) {
+					    unsigned int cur_isize = ((*al2Iter)->ReferenceBegin > (*alIter)->ReferenceBegin)
+					      ? ((*al2Iter)->ReferenceBegin - (*alIter)->ReferenceBegin)
+					      : ((*alIter)->ReferenceBegin - (*al2Iter)->ReferenceBegin);
+
+					    if (cur_isize < isize) {
+					      cur_isize = isize;
+					      mateAl = **al2Iter;
+					    }
+					  }
+					}
 					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+				}
 				
 				(*alIter)->ReferenceIndex += mReferenceOffset;
 				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
