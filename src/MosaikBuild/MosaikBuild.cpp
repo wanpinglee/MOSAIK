@@ -764,12 +764,12 @@ void CMosaikBuild::EnableReadLimit(const uint64_t readLimit) {
 
 // returns the colorspace name for the given read name
 //void CMosaikBuild::GetColorspaceName(const CMosaikString& readName, ColorspaceName& cn) {
-	//vector<string> columns;
-	//back_insert_iterator<vector<string> > backiter(columns);
-	//SplitString(backiter, "_", readName.CData());
-	//cn.first  = GetUnsignedShort((char*)columns[0].c_str());
-	//cn.second = GetUnsignedShort((char*)columns[1].c_str());
-	//cn.third  = GetUnsignedShort((char*)columns[2].c_str());
+//	vector<string> columns;
+//	back_insert_iterator<vector<string> > backiter(columns);
+//	SplitString(backiter, "_", readName.CData());
+//	cn.first  = GetUnsignedShort((char*)columns[0].c_str());
+//	cn.second = GetUnsignedShort((char*)columns[1].c_str());
+//	cn.third  = GetUnsignedShort((char*)columns[2].c_str());
 //}
 
 // Parses an Illumina Bustard directory
@@ -1005,7 +1005,7 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 			const char* bases = r.Mate1.Bases.CData();
 			memcpy((char*)&r.Mate1.SolidPrefixTransition, bases, 1);
 			r.Mate1.Bases.TrimBegin(1);
-			r.Mate1.Qualities.TrimBegin(1);
+			//r.Mate1.Qualities.TrimBegin(1);
 			csu.ConvertReadColorspaceToPseudoColorspace(r.Mate1.Bases);
 		}
 
@@ -1190,9 +1190,9 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 		if(ftags1.Name != ftags2.Name) {
 
 			//if(mEnableColorspace) {
-			//	GetColorspaceName(ftags1.Name, cn1);
-			//	GetColorspaceName(ftags2.Name, cn2);
-			//
+				//GetColorspaceName(ftags1.Name, cn1);
+				//GetColorspaceName(ftags2.Name, cn2);
+			
 			//	while(ftags1.Name != ftags2.Name) {
 			//		if(cn1 < cn2) {
 			//			if(!reader.LoadNextMate(ftags1, r.Mate1)) break;
@@ -1209,9 +1209,9 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 
 			//	if(ftags1.Name != ftags2.Name) {
 			//		cout << "ERROR: Resynchronization colorspace support failed." << endl;
+			//		cout << "Read names: " << ftags1.Name.CData() << " and " << ftags2.Name.CData() << endl;
 			//		exit(1);
 			//	}
-
 			//} else {
 				cout << "ERROR: The mate1 read name did not match the mate2 read name. Resynchronization support needs to be implemented." << endl;
 				cout << "mate 1 name: " << ftags1.Name << endl;
@@ -1476,12 +1476,12 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 	ActivateIlluminaLanes(lanes);
 
 	// create our Illumina base quality LUT
-	char baseQualityLUT[256];
+	//char baseQualityLUT[256];
 	int bq;
 	for(int i = -128; i < 128; i++) {
 		bq = (int)(-10.0 * log10(1.0 / (1.0 + pow(10.0, ((double)i / 10.0)))) + 0.5);
 		if(bq < 1) bq = 1;
-		baseQualityLUT[i + 128] = bq;
+	//	baseQualityLUT[i + 128] = bq;
 	}
 
 	// find the sequence files

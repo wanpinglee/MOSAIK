@@ -61,6 +61,8 @@ public:
 	void EnableBandedSmithWaterman(const unsigned int bandwidth);
 	// enables low-memory algorithm
 	void EnableLowMemory(void);
+	// not count gasp as mismatches
+	void NotCountGapAsMismatch(void);
 	// enables SOLiD colorspace translation
 	void EnableColorspace(const string& basespaceReferenceFilename);
 	// enables the hash position threshold
@@ -97,7 +99,7 @@ public:
 	// sets quiet mode
 	void SetQuietMode(void);
 	// outputs multiply mapped alignments
-	void OutputMultiply(void);
+	void OutputMultiply(const bool& incomplete, const bool& complete);
 	void SetPeNeuralNetworkFilename(const string& neuralNetworkFilename);
 	void SetSeNeuralNetworkFilename(const string& neuralNetworkFilename);
 	void EnableZnTag();

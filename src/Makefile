@@ -1,6 +1,6 @@
 # ==========================
 # MOSAIK Makefile
-# (c) 2009 Michael Stromberg
+# (c) 2012 Wan-Ping Lee
 # ==========================
 
 # define our object and binary directories
@@ -18,7 +18,9 @@ export UTILITIES_DIR = CommonSource/Utilities
 
 # define some default flags
 FLAGS = -Wall -Wno-char-subscripts -ansi -O3
-CFLAGS = -std=C99
+#FLAGS = -Wall -Wno-char-subscripts -ansi -g -D VERBOSE_DEBUG #gdb debugging
+#FLAGS = -Wall -Wno-char-subscripts -ansi -O3 -D VERBOSE_DEBUG #enables verbose debugging
+CFLAGS =
 CXXFLAGS =
 #CXXFLAGS = -ansi -pedantic -Wextra -Weffc++
 CFLAGS += $(FLAGS)

@@ -1094,15 +1094,15 @@ CSRF::block_t* CSRF::DecodeHuffmanStream(block_t* in, huffman_codeset_t* cs) {
 	unsigned int i;
 	int node_num;
 	unsigned char *cp;
-	huffman_codes_t **c;
-	int nc;
+	//huffman_codes_t **c;
+	//int nc;
 	h_jump4_t (*J4)[16];
 	htree_t *t;
 
 	if (!cs)
 		return NULL;
-	c = cs->codes;
-	nc = cs->ncodes;
+	//c = cs->codes;
+	//nc = cs->ncodes;
 
 	/* Ensure precomputed lookup tables exist */
 	if (!cs->decode_t || !cs->decode_J4)

@@ -24,11 +24,11 @@ using namespace std;
 class CSmithWatermanGotoh {
 public:
 	// constructor
-	CSmithWatermanGotoh(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty);
+	CSmithWatermanGotoh(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty, bool notCountGapAsMismatch);
 	// destructor
 	~CSmithWatermanGotoh(void);
 	// aligns the query sequence to the reference using the Smith Waterman Gotoh algorithm
-	void Align(Alignment& alignment, const char* s1, const unsigned int s1Length, const char* s2, const unsigned int s2Length);
+	void Align(Alignment& alignment, const char* s1, const unsigned int& s1Length, const char* s2, const unsigned int& s2Length);
 	// enables homo-polymer scoring
 	void EnableHomoPolymerGapPenalty(float hpGapOpenPenalty);
 
@@ -79,6 +79,7 @@ private:
 	bool mUseHomoPolymerGapOpenPenalty;
 	// specifies the homo-polymer gap open penalty
 	float mHomoPolymerGapOpenPenalty;
+	bool notCountGapAsMismatch_;
 
 	CSmithWatermanGotoh (const CSmithWatermanGotoh&);
 	CSmithWatermanGotoh& operator=(const CSmithWatermanGotoh&);

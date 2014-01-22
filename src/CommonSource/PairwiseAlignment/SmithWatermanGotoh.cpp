@@ -17,7 +17,7 @@ const char CSmithWatermanGotoh::Directions_LEFT     = 1;
 const char CSmithWatermanGotoh::Directions_DIAGONAL = 2;
 const char CSmithWatermanGotoh::Directions_UP       = 3;
 
-CSmithWatermanGotoh::CSmithWatermanGotoh(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty) 
+CSmithWatermanGotoh::CSmithWatermanGotoh(float matchScore, float mismatchScore, float gapOpenPenalty, float gapExtendPenalty, bool notCountGapAsMismatch) 
 : mCurrentMatrixSize(0)
 , mCurrentAnchorSize(0)
 , mCurrentQuerySize(0)
@@ -35,6 +35,7 @@ CSmithWatermanGotoh::CSmithWatermanGotoh(float matchScore, float mismatchScore, 
 , mReversedQuery(NULL)
 , mUseHomoPolymerGapOpenPenalty(false)
 , mHomoPolymerGapOpenPenalty(0.0)
+, notCountGapAsMismatch_(notCountGapAsMismatch)
 {
 	CreateScoringMatrix();
 }
@@ -50,7 +51,7 @@ CSmithWatermanGotoh::~CSmithWatermanGotoh(void) {
 }
 
 // aligns the query sequence to the reference using the Smith Waterman Gotoh algorithm
-void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsigned int s1Length, const char* s2, const unsigned int s2Length) {
+void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsigned int& s1Length, const char* s2, const unsigned int& s2Length) {
 
 	if((s1Length == 0) || (s2Length == 0)) {
 		cout << "ERROR: Found a read with a zero length." << endl;
@@ -232,7 +233,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 
 	// traceback flag
 	bool keepProcessing = true;
-	bool hasGap = false;
+	//bool hasGap = false;
 
 	bool matchRegion = false;
 	unsigned short longestMatch       = 0;
@@ -261,7 +262,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 				mReversedQuery[gappedQueryLen++]   = c2;
 
 				// increment our mismatch counter
-				if(mScoringMatrix[c1 - 'A'][c2 - 'A'] == mMismatchScore) numMismatches++;	
+				if(mScoringMatrix[c1 - 'A'][c2 - 'A'] == mMismatchScore) ++numMismatches;	
 				break;
 
 			case Directions_STOP:
@@ -282,9 +283,9 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 					mReversedAnchor[gappedAnchorLen++] = s1[--ci];
 					mReversedQuery[gappedQueryLen++]   = GAP;
 					ck -= queryLen;
-					numMismatches++;
+					if (!notCountGapAsMismatch_) ++numMismatches;
 				}
-				hasGap = true;
+				//hasGap = true;
 				break;
 
 			case Directions_LEFT:
@@ -297,9 +298,9 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 				for(unsigned int l = 0, len = mSizesOfHorizontalGaps[ck + cj]; l < len; l++) {
 					mReversedAnchor[gappedAnchorLen++] = GAP;
 					mReversedQuery[gappedQueryLen++]   = s2[--cj];
-					numMismatches++;
+					if (!notCountGapAsMismatch_) ++numMismatches;
 				}
-				hasGap = true;
+				//hasGap = true;
 				break;
 		}
 	}
@@ -341,7 +342,7 @@ void CSmithWatermanGotoh::Align(Alignment& alignment, const char* s1, const unsi
 
 
 	// fix the gap order
-	if(hasGap) CorrectHomopolymerGapOrder(alignment);
+	//if(hasGap) CorrectHomopolymerGapOrder(alignment);
 }
 
 // creates a simple scoring matrix to align the nucleotides and the ambiguity code N

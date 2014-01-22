@@ -73,13 +73,15 @@ const char* CMdTager::GetMdTag( const char* reference, const char* query, const 
 			}
 
 		} else if ( ( pReference[currentPos] == pQuery[currentPos] ) || ( pReference[currentPos] == '-' ) ) {
-			
+			int mdlength = 0;
 			while ( ( pReference[testPos] != 0 ) && ( ( pReference[testPos] == pQuery[testPos] ) || ( pReference[testPos] == '-' ) ) ) {
 				++testPos;
 				++operationLength;
+				if (pReference[testPos] != '-')
+				  ++mdlength;
 			}
 
-			numWritten = sprintf_s(pMd, bufferLen, "%u", operationLength);
+			numWritten = sprintf_s(pMd, bufferLen, "%u", mdlength);
 
 			isPreviousInt = true;
 

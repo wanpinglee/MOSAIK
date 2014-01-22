@@ -642,6 +642,10 @@ void CBamWriter::SaveAlignment(
 		mdTag.resize( mdTagLen );
 		pMdTag = (char*)mdTag.data();
 		sprintf(pMdTag, "MDZ%s", pMd);
+		#ifdef VERBOSE_DEBUG
+		fprintf(stderr, "=== MD ===\n");
+		fprintf(stderr, "%s\n%s\n%s\n", al.Reference.CData(), al.Query.CData(), mdTag.c_str());
+		#endif
 	}
 
 	// create our za tag

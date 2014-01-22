@@ -173,10 +173,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	}
 	
 	// both of full- and low-memory MOSAIK need multiply-mapped bam in AlignmentThread.cpp
-	mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
-	mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
-	mBams.mHeader.pReadGroups         = &readGroups;
-	mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	if (mFlags.OutputMultiplyIncomplete || mFlags.OutputMultiplyComplete) {
+		mBams.mHeader.SortOrder           = SORTORDER_UNSORTED;
+		mBams.mHeader.pReferenceSequences = &referenceSequencesWoSpecial;
+		mBams.mHeader.pReadGroups         = &readGroups;
+		mBams.mBam.Open( mSettings.OutputReadArchiveFilename + ".multiple.bam", mBams.mHeader);
+	}
 
 	// ===================
 	// full-memory version
@@ -274,12 +276,17 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		}
 		else {
 			InitializeHashTables(CalculateHashTableSize(mReferenceLength, mSettings.HashSize), pRefBegin[0], pRefEnd[numRefSeqs - 1], 0, mFlags.UseLowMemory, 0, mSReference.found);
+			
+			// set the hash positions threshold
+			if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
+			  mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+			
 			mpDNAHash->LoadKeysNPositions();
 		}
 
 		// set the hash positions threshold
-		if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
-			mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
+		//if(mFlags.IsUsingHashPositionThreshold && (mAlgorithm == CAlignmentThread::AlignerAlgorithm_ALL))
+		//	mpDNAHash->RandomizeAndTrimHashPositions(mSettings.HashPositionThreshold);
 
 		// localize the read archive filenames
 		string outputReadArchiveFilename = mSettings.OutputReadArchiveFilename;
@@ -534,11 +541,12 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			pBsRefSeqs  = NULL;
 			pRefSpecies = NULL;
 		}
-	}
+	} // end else low-memory
 
-	mBams.mBam.Close();
+	if (mFlags.OutputMultiplyIncomplete || mFlags.OutputMultiplyComplete)
+		mBams.mBam.Close();
 
-	if ( mFlags.UseLowMemory )
+	if (mFlags.UseLowMemory)
 		MergeArchives();
 
 	// clean up temp files
@@ -1158,8 +1166,9 @@ void CMosaikAligner::SetSpecialHashCount ( const unsigned int count ) {
 }
 
 // outputs multiply mapped alignments
-void CMosaikAligner::OutputMultiply( void ) {
-	mFlags.OutputMultiply = true;
+void CMosaikAligner::OutputMultiply(const bool& incomplete, const bool& complete) {
+	mFlags.OutputMultiplyIncomplete = incomplete;
+	mFlags.OutputMultiplyComplete = complete;
 }
 
 // sets quiet mode
@@ -1182,6 +1191,11 @@ void CMosaikAligner::EnableBandedSmithWaterman(const unsigned int bandwidth) {
 // enable the low-memory algorithm
 void CMosaikAligner::EnableLowMemory(void) {
 	mFlags.UseLowMemory  = true;
+}
+
+// not count gasp as mismatches
+void CMosaikAligner::NotCountGapAsMismatch(void) {
+	mFlags.NotCountGapAsMismatch = true;
 }
 
 // Enables SOLiD colorspace translation

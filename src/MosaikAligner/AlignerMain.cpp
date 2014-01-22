@@ -30,7 +30,7 @@ string DEFAULT_MODE      = "all";
 unsigned char DEFAULT_HASH_SIZE             = 15;
 //unsigned char DEFAULT_STAT_MAPPING_QUALITY  = 20;
 //unsigned char DEFAULT_NUM_MISMATCHES        = 4;
-double        DEFAULT_PERCENTAGE_MISMATCHES = 0.15;
+double       DEFAULT_PERCENTAGE_MISMATCHES  = 0.15;
 unsigned int DEFAULT_BANDWIDTH              = 9;
 unsigned int DEFAULT_NUM_THREADS            = 1;
 unsigned int DEFAULT_SPECIAL_HASHES         = 20;
@@ -78,12 +78,14 @@ struct ConfigurationSettings {
 	bool KeepJumpPositionsOnDisk;
 	bool LimitHashPositions;
 	bool LimitHashRegions;
+	bool NotCountGapAsMismatch;
 	//bool RecordUnalignedReads;
 	bool UseAlignedLengthForMismatches;
 	bool UseJumpDB;
 	bool UseLowMemory;
 	bool IsQuietMode;
-	bool OutputMultiply;
+        bool OutputMultiplyIncomplete;
+	bool OutputMultiplyComplete;
 
 	// filenames
 	string AlignmentsFilename;
@@ -158,12 +160,14 @@ struct ConfigurationSettings {
 		, KeepJumpPositionsOnDisk(false)
 		, LimitHashPositions(true)
 		, LimitHashRegions(false)
+		, NotCountGapAsMismatch(false)
 		//, RecordUnalignedReads(false)
 		, UseAlignedLengthForMismatches(false)
 		, UseJumpDB(false)
 		, UseLowMemory(false)
 		, IsQuietMode(false)
-		, OutputMultiply(false)
+		, OutputMultiplyIncomplete(false)
+		, OutputMultiplyComplete(false)
 		, MismatchPercent (DEFAULT_PERCENTAGE_MISMATCHES)
 		, Algorithm(DEFAULT_ALGORITHM)
 		, Mode(DEFAULT_MODE)
@@ -193,9 +197,9 @@ int main(int argc, char* argv[]) {
 
 	printf("------------------------------------------------------------------------------\n");
 	printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
-	printf(" %u.%u.%u                                                %s\n", 
+	printf(" %u.%u.%u                                                 %s\n", 
 		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Michael Stromberg & Wan-Ping Lee  Marth Lab, Boston College Biology Department\n");
+	printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
 	printf("------------------------------------------------------------------------------\n\n");
 
 	// =================================
@@ -225,14 +229,15 @@ int main(int argc, char* argv[]) {
 	COptions::AddValueOption("-act",  "threshold",      "the alignment candidate threshold (length)", "", settings.EnableAlignmentCandidateThreshold, settings.AlignmentCandidateThreshold, pFilterOpts);
 	//COptions::AddOption("-dh", "require at least two hash hits",                                          settings.EnableDoubleHashHits,                                                    pFilterOpts);
 	COptions::AddValueOption("-ls",   "radius",          "enable local alignment search for PE reads", "", settings.HasLocalAlignmentSearchRadius,     settings.LocalAlignmentSearchRadius,  pFilterOpts);
-	COptions::AddValueOption("-lsh",  "mapping quality", "MQ threshold", "", settings.HasLocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchHighMqThreshold, pFilterOpts );
-	COptions::AddValueOption("-lsl",  "mapping quality", "MQ threshold; when the best MQ is higher than -lsh and the second best is lower than -lsl, local alignment search is enabled.", "", settings.HasLocalAlignmentSearchLowMqThreshold, settings.LocalAlignmentSearchLowMqThreshold, pFilterOpts );
+	//COptions::AddValueOption("-lsh",  "mapping quality", "MQ threshold", "", settings.HasLocalAlignmentSearchHighMqThreshold, settings.LocalAlignmentSearchHighMqThreshold, pFilterOpts );
+	//COptions::AddValueOption("-lsl",  "mapping quality", "MQ threshold; when the best MQ is higher than -lsh and the second best is lower than -lsl, local alignment search is enabled.", "", settings.HasLocalAlignmentSearchLowMqThreshold, settings.LocalAlignmentSearchLowMqThreshold, pFilterOpts );
 	COptions::AddValueOption("-mhp",  "hash positions",  "the maximum # of positions stored per seed",      "", settings.LimitHashPositions,                settings.HashPositionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-mhr",  "hash regionss",   "the maximum # of regions for aligning",      "", settings.LimitHashRegions,                settings.HashRegionThreshold,       pFilterOpts);
 	COptions::AddValueOption("-min",  "nucleotides",     "the minimum # of aligned nucleotides",      "", settings.CheckMinAlignment,                 settings.MinimumAlignment,            pFilterOpts);
 	COptions::AddValueOption("-minp", "percent",         "the minimum alignment percentage [0.0 - 1.0]",                "", settings.CheckMinAlignmentPercent,          settings.MinimumAlignmentPercentage,  pFilterOpts);
 	COptions::AddValueOption("-mm",   "mismatches",      "the # of mismatches allowed",                "", settings.CheckNumMismatches,                settings.NumMismatches,               pFilterOpts);
 	COptions::AddValueOption("-mmp",  "threshold",       "the percentage of mismatches allowed [0.0 - 1.0]",      "", settings.CheckMismatchPercent,              settings.MismatchPercent,             pFilterOpts);
+	COptions::AddOption(     "-ncg",  "not count gaps as mismatches", settings.NotCountGapAsMismatch, pFilterOpts);
 	//COptions::AddOption("-mmal", "when enabled, unaligned portions of the read will not count as a mismatch", settings.UseAlignedLengthForMismatches,                                       pFilterOpts);
 
 	// TODO: we need to move the alignment quality calculation up to ApplyReadFilters in order to make this option useable
@@ -256,7 +261,9 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-om",          "output multiply mapped alignments", settings.OutputMultiply, pReportingOpts);
+	COptions::AddOption("-omi",         "output chrmosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
+	COptions::AddOption("-om",          "output complete multiply mapped alignments in the multiple.bam", settings.OutputMultiplyComplete, pReportingOpts);
+
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
 	//COptions::AddValueOption("-rur", "FASTQ filename", "stores unaligned reads in a FASTQ file", "", settings.RecordUnalignedReads, settings.UnalignedReadsFilename, pReportingOpts);
 
@@ -270,7 +277,7 @@ int main(int argc, char* argv[]) {
 
 	// add interface options
 	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
-	COptions::AddOption("-quiet",  "disenable progress bars and counters", settings.IsQuietMode, pInterface);
+	COptions::AddOption("-quiet",  "disable progress bars and counters", settings.IsQuietMode, pInterface);
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
@@ -593,6 +600,11 @@ int main(int argc, char* argv[]) {
 		CFileUtilities::CheckFile(settings.SeNeuralNetworkFilename.c_str(), true);
 	}
 
+	if (settings.OutputMultiplyIncomplete && settings.OutputMultiplyComplete) {
+		foundError = true;
+		errorBuilder << ERROR_SPACER << "-omi and -om are incompatible." << endl;
+	}
+
 	// print the errors if any were found
 	if(foundError) {
 
@@ -693,7 +705,7 @@ int main(int argc, char* argv[]) {
 	if (settings.HasSeNeuralNetworkFilename) ma.SetSeNeuralNetworkFilename(settings.SeNeuralNetworkFilename);
 
 	// output multiply mapped alignments
-	if (settings.OutputMultiply) ma.OutputMultiply();
+	ma.OutputMultiply(settings.OutputMultiplyIncomplete, settings.OutputMultiplyComplete);
 	
 	// enable quiet mode
 	if (settings.IsQuietMode) ma.SetQuietMode();
@@ -730,6 +742,9 @@ int main(int argc, char* argv[]) {
 
 	// enable low-memory algorithm
 	if(settings.UseLowMemory) ma.EnableLowMemory();
+
+	// not count gasp as mismatches
+	if(settings.NotCountGapAsMismatch) ma.NotCountGapAsMismatch();
 
 	// enables special references checker
 	if(settings.HasSpecialReferencePrefix) {

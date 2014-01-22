@@ -142,9 +142,9 @@ int main(int argc, char* argv[]) {
 
 	printf("------------------------------------------------------------------------------\n");
 	printf("Mosaik"); CConsole::Red(); printf("Build"); CConsole::Reset();
-	printf(" %u.%u.%u                                                  %s\n", 
+	printf(" %u.%u.%u                                                   %s\n", 
 		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Michael Stromberg & Wan-Ping Lee  Marth Lab, Boston College Biology Department\n");
+	printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
 	printf("------------------------------------------------------------------------------\n\n");
 
 	// =================================
@@ -216,7 +216,7 @@ int main(int argc, char* argv[]) {
 
 	// add the interface options
 	OptionGroup* pInterface = COptions::CreateOptionGroup("Interface Options");
-	COptions::AddOption("-quiet",  "disenable progress bars and counters", settings.IsQuietMode, pInterface);
+	COptions::AddOption("-quiet",  "disable progress bars and counters", settings.IsQuietMode, pInterface);
 
 
 	// parse the current command line
@@ -424,8 +424,6 @@ int main(int argc, char* argv[]) {
 						mate2Files.push_back(dirFiles[i]);
 
 			} else mate2Files.push_back(settings.Fastq2Filename);
-
-			cout << mate2Files[0] << endl;
 		}
 
 	} else if(settings.HasSrfFilename) {

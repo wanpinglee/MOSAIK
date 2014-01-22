@@ -26,6 +26,7 @@ _EXT_OBJECTS = AbstractDnaHash.o \
 		CigarTager.o \
 		ColorspaceUtilities.o \
 		ConsoleUtilities.o \
+		ConvertSswToAlignment.o \
 		DnaHash.o \
 		Entropy.o \
 		fastlz.o \
@@ -50,6 +51,8 @@ _EXT_OBJECTS = AbstractDnaHash.o \
 		SmithWatermanGotoh.o \
 		SortNMergeUtilities.o \
 		SortThread.o \
+		ssw.o \
+		ssw_cpp.o \
 		StatisticsMaps.o \
 		TimeSupport.o \
 		UbiqDnaHash.o \

@@ -63,8 +63,9 @@ CAlignmentThread::CAlignmentThread(
 	, mReverseRead(NULL)
 	, mReferenceLength(referenceLen)
 	, mpDNAHash(pDnaHash)
-	, mSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty)
-	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth)
+	, mSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, flags.NotCountGapAsMismatch)
+	, mBSW(CPairwiseUtilities::MatchScore, CPairwiseUtilities::MismatchScore, CPairwiseUtilities::GapOpenPenalty, CPairwiseUtilities::GapExtendPenalty, settings.Bandwidth, flags.NotCountGapAsMismatch)
+	, mSSW(10, 9, 15, 1)
 	, mReferenceBegin(pRefBegin)
 	, mReferenceEnd(pRefEnd)
 	, mReferenceSpecies(pRefSpecies)
@@ -181,6 +182,10 @@ void CAlignmentThread::SearchLocalRegion(
 	// the best one alignment is at the end of the vector
 	//vector<Alignment*>::const_iterator uniqueIter = anchorVector.end() - 1;
 
+	#ifdef VERBOSE_DEBUG
+	fprintf(stderr,"Anchor position: %u:%u\t%u\n", (*uniqueIter)->ReferenceIndex, (*uniqueIter)->ReferenceBegin, (*uniqueIter)->ReferenceEnd);
+	#endif
+
 	const unsigned int refIndex    = (*uniqueIter)->ReferenceIndex;
 	const unsigned int uniqueBegin = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceBegin;
 	const unsigned int uniqueEnd   = mReferenceBegin[refIndex] + (*uniqueIter)->ReferenceEnd;
@@ -213,13 +218,16 @@ void CAlignmentThread::SearchLocalRegion(
 
 	// settle the local search region
 	bool settleLocalSearchWindow = SettleLocalSearchRegion( lam, refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd );
+	#ifdef VERBOSE_DEBUG
+	fprintf(stderr, "Local search: %u:%u\t%u;\t%u\t%u\n", refIndex, uniqueBegin, uniqueEnd, localSearchBegin, localSearchEnd);
+	#endif
 	
 	// check if the mate is already sitting in the local region
 	bool isAlExisting = false;
 	if ( settleLocalSearchWindow )
 		isAlExisting = mateVector->CheckExistence(refIndex, localSearchBegin - mReferenceBegin[refIndex], localSearchEnd - mReferenceBegin[refIndex]);
 
-	if ( !isAlExisting ) {
+	if ( !isAlExisting && settleLocalSearchWindow ) {
 		Alignment al;
 
 		if( RescueMate( lam, mate.Bases, localSearchBegin, localSearchEnd, refIndex, al ) ) {
@@ -239,7 +247,7 @@ void CAlignmentThread::SearchLocalRegion(
 
 }
 
-void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment al ) {
+void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mateStatus, const Alignment& al ) {
 	
 	bool isMateRescued = al.WasRescued;
 	if ( !al.IsMapped ) {
@@ -280,9 +288,9 @@ void CAlignmentThread::UpdateSeStatistics ( const enum AlignmentStatusType& mate
 void CAlignmentThread::UpdateStatistics ( 
 	  const enum AlignmentStatusType& mate1Status
 	, const enum AlignmentStatusType& mate2Status
-	, const Alignment al1
-	, const Alignment al2
-	, const bool isProperPair) {
+	, const Alignment& al1
+	, const Alignment& al2
+	, const bool& isProperPair) {
 	
 	UpdateSeStatistics( mate1Status, al1 );
 	if ( alInfo.isPairedEnd ) {
@@ -373,18 +381,41 @@ void CAlignmentThread::SaveMultiplyAlignment(
 
 	AlignmentStatusType mate1Status, mate2Status;
 	// -om is enabled
-	if ( mFlags.OutputMultiply ) {
-		if ( isMate1Multiple ) {
-			Alignment mateAl;
-			if ( !isMate2Empty ) {
-				mateAl = *(mate2Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
+	if (mFlags.OutputMultiplyComplete) {
+		if (isMate1Multiple) {
+			//Alignment mateAl;
+			//if ( !isMate2Empty ) {
+			//	mateAl = *(mate2Set[0]);
+			//	mateAl.ReferenceIndex += mReferenceOffset;
+			//}
 			vector<Alignment*> mate1SetTemp = mate1Set;
 			for(vector<Alignment*>::iterator alIter = mate1SetTemp.begin(); alIter != mate1SetTemp.end(); ++alIter) {
 				
-				if ( !isMate2Empty )
+				Alignment mateAl;
+				unsigned int isize = INT_MAX;
+				if ( !isMate2Empty ) {
+				        mateAl = *(mate2Set[0]);
+					if (mateAl.ReferenceIndex == (*alIter)->ReferenceIndex) {
+					  isize = 
+					    (mateAl.ReferenceBegin > (*alIter)->ReferenceBegin) 
+					    ? (mateAl.ReferenceBegin - (*alIter)->ReferenceBegin)
+					    : ((*alIter)->ReferenceBegin - mateAl.ReferenceBegin);
+					}
+					// pick the alignment in mate2Set that is closest to *alIter
+				        for(vector<Alignment*>::const_iterator al2Iter = mate2Set.begin() + 1; al2Iter != mate2Set.end(); ++al2Iter) {
+					  if ((*al2Iter)->ReferenceIndex == (*alIter)->ReferenceIndex) {
+					    unsigned int cur_isize = ((*al2Iter)->ReferenceBegin > (*alIter)->ReferenceBegin)
+					      ? ((*al2Iter)->ReferenceBegin - (*alIter)->ReferenceBegin)
+					      : ((*alIter)->ReferenceBegin - (*al2Iter)->ReferenceBegin);
+
+					    if (cur_isize < isize) {
+					      cur_isize = isize;
+					      mateAl = **al2Iter;
+					    }
+					  }
+					}
 					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+				}
 
 				(*alIter)->ReferenceIndex += mReferenceOffset;
 				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
@@ -399,17 +430,41 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplyBuffer.push( buffer );
 			}
 		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
-			Alignment mateAl;
-			if ( !isMate1Empty ) {
-				mateAl = *(mate1Set[0]);
-				mateAl.ReferenceIndex += mReferenceOffset;
-			}
+		if (alInfo.isPairedEnd && isMate2Multiple) {
+			//Alignment mateAl;
+			//if (!isMate1Empty) {
+			//	mateAl = *(mate1Set[0]);
+			//	mateAl.ReferenceIndex += mReferenceOffset;
+			//}
 
 			vector<Alignment*> mate2SetTemp = mate2Set;
 			for(vector<Alignment*>::iterator alIter = mate2SetTemp.begin(); alIter != mate2SetTemp.end(); ++alIter) {
-				if ( !isMate1Empty )
+
+			        Alignment mateAl;
+				unsigned int isize = INT_MAX;
+				if ( !isMate1Empty ) {
+				        mateAl = *(mate1Set[0]);
+					if (mateAl.ReferenceIndex == (*alIter)->ReferenceIndex) {
+					  isize = 
+					    (mateAl.ReferenceBegin > (*alIter)->ReferenceBegin) 
+					    ? (mateAl.ReferenceBegin - (*alIter)->ReferenceBegin)
+					    : ((*alIter)->ReferenceBegin - mateAl.ReferenceBegin);
+					}
+					// pick the alignment in mate2Set that is closest to *alIter
+				        for(vector<Alignment*>::const_iterator al2Iter = mate1Set.begin() + 1; al2Iter != mate1Set.end(); ++al2Iter) {
+					  if ((*al2Iter)->ReferenceIndex == (*alIter)->ReferenceIndex) {
+					    unsigned int cur_isize = ((*al2Iter)->ReferenceBegin > (*alIter)->ReferenceBegin)
+					      ? ((*al2Iter)->ReferenceBegin - (*alIter)->ReferenceBegin)
+					      : ((*alIter)->ReferenceBegin - (*al2Iter)->ReferenceBegin);
+
+					    if (cur_isize < isize) {
+					      cur_isize = isize;
+					      mateAl = **al2Iter;
+					    }
+					  }
+					}
 					(*alIter)->SetPairFlagsAndFragmentLength(mateAl, 0, 0, mSettings.SequencingTechnology);
+				}
 				
 				(*alIter)->ReferenceIndex += mReferenceOffset;
 				(*alIter)->RecalibratedQuality = (*alIter)->Quality;
@@ -424,20 +479,23 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplyBuffer.push( buffer );
 			}
 		}
-
 		// buffer is full; save and clear it
 		if (bamMultiplyBuffer.size() > _bufferSize) {
-			AlignmentBamBuffer buffer;
+			//AlignmentBamBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
 			while(!bamMultiplyBuffer.empty()) {
-				buffer = bamMultiplyBuffer.front();
-				pBams->mBam.SaveAlignment(buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD);
+				//buffer = bamMultiplyBuffer.front();
+				pBams->mBam.SaveAlignment(bamMultiplyBuffer.front().al, 
+				                          bamMultiplyBuffer.front().zaString.c_str(), 
+							  bamMultiplyBuffer.front().noCigarMdNm, 
+							  bamMultiplyBuffer.front().notShowRnamePos, 
+							  alInfo.isUsingSOLiD);
 				bamMultiplyBuffer.pop();
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
-	}else {
-		if ( isMate1Multiple ) {
+	} else if (mFlags.OutputMultiplyIncomplete) {
+		if (isMate1Multiple) {
 			SimpleBamRecordBuffer buffer;
 			for(vector<Alignment*>::const_iterator alIter = mate1Set.begin(); alIter != mate1Set.end(); ++alIter) {
 				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
@@ -446,7 +504,7 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
-		if ( alInfo.isPairedEnd && isMate2Multiple ) {
+		if (alInfo.isPairedEnd && isMate2Multiple) {
 			SimpleBamRecordBuffer buffer;
 			for(vector<Alignment*>::const_iterator alIter = mate2Set.begin(); alIter != mate2Set.end(); ++alIter) {
 				buffer.refIndex = (*alIter)->ReferenceIndex + mReferenceOffset;
@@ -455,19 +513,21 @@ void CAlignmentThread::SaveMultiplyAlignment(
 				bamMultiplySimpleBuffer.push( buffer );
 			}
 		}
-
-		
 		// buffer is full; save and clear it
-		if ( bamMultiplySimpleBuffer.size() > _bufferSize ) {
-			SimpleBamRecordBuffer buffer;
+		if (bamMultiplySimpleBuffer.size() > _bufferSize) {
+			//SimpleBamRecordBuffer buffer;
 			pthread_mutex_lock(&mSaveMultipleBamMutex);
 			while( !bamMultiplySimpleBuffer.empty() ) {
-				buffer = bamMultiplySimpleBuffer.front();
-				pBams->mBam.SaveReferencePosition( buffer.refIndex, buffer.refBegin, buffer.refEnd );
+				//buffer = bamMultiplySimpleBuffer.front();
+				pBams->mBam.SaveReferencePosition( bamMultiplySimpleBuffer.front().refIndex, 
+				                                   bamMultiplySimpleBuffer.front().refBegin, 
+								   bamMultiplySimpleBuffer.front().refEnd );
 				bamMultiplySimpleBuffer.pop();
 			}
 			pthread_mutex_unlock(&mSaveMultipleBamMutex);
 		}
+	} else {
+		// nothing
 	}
 
 }
@@ -480,11 +540,15 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 		WriteAlignmentBufferToFile( pBams, pMaps, pOut );
 
 	if ( !bamMultiplyBuffer.empty() ) {
-		AlignmentBamBuffer buffer;
+		//AlignmentBamBuffer buffer;
 		pthread_mutex_lock(&mSaveMultipleBamMutex);
 		while( !bamMultiplyBuffer.empty() ) {
-			buffer = bamMultiplyBuffer.front();
-			pBams->mBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, alInfo.isUsingSOLiD );
+			//buffer = bamMultiplyBuffer.front();
+			pBams->mBam.SaveAlignment( bamMultiplyBuffer.front().al, 
+			                           bamMultiplyBuffer.front().zaString.c_str(), 
+						   bamMultiplyBuffer.front().noCigarMdNm, 
+						   bamMultiplyBuffer.front().notShowRnamePos, 
+						   alInfo.isUsingSOLiD );
 			bamMultiplyBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveMultipleBamMutex);
@@ -503,12 +567,18 @@ void CAlignmentThread::SaveNClearBuffers( BamWriters* const pBams, CStatisticsMa
 
 	if ( !bamSpecialBuffer.empty() ) {
 		const bool processedBamData = true;
-		AlignmentBamBuffer buffer;
+		//AlignmentBamBuffer buffer;
 		pthread_mutex_lock(&mSaveSpecialBamMutex);
 		while( !bamSpecialBuffer.empty() ) {
-			buffer = bamSpecialBuffer.front();
+			//buffer = bamSpecialBuffer.front();
+			//bamSpecialBuffer.pop();
+			pBams->sBam.SaveAlignment( bamSpecialBuffer.front().al, 
+			                           bamSpecialBuffer.front().zaString.c_str(), 
+						   bamSpecialBuffer.front().noCigarMdNm, 
+						   bamSpecialBuffer.front().notShowRnamePos, 
+						   mFlags.EnableColorspace, 
+						   processedBamData);
 			bamSpecialBuffer.pop();
-			pBams->sBam.SaveAlignment( buffer.al, buffer.zaString.c_str(), buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 		}
 		pthread_mutex_unlock(&mSaveSpecialBamMutex);
 	}
@@ -558,18 +628,22 @@ inline void CAlignmentThread::SaveArchiveAlignment ( const Mosaik::Read& mr, con
 
 // write special buffer to bam
 void CAlignmentThread::WriteSpecialAlignmentBufferToFile( BamWriters* const pBams ) {
-	AlignmentBamBuffer buffer;
+	//AlignmentBamBuffer buffer;
 	const bool processedBamData = true;
-
 	pthread_mutex_lock(&mSaveSpecialBamMutex);
 	while( !bamSpecialBuffer.empty() ) {
-		buffer = bamSpecialBuffer.front();
+		//buffer = bamSpecialBuffer.front();
+		//bamSpecialBuffer.pop();
+		const char* za = bamSpecialBuffer.front().zaString.empty() ? 0 : bamSpecialBuffer.front().zaString.c_str();
+		pBams->sBam.SaveAlignment( bamSpecialBuffer.front().al, 
+		                           za, 
+					   bamSpecialBuffer.front().noCigarMdNm, 
+					   bamSpecialBuffer.front().notShowRnamePos, 
+					   mFlags.EnableColorspace, 
+					   processedBamData);
 		bamSpecialBuffer.pop();
-		const char* za = buffer.zaString.empty() ? 0 : buffer.zaString.c_str();
-		pBams->sBam.SaveAlignment( buffer.al, za, buffer.noCigarMdNm, buffer.notShowRnamePos, mFlags.EnableColorspace, processedBamData );
 	}
 	pthread_mutex_unlock(&mSaveSpecialBamMutex);
-
 }
 
 // write alignment buffer to bam/archive
@@ -584,11 +658,17 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 		if ( !alInfo.isPairedEnd ) {
 			pthread_mutex_lock(&mSaveReadMutex);
 			while ( !bamBuffer.empty() ) {
-				buffer1 = bamBuffer.front();
+				//buffer1 = bamBuffer.front();
+				const char* za = bamBuffer.front().zaString.empty() ? 0 : bamBuffer.front().zaString.c_str();
+				pBams->rBam.SaveAlignment(bamBuffer.front().al, 
+				                          za, 
+							  bamBuffer.front().noCigarMdNm, 
+							  bamBuffer.front().notShowRnamePos, 
+							  mFlags.EnableColorspace, 
+							  processedBamData, 
+							  mFlags.ReportZnTag);
+				pMaps->SaveRecord(bamBuffer.front().al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology);
 				bamBuffer.pop();
-				const char* za = buffer1.zaString.empty() ? 0 : buffer1.zaString.c_str();
-				pBams->rBam.SaveAlignment(buffer1.al, za, buffer1.noCigarMdNm, buffer1.notShowRnamePos, mFlags.EnableColorspace, processedBamData, mFlags.ReportZnTag);
-				pMaps->SaveRecord(buffer1.al, dumpAl, alInfo.isPairedEnd, mSettings.SequencingTechnology);
 			}
 			pthread_mutex_unlock(&mSaveReadMutex);
 		} else {
@@ -611,11 +691,16 @@ void CAlignmentThread::WriteAlignmentBufferToFile( BamWriters* const pBams, CSta
 			pthread_mutex_unlock(&mSaveReadMutex);
 		}
 	} else {
-		AlignmentArchiveBuffer buffer;
+		//AlignmentArchiveBuffer buffer;
 		pthread_mutex_lock(&mSaveReadMutex);
 		while ( !archiveBuffer.empty() ) {
-			buffer = archiveBuffer.front();
-			pOut->SaveRead(buffer.mr, buffer.al1, buffer.al2, buffer.isLongRead, true, alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive);
+			//buffer = archiveBuffer.front();
+			pOut->SaveRead(archiveBuffer.front().mr, 
+			               archiveBuffer.front().al1, 
+				       archiveBuffer.front().al2, 
+				       archiveBuffer.front().isLongRead, 
+				       true, 
+				       alInfo.isPairedEnd, mFlags.SaveUnmappedBasesInArchive);
 			archiveBuffer.pop();
 		}
 		pthread_mutex_unlock(&mSaveReadMutex);
@@ -709,6 +794,9 @@ void CAlignmentThread::AlignReadArchive(
 		mr = readBuffer.front();
 		readBuffer.pop();
 
+		#ifdef VERBOSE_DEBUG
+		cerr << "Read: " << mr.Name.CData() << endl;
+		#endif
 
 		// specify if this is a paired-end read
 		const unsigned short numMate1Bases = (unsigned short)mr.Mate1.Bases.Length();
@@ -732,9 +820,16 @@ void CAlignmentThread::AlignReadArchive(
 		int numMate1Hashes  = 0;
 		mate1Alignments.Clear();
 		if( numMate1Bases != 0 && !isTooManyNMate1 ) {
+			#ifdef VERBOSE_DEBUG
+				cerr << "=== Align mate1 ===" << endl;
+			#endif
 			// align the read
 			if (AlignRead(mate1Alignments, mr.Mate1.Bases.CData(), mr.Mate1.Qualities.CData(), numMate1Bases, mate1Status, &numMate1Hashes)) 
 				isMate1Aligned = true;
+			#ifdef VERBOSE_DEBUG
+				if (isMate1Aligned) cerr << "mate1 is mapped." << endl;
+				else cerr << "mate1 is NOT mapped!" << endl;
+			#endif
 		}
 
 		// =====================
@@ -745,9 +840,16 @@ void CAlignmentThread::AlignReadArchive(
 		int numMate2Hashes  = 0;
 		mate2Alignments.Clear();
 		if( numMate2Bases != 0 && !isTooManyNMate2 ) {
+			#ifdef VERBOSE_DEBUG
+				cerr << "=== Align mate2 ===" << endl;
+			#endif
 			// align the read
 			if (AlignRead(mate2Alignments, mr.Mate2.Bases.CData(), mr.Mate2.Qualities.CData(), numMate2Bases, mate2Status, &numMate2Hashes)) 
 				isMate2Aligned = true;
+			#ifdef VERBOSE_DEBUG
+				if (isMate2Aligned) cerr << "mate2 is mapped." << endl;
+				else cerr << "mate2 is NOT mapped!" << endl;
+			#endif
 		}
 
 		// ======================
@@ -761,6 +863,10 @@ void CAlignmentThread::AlignReadArchive(
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate2) {
 				mate1Alignments.GetSet(&mate1Set);
+				#ifdef VERBOSE_DEBUG
+					cerr << "=== Local Search mate2 ===" << endl;
+					cerr << "Mate1 alignments: " << mate1Alignments.GetCount() << endl;
+				#endif
 				if (mate1Alignments.IsUnique()) {
 					SearchLocalRegion(mate1Set, mr.Mate2, &mate2Alignments);
 				} else if (mate1Alignments.IsMultiple()){ // do local search for some good multiply mappings
@@ -773,6 +879,11 @@ void CAlignmentThread::AlignReadArchive(
 			// search local region
 			if (mFlags.UseLocalAlignmentSearch && !isTooManyNMate1) {
 				mate2Alignments.GetSet(&mate2Set);
+
+				#ifdef VERBOSE_DEBUG
+					cerr << "=== Local Search mate1 ===" << endl;
+					cerr << "Mate2 alignments: " << mate2Alignments.GetCount() << endl;
+				#endif
 				if (mate2Alignments.IsUnique()) {
 					SearchLocalRegion(mate2Set, mr.Mate1, &mate1Alignments);
 				} else if (mate2Alignments.IsMultiple()){ // do local search for some good multiply mappings
@@ -817,7 +928,7 @@ void CAlignmentThread::AlignReadArchive(
 		// ===================================
 
 		// save chromosomes and positions of multiple alignments in bam
-		if ( mFlags.SaveMultiplyBam ) {
+		if (mFlags.SaveMultiplyBam && (mFlags.OutputMultiplyComplete || mFlags.OutputMultiplyIncomplete)) {
 			SaveMultiplyAlignment( mate1Set, mate2Set, mr, pBams, pMaps );
 		}
 		
@@ -1109,7 +1220,7 @@ unsigned char CAlignmentThread::GetMappingQuality (const Alignment& al1,
 }
 
 // treat the best alignment as an unique mapping and than turn on local search
-bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const unsigned int readLength) {
+bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const unsigned int& readLength) {
 	sort(mateSet->begin(), mateSet->end(), Alignment_LessThanMq());
 
 	// Note that there are at least two alignments
@@ -1117,7 +1228,7 @@ bool CAlignmentThread::TreatBestAsUnique (vector<Alignment*>* mateSet, const uns
 	Alignment* bestAl  = *rit;
 	unsigned short mq1 = (*rit)->Quality;
 	float swScore1     = (*rit)->SwScore;
-	rit++;
+	++rit;
 	Alignment* secondBestAl = *rit;
 	unsigned short mq2      = (*rit)->Quality;
 	float swScore2          = (*rit)->SwScore;
@@ -1450,7 +1561,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 	//}
 
 	// statistics variables
-	int64_t hashRegionLength = 0;
+	//int64_t hashRegionLength = 0;
 
 	// control variables
 	bool evaluateReverseReads = true;
@@ -1462,7 +1573,6 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 	//unsigned int numHash = 0;
 
 	try {
-
 		//
 		// copy the query to the forward and reverse reads
 		//
@@ -1559,24 +1669,17 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 
 			// add the alignment to the vector if it passes the filters
 			if( ApplyReadFilters( al, query, qualities, queryLength ) ) {
-				// the base qualities of SOLiD reads are attached in ApplyReadFilters
-				//if( mFlags.EnableColorspace )
-				//	al.BaseQualities.Copy(qualities, queryLength);
-				//al.Quality = GetMappingQuality(al);
 				alignments.Add(al);
 			}
-
-			// increment our candidates counter
-			//mStatisticsCounters.AlignmentCandidates++;
-
 		} else {
-			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); i++) {
+			for(unsigned int i = 0; i < (unsigned int)forwardRegions.size(); ++i) {
 				
 				// enforce alignment candidate thresholds
-				if(mFlags.IsUsingAlignmentCandidateThreshold) {
-					hashRegionLength = forwardRegions[i].End - forwardRegions[i].Begin + 1;
-					if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
-				}
+				// @Wan-Ping Lee: The following check is moved to GetReadCandidates function
+				//if(mFlags.IsUsingAlignmentCandidateThreshold) {
+				//	hashRegionLength = forwardRegions[i].End - forwardRegions[i].Begin + 1;
+				//	if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
+				//}
 
 				// create a new alignment data structure
 				Alignment al;
@@ -1587,16 +1690,8 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 
 				// add the alignment to the alignments vector
 				if( ApplyReadFilters( al, query, qualities, queryLength ) ) {	
-					// the base qualities of SOLiD reads are attached in ApplyReadFilters
-					//if( mFlags.EnableColorspace )
-					//	al.BaseQualities.Copy(qualities, queryLength);
-					//al.Quality = GetMappingQuality(al);
-					//al.NumHash = numHash;
 					alignments.Add(al);
 				}
-
-				// increment our candidates counter
-				//mStatisticsCounters.AlignmentCandidates++;
 
 				// check if we can prematurely stop
 				if( !alignAllReads && ( alignments.GetCount() > 1 ) ) {
@@ -1615,13 +1710,14 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 			if(alignAllReads) evaluateReverseReads = true;
 
 			if(evaluateReverseReads) {
-				for(unsigned int i = 0; i < (unsigned int)reverseRegions.size(); i++) {
+				for(unsigned int i = 0; i < (unsigned int)reverseRegions.size(); ++i) {
 					
 					// enforce alignment candidate thresholds
-					if(mFlags.IsUsingAlignmentCandidateThreshold) {
-						hashRegionLength = reverseRegions[i].End - reverseRegions[i].Begin + 1;
-						if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
-					}
+					// @Wan-Ping Lee: The following check is moved to GetReadCandidates function 
+					//if(mFlags.IsUsingAlignmentCandidateThreshold) {
+					//	hashRegionLength = reverseRegions[i].End - reverseRegions[i].Begin + 1;
+					//	if(hashRegionLength < mSettings.AlignmentCandidateThreshold) continue;
+					//}
 
 					// create a new alignment data structure
 					Alignment al;
@@ -1632,18 +1728,8 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 
 					// add the alignment to the alignments vector
 					if( ApplyReadFilters(al, query, qualities, queryLength ) ) {
-						// the base qualities of SOLiD reads are attached in ApplyReadFilters
-						//if( mFlags.EnableColorspace ) {
-						//	al.BaseQualities.Copy( qualities, queryLength);
-						//	al.BaseQualities.Reverse();
-						//}
-						//al.Quality = GetMappingQuality(al);
-						//al.NumHash = numHash;
 						alignments.Add(al);
 					}
-
-					// increment our candidates counter
-					//mStatisticsCounters.AlignmentCandidates++;
 
 					// check if we can prematurely stop
 					if (!alignAllReads && (alignments.GetCount() > 1))
@@ -1661,7 +1747,6 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 		}
 
 	} catch(bad_alloc &ba) {
-
 		cout << "ERROR: Could not allocate enough memory to create forward and reverse aligned sequences: " << ba.what() << endl;
 		exit(1);
 	}
@@ -1670,7 +1755,7 @@ bool CAlignmentThread::AlignRead(CNaiveAlignmentSet& alignments,
 }
 
 // aligns the read against a specified hash region using Smith-Waterman-Gotoh
-void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, char* query, unsigned int queryLength, unsigned int extensionBases) {
+void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, char* query, const unsigned int& queryLength, unsigned int& extensionBases) {
 
 	// define the begin coordinate of our alignment region
 	unsigned int begin = r.End;
@@ -1692,7 +1777,7 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 
 	// make sure the endpoints are within the reference sequence
 	unsigned int referenceIndex = 0;
-	while(r.Begin > mReferenceEnd[referenceIndex]) referenceIndex++;
+	while(r.Begin > mReferenceEnd[referenceIndex]) ++referenceIndex;
 
 
 	const unsigned int refBegin = mReferenceBegin[referenceIndex];
@@ -1705,8 +1790,8 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 	if(end   > refEnd)   end   = refEnd;
 
 	// adjust the begin and end positions if the reference is masked
-	while(mReference[begin] == 'X') begin++;
-	while(mReference[end]   == 'X') end--;
+	while(mReference[begin] == 'X') ++begin;
+	while(mReference[end]   == 'X') --end;
 
 	// perform a Smith-Waterman alignment on our region
 	char* pAnchor = mReference + begin;
@@ -1719,9 +1804,10 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 
 
 	// determine if the specified bandwidth is enough to accurately align using the banded algorithm
-	bool hasEnoughBandwidth = false;
-	HashRegion diagonalRegion = r;
+	//bool hasEnoughBandwidth = false;
+	//HashRegion diagonalRegion = r;
 
+	/*
 	if(mFlags.UseBandedSmithWaterman) {
 
 		diagonalRegion.Begin -= begin;
@@ -1735,12 +1821,17 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 		hasEnoughBandwidth = (queryLength - diagonalRegion.QueryBegin) > mSettings.Bandwidth;
 		hasEnoughBandwidth = hasEnoughBandwidth && (((end - begin + 1) - diagonalRegion.Begin) > mSettings.Bandwidth / 2);
 	}
+	*/
 
-	if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
-		mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
-	} else {
-		mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
-	}
+	//if(mFlags.UseBandedSmithWaterman && hasEnoughBandwidth) {
+	//	mBSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength, diagonalRegion);
+	//} else {
+	//	mSW.Align(alignment, pAnchor, (end - begin + 1), query, queryLength);
+	//}
+	StripedSmithWaterman::Filter filter;
+	StripedSmithWaterman::Alignment ssw_alignment;
+	mSSW.Align(query, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+	ConvertSswToAlignment(ssw_alignment, pAnchor, query, &alignment);
 
 	// adjust the reference start positions
 	//if ( !mFlags.UseLowMemory )
@@ -1752,10 +1843,9 @@ void CAlignmentThread::AlignRegion(const HashRegion& r, Alignment& alignment, ch
 }
 
 // returns true if the alignment passes all of the user-specified filters
-bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int queryLength) {
+bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const char* qualities, const unsigned int& queryLength) {
 
 	unsigned int queryLength1 = mFlags.EnableColorspace ? queryLength + 1 : queryLength;
-	
 	// assuming this is a good read
 	bool ret = true;
 
@@ -1764,16 +1854,10 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 
 	// convert from colorspace to basespace
 	if( mFlags.EnableColorspace ) {
-		//cerr << al.NumMismatches;
-		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
 		if( al.IsReverseStrand ) al.BaseQualities.Reverse();
 		if ( !mCS.ConvertAlignmentToBasespace( al ) ) ret = false;
 		numNonAlignedBases = queryLength1 - al.QueryLength;
-		//cerr << " " << al.NumMismatches << " " << al.QueryLength << endl;
-
 	} else {
-		//al.BaseQualities.Copy( qualities + al.QueryBegin, al.QueryEnd - al.QueryBegin + 1 );
-	
 		// don't count leading and lagging N's as mismatches
 		unsigned int pos = 0;
 		while( ( bases[pos] == 'N' ) && ( pos < queryLength1 ) ) {
@@ -1817,7 +1901,7 @@ bool CAlignmentThread::ApplyReadFilters(Alignment& al, const char* bases, const 
 }
 
 // creates the hash for a supplied fragment
-void CAlignmentThread::CreateHash(const char* fragment, const unsigned char fragmentLen, uint64_t& key) {
+void CAlignmentThread::CreateHash(const char* fragment, const unsigned char& fragmentLen, uint64_t& key) {
 
 	// set the key to zero
 	key = 0;
@@ -1859,7 +1943,7 @@ void CAlignmentThread::CreateHash(const char* fragment, const unsigned char frag
 }
 
 // consolidates hash hits into a read candidate (fast algorithm)
-void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList) {
+void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList) {
 
 	// localize the hash size
 	unsigned char hashSize = mSettings.HashSize;
@@ -1896,7 +1980,7 @@ void CAlignmentThread::GetFastReadCandidate(HashRegion& region, char* query, con
 }
 
 // consolidates hash hits into read candidates
-void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int queryLength, MhpOccupancyList* pMhpOccupancyList) {
+void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* query, const unsigned int& queryLength, MhpOccupancyList* pMhpOccupancyList) {
 
 	// localize the hash size
 	unsigned char hashSize = mSettings.HashSize;
@@ -1919,22 +2003,37 @@ void CAlignmentThread::GetReadCandidates(vector<HashRegion>& regions, char* quer
 	}
 
 	// add the consolidated regions
-	regions.resize(hrt.GetCount());
-	vector<HashRegion>::iterator hrIter = regions.begin();
+	regions.reserve(hrt.GetCount());
+	//vector<HashRegion>::iterator hrIter = regions.begin();
 
 	hrt.GotoFirstEntry();
 	while(HashRegion* r = hrt.GetTraversalHashRegion()) {
 		if(!hrt.GetNextEntry()) break;
-		*hrIter = *r;
-		hrIter++;
+		//*hrIter = *r;
+		//hrIter++;
+		if(mFlags.IsUsingAlignmentCandidateThreshold) {
+		  int length = r->End - r->Begin + 1;
+		  if (length >= mSettings.AlignmentCandidateThreshold)
+		    regions.push_back(*r);
+		}
 	}
 
 	// sort the hash regions according to length (descending)
-	if( !mFlags.IsAligningAllReads || mFlags.IsUsingHashPositionThreshold ) sort(regions.begin(), regions.end(), SortHashRegionByLength() );
+	if ((!mFlags.IsAligningAllReads)
+	   || (mFlags.IsUsingHashRegionThreshold && (regions.size() > mSettings.HashRegionThreshold))) {
+	  sort(regions.begin(), regions.end(), SortHashRegionByLength());
+	}
+	  
 }
 
 // settles the local Smith-Waterman window
-bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, const unsigned int refIndex, const unsigned int uniqueBegin, const unsigned int uniqueEnd, unsigned int& localSearchBegin, unsigned int& localSearchEnd ) {
+bool CAlignmentThread::SettleLocalSearchRegion(
+    const LocalAlignmentModel& lam, 
+    const unsigned int& refIndex, 
+    const unsigned int& uniqueBegin, 
+    const unsigned int& uniqueEnd, 
+    unsigned int& localSearchBegin, 
+    unsigned int& localSearchEnd ) {
 
 	// calculate the target regions using the local alignment models
 	const unsigned int refBegin = mReferenceBegin[refIndex];
@@ -1972,10 +2071,10 @@ bool CAlignmentThread::SettleLocalSearchRegion( const LocalAlignmentModel& lam, 
 	if(end   > refEnd)   end   = refEnd;
 
 	// adjust the start position if the reference starts with a J nucleotide
-	while(mReference[begin] == 'X') ++begin;
+	while(mReference[begin] == 'J') ++begin;
 
 	// adjust the stop position if the reference ends with a J nucleotide
-	while(mReference[end] == 'X')   --end;
+	while(mReference[end] == 'J')   --end;
 
 
 	// quit if we don't have a region to align against
@@ -2002,9 +2101,13 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 				  const unsigned int& end, 
 				  const unsigned int& refIndex, 
 				  Alignment& al) {
-	// prepare for alignment (borrow the forward read buffer)
+        // prepare for alignment (borrow the forward read buffer)
 	const char* query              = bases.CData();
 	const unsigned int queryLength = bases.Length();
+
+        // the reference is shorter than query 
+        // so we do not align it
+	if ((end - begin + 1) < queryLength) return false;
 
 	strncpy_s(mForwardRead, mSettings.AllocatedReadLength, query, queryLength);
 	mForwardRead[queryLength] = 0;
@@ -2019,7 +2122,13 @@ bool CAlignmentThread::RescueMate(const LocalAlignmentModel& lam,
 	// align according to the model
 	al.IsReverseStrand = (lam.IsTargetReverseStrand ? true : false);
 	char* pAnchor = mReference + begin;
-	mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
+	//mSW.Align(al, pAnchor, (end - begin + 1), mForwardRead, queryLength);
+	StripedSmithWaterman::Filter filter;
+	StripedSmithWaterman::Alignment ssw_alignment;
+	mSSW.Align(mForwardRead, pAnchor, (end - begin + 1), filter, &ssw_alignment);
+        if (ssw_alignment.sw_score == 0) return false; // No alignment generated by ssw
+
+	ConvertSswToAlignment(ssw_alignment, pAnchor, mForwardRead, &al);
 
 	// adjust the reference start positions
 	al.ReferenceIndex = refIndex;
