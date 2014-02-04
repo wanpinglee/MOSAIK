@@ -27,7 +27,6 @@ CFLAGS += $(FLAGS)
 CXXFLAGS += $(FLAGS)
 export CFLAGS
 export CXXFLAGS
-export LDFLAGS = -Wl
 export CXX ?= g++
 
 # define our platform
