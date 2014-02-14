@@ -631,13 +631,16 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 	// get the current offset
 	concatenated2bOffset = ftell64(refStream);
 
-	printf("- writing concatenated 2-bit reference sequence...  ");
-	fflush(stdout);
+	if ( !mFlags.IsQuietMode ) {
+	  printf("- writing concatenated 2-bit reference sequence...  ");
+	  fflush(stdout);
+	}
 
 	// write the concatenated reference sequence
 	fio.Write(concatenated2bReference, concatenated2bLength, refStream);
 
-	printf("finished.\n");
+        if ( !mFlags.IsQuietMode )
+	  printf("finished.\n");
 
 
 	// ======================
@@ -653,8 +656,10 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 
 	if(numMaskedRegions > 0) {
 
-		printf("- writing masking vector...                         ");
-		fflush(stdout);
+		if ( !mFlags.IsQuietMode ) {
+		  printf("- writing masking vector...                         ");
+		  fflush(stdout);
+		}
 
 		const unsigned int numBytesWritten = numMaskedRegions * SIZEOF_INT * 2;
 
@@ -676,7 +681,8 @@ void CMosaikBuild::CreateReferenceArchive(const string& fastaFilename, const str
 		}
 
 		fio.Write(maskedBuffer, numBytesWritten, refStream);
-		printf("finished.\n");
+		if ( !mFlags.IsQuietMode )
+		  printf("finished.\n");
 
 		// clean up
 		delete [] maskedBuffer;
@@ -817,10 +823,12 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 	}
 
 	unsigned int numBustardFiles = (unsigned int)bustardFiles.size();
-	cout << "- found " << numBustardFiles << " files" << endl;
+	if ( !mFlags.IsQuietMode )
+	  cout << "- found " << numBustardFiles << " files" << endl;
 
 	CConsole::Heading();
-	SILENTMODE cout << endl << "- parsing Bustard file" << ((numBustardFiles > 1) ? "s" : "") << ":" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << endl << "- parsing Bustard file" << ((numBustardFiles > 1) ? "s" : "") << ":" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -976,7 +984,8 @@ void CMosaikBuild::ParseBustard(const string& directory, const string& lanes, co
 void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& outputFilename) {
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing FASTA files:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing FASTA files:" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1031,14 +1040,16 @@ void CMosaikBuild::ParseFasta(const string& readFastaFilename, const string& out
 	s.NumBasesWritten = writer.GetNumBases();
 	s.NumReadsWritten = writer.GetNumReads();
 	s.NumTotalMates   = numReadsParsed;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // Parses the sequence and quality paired-end FASTA files while writing to our read archive
 void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFilename2, const string& outputFilename) {
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing paired-end/mate-pair FASTA files:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing paired-end/mate-pair FASTA files:" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1268,14 +1279,16 @@ void CMosaikBuild::ParsePEFasta(string& readFastaFilename, string& readFastaFile
 	s.NumTotalMates    = numReadsParsed;
 	s.NumMate1Orphaned = numMate1Orphaned;
 	s.NumMate2Orphaned = numMate2Orphaned;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // Parses the reads and base qualities from a FASTQ file
 void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFilename) {
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing FASTQ file" << ((fastqFiles.size() > 1) ? "s" : "") << ":" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing FASTQ file" << ((fastqFiles.size() > 1) ? "s" : "") << ":" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1336,7 +1349,8 @@ void CMosaikBuild::ParseFastq(vector<string>& fastqFiles, const string& outputFi
 	s.NumBasesWritten = writer.GetNumBases();
 	s.NumReadsWritten = writer.GetNumReads();
 	s.NumTotalMates   = numReadsParsed;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // Parses the reads and base qualities from a paired-end FASTQ file
@@ -1356,7 +1370,8 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 	sort(mate2Files.begin(), mate2Files.end());
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing paired-end/mate-pair FASTQ files:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing paired-end/mate-pair FASTQ files:" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1466,7 +1481,8 @@ void CMosaikBuild::ParsePEFastq(vector<string>& mate1Files, vector<string>& mate
 	s.NumBasesWritten = writer.GetNumBases();
 	s.NumReadsWritten = writer.GetNumReads();
 	s.NumTotalMates   = numReadsParsed * 2;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // Parses an Illumina Gerald directory
@@ -1514,10 +1530,12 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 	}
 
 	const unsigned int numGeraldFiles = (unsigned int)geraldFiles.size();
-	cout << "- found " << numGeraldFiles << " files" << endl;
+        if ( !mFlags.IsQuietMode )
+	  cout << "- found " << numGeraldFiles << " files" << endl;
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing Gerald file" << ((numGeraldFiles > 1) ? "s" : "") << ":" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing Gerald file" << ((numGeraldFiles > 1) ? "s" : "") << ":" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1566,14 +1584,16 @@ void CMosaikBuild::ParseGerald(const string& directory, const string& lanes, con
 	s.NumBasesWritten = writer.GetNumBases();
 	s.NumReadsWritten = writer.GetNumReads();
 	s.NumTotalMates   = numReadsParsed;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // Parses the SRF archive
 void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilename) {
 
 	CConsole::Heading();
-	SILENTMODE cout << "- parsing SRF file" << ((srfFiles.size() > 1) ? "s" : "") << ":" << endl;
+	if ( !mFlags.IsQuietMode )
+	  SILENTMODE cout << "- parsing SRF file" << ((srfFiles.size() > 1) ? "s" : "") << ":" << endl;
 	CConsole::Reset();
 
 	// initialize our writer
@@ -1625,7 +1645,8 @@ void CMosaikBuild::ParseSRF(vector<string>& srfFiles, const string& outputFilena
 	s.NumBasesWritten = writer.GetNumBases();
 	s.NumReadsWritten = writer.GetNumReads();
 	s.NumTotalMates   = numReadsParsed;
-	ShowStatistics(s);
+	if ( !mFlags.IsQuietMode )
+	  ShowStatistics(s);
 }
 
 // trims the mate

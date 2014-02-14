@@ -140,13 +140,6 @@ int main(int argc, char* argv[]) {
 	CConsole::Initialize();
 	ConfigurationSettings settings;
 
-	printf("------------------------------------------------------------------------------\n");
-	printf("Mosaik"); CConsole::Red(); printf("Build"); CConsole::Reset();
-	printf(" %u.%u.%u                                                   %s\n", 
-		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
-	printf("------------------------------------------------------------------------------\n\n");
-
 	// =================================
 	// configure the command line parser
 	// =================================
@@ -221,6 +214,17 @@ int main(int argc, char* argv[]) {
 
 	// parse the current command line
 	COptions::Parse(argc, argv);
+
+
+        if (!settings.IsQuietMode) {
+	  printf("------------------------------------------------------------------------------\n");
+	  printf("Mosaik"); CConsole::Red(); printf("Build"); CConsole::Reset();
+	  printf(" %u.%u.%u                                                   %s\n", 
+		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
+	  printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
+	  printf("------------------------------------------------------------------------------\n\n");
+	}
+
 
 	// =============================
 	// check for missing information
@@ -469,7 +473,7 @@ int main(int argc, char* argv[]) {
 		mb.SetQuietMode();
 	
 	// output the metadata information
-	if(!settings.HasOutputReferenceFilename) {
+	if(!settings.HasOutputReferenceFilename && !settings.IsQuietMode) {
 		if(settings.HasCenterName)               cout << "- setting center name to: " << rg.CenterName << endl;
 		if(settings.HasDescription)              cout << "- setting description to: " << rg.Description << endl;
 		if(settings.HasReadGroupID)              cout << "- setting read group ID to: " << rg.ReadGroupID << endl;
@@ -482,7 +486,7 @@ int main(int argc, char* argv[]) {
 
 	// enable colorspace handling
 	if(settings.EnableColorspace) {
-		if(settings.HasOutputReferenceFilename) cout << "- enabling AB SOLiD colorspace conversion" << endl;	
+		if(settings.HasOutputReferenceFilename && !settings.IsQuietMode) cout << "- enabling AB SOLiD colorspace conversion" << endl;	
 		mb.EnableColorspace();
 	}
 
@@ -499,47 +503,55 @@ int main(int argc, char* argv[]) {
 	} else {
 
 		if(settings.HasGenomeAssemblyID) {
-			cout << "- setting genome assembly ID to \"" << settings.GenomeAssemblyID << "\"" << endl;
+			if (!settings.IsQuietMode)
+			  cout << "- setting genome assembly ID to \"" << settings.GenomeAssemblyID << "\"" << endl;
 			mb.SetGenomeAssemblyID(settings.GenomeAssemblyID);
 		}
 
 		if(settings.HasUniformResourceIdentifier) {
-			cout << "- setting URI to \"" << settings.UniformResourceIdentifier << "\"" << endl;
+			if (!settings.IsQuietMode)
+			  cout << "- setting URI to \"" << settings.UniformResourceIdentifier << "\"" << endl;
 			mb.SetURI(settings.UniformResourceIdentifier);
 		}
 
 		if(settings.HasSpeciesName) {
-			cout << "- setting species name to \"" << settings.SpeciesName << "\"" << endl;
+			if (!settings.IsQuietMode)
+			  cout << "- setting species name to \"" << settings.SpeciesName << "\"" << endl;
 			mb.SetSpecies(settings.SpeciesName);
 		}
-
-		cout << "- converting " << settings.ReadFastaFilename << " to a reference sequence archive." << endl;
+                if (!settings.IsQuietMode)
+		  cout << "- converting " << settings.ReadFastaFilename << " to a reference sequence archive." << endl;
 	}
 
 	// enable read and read name trimming
 	if(settings.HasTrimPrefixBases || settings.HasTrimSuffixBases) {
-		cout << "- trimming the first " << settings.NumTrimPrefixBases << " and the last " << settings.NumTrimSuffixBases << " bases" << endl;
+		if (!settings.IsQuietMode)
+		  cout << "- trimming the first " << settings.NumTrimPrefixBases << " and the last " << settings.NumTrimSuffixBases << " bases" << endl;
 		mb.EnableBaseTrimming(settings.NumTrimPrefixBases, settings.NumTrimSuffixBases);		
 	}
 
 	if(settings.HasTrimPrefixName || settings.HasTrimSuffixName) {
-		cout << "- trimming the first " << settings.NumTrimPrefixName << " and the last " << settings.NumTrimSuffixName << " characters of the read name" << endl;	
+	        if (!settings.IsQuietMode)
+		  cout << "- trimming the first " << settings.NumTrimPrefixName << " and the last " << settings.NumTrimSuffixName << " characters of the read name" << endl;	
 		mb.EnableReadNameTrimming(settings.NumTrimPrefixName, settings.NumTrimSuffixName);
 	}
 
 	// enable the addition of a user specified read name prefix
 	if(settings.HasReadNamePrefix) {
-		cout << "- prepending all read names with \"" << settings.ReadNamePrefix << "\"" << endl;	
+		if (!settings.IsQuietMode)
+		  cout << "- prepending all read names with \"" << settings.ReadNamePrefix << "\"" << endl;	
 		mb.EnableReadNamePrefix(settings.ReadNamePrefix);
 	}
 
 	// enable the read limit
 	if(settings.HasReadLimit) {
-		cout << "- limiting read archive to " << settings.ReadLimit << " reads" << endl;	
+		if (!settings.IsQuietMode)
+		  cout << "- limiting read archive to " << settings.ReadLimit << " reads" << endl;	
 		mb.EnableReadLimit(settings.ReadLimit);
 	}
 
-	cout << endl;
+        if (!settings.IsQuietMode)
+	  cout << endl;
 
 	// ================
 	// parse read files
@@ -604,8 +616,10 @@ int main(int argc, char* argv[]) {
 	bench.Stop();
 
 	// show the benchmarking results
-	cout << endl;
-	bench.DisplayTime("MosaikBuild");
+	if (!settings.IsQuietMode)
+	  cout << endl;
+	if (!settings.IsQuietMode)
+	  bench.DisplayTime("MosaikBuild");
 
 	return 0;
 }
