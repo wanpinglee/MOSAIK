@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	printf("Mosaik"); CConsole::Red(); printf("Text"); CConsole::Reset();
 	printf(" %u.%u.%u                                                   %s\n", 
 		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Michael Stromberg                 Marth Lab, Boston College Biology Department\n");
+	printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
 	printf("------------------------------------------------------------------------------\n\n");
 
 	// =================================
