@@ -17,8 +17,8 @@ export PAIRWISE_DIR = CommonSource/PairwiseAlignment
 export UTILITIES_DIR = CommonSource/Utilities
 
 # define some default flags
-FLAGS = -Wall -Wno-char-subscripts -ansi -O3
-#FLAGS = -Wall -Wno-char-subscripts -ansi -g -D VERBOSE_DEBUG #gdb debugging
+#FLAGS = -Wall -Wno-char-subscripts -ansi -O3
+FLAGS = -Wall -Wno-char-subscripts -ansi -g -D VERBOSE_DEBUG #gdb debugging
 #FLAGS = -Wall -Wno-char-subscripts -ansi -O3 -D VERBOSE_DEBUG #enables verbose debugging
 CFLAGS =
 CXXFLAGS =

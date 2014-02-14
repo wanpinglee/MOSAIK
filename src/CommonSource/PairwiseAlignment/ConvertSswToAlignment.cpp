@@ -5,6 +5,9 @@ bool ConvertSswToAlignment(
     const char* ref,
     const char* query,
     Alignment* al) {
+
+  if ((ssw_al.ref_begin < 0) || (ssw_al.ref_end < 0) || (ssw_al.query_begin < 0) || (ssw_al.query_end < 0)) return false;
+
   al->QueryBegin  = ssw_al.query_begin;
   al->QueryEnd    = ssw_al.query_end;
   al->QueryLength = ssw_al.query_end - ssw_al.query_begin + 1;
