@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-omi",         "output chrmosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
+	COptions::AddOption("-omi",         "output chromosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
 	COptions::AddOption("-om",          "output complete multiply mapped alignments in the multiple.bam", settings.OutputMultiplyComplete, pReportingOpts);
 
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
