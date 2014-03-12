@@ -7,14 +7,12 @@ CBUILT_OBJECTS= $(patsubst %,$(TD)$(OBJ_DIR)/%,$(COBJECTS))
 
 INCLUDES= include/
 
-MY_FLAGS = -Wunused-result -Wformat
-
 all: $(CBUILT_OBJECTS)
 .PHONY: all
 
 $(CBUILT_OBJECTS): $(CSOURCES)
 	@echo "  * compiling" $(*F).c
-	@$(CC) -c -o $@ $(*F).c -O3 $(MY_FLAGS) $(PLATFORM_FLAGS) -I$(INCLUDES) 
+	@$(CC) -c -o $@ $(*F).c -O3 $(PLATFORM_FLAGS) -I$(INCLUDES) 
 
 clean:
 	@echo "Cleaning up."
