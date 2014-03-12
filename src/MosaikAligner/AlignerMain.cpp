@@ -195,13 +195,6 @@ int main(int argc, char* argv[]) {
 	for ( int i = 0; i < argc; ++i )
 		commandLine = commandLine + argv[i] + " ";
 
-	printf("------------------------------------------------------------------------------\n");
-	printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
-	printf(" %u.%u.%u                                                 %s\n", 
-		MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
-	printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
-	printf("------------------------------------------------------------------------------\n\n");
-
 	// =================================
 	// configure the command line parser
 	// =================================
@@ -261,7 +254,7 @@ int main(int argc, char* argv[]) {
 	// add the reporting options
 	OptionGroup* pReportingOpts = COptions::CreateOptionGroup("Reporting");
 	COptions::AddValueOption("-statmq", "threshold", "enable mapping quality threshold for statistical map [0 - 255]", "", settings.HasStatMappingQuality, settings.StatMappingQuality, pReportingOpts);
-	COptions::AddOption("-omi",         "output chrmosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
+	COptions::AddOption("-omi",         "output chromosome ids and positions of multiply mapped alignments in the multiple.bam", settings.OutputMultiplyIncomplete, pReportingOpts);
 	COptions::AddOption("-om",          "output complete multiply mapped alignments in the multiple.bam", settings.OutputMultiplyComplete, pReportingOpts);
 
 	COptions::AddOption("-zn",          "output zn tags",settings.EnableZnTag, pReportingOpts);
@@ -285,6 +278,16 @@ int main(int argc, char* argv[]) {
 	// =============================
 	// check for missing information
 	// =============================
+
+        if (!settings.IsQuietMode) {
+	  printf("------------------------------------------------------------------------------\n");
+	  printf("Mosaik"); CConsole::Red(); printf("Aligner"); CConsole::Reset();
+	  printf(" %u.%u.%u                                                %s\n", 
+	  	MOSAIK_MAJOR_VERSION, MOSAIK_MINOR_VERSION, MOSAIK_BUILD_VERSION, MOSAIK_VERSION_DATE);
+	  printf("Wan-Ping Lee & Michael Stromberg  Marth Lab, Boston College Biology Department\n");
+	  printf("------------------------------------------------------------------------------\n\n");
+	}
+
 
 	bool foundError = false;
 	ostringstream errorBuilder;
@@ -774,6 +777,7 @@ int main(int argc, char* argv[]) {
 	// echo enabled options
 	// ====================
 
+        if (!settings.IsQuietMode) {
 	cout << "- Using the following alignment algorithm: ";
 	switch(algorithmType) {
 		case CAlignmentThread::AlignerAlgorithm_FAST:
@@ -848,6 +852,7 @@ int main(int argc, char* argv[]) {
 		cout << "- Updating Smith-Waterman scoring scheme (match, mismatch, gap open, gap extend): (" <<
 		CPairwiseUtilities::MatchScore << ", " << CPairwiseUtilities::MismatchScore << ", " <<
 		CPairwiseUtilities::GapOpenPenalty << ", " << CPairwiseUtilities::GapExtendPenalty << ")" << endl;
+	} // end of if (!settings.IsQuietMode)
 
 	// ==============
 	// Start aligning
@@ -864,8 +869,10 @@ int main(int argc, char* argv[]) {
 	bench.Stop();
 
 	// show the benchmarking results
-	cout << endl;
-	bench.DisplayTime("MosaikAligner");
+	if (!settings.IsQuietMode) {
+	  cout << endl;
+	  bench.DisplayTime("MosaikAligner");
+	}
 
 	return 0;
 }

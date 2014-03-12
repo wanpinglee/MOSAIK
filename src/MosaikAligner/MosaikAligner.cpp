@@ -230,8 +230,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 		char** pBsRefSeqs = NULL;
 		if(mFlags.EnableColorspace) {
 
-			cout << "- loading basespace reference sequences... ";
-			cout.flush();
+			if ( !mFlags.IsQuietMode ) {
+			  cout << "- loading basespace reference sequences... ";
+			  cout.flush();
+			}
 
 			MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
 			bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
@@ -240,16 +242,21 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			bsRefSeq.CopyReferenceSequences(pBsRefSeqs);
 			bsRefSeq.Close();
 
-			cout << "finished." << endl;
+			if ( !mFlags.IsQuietMode )
+			  cout << "finished." << endl;
 		}
 
 		// prepare reference sequence
 		refseq.Open(mSettings.ReferenceFilename);
-		cout << "- loading reference sequence... ";
-		cout.flush();
+		if ( !mFlags.IsQuietMode ) {
+		  cout << "- loading reference sequence... ";
+		  cout.flush();
+		}
 		refseq.LoadConcatenatedSequence(mReference);
-		cout << "finished." << endl;
-		refseq.Close();
+		if ( !mFlags.IsQuietMode ) {
+		  cout << "finished." << endl;
+		  refseq.Close();
+		}
 		
 		unsigned int* pRefBegin = new unsigned int[numRefSeqs];
 		unsigned int* pRefEnd   = new unsigned int[numRefSeqs];
@@ -395,10 +402,15 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			unsigned int endRef   = referenceGroups[i].first + referenceGroups[i].second - 1;
 
 			CConsole::Heading();
-		        if ( referenceGroups[i].second > 1 )
-				cout << endl << "Aligning chromosome " << startRef + 1 << "-" << endRef + 1 << " (of " << numRefSeqs << "):" << endl;
-			else
-				cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
+		        if ( referenceGroups[i].second > 1 ) {
+				if ( !mFlags.IsQuietMode ) {
+				  cout << endl << "Aligning chromosome " << startRef + 1 << "-" << endRef + 1 << " (of " << numRefSeqs << "):" << endl;
+				}
+			} else {
+			        if ( !mFlags.IsQuietMode ) {
+				  cout << endl << "Aligning chromosome " << startRef + 1 << " (of " << numRefSeqs << "):" << endl;
+				}
+			}
 		        CConsole::Reset();
 
 			// initialize our hash tables
@@ -451,8 +463,10 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 			char** pBsRefSeqs = NULL;
 			if(mFlags.EnableColorspace) {
 	
-				cout << "- loading basespace reference sequences... ";
-				cout.flush();
+				if ( !mFlags.IsQuietMode ) {
+				  cout << "- loading basespace reference sequences... ";
+				  cout.flush();
+				}
 
 				MosaikReadFormat::CReferenceSequenceReader bsRefSeq;
 				bsRefSeq.Open(mSettings.BasespaceReferenceFilename);
@@ -461,18 +475,22 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 				bsRefSeq.CopyReferenceSequences(pBsRefSeqs, startRef, referenceGroups[i].second);
 				bsRefSeq.Close();
 
-				cout << "finished." << endl;
+				if ( !mFlags.IsQuietMode )
+				  cout << "finished." << endl;
 			}
 
 			// prepare reference sequence
 			refseq.Open(mSettings.ReferenceFilename);
-			cout << "- loading reference sequence... ";
-			cout.flush();
+			if ( !mFlags.IsQuietMode ) {
+			  cout << "- loading reference sequence... ";
+			  cout.flush();
+			}
 			//refseq.LoadConcatenatedSequence(mReference);
 			refseq.LoadConcatenatedSequence(mReference, startRef, referenceGroups[i].second);
 			refseq.Close();
 
-			cout << "finished." << endl;
+			if ( !mFlags.IsQuietMode )
+			  cout << "finished." << endl;
 			
 			
 			// localize the read archive filenames
@@ -553,9 +571,11 @@ void CMosaikAligner::AlignReadArchiveLowMemory(void) {
 	string tempDir;
 	CFileUtilities::GetTempDirectory( tempDir );
 	if ( CFileUtilities::DirExists( tempDir.c_str() ) ) {
-	        cout << endl << "- cleaning up temp files...";
+	        if ( !mFlags.IsQuietMode )
+		  cout << endl << "- cleaning up temp files...";
 		CFileUtilities::DeleteDir( tempDir );
-		cout << "finished." << endl;
+		if ( !mFlags.IsQuietMode )
+		  cout << "finished." << endl;
 	}
 
 	if ( !mSReference.found ) {
@@ -712,7 +732,8 @@ void CMosaikAligner::MergeArchives(void) {
 	}
 
 	CConsole::Heading();
-	cout << endl << "Sorting alignment archive:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  cout << endl << "Sorting alignment archive:" << endl;
 	CConsole::Reset();
 	SortThread sThread ( outputFilenames, temporaryFiles, nThread, nReads, mSettings.MedianFragmentLength, alignmentCacheEachSorter );
 	if ( mFlags.IsQuietMode )
@@ -726,7 +747,8 @@ void CMosaikAligner::MergeArchives(void) {
 
 
 	CConsole::Heading();
-	cout << "Merging alignment archive:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  cout << "Merging alignment archive:" << endl;
 	CConsole::Reset();
 
 
@@ -871,11 +893,13 @@ void CMosaikAligner::AlignReadArchive(
 
 	// initialize our progress bar
 	
-	if ( !mFlags.UseLowMemory ) {
+	if ( !mFlags.UseLowMemory && !mFlags.IsQuietMode) {
 		CConsole::Heading();
 		cout << endl;
 	}
-	cout << "Aligning read library (" << numReadArchiveReads << "):" << endl;
+
+	if ( !mFlags.IsQuietMode )
+	  cout << "Aligning read library (" << numReadArchiveReads << "):" << endl;
 	if ( !mFlags.UseLowMemory )
 	CConsole::Reset();
 
@@ -941,7 +965,8 @@ void CMosaikAligner::PrintStatistics () {
 
 	// print our alignment statistics (mates) if don't enable low-memory algorithm
 
-	
+
+        if ( !mFlags.IsQuietMode ) {
 	printf("\n");
 	CConsole::Heading(); printf("Alignment statistics (mates):\n"); CConsole::Reset();
 	printf("================================================\n");
@@ -1104,6 +1129,7 @@ void CMosaikAligner::PrintStatistics () {
 	}
 
 	fflush(stdout);
+	} // end of if ( !mFlags.IsQuietMode )
 
 }
 
@@ -1362,7 +1388,8 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 	unsigned int maxPositions = (unsigned int)(numBases - hashSize + 1);
 
 	CConsole::Heading();
-	cout << endl << "Hashing reference sequence:" << endl;
+	if ( !mFlags.IsQuietMode )
+	  cout << endl << "Hashing reference sequence:" << endl;
 	CConsole::Reset();
 	if ( !mFlags.IsQuietMode )
 		CProgressBar<unsigned int>::StartThread(&j, 0, maxPositions, "ref bases");
@@ -1442,9 +1469,10 @@ void CMosaikAligner::HashReferenceSequence(MosaikReadFormat::CReferenceSequenceR
 		mpDNAHash->Add(key, j);
 	}
 
-	if ( !mFlags.IsQuietMode )
+	if ( !mFlags.IsQuietMode ) {
 		CProgressBar<unsigned int>::WaitThread();
-	cout << endl;
+	        cout << endl;
+	}
 
 	// clean up
 	delete [] twoBitConcatenatedSequence;

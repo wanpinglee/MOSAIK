@@ -222,6 +222,7 @@ inline void CBamWriter::BgzfPackUnsignedShort(char* buffer, unsigned short value
 
 // calculates the minimum bin that contains a region [begin, end)
 inline unsigned int CBamWriter::CalculateMinimumBin(unsigned int begin, unsigned int end) {
+	if (end == 0) end = begin;
 	--end;
 	if((begin >> 14) == (end >> 14)) return 4681 + (begin >> 14);
 	if((begin >> 17) == (end >> 17)) return  585 + (begin >> 17);

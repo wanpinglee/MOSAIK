@@ -12,7 +12,7 @@ all: $(CBUILT_OBJECTS)
 
 $(CBUILT_OBJECTS): $(CSOURCES)
 	@echo "  * compiling" $(*F).c
-	@$(CC) -c -o $@ $(*F).c -O3 $(PLATFORM_FLAGS) -I$(INCLUDES)
+	@$(CC) -c -o $@ $(*F).c -O3 $(PLATFORM_FLAGS) -I$(INCLUDES) 
 
 clean:
 	@echo "Cleaning up."

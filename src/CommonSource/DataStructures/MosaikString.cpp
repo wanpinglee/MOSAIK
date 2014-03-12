@@ -199,12 +199,14 @@ void CMosaikString::Append(const char* s) {
 
 		// save the old string
 		char* newData = new char[currentLength + 1];
-		memcpy(newData, mData, currentLength);
+		if (currentLength > 0)
+		  memcpy(newData, mData, currentLength);
 		newData[currentLength] = 0;
 
 		// copy the old string
 		Reserve(newLength);
-		memcpy(mData, newData, currentLength);
+		if (currentLength > 0)
+		  memcpy(mData, newData, currentLength);
 
 		// clean up
 		delete [] newData;
@@ -230,12 +232,15 @@ void CMosaikString::Append(const char* s, const unsigned int sLen) {
 
 		// save the old string
 		char* newData = new char[currentLength + 1];
-		memcpy(newData, mData, currentLength);
+
+		if (currentLength > 0)
+		  memcpy(newData, mData, currentLength);
 		newData[currentLength] = 0;
 
 		// copy the old string
 		Reserve(newLength);
-		memcpy(mData, newData, currentLength);
+		if (currentLength > 0)
+		  memcpy(mData, newData, currentLength);
 
 		// clean up
 		delete [] newData;
@@ -260,12 +265,14 @@ void CMosaikString::Append(const char c, const unsigned int sLen) {
 	
 		// save the old string
 		char* newData = new char[currentLength + 1];
-		memcpy(newData, mData, currentLength);
+		if (currentLength > 0)
+		  memcpy(newData, mData, currentLength);
 		newData[currentLength] = 0;
 
 		// copy the old string
 		Reserve(newLength);
-		memcpy(mData, newData, currentLength);
+		if (currentLength > 0)
+		  memcpy(mData, newData, currentLength);
 
 		// clean up
 		delete [] newData;
@@ -474,12 +481,14 @@ void CMosaikString::Prepend(const char c, const unsigned int sLen) {
 		
 		// save the old string
 		char* newData = new char[currentLength + 1];
-		memcpy(newData, mData, currentLength);
+		if (currentLength > 0)
+		  memcpy(newData, mData, currentLength);
 		newData[currentLength] = 0;
 
 		// copy the prefix
 		Reserve(newLength);
-		memset(mData, c, prefixLength);
+		if (currentLength > 0)
+		  memset(mData, c, prefixLength);
 
 		// copy the old string
 		memcpy(mData + prefixLength, newData, currentLength);
@@ -529,6 +538,10 @@ void CMosaikString::Reserve(const unsigned int numBytes) {
 		mAllocatedLength = numBytes + GROWTH_FACTOR + 1;
 		if(mData) delete [] mData;
 		mData = new char[mAllocatedLength];
+
+		if (!mData) {
+		  fprintf(stderr,"ERROR: CMosaikString::Reserve fails to allocate memory.\n");
+		}
 	}
 
 	// reset the data
