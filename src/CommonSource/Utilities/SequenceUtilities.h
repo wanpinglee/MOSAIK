@@ -20,9 +20,9 @@ using namespace std;
 
 namespace CSequenceUtilities {
 	// Performs an in-place reverse complement conversion
-	void GetReverseComplement(char* seqBases, const unsigned int seqLength);
+	void GetReverseComplement(char* seqBases, const unsigned int& seqLength);
 	// Performs an in-place sequence reversal using a C string
-	void ReverseSequence(char* seqBases, const unsigned int seqLength);
+	void ReverseSequence(char* seqBases, const unsigned int& seqLength);
 	// Converts an STL string to uppercase
 	void UppercaseSequence(string& s);
 	// Converts an STL string to lowercase

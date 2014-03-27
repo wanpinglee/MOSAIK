@@ -5,7 +5,11 @@ Wan-Ping Lee & Michael Stromberg    Marth Lab, Boston College Biology Department
 
 News:
 
-Version 2.2 is about four-fold faster than previous by improving the Smith-
+1. 2014-03-26 
+   A bug causing incorrect bases of reverse complement alignments has been fixed.
+   Please check any version greater than 2.2.19 for the fix.
+
+2. Version 2.2 is about four-fold faster than previous by improving the Smith-
 Waterman (SW) strategy and using SIMD SW [1]. This is also the version that we 
 use on 1000 Genomes Project [2] Phase-III datasets.
 
@@ -28,7 +32,7 @@ use in publications, talks, etc.
 
 Citation:
 
-http://arxiv.org/abs/1309.1149
+http://dx.plos.org/10.1371/journal.pone.0090581
 We ask that you cite this paper if you use MOSAIK in work that leads to 
 publication.
 
@@ -37,7 +41,7 @@ Obtaining:
 
 To download MOSAIK, please use git to download the most recent development tree.
 
-    % git clone git://github.com/wanpinglee/MOSAIK.git
+    % git clone https://github.com/wanpinglee/MOSAIK.git
 
 
 Or, download it from google code webpage:
@@ -55,7 +59,10 @@ most recent stable revision (2.2.3) then use:
 Compilation:
 
 MOSAIK requires g++ and the standard C and C++ development libraries.
-Just enter the src directory, glance at the README file, and type "make"
+Just enter the src directory, glance at the README file, and type "make".
+
+If static libraries are not installed, please modify includes/linux.inc,
+deleting "-static".
 
 
 

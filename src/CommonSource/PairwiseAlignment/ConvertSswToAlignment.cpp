@@ -4,12 +4,13 @@ bool ConvertSswToAlignment(
     const StripedSmithWaterman::Alignment& ssw_al,
     const char* ref,
     const char* query,
+    const int& queryLength,
     Alignment* al) {
 
   if ((ssw_al.ref_begin < 0) || (ssw_al.ref_end < 0) || (ssw_al.query_begin < 0) || (ssw_al.query_end < 0)) return false;
 
-  al->QueryBegin  = ssw_al.query_begin;
-  al->QueryEnd    = ssw_al.query_end;
+  al->QueryBegin  = (al->IsReverseStrand) ? (queryLength - ssw_al.query_end - 1) : ssw_al.query_begin;
+  al->QueryEnd    = (al->IsReverseStrand) ? (queryLength - ssw_al.query_begin - 1) : ssw_al.query_end;
   al->QueryLength = ssw_al.query_end - ssw_al.query_begin + 1;
 
   al->ReferenceBegin = ssw_al.ref_begin;
@@ -19,8 +20,8 @@ bool ConvertSswToAlignment(
 
   al->NumLongestMatchs = 0;
 
-  char* ref_ptr   = (char*)ref + al->ReferenceBegin;
-  char* query_ptr = (char*)query + al->QueryBegin;
+  char* ref_ptr   = (char*)ref + ssw_al.ref_begin;
+  char* query_ptr = (char*)query + ssw_al.query_begin;
   
   for (unsigned int i = 0; i < ssw_al.cigar.size(); ++i) {
     int op  = ssw_al.cigar[i] & 0x0000000f;

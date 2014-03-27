@@ -56,6 +56,7 @@ namespace SortNMergeUtilities {
 		bool operator>(AlignedReadPair& x) {
 			if ( x.read.Name.empty() ) return false;
 			if (   read.Name.empty() ) return true;
+			return read.Name > x.read.Name;
 		}
 	};
 

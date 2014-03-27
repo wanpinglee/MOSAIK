@@ -11,8 +11,8 @@
 #include "SequenceUtilities.h"
 
 // Performs an in-place reverse complement conversion
-void CSequenceUtilities::GetReverseComplement(char* seqBases, const unsigned int seqLength) {
-
+void CSequenceUtilities::GetReverseComplement(char* seqBases, const unsigned int& seqLength) {
+	
 	// reverse the sequence
 	ReverseSequence(seqBases, seqLength);
 
@@ -77,7 +77,7 @@ void CSequenceUtilities::LowercaseSequence(string& s) {
 }
 
 // Performs an in-place sequence reversal using a C string
-void CSequenceUtilities::ReverseSequence(char* seqBases, const unsigned int seqLength) {
+void CSequenceUtilities::ReverseSequence(char* seqBases, const unsigned int& seqLength) {
 	for(unsigned int i = seqLength; i >= (seqLength / 2) + 1; i--) 
 		swap(seqBases[seqLength - i], seqBases[i - 1]);
 }
