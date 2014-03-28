@@ -47,6 +47,7 @@ all:
 	@for dir in $(SUBDIRS); do \
 		echo "- Building in $$dir"; \
 		$(MAKE) --no-print-directory -C $$dir; \
+		if [ $$? -ne 0 ]; then exit 1; fi; \
 		echo ""; \
 	done
 
