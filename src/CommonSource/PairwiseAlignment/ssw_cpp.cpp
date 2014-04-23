@@ -23,6 +23,67 @@ static int8_t kBaseTranslation[128] = {
     4, 4, 4, 4,  3, 0, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4 
 };
 
+void BuildIupacMatch(std::vector<std::vector<int8_t> >* matrix) {
+  matrix->clear();
+  matrix->resize(26);
+  for (unsigned int i = 0; i < 26; ++i) {
+    (*matrix)[i].resize(26, 0);
+  }
+  for (unsigned int i = 0; i < 26; ++i) {
+    (*matrix)[i][i] = 1;
+  }
+
+  (*matrix)['R' - 'A']['A' - 'A'] = 1;
+  (*matrix)['R' - 'A']['G' - 'A'] = 1;
+  (*matrix)['Y' - 'A']['C' - 'A'] = 1;
+  (*matrix)['Y' - 'A']['T' - 'A'] = 1;
+  (*matrix)['S' - 'A']['G' - 'A'] = 1;
+  (*matrix)['S' - 'A']['C' - 'A'] = 1;
+  (*matrix)['W' - 'A']['A' - 'A'] = 1;
+  (*matrix)['W' - 'A']['T' - 'A'] = 1;
+  (*matrix)['K' - 'A']['G' - 'A'] = 1;
+  (*matrix)['K' - 'A']['T' - 'A'] = 1;
+  (*matrix)['M' - 'A']['A' - 'A'] = 1;
+  (*matrix)['M' - 'A']['C' - 'A'] = 1;
+  (*matrix)['B' - 'A']['C' - 'A'] = 1;
+  (*matrix)['B' - 'A']['G' - 'A'] = 1;
+  (*matrix)['B' - 'A']['T' - 'A'] = 1;
+  (*matrix)['D' - 'A']['A' - 'A'] = 1;
+  (*matrix)['D' - 'A']['G' - 'A'] = 1;
+  (*matrix)['D' - 'A']['T' - 'A'] = 1;
+  (*matrix)['H' - 'A']['A' - 'A'] = 1;
+  (*matrix)['H' - 'A']['C' - 'A'] = 1;
+  (*matrix)['H' - 'A']['T' - 'A'] = 1;
+  (*matrix)['V' - 'A']['A' - 'A'] = 1;
+  (*matrix)['V' - 'A']['C' - 'A'] = 1;
+  (*matrix)['V' - 'A']['G' - 'A'] = 1;
+
+  (*matrix)['A' - 'A']['R' - 'A'] = 1;
+  (*matrix)['G' - 'A']['R' - 'A'] = 1;
+  (*matrix)['C' - 'A']['Y' - 'A'] = 1;
+  (*matrix)['T' - 'A']['Y' - 'A'] = 1;
+  (*matrix)['G' - 'A']['S' - 'A'] = 1;
+  (*matrix)['C' - 'A']['S' - 'A'] = 1;
+  (*matrix)['A' - 'A']['W' - 'A'] = 1;
+  (*matrix)['T' - 'A']['W' - 'A'] = 1;
+  (*matrix)['G' - 'A']['K' - 'A'] = 1;
+  (*matrix)['T' - 'A']['K' - 'A'] = 1;
+  (*matrix)['A' - 'A']['M' - 'A'] = 1;
+  (*matrix)['C' - 'A']['M' - 'A'] = 1;
+  (*matrix)['C' - 'A']['B' - 'A'] = 1;
+  (*matrix)['G' - 'A']['B' - 'A'] = 1;
+  (*matrix)['T' - 'A']['B' - 'A'] = 1;
+  (*matrix)['A' - 'A']['D' - 'A'] = 1;
+  (*matrix)['G' - 'A']['D' - 'A'] = 1;
+  (*matrix)['T' - 'A']['D' - 'A'] = 1;
+  (*matrix)['A' - 'A']['H' - 'A'] = 1;
+  (*matrix)['C' - 'A']['H' - 'A'] = 1;
+  (*matrix)['T' - 'A']['H' - 'A'] = 1;
+  (*matrix)['A' - 'A']['V' - 'A'] = 1;
+  (*matrix)['C' - 'A']['V' - 'A'] = 1;
+  (*matrix)['G' - 'A']['V' - 'A'] = 1;
+}
+
 void BuildSwScoreMatrix(const uint8_t& match_score, 
                         const uint8_t& mismatch_penalty,
 			int8_t* matrix) {
@@ -95,10 +156,11 @@ void ConvertAlignment(const s_align& s_al,
 }
 
 int CalculateNumberMismatch(
+    const std::vector<std::vector<int8_t> >& iupac_match,
     const StripedSmithWaterman::Alignment& al,
     //const int8_t* matrix,
-    int8_t const *ref,
-    int8_t const *query) {
+    char const *ref,
+    char const *query) {
   
   ref   += al.ref_begin;
   query += al.query_begin;
@@ -108,7 +170,8 @@ int CalculateNumberMismatch(
     int32_t length = (al.cigar[i] >> 4) & 0x0fffffff;
     if (op == 0) { // M
       for (int j = 0; j < length; ++j) {
-	if (*ref != *query) ++mismatch_length;
+	//if (*ref != *query) ++mismatch_length;
+	if (iupac_match[*ref - 'A'][*query - 'A'] == 0) ++mismatch_length;
 	++ref;
 	++query;
       }
@@ -149,6 +212,7 @@ Aligner::Aligner(void)
     , reference_length_(0)
 {
   BuildDefaultMatrix();
+  BuildIupacMatch(&iupac_match_);
 }
 
 Aligner::Aligner(
@@ -170,6 +234,7 @@ Aligner::Aligner(
     , reference_length_(0)
 {
   BuildDefaultMatrix();
+  BuildIupacMatch(&iupac_match_);
 }
 
 Aligner::Aligner(const int8_t* score_matrix,
@@ -194,6 +259,7 @@ Aligner::Aligner(const int8_t* score_matrix,
   translation_matrix_ = new int8_t[translation_matrix_size];
   memcpy(translation_matrix_, translation_matrix, sizeof(int8_t) * translation_matrix_size);
   matrix_built_ = true;
+  BuildIupacMatch(&iupac_match_);
 }
 
 
@@ -240,7 +306,8 @@ int Aligner::TranslateBase(const char* bases, const int& length,
   return len;
 }
 
-
+// MOSAIK should not use this function.
+/*
 bool Aligner::Align(const char* query, const Filter& filter, 
                     Alignment* alignment) const
 {
@@ -276,7 +343,7 @@ bool Aligner::Align(const char* query, const Filter& filter,
 
   return true;
 }
-
+*/
 
 bool Aligner::Align(const char* query, const char* ref, const int& ref_len,
                     const Filter& filter, Alignment* alignment) const
@@ -310,7 +377,7 @@ bool Aligner::Align(const char* query, const char* ref, const int& ref_len,
   
   alignment->Clear();
   ConvertAlignment(*s_al, query_len, alignment);
-  alignment->mismatches = CalculateNumberMismatch(*alignment, translated_ref, translated_query);
+  alignment->mismatches = CalculateNumberMismatch(iupac_match_, *alignment, ref, query);
 
   // Free memory
   if (query_len > 1) delete [] translated_query;

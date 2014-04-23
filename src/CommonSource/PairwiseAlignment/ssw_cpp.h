@@ -177,6 +177,8 @@ class Aligner {
   bool    default_matrix_;
   bool    matrix_built_;
 
+  std::vector<std::vector<int8_t> > iupac_match_;
+
   uint8_t match_score_;           // default: 2
   uint8_t mismatch_penalty_;      // default: 2
   uint8_t gap_opening_penalty_;   // default: 3
