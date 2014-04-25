@@ -9,18 +9,18 @@ extern "C" {
 namespace {
 
 static int8_t kBaseTranslation[128] = {
-    4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
-    4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
-    4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
-    4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
-  //   A     C            G
-    4, 0, 4, 1,  4, 4, 4, 2,  4, 4, 4, 4,  4, 4, 4, 4, 
-  //             T
-    4, 4, 4, 4,  3, 0, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4, 
-  //   a     c            g
-    4, 0, 4, 1,  4, 4, 4, 2,  4, 4, 4, 4,  4, 4, 4, 4, 
-  //             t
-    4, 4, 4, 4,  3, 0, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4 
+    15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15, 
+    15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15, 
+    15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15,
+    15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15,  15, 15, 15, 15, 
+  //     A   B   C    D   E   F   G    H   I   J   K    L   M   N   O
+    15,  0,  5,  1,   6, 15, 15,  2,   7, 15, 15,  8,  15,  9,  4, 15, 
+  // P   Q   R   S    T   U   V   W    X   Y   Z
+    15, 15, 10, 11,   3,  3, 12, 13,  15, 14, 15, 15,  15, 15, 15, 15, 
+  //     a   b   c    d   e   f   g    h   i   j   k    l   m   n   o
+    15,  0,  5,  1,   6, 15, 15,  2,   7, 15, 15,  8,  15,  9,  4, 15, 
+  // p   q   r   s    t   u   v  w     x   y   z
+    15, 15, 10, 11,   3,  3, 12, 13,  15, 14, 15, 15,  15, 15, 15, 15
 };
 
 void BuildIupacMatch(std::vector<std::vector<int8_t> >* matrix) {
@@ -95,7 +95,8 @@ void BuildSwScoreMatrix(const uint8_t& match_score,
   //                   -2, -2,  2, -2,  0, // G
   //                   -2, -2, -2,  2,  0, // T
   //                    0,  0,  0,  0,  0};// N
-
+ 
+  /*
   int id = 0;
   for (int i = 0; i < 4; ++i) {
     for (int j = 0; j < 4; ++j) {
@@ -108,7 +109,45 @@ void BuildSwScoreMatrix(const uint8_t& match_score,
 
   for (int i = 0; i < 5; ++i)
     matrix[id++] = 0;
-    
+ */
+
+  const int size = 16;
+  memset(matrix, -mismatch_penalty, size * size); // fill the matrix with -mismatch_penalty
+  for (int i = 0; i < size; ++i) // fill the diagonal line with match_score
+    matrix[(i * size) + i] = match_score;
+
+  for (int i = 0; i < size; ++i)
+    matrix[(4 * size) + i] = 0; // elements in N row are all zero.
+
+  for (int i = 0; i < size; ++i)
+    matrix[(i * size) + 4] = 0; // elements in N column are all zero.
+
+  // IUPAC
+  matrix[(kBaseTranslation['R'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['R'] * size) + kBaseTranslation['G']] = match_score;
+  matrix[(kBaseTranslation['Y'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['Y'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['S'] * size) + kBaseTranslation['G']] = match_score;
+  matrix[(kBaseTranslation['S'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['W'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['W'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['K'] * size) + kBaseTranslation['G']] = match_score;
+  matrix[(kBaseTranslation['K'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['M'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['M'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['B'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['B'] * size) + kBaseTranslation['G']] = match_score;
+  matrix[(kBaseTranslation['B'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['D'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['D'] * size) + kBaseTranslation['G']] = match_score;
+  matrix[(kBaseTranslation['D'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['H'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['H'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['H'] * size) + kBaseTranslation['T']] = match_score;
+  matrix[(kBaseTranslation['V'] * size) + kBaseTranslation['A']] = match_score;
+  matrix[(kBaseTranslation['V'] * size) + kBaseTranslation['C']] = match_score;
+  matrix[(kBaseTranslation['V'] * size) + kBaseTranslation['G']] = match_score;
+
 }
 
 void ConvertAlignment(const s_align& s_al, 
@@ -200,7 +239,7 @@ namespace StripedSmithWaterman {
 
 Aligner::Aligner(void)
     : score_matrix_(NULL)
-    , score_matrix_size_(5)
+    , score_matrix_size_(16)
     , translation_matrix_(NULL)
     , default_matrix_(false)
     , matrix_built_(false)
@@ -222,7 +261,7 @@ Aligner::Aligner(
     const uint8_t& gap_extending_penalty)
 
     : score_matrix_(NULL)
-    , score_matrix_size_(5)
+    , score_matrix_size_(16)
     , translation_matrix_(NULL)
     , default_matrix_(false)
     , matrix_built_(false)
