@@ -13,7 +13,7 @@ inline unsigned char float2phred(float prob) {
     float p = -10 * (float) log10(prob);
     p = floor(p + 0.5);
     if (p < 0 || p > PHRED_MAX) // int overflow guard
-      return PHRED_MAX;
+      return 0;
     else
       return static_cast<unsigned char>(p);
 
