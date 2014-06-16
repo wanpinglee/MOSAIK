@@ -1,21 +1,23 @@
 ================================================================================
-Mosaik 2.0        Release Distribution Documentation                  2011-04-25
+Mosaik 2.0        Release Distribution Documentation                  2014-06-16
 Michael Stromberg & Wan-Ping Lee    Marth Lab, Boston College Biology Department
 ================================================================================
 
-To compile MOSAIK, simply type "make". When the compilation is complete, you 
-will find the MOSAIK binaries in the ../bin directory.
+To compile MOSAIK, simply type 'make' from inside the src/ directory. When the
+compilation is complete, you will find the MOSAIK binaries in the bin/
+directory.
 
 By default, Makefile behavior is tuned to Linux distributions. If you want to
-compile MOSAIK in Mac OS X, simply set the BLD_PLATFORM environment variable
-to macosx. e.g.
+compile MOSAIK in Mac OS X, set the BLD_PLATFORM environment variable to either
+'macosx' or 'macosx64' (64-bit support was kindly added by fyzkem). For example:
 
-export BLD_PLATFORM=macosx
+'export BLD_PLATFORM=macosx64'
 
-In addition to 'linux' and 'macosx', we have included another build platform:
+The GNU Compiler Collection (GCC) is not bundled with some recent versions of
+Mac OS X, and must be installed in order to compile MOSAIK without errors.
+Once installed, the g++ binary should be specified during compilation like so:
 
-'macosx64' - fyzkem was kind enough to enable 64-bit support for the Mac OS X
-             version of MOSAIK.
+'make CXX=/path/to/g++/binary'
 
 If you want to add another set of settings to configure the Makefile, simply
 add a new .inc file in the includes directory and set the BLD_PLATFORM variable
