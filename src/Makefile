@@ -28,7 +28,8 @@ CXXFLAGS += $(FLAGS)
 export CFLAGS
 export CXXFLAGS
 #export LDFLAGS = -Wl
-export CXX ?= g++-6
+export CC=gcc-6
+export CXX=g++-6
 
 # define our platform
 export BLD_PLATFORM ?= macosx64
