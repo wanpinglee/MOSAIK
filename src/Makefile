@@ -28,10 +28,10 @@ CXXFLAGS += $(FLAGS)
 export CFLAGS
 export CXXFLAGS
 #export LDFLAGS = -Wl
-export CXX ?= g++
+export CXX ?= g++-6
 
 # define our platform
-export BLD_PLATFORM ?= linux
+export BLD_PLATFORM ?= macosx64
 include includes/$(BLD_PLATFORM).inc
 
 # define our source subdirectories
