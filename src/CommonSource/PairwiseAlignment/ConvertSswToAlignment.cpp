@@ -26,8 +26,11 @@ bool ConvertSswToAlignment(
   for (unsigned int i = 0; i < ssw_al.cigar.size(); ++i) {
     int op  = ssw_al.cigar[i] & 0x0000000f;
     int len = ssw_al.cigar[i] >> 4;
-    switch (op) {
-      case 0: //M
+    
+    if(op==7||op==8){
+    op=0;
+    } switch (op) {
+      case 0: //M|=|X
         al->Reference.Append(ref_ptr, len);
 	al->Query.Append(query_ptr, len);
 	ref_ptr   += len;
